@@ -1,0 +1,81 @@
+name: Test artifacts
+run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+
+# Builds manylinux wheels and source distribution
+# Optionally run tests on manylinux wheels
+# Then upload artifacts to Github
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        description: "Run integration tests with the wheels after building them"
+        required: true
+        type: boolean
+        default: false
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+        description: 'Test against server release candidate? (e.g to test new server features)'
+      server-tag:
+        type: string
+        required: true
+        default: '8.1.0.0-rc5'
+        description: 'Server docker image tag (e.g to test a client backport version)'
+
+  workflow_call:
+    inputs:
+      # The "dev" tests test the artifacts against a server
+      # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
+      run_tests:
+        required: false
+        type: boolean
+        default: false
+      version:
+        type: string
+        description: Build version
+        required: true
+      # workflow_call hack
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
+      # This input is only used in workflow_call events
+      use-server-rc:
+        required: false
+        default: false
+        type: boolean
+      server-tag:
+        type: string
+        required: false
+        default: '8.1.0.0-rc5'
+    secrets:
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: true
+
+jobs:
+  test-bindings:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64",
+          "macosx_arm64",
+          "win_amd64"
+        ]
+      fail-fast: false
+    uses: ./.github/workflows/test-dev-artifacts.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      # Can't use env context here, so just copy from build-sdist env var
+      run_tests: ${{ inputs.run_tests }}
+      use-server-rc: ${{ inputs.use-server-rc }}
+      server-tag: ${{ inputs.server-tag }}
+      version: ${{ inputs.version }}
+    secrets: inherit

@@ -1,0 +1,174 @@
+name: Publish JFrog build to PyPI
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      old_version:
+        type: string
+        required: false
+      new_version:
+        type: string
+        required: false
+      #use-test-pypi:
+      #  type: boolean
+      #  description: 'DEBUG: upload to test.pypi.org?'
+      #  required: true
+      #  default: false
+  workflow_call:
+    inputs:
+      old_version:
+        type: string
+        required: false
+      new_version:
+        type: string
+        required: false
+    secrets:
+      # Just make all the secrets required to make things simpler...
+      NPMRC:
+        required: true
+      NPMRC_OFF:
+        required: true
+      NPM_TOKEN_OFF:
+        required: true
+
+jobs:
+  publish-jfrog-build-to-npm:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        # We need the last tag before the ref, so we can relabel the version if needed
+        fetch-depth: 0
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+        registry-url: 'https://registry.npmjs.org'
+
+
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+
+
+    - name: Move artifacts
+      run: |
+        tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        cp -r ${{ env.OLD_VERSION }}/lib/binding temp;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
+
+    - name: Change install command for release
+      run: node ./scripts/change-install-command.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "darkcartpale"/' package.json
+    #  working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: list version info
+      run: |
+        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm install;
+      env:
+        NEW_VERSION: ${{ inputs.new_version }} 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        echo "======================================";
+        cp -r temp/* ${{ env.OLD_VERSION }}/lib/binding;
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
+
+    - name: list version info
+      run:
+        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        npm ci;
+      env:
+        NEW_VERSION: ${{ inputs.new_version }} 
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: check binding
+      run:
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+        echo "======================================";
+        cp -r temp/* ${{ env.OLD_VERSION }}/lib/binding;
+        ls ${{ env.OLD_VERSION }}/lib/binding;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike
+
+    #- name: change verison
+    #  run: |
+    #   npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+    #  env:
+    #    NEW_VERSION: ${{ inputs.new_version }}
+
+    - name: npm rc
+      run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
+      env:
+        NPMRC: ${{ secrets.NPMRC_RELEASE }}
+
+    - run: |
+        npm publish --provenance;
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OTP }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    #- name: npm rc
+    #  run: echo "$NPMRC_OFF" | base64 --decode > ~/.npmrc  
+    #  env:
+    #    NPMRC_OFF: ${{ secrets.NPMRC_OFF }}
+
+    #- name: npm publish
+    #  run: |
+    #    npm publish
+    #  env:
+    #    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OFF }}
+
+    #- name: npm install
+    #  run: |
+    #    npm install aerospike@6.2.1-dev.4
+
+    - name: npm pack
+      run: |
+        npm pack aerospike

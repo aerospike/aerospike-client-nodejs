@@ -1,0 +1,80 @@
+name: Download JFrog Artifacts to Github
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        type: string
+        description: Build version
+        required: true
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        description: Build version
+        required: true
+    secrets:
+      # Just make all the secrets required to make things simpler...
+      NPMRC:
+        required: true
+      NPMRC_OFF:
+        required: true
+      NPM_TOKEN_OFF:
+        required: true
+
+jobs:
+  prepare-artifacts:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        # We need the last tag before the ref, so we can relabel the version if needed
+        fetch-depth: 0
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+        registry-url: 'https://registry.npmjs.org'
+
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/downloaded-artifacts
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Move artifacts
+      run: |
+        cp -r downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}/lib/binding/ lib/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        
+    - name: Upload wheels to GitHub Linux x86
+      uses: actions/upload-artifact@v4
+      #if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
+      with:
+        path: ./lib/binding/*
+        name: nodejs-client-artifacts

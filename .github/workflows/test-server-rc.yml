@@ -1,0 +1,167 @@
+name: Test cibuildwheel artifacts against server RC
+run-name: Test cibuildwheel artifacts against server RC
+
+on:
+  workflow_call:
+    secrets:
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: true
+
+jobs:
+  manylinux:
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python versions to build wheels on
+        nodejs: [
+          ["20", "v115"],
+          ["22", "v127"],
+          ["24", "v137"],
+        ]
+        platform: [
+          ["x86_64", "ubuntu-22.04"],
+          #["aarch64", "aerospike_arm_runners_2"]
+        ]
+    runs-on: ${{ matrix.platform[1] }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
+
+    - uses: ./.github/actions/run-ee-server-for-ext-container
+      with:
+        use-server-rc: true
+        server-tag: latest
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.nodejs[1] }}-manylinux_${{ matrix.platform[0] }}.build
+        path: ./
+
+    - name: Copy repo and wheel into manylinux container
+      run: docker cp ../aerospike-client-nodejs manylinux:/
+
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-nodejs manylinux nodejs${{ matrix.nodejs[0] }} -m pip install *.whl
+
+    - name: Install test prerequisites
+      run: docker exec --workdir /aerospike-client-nodejs/test manylinux nodejs${{ matrix.nodejs[0] }} -m pip install -r requirements.txt
+
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-nodejs/test manylinux nodejs${{ matrix.nodejs[0] }} -m pytest new_tests/
+
+  macOS-x86:
+    # Skip macOS x86 testing since it's unstable
+    if: ${{ false }}
+    strategy:
+      fail-fast: false
+      matrix:
+        nodejs: [
+          ["20", "v115"],
+          ["22", "v127"],
+          ["24", "v137"],
+        ]
+    runs-on: macos-12-large
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: ./.github/actions/setup-docker-on-macos
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: true
+        server-tag: latest
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.nodejs[1] }}-macosx_x86_64.build
+        path: ./
+
+    - uses: actions/setup-nodejs@v4
+      with:
+        nodejs-version: ${{ matrix.nodejs[0] }}
+
+    - run: python${{ matrix.python[0] }} -m pip install *.whl
+
+    - run: python${{ matrix.python[0] }} -m pip install -r requirements.txt
+      working-directory: test
+
+    - run: python${{ matrix.python[0] }} -m pytest new_tests/
+      id: test
+      working-directory: test
+
+  macOS-m1:
+    # TODO: this shares a lot of steps as in the build wheels workflow
+    runs-on: [
+      self-hosted,
+      macOS,
+      ARM64
+    ]
+    strategy:
+      matrix:
+        python-version: [
+          ["20", "v115"],
+          ["22", "v127"],
+          ["24", "v137"],
+        ]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.nodejs-version[1] }}-macosx_arm64.build
+        path: ./
+
+    # Update dependencies if needed
+    - name: Add brew to path
+      run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
+
+    # TODO: INSTALL NODEJS
+    - name: Install or upgrade Python
+      run: brew install python@${{ matrix.python-version[0] }}
+
+    # Self-hosted runner only
+    # Need to be able to save Docker Hub credentials to keychain
+    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+
+    - uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run server RC
+      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ vars.SERVER_RC_REPO_LINK }}
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - name: Install wheel
+      run: python${{ matrix.nodejs-version[0] }} -m pip install --force-reinstall --break-system-packages *.whl
+
+    - run: python${{ matrix.nodejs-version[0] }} -m pip install --force-reinstall --break-system-packages -r requirements.txt
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
+
+    - run: python${{ matrix.nodejs-version[0] }} -m pytest new_tests/
+      id: test
+      working-directory: test
+
+    - name: Stop server
+      if: ${{ always() }}
+      run: |
+        docker container stop aerospike
+        docker container prune -f

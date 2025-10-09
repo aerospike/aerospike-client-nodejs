@@ -31,12 +31,20 @@ const recgen: any = helper.recgen
 const status: typeof statusModule = Aerospike.status
 
 describe('MRT API Tests', function () {
+<<<<<<< HEAD
+=======
+  helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
+>>>>>>> master
   
   context('Test the MRT specific API', function () { 
     const client: Cli = helper.client
 
+<<<<<<< HEAD
     //helper.skipUnlessVersionAndEnterprise('>=8.0.0', this)
     it('Expands the pool size', async function () {
+=======
+    it('Reaps completed transactions', async function () {
+>>>>>>> master
 
       for (let i = 0; i < 150; i++) {
         let mrt: Transaction = new Aerospike.Transaction()

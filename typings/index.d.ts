@@ -295,7 +295,11 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
+<<<<<<< HEAD
     public bins: AerospikeRecord<B>;
+=======
+    public bins: B;
+>>>>>>> master
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
@@ -1269,7 +1273,11 @@ export class Query {
      */
     public where(predicate: filter.SindexFilterPredicate): void;
     /**
+<<<<<<< HEAD
      * Applies an expression index to the query.
+=======
+     * Applies a SI on expression to the query.
+>>>>>>> master
      *
      * Use a SI to limit the results returned by the query.
      * This method takes SI created using the {@link
@@ -1298,9 +1306,15 @@ export class Query {
      *
      * @see {@link filter} to create SI filters.
      */
+<<<<<<< HEAD
     public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp | string): void;
     /**
      * Applies a SI to the query using the index name.
+=======
+    public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp): void;
+    /**
+     * Applies a SI on expression to the query.
+>>>>>>> master
      *
      * Use a SI to limit the results returned by the query.
      * This method takes SI created using the {@link
@@ -2667,7 +2681,11 @@ export namespace policy {
         public reportSizeLimit?: number;
         /**
          * Number of cluster tend iterations between metrics notification events. One tend iteration
+<<<<<<< HEAD
          * is defined as {@link Config.tenderInterval} (default 1 second) plus the time to tend all nodes.
+=======
+         * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
+>>>>>>> master
          */
         public interval?: number;
         /**
@@ -3335,8 +3353,13 @@ export namespace policy {
          * For reads, try node on preferred racks first. If there are no nodes on preferred racks,
          * use SEQUENCE instead. Also use SEQUENCE for writes.
          *
+<<<<<<< HEAD
          * {@link Config.rackAware}, {@link Config.rackId} or {@link Config.rackIds}, and server rack.
          * 
+=======
+         * config.rackAware, config.rackId or as_config.rackIds, and server rack 
+         * configuration must also be set to enable this functionality.
+>>>>>>> master
          */
         PREFER_RACK,
         /**
@@ -3673,7 +3696,11 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
+<<<<<<< HEAD
     public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult<B>[]>): void;
+=======
+    public batchExists(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult[]>): void;
+>>>>>>> master
 
     /**
      *
@@ -3754,7 +3781,11 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
+<<<<<<< HEAD
     public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult<B>[]>;
+=======
+    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult[]>;
+>>>>>>> master
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param callback - The function to call when
@@ -3767,7 +3798,11 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
+<<<<<<< HEAD
     public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
+=======
+    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+>>>>>>> master
     /**
      *
      * Reads a batch of records from the database cluster.
@@ -3829,7 +3864,11 @@ export class Client extends EventEmitter {
      * })();
      *
      */
+<<<<<<< HEAD
     public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
+=======
+    public batchGet(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+>>>>>>> master
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
@@ -3931,7 +3970,11 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
+<<<<<<< HEAD
     public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
+=======
+    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+>>>>>>> master
 
     /**
      *
@@ -4297,7 +4340,11 @@ export class Client extends EventEmitter {
      */
     public contextToBase64(context: cdt.Context): string;
     /**
+<<<<<<< HEAD
      * Creates an index on blob data.
+=======
+     * Creates a blob secondary index.
+>>>>>>> master
      *
      * This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
@@ -4347,7 +4394,291 @@ export class Client extends EventEmitter {
      */
     public createBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
+<<<<<<< HEAD
      * Creates an expression index on blob data.
+=======
+     * Creates a blob secondary index on an expression.
+     *
+     * This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'location'
+     *   var exp = Aerospike.exp.binBlob(binName)
+     *   var indexName = 'locationIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   exp: exp,
+     *                   index: indexName }
+     *
+     *   client.createBlobIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpBlobIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpBlobIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+    /**
+     *
+     * Creates a secondary index (SI) on an expression.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link createIndex} for more info on secondary indexes.
+     * 
+     * @see {@link indexType} for enumeration of supported index types.
+     * @see {@link indexDataType} for enumeration of supported data types.
+     * @see {@link IndexJob}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * const Context = Aerospike.cdt.Context
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   // create index over user's recent locations
+     *   let namespace = 'test'
+     *   let set = 'demo'
+     *   let binName = 'rloc' // recent locations
+     *   let exp = Aerospike.exp.binList(binName)
+     *   let indexName = 'recentLocationsIdx'
+     *   let indexType = Aerospike.indexType.LIST
+     *   let dataType = Aerospike.indexDataType.GEO2DSPHERE
+     *   let options = { ns: namespace,
+     *                   set: set,
+     *                   exp: exp,
+     *                   index: indexName,
+     *                   type: indexType,
+     *                   datatype: dataType,
+     *                   context: context }
+     *
+     *   let policy = new Aerospike.InfoPolicy({ timeout: 100 })
+     *
+     *   client.createIndex(options, policy, (error, job) => {
+     *     if (error) throw error
+     *
+     *     // wait for index creation to complete
+     *     var pollInterval = 100
+     *     job.waitUntilDone(pollInterval, (error) => {
+     *       if (error) throw error
+     *       console.info('SI %s on %s was created successfully', indexName, binName)
+     *       client.close()
+     *     })
+     *   })
+     * })
+     */
+    public createExpIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+    /**
+     * Creates a SI of type Integer on an expression.
+     *
+     * @remarks This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'age'
+     *   var exp = Aerospike.exp.binInt(binName)
+     *   var indexName = 'ageIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   exp: exp,
+     *                   index: indexName }
+     *
+     *   client.createIntegerIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpIntegerIndex(options: IndexOptions, policy?: policy.InfoPolicy | null): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     */
+    public createExpIntegerIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     */
+    public createExpIntegerIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
+    /**
+     * Creates a SI of type String on an expression.
+     *
+     * @remarks This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.STRING</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'name'
+     *   var exp = Aerospike.exp.binStr(binName)
+     *   var indexName = 'nameIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   exp: exp,
+     *                   index: indexName }
+     *
+     *   client.createStringIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpStringIndex(options: IndexOptions, policy?: policy.InfoPolicy): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpStringIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpStringIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
+    /**
+     * Creates a geospatial secondary secondary index on an expression.
+     *
+     * @remarks This is a short-hand for calling {@link Client#createIndex}
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.GEO2DSPHERE</code>.
+     *
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     *
+     * @returns {?Promise} - A Promise that will resolve to an {@link IndexJob} instance.
+     *
+     * @see {@link Client#createIndex}
+     *
+     * @example
+     *
+     * const Aerospike = require('aerospike')
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     * }
+     *
+     * Aerospike.connect(config, (error, client) => {
+     *   if (error) throw error
+     *
+     *   var binName = 'location'
+     *   var exp = Aerospike.exp.binGeo(binName)
+     *   var indexName = 'locationIndex'
+     *   var options = { ns: 'test',
+     *                   set: 'demo',
+     *                   bin: binName,
+     *                   index: indexName }
+     *
+     *   client.createGeo2DSphereIndex(options, function (error) {
+     *     if (error) throw error
+     *     console.info('SI %s on %s was created successfully', indexName, binName)
+     *     client.close()
+     *   })
+     * })
+     */
+    public createExpGeo2DSphereIndex(options: IndexOptions, policy?: policy.InfoPolicy): Promise<IndexJob>;
+    /**
+     * @param options - Options for creating the index.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpGeo2DSphereIndex(options: IndexOptions, callback: TypedCallback<IndexJob>): void;
+    /**
+     * @param options - Options for creating the index.
+     * @param policy - The Info Policy to use for this command.
+     * @param callback - The function to call when the command completes.
+     */
+    public createExpGeo2DSphereIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
+    /**
+>>>>>>> master
      *
      * This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
@@ -6507,6 +6838,22 @@ export class Client extends EventEmitter {
      * })()
      */
     public changePassword(user: string, password: string, policy?: policy.AdminPolicy | null): Promise<void>;
+<<<<<<< HEAD
+=======
+    /**
+     * @param user - User name for the password change.
+     * @param password - User password in clear-text format.
+     * @param callback - The function to call when the command has completed.
+     */
+    public changePassword(user: string, password: string, callback?: TypedCallback<void>): void;
+    /**
+     * @param user - User name for the password change.
+     * @param password - User password in clear-text format.
+     * @param policy - Optional {@link AdminPolicy}.
+     * @param callback - The function to call when the command has completed.
+     */
+    public changePassword(user: string, password: string, policy: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
+>>>>>>> master
     /**
      * @param user - User name for the password change.
      * @param password - User password in clear-text format.
@@ -7506,8 +7853,11 @@ export class Config {
     public authMode?: auth;
     /**
     * Dynamic configuration provider. Determines how to retrieve cluster policies.
+<<<<<<< HEAD
     *
     * An alternate way to enable dynamic config is to set environment variable AEROSPIKE_CLIENT_CONFIG_URL to the path of the config file before running the application.
+=======
+>>>>>>> master
     */
     public configProvider?: ConfigProvider;
     /**
@@ -10017,8 +10367,11 @@ export interface ConfigOptions {
     authMode?: auth;
     /**
     * Dynamic configuration provider. Determines how to retrieve cluster policies.
+<<<<<<< HEAD
     *
     * An alternate way to enable dynamic config is to set environment variable AEROSPIKE_CLIENT_CONFIG_URL to the path of the config file before running the application.
+=======
+>>>>>>> master
     */
     configProvider?: ConfigProvider;
     /**
@@ -10504,17 +10857,30 @@ export interface ConfigProvider {
     /**
     * Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
     * initialization and whenever the file changes. The policies fields in the file
+<<<<<<< HEAD
     * override all command policies as well as all policies specified in the Node.js Client {@link Config}.
+=======
+    * override all command policies.
+>>>>>>> master
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.
     * 
+<<<<<<< HEAD
     */
     path?: string;
     /**
      * Interval in milliseconds between dynamic configuration check for file modifications.
      * The value must be greater than or equal to the {Config.tenderInterval}.
      * 
+=======
+    * If command-level policies are set in addition to a dynamic configuration policy, the dynamic configuration
+    * will take precedence over the command-level policy
+    */
+    path?: string;
+    /**
+     * Check dynamic configuration file for changes after this number of cluster tend iterations.
+>>>>>>> master
      */
     interval?: number;
 }
@@ -10540,6 +10906,7 @@ export interface ConnectionStats {
      * Total number of node connections closed since node creation.
      */
     closed: number;
+<<<<<<< HEAD
     /**
      * Total number of recovered connections since node creation. A recovered connecton is a
      * connection that timed out on a socket read and then independently drained (read all incoming
@@ -10565,6 +10932,18 @@ export interface EventLoop {
    */
   processSize: number;
 
+=======
+}
+/**
+ * Event loop metrics.
+ */
+export interface EventLoop {
+  /**
+   * Number of tasks currently being processed by the event loop.
+   */
+  processSize: number;
+
+>>>>>>> master
   /**
    * Number of tasks waiting in the event loop queue.
    */
@@ -10667,7 +11046,11 @@ export interface IndexOptions {
     /**
      * The expression on which values are to be indexed.
      */
+<<<<<<< HEAD
     exp?: AerospikeExp | string;
+=======
+    exp?: AerospikeExp;
+>>>>>>> master
     /**
      * The namespace on which the index is to be created.
      */
@@ -10871,7 +11254,11 @@ export interface MetricsPolicyOptions {
     reportSizeLimit?: number;
     /**
      * Number of cluster tend iterations between metrics notification events. One tend iteration
+<<<<<<< HEAD
      * is defined as {@link Config.tenderInterval} (default 1 second) plus the time to tend all nodes.
+=======
+     * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
+>>>>>>> master
      */
     interval?: number;
     /**
@@ -10978,12 +11365,17 @@ export interface Node {
      */
     conns: ConnectionStats;
     /**
+<<<<<<< HEAD
      * Synchronous connection stats on this node.
      */
     syncConns: ConnectionStats;
     /**
      * Namespace Metrics
      */
+=======
+     * Namespace Metrics
+     */
+>>>>>>> master
     metrics: Array<NamespaceMetrics>;
 }
 
@@ -11057,6 +11449,10 @@ export interface NodeStats {
     /**
      * Connections stats for Synchronous Connections on this Node..
      *
+<<<<<<< HEAD
+=======
+     * @remarks The Aerospike Node.js does not use synchronous connections.
+>>>>>>> master
      */
     syncConnections: ConnectionStats;
     /**
@@ -11065,8 +11461,11 @@ export interface NodeStats {
     asyncConnections: ConnectionStats;
     /**
      * Connection stats for Pipeline Connections on this Node.
+<<<<<<< HEAD
      * 
      * @remarks The Aerospike Node.js client currently does not implement the pipelining feature.
+=======
+>>>>>>> master
      */
     pipelineConnections: ConnectionStats;
     /**
@@ -17519,7 +17918,11 @@ export namespace filter {
         public datatype: indexDataType;
         public type: indexType;
         public indexName?: string;
+<<<<<<< HEAD
         public exp?: AerospikeExp | string;
+=======
+        public exp?: AerospikeExp;
+>>>>>>> master
     }
 
     /**
