@@ -83,7 +83,6 @@ describe('Circuit breaker functionality', function () {
 
           const query: Query = dummyClient.query(helper.namespace, helper.set)
 
-          console.log("running queiress")
           await abort_until_circuit_breaker_flips(query, 4)
 
         }
