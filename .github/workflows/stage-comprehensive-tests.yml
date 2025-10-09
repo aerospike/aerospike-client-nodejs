@@ -8,6 +8,7 @@ permissions:
 
 on:
 
+
   workflow_call:
     inputs:
       nodejs-tags:
@@ -93,7 +94,7 @@ jobs:
       working-directory: aerospike-client-c/vs
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.run_tests && (inputs.platform-tag != 'macosx_arm64' && inputs.platform-tag != 'macosx_x86_64') }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: Setup Docker using colima for testing'
@@ -101,7 +102,7 @@ jobs:
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.run_tests && (inputs.platform-tag != 'macosx_arm64' && inputs.platform-tag != 'macosx_x86_64') }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -182,7 +183,7 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
+      if: ${{ inputs.run_tests && (inputs.platform-tag != 'macosx_arm64' && inputs.platform-tag != 'macosx_x86_64') }}
       run: |
         docker ps;
         docker logs aerospike;
@@ -597,7 +598,7 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{ inputs.run_tests && ( inputs.platform-tag != 'macosx_x86_64' ) }}
+    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'macosx_x86_64' && inputs['platform-tag'] != 'win_amd64' && inputs['platform-tag']  != 'macosx_arm64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -810,7 +811,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64' ) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -917,7 +918,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'macosx_x86_64' && inputs['platform-tag'] != 'win_amd64' && inputs['platform-tag'] != 'macosx_arm64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
