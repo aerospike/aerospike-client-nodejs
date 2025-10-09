@@ -3,7 +3,7 @@ name: Master workflow
 on:
   pull_request:
     branches:
-      - master-test
+      - master-stage
 
 jobs:
   master-get-jfrog-version:
