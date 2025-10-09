@@ -567,6 +567,7 @@ describe('Aerospike.exp', function () {
           datatype: Aerospike.indexDataType.NUMERIC
         }
 
+
         return client.createExpIndex(options)
       })
 
