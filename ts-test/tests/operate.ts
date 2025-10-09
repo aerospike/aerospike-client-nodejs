@@ -22,7 +22,7 @@
 
 import Aerospike, { GeoJSON as GeoJSONType, Client as Cli, KeyOptions, AerospikeBins, AerospikeRecord, AerospikeError as ASError, Double as Doub, GeoJSON as GJ, status as statusModule, operations, RecordMetadata, WritePolicy, OperatePolicy, Key} from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert} from 'chai'; 
 import * as helper from './test_helper';
 
 const Double: typeof Doub = Aerospike.Double
@@ -80,17 +80,18 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then((record: AerospikeRecord) => {
-            expect(record.bins.string).to.equal('def')
-            expect(record.bins.int).to.equal(432)
-            expect(record.bins.double1).to.equal(2.34)
-            expect(record.bins.double2).to.equal(2.0)
-            expect(new GeoJSON(record.bins.geo as GJ).toJSON?.()).to.eql(
+            const bins: AerospikeBins = record.bins
+            expect(bins.string).to.equal('def')
+            expect(bins.int).to.equal(432)
+            expect(bins.double1).to.equal(2.34)
+            expect(bins.double2).to.equal(2.0)
+            expect(new GeoJSON(bins.geo as GJ).toJSON?.()).to.eql(
               { type: 'Point', coordinates: [123.456, 1.308] }
             )
-            expect(record.bins.blob).to.eql(Buffer.from('bar'))
-            expect(record.bins.list).to.eql([2, 3, 4])
-            expect(record.bins.map).to.eql({ d: 4, e: 5, f: 6 })
-            expect(record.bins.boolean).to.eql(true)
+            expect(bins.blob).to.eql(Buffer.from('bar'))
+            expect(bins.list).to.eql([2, 3, 4])
+            expect(bins.map).to.eql({ d: 4, e: 5, f: 6 })
+            expect(bins.boolean).to.eql(true)
           })
       })
 
@@ -116,7 +117,8 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then((record: AerospikeRecord) => {
-            expect(record.bins.int).to.equal(555)
+            const bins: AerospikeBins = record.bins
+            expect(bins.int).to.equal(555)
           })
       })
 
@@ -129,8 +131,10 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then((record: AerospikeRecord) => {
-            expect(record.bins.double1).to.equal(4.68)
-            expect(record.bins.double2).to.equal(4.14159)
+
+            const bins: AerospikeBins = record.bins
+            expect(bins.double1).to.equal(4.68)
+            expect(bins.double2).to.equal(4.14159)
           })
       })
 
@@ -142,7 +146,8 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then((record: AerospikeRecord) => {
-            expect(record.bins.int).to.equal(555)
+            const bins: AerospikeBins = record.bins
+            expect(bins.int).to.equal(555)
           })
       })
       /*
@@ -166,7 +171,8 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then((record: AerospikeRecord) => {
-            expect(record.bins.string).to.equal('abcdef')
+            const bins: AerospikeBins = record.bins
+            expect(bins.string).to.equal('abcdef')
           })
       })
 
@@ -191,7 +197,8 @@ context('Operations', function () {
         return client.operate(key, ops)
           .then(() => client.get(key))
           .then((record: AerospikeRecord) => {
-            expect(record.bins.string).to.equal('defabc')
+            const bins: AerospikeBins = record.bins
+            expect(bins.string).to.equal('defabc')
           })
       })
       /*
@@ -262,7 +269,12 @@ context('Operations', function () {
           op.delete()
         ]
         return client.operate(key, ops)
-          .then((result: AerospikeRecord) => expect(result.bins.string).to.eq('abc'))
+          .then((result: AerospikeRecord) => {
+
+            const bins: AerospikeBins = result.bins
+            expect(bins.string).to.eq('abc')
+
+          })
           .then(() => client.exists(key))
           .then((exists: boolean) => expect(exists).to.be.false)
       })
@@ -347,7 +359,11 @@ context('Operations', function () {
 
             return client.operate(key, ops, meta, policy)
               .then(() => client.get(key))
-              .then((record: AerospikeRecord) => expect(record.bins.int).to.equal(130))
+              .then((record: AerospikeRecord) => {
+
+                const bins: AerospikeBins = record.bins
+                expect(bins.int).to.equal(130)
+              })
           })
 
           it('rejects the operation if the generation does not match', function () {
@@ -362,7 +378,10 @@ context('Operations', function () {
                 return Promise.resolve(true)
               })
               .then(() => client.get(key))
-              .then((record: AerospikeRecord) => expect(record.bins.int).to.equal(123))
+              .then((record: AerospikeRecord) => {
+                const bins: AerospikeBins = record.bins
+                expect(bins.int).to.equal(123)
+              })
           })
         })
       })
@@ -377,9 +396,10 @@ context('Operations', function () {
 
           return client.operate(key, ops, null, policy)
             .then((record: AerospikeRecord) => {
-              expect(record.bins.int).to.equal(123)
-              expect(record.bins.list).to.eql(Buffer.from([0x93, 0x01, 0x02, 0x03]))
-              expect(record.bins.map).to.eql(Buffer.from([0x84, 0xc7, 0x00, 0x01, 0xc0, 0xa2, 0x03, 0x61, 0x01, 0xa2, 0x03, 0x62, 0x02, 0xa2, 0x03, 0x63, 0x03]))
+              const bins: AerospikeBins = record.bins
+              expect(bins.int).to.equal(123)
+              expect(bins.list).to.eql(Buffer.from([0x93, 0x01, 0x02, 0x03]))
+              expect(bins.map).to.eql(Buffer.from([0x84, 0xc7, 0x00, 0x01, 0xc0, 0xa2, 0x03, 0x61, 0x01, 0xa2, 0x03, 0x62, 0x02, 0xa2, 0x03, 0x63, 0x03]))
             })
         })
       })
@@ -392,7 +412,13 @@ context('Operations', function () {
 
       client.operate(key, ops, (error?: ASError, result?: AerospikeRecord) => {
         if (error) throw error
-        expect(result?.bins.int).to.equal(123)
+        if(result){
+          const bins: AerospikeBins = result.bins
+          expect(bins.int).to.equal(123)
+        }
+        else{
+          assert.fail("no result was returned")
+        }
         done()
       })
     })
@@ -403,7 +429,8 @@ context('Operations', function () {
       return client.add(key, { int: 234 })
         .then(() => client.get(key))
         .then((record: AerospikeRecord) => {
-          expect(record.bins.int).to.equal(357)
+          const bins: AerospikeBins = record.bins
+          expect(bins.int).to.equal(357)
         })
     })
   })
@@ -413,7 +440,8 @@ context('Operations', function () {
       return client.incr(key, { int: 234 })
         .then(() => client.get(key))
         .then((record: AerospikeRecord) => {
-          expect(record.bins.int).to.equal(357)
+          const bins: AerospikeBins = record.bins
+          expect(bins.int).to.equal(357)
         })
     })
   })
@@ -423,7 +451,8 @@ context('Operations', function () {
       return client.append(key, { string: 'def' })
         .then(() => client.get(key))
         .then((record: AerospikeRecord) => {
-          expect(record.bins.string).to.equal('abcdef')
+          const bins: AerospikeBins = record.bins
+          expect(bins.string).to.equal('abcdef')
         })
     })
   })
@@ -433,7 +462,8 @@ context('Operations', function () {
       return client.prepend(key, { string: 'def' })
         .then(() => client.get(key))
         .then((record: AerospikeRecord) => {
-          expect(record.bins.string).to.equal('defabc')
+          const bins: AerospikeBins = record.bins
+          expect(bins.string).to.equal('defabc')
         })
     })
   })

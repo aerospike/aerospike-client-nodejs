@@ -119,6 +119,21 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 				}
 
 			}
+			else if (v8_exp->IsString()) {
+
+				if (v8_index_name->IsString()) {
+					as_v8_error(log, "Index name must not be defined if expression is defined");
+					Nan::ThrowError("Index name must not be defined if expression is defined");
+				}
+
+				if (v8_bin->IsString()) {
+					as_v8_error(log, "Bin name must not be defined if expression is defined");
+					Nan::ThrowError("Bin name must not be defined if expression is defined");
+				}
+
+				Nan::Utf8String exp_b64(v8_exp.As<String>());
+				*exp = as_exp_from_base64(*exp_b64);
+			}
 			else if (v8_index_name->IsString()) {
 				if (v8_bin->IsString()) {
 					as_v8_error(log, "Bin name must not be defined if index name is defined");

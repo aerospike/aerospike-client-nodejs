@@ -31,6 +31,10 @@ const recgen: any = helper.recgen
 describe('set_xdr_filter tests', function () {
   const client: Cli = helper.client
 
+
+  const filterExpression = exp.eq(exp.int(2), exp.int(1))
+  const exp_b64 = client.expressionToBase64(filterExpression)
+
   context('set_xdr_filter tests', function () { 
 
     let run_xdr: any = helper.skipUnlessXDR(this)
@@ -112,8 +116,21 @@ describe('set_xdr_filter tests', function () {
         assert.fail("An error should have been caught!")
       }
       catch(error: any){
-        expect(error.message).to.eql("Expression must be an array")
+        expect(error.message).to.eql("Invalid filter expression value")
       }
+
+      
+    
+
+    })
+
+    it('Set XDR filter with base64 encoded expression', async function () {
+
+      let response = await client.setXDRFilter(exp_b64, 'dc2', 'test')
+      
+      expect(response.trim()).to.eql(("xdr-set-filter:dc=dc2;namespace=test;exp=kwECAQ==\tok").trim())
+
+
 
       
     

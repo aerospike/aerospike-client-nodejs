@@ -29,8 +29,7 @@ using namespace v8;
 
 const uint16_t DEFAULT_PORT = 3000;
 
-int config_from_jsobject(as_config *config, Local<Object> configObj,
-						 const LogInfo *log)
+int config_from_jsobject(as_config *config, Local<Object> configObj, AerospikeClient *client, const LogInfo *log)
 {
 	bool defined;
 	int rc;
@@ -392,6 +391,17 @@ int config_from_jsobject(as_config *config, Local<Object> configObj,
 			if ((rc = writepolicy_from_jsobject(&policies->write,
 												policy_val.As<Object>(),
 												log)) != AS_NODE_PARAM_OK) {
+				goto Cleanup;
+			}
+		}
+
+		policy_val = Nan::Get(policies_obj, Nan::New("metrics").ToLocalChecked())
+						 .ToLocalChecked();
+		if (policy_val->IsObject()) {
+
+			if ((rc = metricspolicy_from_jsobject(&policies->metrics, policy_val.As<Object>(), &(client->report_dir),
+												  client->enable_callback, client->snapshot_callback, client->node_close_callback,
+												  client->disable_callback, true, log)) != AS_NODE_PARAM_OK) {
 				goto Cleanup;
 			}
 		}

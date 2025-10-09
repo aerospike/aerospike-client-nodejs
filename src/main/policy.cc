@@ -20,6 +20,7 @@
 #include "policy.h"
 #include "conversions.h"
 #include "expressions.h"
+#include "metrics.h"
 
 extern "C" {
 #include <aerospike/as_policy.h>
@@ -60,6 +61,11 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 							 const LogInfo *log)
 {
 	int rc = 0;
+	if ((rc = get_optional_uint32_property(&policy->connect_timeout, NULL, obj,
+										   "connectTimeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_uint32_property(&policy->socket_timeout, NULL, obj,
 										   "socketTimeout", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -67,6 +73,11 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 	}
 	if ((rc = get_optional_uint32_property(&policy->total_timeout, NULL, obj,
 										   "totalTimeout", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_uint32_property(&policy->timeout_delay, NULL, obj,
+										   "timeoutDelay", log)) !=
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
@@ -85,6 +96,10 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 			AS_NODE_PARAM_OK) {
 			return rc;
 		}
+	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
 	}
 	else if (exp_val->IsNull() || exp_val->IsUndefined()) {
 		// no-op
@@ -426,6 +441,10 @@ int batchread_policy_from_jsobject(as_policy_batch_read *policy,
 			return AS_NODE_PARAM_ERR;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
+	}
 
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->read_mode_ap,
 										   NULL, obj, "readModeAP", log)) !=
@@ -463,6 +482,11 @@ int batchwrite_policy_from_jsobject(as_policy_batch_write *policy,
 			return AS_NODE_PARAM_ERR;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
+	}
+
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
@@ -522,6 +546,10 @@ int batchapply_policy_from_jsobject(as_policy_batch_apply *policy,
 			return AS_NODE_PARAM_ERR;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
+	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
 		return rc;
@@ -566,6 +594,10 @@ int batchremove_policy_from_jsobject(as_policy_batch_remove *policy,
 			AS_NODE_PARAM_OK) {
 			return AS_NODE_PARAM_ERR;
 		}
+	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+		policy->filter_exp = as_exp_from_base64(*exp_b64);
 	}
 	if ((rc = get_optional_uint32_property((uint32_t *)&policy->key, NULL, obj,
 										   "key", log)) != AS_NODE_PARAM_OK) {
@@ -688,6 +720,11 @@ int infopolicy_from_jsobject(as_policy_info *policy, Local<Object> obj,
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_uint32_property(&policy->timeout_delay, NULL, obj,
+										   "timeoutDelay", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
 	if ((rc = get_optional_bool_property(&policy->send_as_is, NULL, obj,
 										 "sendAsIs", log)) !=
 		AS_NODE_PARAM_OK) {
@@ -719,23 +756,57 @@ int adminpolicy_from_jsobject(as_policy_admin *policy, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
-int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<Object> obj,
-							 as_metrics_listeners* listeners, char** report_dir, const LogInfo *log)
+int metricspolicy_from_jsobject(as_metrics_policy *policy, Local<Object> obj, char** report_dir, Nan::Persistent<v8::Function>& enable_callback,
+								Nan::Persistent<v8::Function>& snapshot_callback, Nan::Persistent<v8::Function>& node_close_callback, Nan::Persistent<v8::Function>& disable_callback,
+								bool is_config_policy, const LogInfo *log)
 {
 	if (obj->IsUndefined() || obj->IsNull()) {
 		return AS_NODE_PARAM_ERR;
 	}
+
 	int rc = 0;
-	as_metrics_policy_init(policy);
-
 	bool defined = false;
-
 	int report_dir_size = 256;
 
-	if(listeners != NULL){
-		policy->metrics_listeners = *listeners;
-	}
+	as_metrics_policy_init(policy);
 
+	Local<Value> maybe_metrics_listeners = Nan::Get(obj, Nan::New("metricsListeners").ToLocalChecked()).ToLocalChecked();
+
+	if (maybe_metrics_listeners->IsObject()) {
+		Local<Object> v8_metrics_listeners = maybe_metrics_listeners.As<Object>();
+
+		Local<Value> v8_enable_listener = Nan::Get(v8_metrics_listeners, Nan::New("enableListener").ToLocalChecked()).ToLocalChecked();
+		Local<Value> v8_snapshot_listener = Nan::Get(v8_metrics_listeners, Nan::New("snapshotListener").ToLocalChecked()).ToLocalChecked();
+		Local<Value> v8_node_close_listener = Nan::Get(v8_metrics_listeners, Nan::New("nodeCloseListener").ToLocalChecked()).ToLocalChecked();
+		Local<Value> v8_disable_listener = Nan::Get(v8_metrics_listeners, Nan::New("disableListener").ToLocalChecked()).ToLocalChecked();
+
+		if (v8_enable_listener->IsFunction() || v8_snapshot_listener->IsFunction() || v8_node_close_listener->IsFunction() || v8_disable_listener->IsFunction()) {
+			if (v8_enable_listener->IsFunction() && v8_snapshot_listener->IsFunction() && v8_node_close_listener->IsFunction() && v8_disable_listener->IsFunction()) {
+
+				enable_callback.Reset(v8_enable_listener.As<Function>());
+				snapshot_callback.Reset(v8_snapshot_listener.As<Function>());
+				node_close_callback.Reset(v8_node_close_listener.As<Function>());
+				disable_callback.Reset(v8_disable_listener.As<Function>());
+
+				if(is_config_policy){
+					policy->metrics_listeners.enable_listener = enable_listener_config;
+					policy->metrics_listeners.snapshot_listener = snapshot_listener_config;
+					policy->metrics_listeners.node_close_listener = node_close_listener_config;
+					policy->metrics_listeners.disable_listener = disable_listener_config;
+				}
+				else{
+					policy->metrics_listeners.enable_listener = enable_listener;
+					policy->metrics_listeners.snapshot_listener = snapshot_listener;
+					policy->metrics_listeners.node_close_listener = node_close_listener;
+					policy->metrics_listeners.disable_listener = disable_listener;
+				}
+			}
+			else {
+				as_v8_error(log, "If one metrics callback is set, all metrics callbacks must be set");
+				return AEROSPIKE_ERR_PARAM;
+			}
+		}
+	}
 
 	Local<Value> v8_labels = Nan::Get(obj, Nan::New("labels").ToLocalChecked()).ToLocalChecked();
 
@@ -763,7 +834,6 @@ int metricspolicy_from_jsobject_with_listeners(as_metrics_policy *policy, Local<
 		as_v8_error(log, "labels must be an object with string key pairs.");
 		return AS_NODE_PARAM_ERR;
 	}
-
 
 	if ((rc = get_optional_report_dir_property(report_dir, &defined, &report_dir_size, obj,
 										   "reportDir", log)) !=

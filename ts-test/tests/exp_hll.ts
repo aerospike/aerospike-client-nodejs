@@ -71,7 +71,9 @@ describe('Aerospike.exp_operations', function () {
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
         // console.log(result)
-        expect(result.bins.ExpVar).to.eql(4)
+
+        const bins: AerospikeBins = result.bins
+        expect(bins.ExpVar).to.eql(4)
       })
     })
   })

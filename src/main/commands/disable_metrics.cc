@@ -14,6 +14,8 @@
  * limitations under the License.
  ******************************************************************************/
 
+
+#include <cstdint>
 #include "client.h"
 #include "command.h"
 

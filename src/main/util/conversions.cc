@@ -1627,7 +1627,7 @@ int recordmeta_from_jsobject(as_record *rec, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
-void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log) {
+void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, as_metrics_policy* policy, const LogInfo *log) {
 	as_error err;
 	as_error_init(&err);
 
@@ -1702,13 +1702,7 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 		for (uint32_t i = 0; i < nodes->size; i++) {
 			as_node* node = nodes->array[i];
 			Local<Object> v8_node = Nan::New<Object>();
-			if(latency){
-				node_to_jsobject(node, v8_node, &latency[i], bucket_max, ns_metrics, metrics_size, labels, policy, log);
-
-			}
-			else{
-				node_to_jsobject(node, v8_node, NULL, 0, NULL, 0, NULL, policy, log);
-			}
+			node_to_jsobject(node, v8_node, log);
 			Nan::Set(v8_nodes, i, v8_node);
 		}
 	}
@@ -1720,6 +1714,8 @@ void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, latenc
 void
 as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool)
 {
+
+
 	// Warning: cross-thread reference without a lock.
 	int tmp = as_queue_size(&pool->queue);
 
@@ -1736,9 +1732,13 @@ as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool)
 	stats->in_use += tmp;
 	stats->opened += pool->opened;
 	stats->closed += pool->closed;
+	stats->recovered += pool->recovered;
+	stats->aborted += pool->aborted;
 }
 
-void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log) {
+
+
+void node_to_jsobject(as_node_s* node, Local<Object> v8_node, const LogInfo *log) {
 	Nan::Set(v8_node, Nan::New("name").ToLocalChecked(), Nan::New(node->name).ToLocalChecked());
 
 	as_address* address = as_node_get_address(node);
@@ -1750,9 +1750,10 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 
 	Nan::Set(v8_node, Nan::New("address").ToLocalChecked(), Nan::New(address_name).ToLocalChecked());
 	Nan::Set(v8_node, Nan::New("port").ToLocalChecked(), Nan::New(port));
-	//Should this just by conn in NODEJS
+
 	struct as_conn_stats_s async;
 	as_conn_stats_init_internal(&async);
+
 
 	for (uint32_t i = 0; i < as_event_loop_size; i++) {
 		// Regular async.
@@ -1764,246 +1765,169 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, latency* latency, 
 	Nan::Set(v8_conn_stats, Nan::New("inPool").ToLocalChecked(), Nan::New(async.in_pool));
 	Nan::Set(v8_conn_stats, Nan::New("opened").ToLocalChecked(), Nan::New(async.opened));
 	Nan::Set(v8_conn_stats, Nan::New("closed").ToLocalChecked(), Nan::New(async.closed));
+	Nan::Set(v8_conn_stats, Nan::New("aborted").ToLocalChecked(), Nan::New(async.aborted));
+	Nan::Set(v8_conn_stats, Nan::New("recovered").ToLocalChecked(), Nan::New(async.recovered));
 
 	Nan::Set(v8_node, Nan::New("conns").ToLocalChecked(), v8_conn_stats);
-	
+
+	struct as_conn_stats_s sync;
+	as_conn_stats_init_internal(&sync);
+
+	uint32_t max = node->cluster->conn_pools_per_node;
+
+	// Sync connection summary.
+	for (uint32_t i = 0; i < max; i++) {
+		as_conn_pool* pool = &node->sync_conn_pools[i];
+
+		pthread_mutex_lock(&pool->lock);
+		uint32_t in_pool = as_queue_size(&pool->queue);
+		uint32_t total = pool->queue.total;
+		pthread_mutex_unlock(&pool->lock);
+
+		sync.in_pool += in_pool;
+		sync.in_use += total - in_pool;
+	}
+
+	sync.opened = as_node_get_sync_conns_opened(node);
+	sync.closed = as_node_get_sync_conns_closed(node);
+	sync.recovered = as_node_get_sync_conns_recovered(node);
+	sync.aborted = as_node_get_sync_conns_aborted(node);
+
+
+	Local<Object> v8_sync_conn_stats = Nan::New<Object>();
+	Nan::Set(v8_sync_conn_stats, Nan::New("inUse").ToLocalChecked(), Nan::New(sync.in_use));
+	Nan::Set(v8_sync_conn_stats, Nan::New("inPool").ToLocalChecked(), Nan::New(sync.in_pool));
+	Nan::Set(v8_sync_conn_stats, Nan::New("opened").ToLocalChecked(), Nan::New(sync.opened));
+	Nan::Set(v8_sync_conn_stats, Nan::New("closed").ToLocalChecked(), Nan::New(sync.closed));
+	Nan::Set(v8_sync_conn_stats, Nan::New("aborted").ToLocalChecked(), Nan::New(sync.aborted));
+	Nan::Set(v8_sync_conn_stats, Nan::New("recovered").ToLocalChecked(), Nan::New(sync.recovered));
+
+
+
+	Nan::Set(v8_node, Nan::New("syncConns").ToLocalChecked(), v8_sync_conn_stats);
+
+
 	Local<Array> v8_ns_metrics_array= Nan::New<Array>();
 
-	for (uint8_t j = 0; j < node->metrics_size; ++j)
+	for (uint8_t metrics_index = 0; metrics_index < node->metrics_size; metrics_index++)
 	{
-		as_ns_metrics* node_metrics = node->metrics[j];
 
+		as_ns_metrics* metrics = node->metrics[metrics_index];
 
-		Local<Array> connection = Nan::New<Array>();
-		Local<Array> write = Nan::New<Array>();
-		Local<Array> read = Nan::New<Array>();
-		Local<Array> batch = Nan::New<Array>();
-		Local<Array> query = Nan::New<Array>();
-		uint32_t i = 0;
-		
 		Local<Object> v8_ns_metrics = Nan::New<Object>();
 
-		if(!latency){
+		Local<String> v8_ns = Nan::New(metrics->ns).ToLocalChecked();
+
+		Local<Value> v8_bytes_in;
+		Local<Value> v8_bytes_out;
+		Local<Value> v8_error_count;
+		Local<Value> v8_timeout_count;
+		Local<Value> v8_key_busy_count;
 
 
-
-			Local<String> v8_ns = Nan::New(node_metrics->ns).ToLocalChecked();
-
-			Local<Value> v8_bytes_in;
-			Local<Value> v8_bytes_out;
-			Local<Value> v8_error_count;
-			Local<Value> v8_timeout_count;
-			Local<Value> v8_key_busy_count;
-
-			if ((uint64_t)MAX_SAFE_INTEGER < node_metrics->bytes_in) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_bytes_in = BigInt::New(isolate, node_metrics->bytes_in);
-			}
-			else{
-				v8_bytes_in = Nan::New((double)node_metrics->bytes_in);
-			}
-
-			if (UMAX_SAFE_INTEGER < node_metrics->bytes_out) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_bytes_out = BigInt::New(isolate, node_metrics->bytes_out);
-			}
-			else{
-				v8_bytes_out = Nan::New((double)node_metrics->bytes_out);
-			}
-
-			if (UMAX_SAFE_INTEGER < node_metrics->error_count) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_error_count = BigInt::New(isolate, node_metrics->error_count);
-			}
-			else{
-				v8_error_count = Nan::New((double)node_metrics->error_count);
-			}
-
-			if (UMAX_SAFE_INTEGER < node_metrics->timeout_count) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_timeout_count = BigInt::New(isolate, node_metrics->error_count);
-			}
-			else{
-				v8_timeout_count = Nan::New((double)node_metrics->timeout_count);
-			}
-
-			if (UMAX_SAFE_INTEGER < node_metrics->key_busy_count) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_key_busy_count = BigInt::New(isolate, node_metrics->error_count);
-			}
-			else{
-				v8_key_busy_count = Nan::New((double)node_metrics->key_busy_count);
-			}
-
-			as_latency* buckets = as_latency_reserve(node_metrics->latency[0]);
-
-			bucket_max = buckets->size;
-
-			for (i = 0; i < bucket_max; i++) {
-				Nan::Set(connection, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
-			}
-
-	    	as_latency_release(buckets);
-
-			buckets = as_latency_reserve(node_metrics->latency[1]);
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(write, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
-			}
-
-		    as_latency_release(buckets);
-
-			buckets = as_latency_reserve(node_metrics->latency[2]);
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(read, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
-			}
-
-		    as_latency_release(buckets);
-
-			buckets = as_latency_reserve(node_metrics->latency[3]);
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(batch, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
-			}
-
-		    as_latency_release(buckets);
-
-			buckets = as_latency_reserve(node_metrics->latency[4]);
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(query, i, Nan::New((uint32_t) as_latency_get_bucket(buckets, i)));
-			}
-
-		    as_latency_release(buckets);
-
-			Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), connection);
-			Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), write);
-			Nan::Set(v8_ns_metrics, Nan::New("readLatency").ToLocalChecked(), read);
-			Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), batch);
-			Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), query);
-
-			Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
-			Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
-			Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
-			Nan::Set(v8_ns_metrics, Nan::New("errorCount").ToLocalChecked(), v8_error_count);
-			Nan::Set(v8_ns_metrics, Nan::New("timeoutCount").ToLocalChecked(), v8_timeout_count);
-			Nan::Set(v8_ns_metrics, Nan::New("keyBusyCount").ToLocalChecked(), v8_key_busy_count);
-
-			Nan::Set(v8_ns_metrics_array, j, v8_ns_metrics);
+		if ((uint64_t)MAX_SAFE_INTEGER < metrics->bytes_in) {
+			as_v8_detail(
+				log, "Integer value outside safe range - returning BigInt");
+			v8::Isolate *isolate = v8::Isolate::GetCurrent();
+			v8_bytes_in = BigInt::New(isolate, metrics->bytes_in);
 		}
 		else{
-
-
-
-			as_ns_metrics* namespace_metrics = *ns_metrics;
-			Local<String> v8_ns = Nan::New(namespace_metrics->ns).ToLocalChecked();
-
-			Local<Value> v8_bytes_in;
-			Local<Value> v8_bytes_out;
-			Local<Value> v8_error_count;
-			Local<Value> v8_timeout_count;
-			Local<Value> v8_key_busy_count;
-
-			if (UMAX_SAFE_INTEGER < namespace_metrics->bytes_in) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_bytes_in = BigInt::New(isolate, namespace_metrics->bytes_in);
-
-			}
-			else{
-				v8_bytes_in = Nan::New((double)namespace_metrics->bytes_in);
-			}
-
-			if (UMAX_SAFE_INTEGER < namespace_metrics->bytes_out) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_bytes_out = BigInt::New(isolate, namespace_metrics->bytes_out);
-			}
-			else{
-				v8_bytes_out = Nan::New((double)namespace_metrics->bytes_out);
-			}
-
-			if (UMAX_SAFE_INTEGER < namespace_metrics->error_count) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_error_count = BigInt::New(isolate, namespace_metrics->error_count);
-			}
-			else{
-				v8_error_count = Nan::New((double)namespace_metrics->error_count);
-			}
-
-			if (UMAX_SAFE_INTEGER < namespace_metrics->timeout_count) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_timeout_count = BigInt::New(isolate, namespace_metrics->error_count);
-			}
-			else{
-				v8_timeout_count = Nan::New((double)namespace_metrics->timeout_count);
-			}
-
-			if (UMAX_SAFE_INTEGER < namespace_metrics->key_busy_count) {
-				as_v8_detail(
-					log, "Integer value outside safe range - returning BigInt");
-				v8::Isolate *isolate = v8::Isolate::GetCurrent();
-				v8_key_busy_count = BigInt::New(isolate, namespace_metrics->error_count);
-			}
-			else{
-				v8_key_busy_count = Nan::New((double)namespace_metrics->key_busy_count);
-			}
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(connection, i, Nan::New((uint32_t) latency->connection[i]));
-			}
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(write, i, Nan::New((uint32_t) latency->write[i]));
-			}
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(read, i, Nan::New((uint32_t) latency->read[i]));
-			}
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(batch, i, Nan::New((uint32_t) latency->batch[i]));
-			}
-
-			for ( i = 0; i < bucket_max; i++) {
-				Nan::Set(query, i, Nan::New((uint32_t) latency->query[i]));
-			}
-
-
-			Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), connection);
-			Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), write);
-			Nan::Set(v8_ns_metrics, Nan::New("readLatency").ToLocalChecked(), read);
-			Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), batch);
-			Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), query);
-
-			Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
-			Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
-			Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
-			Nan::Set(v8_ns_metrics, Nan::New("errorCount").ToLocalChecked(), v8_error_count);
-			Nan::Set(v8_ns_metrics, Nan::New("timeoutCount").ToLocalChecked(), v8_timeout_count);
-			Nan::Set(v8_ns_metrics, Nan::New("keyBusyCount").ToLocalChecked(), v8_key_busy_count);
-
-			Nan::Set(v8_ns_metrics_array, j, v8_ns_metrics);
+			v8_bytes_in = Nan::New((double)metrics->bytes_in);
 		}
 
+		if (UMAX_SAFE_INTEGER < metrics->bytes_out) {
+			as_v8_detail(
+				log, "Integer value outside safe range - returning BigInt");
+			v8::Isolate *isolate = v8::Isolate::GetCurrent();
+			v8_bytes_out = BigInt::New(isolate, metrics->bytes_out);
+		}
+		else{
+			v8_bytes_out = Nan::New((double)metrics->bytes_out);
+		}
 
+		if (UMAX_SAFE_INTEGER < metrics->error_count) {
+			as_v8_detail(
+				log, "Integer value outside safe range - returning BigInt");
+			v8::Isolate *isolate = v8::Isolate::GetCurrent();
+			v8_error_count = BigInt::New(isolate, metrics->error_count);
+		}
+		else{
+			v8_error_count = Nan::New((double)metrics->error_count);
+		}
+
+		if (UMAX_SAFE_INTEGER < metrics->timeout_count) {
+			as_v8_detail(
+				log, "Integer value outside safe range - returning BigInt");
+			v8::Isolate *isolate = v8::Isolate::GetCurrent();
+			v8_timeout_count = BigInt::New(isolate, metrics->error_count);
+		}
+		else{
+			v8_timeout_count = Nan::New((double)metrics->timeout_count);
+		}
+
+		if (UMAX_SAFE_INTEGER < metrics->key_busy_count) {
+			as_v8_detail(
+				log, "Integer value outside safe range - returning BigInt");
+			v8::Isolate *isolate = v8::Isolate::GetCurrent();
+			v8_key_busy_count = BigInt::New(isolate, metrics->error_count);
+		}
+		else{
+			v8_key_busy_count = Nan::New((double)metrics->key_busy_count);
+		}
+
+		Local<Array> v8_connection = Nan::New<Array>();
+		Local<Array> v8_write = Nan::New<Array>();
+		Local<Array> v8_read = Nan::New<Array>();
+		Local<Array> v8_batch = Nan::New<Array>();
+		Local<Array> v8_query = Nan::New<Array>();
+
+		as_latency* conn_buckets = as_latency_reserve(metrics->latency[0]);
+		as_latency* write_buckets = as_latency_reserve(metrics->latency[1]);
+		as_latency* read_buckets = as_latency_reserve(metrics->latency[2]);
+		as_latency* batch_buckets = as_latency_reserve(metrics->latency[3]);
+		as_latency* query_buckets = as_latency_reserve(metrics->latency[4]);
+
+		int bucket_index;
+		for (bucket_index = 0; bucket_index < conn_buckets->size; bucket_index++) {
+			Nan::Set(v8_connection, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(conn_buckets, bucket_index)));
+		}
+
+		for (bucket_index = 0; bucket_index < write_buckets->size; bucket_index++) {
+			Nan::Set(v8_write, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(write_buckets, bucket_index)));
+		}
+
+		for (bucket_index = 0; bucket_index < read_buckets->size; bucket_index++) {
+			Nan::Set(v8_read, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(read_buckets, bucket_index)));
+		}
+
+		for (bucket_index = 0; bucket_index < batch_buckets->size; bucket_index++) {
+			Nan::Set(v8_batch, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(batch_buckets, bucket_index)));
+		}
+
+		for (bucket_index = 0; bucket_index < query_buckets->size; bucket_index++) {
+			Nan::Set(v8_query, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(query_buckets, bucket_index)));
+		}
+
+	    as_latency_release(conn_buckets);
+    	as_latency_release(write_buckets);
+    	as_latency_release(read_buckets);
+    	as_latency_release(batch_buckets);
+    	as_latency_release(query_buckets);
+
+		Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), v8_connection);
+		Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), v8_write);
+		Nan::Set(v8_ns_metrics, Nan::New("readLatency").ToLocalChecked(), v8_read);
+		Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), v8_batch);
+		Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), v8_query);
+
+		Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
+		Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
+		Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
+		Nan::Set(v8_ns_metrics, Nan::New("errorCount").ToLocalChecked(), v8_error_count);
+		Nan::Set(v8_ns_metrics, Nan::New("timeoutCount").ToLocalChecked(), v8_timeout_count);
+		Nan::Set(v8_ns_metrics, Nan::New("keyBusyCount").ToLocalChecked(), v8_key_busy_count);
+
+		Nan::Set(v8_ns_metrics_array, metrics_index, v8_ns_metrics);
 	}
 	Nan::Set(v8_node, Nan::New("metrics").ToLocalChecked(), v8_ns_metrics_array);
 

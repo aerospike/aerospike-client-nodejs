@@ -1582,8 +1582,9 @@ describe('Aerospike.exp_operations', function () {
           0),
         op.read('map')
       ]
-      const result = await client.operate(key, ops, {})
-      expect(result.bins.map).to.eql({ a: 3, b: 2, c: 1, d: 3, e: 2, f: 1 })
+      const result: AerospikeRecord = await client.operate(key, ops, {})
+      const bins: AerospikeBins = result.bins
+      expect(bins.map).to.eql({ a: 3, b: 2, c: 1, d: 3, e: 2, f: 1 })
     })
 
     it('writes map values from exp.map expression to specified map', async function () {
@@ -1594,8 +1595,9 @@ describe('Aerospike.exp_operations', function () {
           0),
         op.read('map')
       ]
-      const result = await client.operate(key, ops, {})
-      expect(result.bins.map).to.eql({ a: 3, b: 2, c: 1, d: 3, e: 2, f: 1 })
+      const result: AerospikeRecord = await client.operate(key, ops, {})
+      const bins: AerospikeBins = result.bins
+      expect(bins.map).to.eql({ a: 3, b: 2, c: 1, d: 3, e: 2, f: 1 })
     })
 
     it('writes map values originating from nested map to a specified map', async function () {
@@ -1608,7 +1610,8 @@ describe('Aerospike.exp_operations', function () {
         op.read('map')
       ]
       const result: AerospikeRecord = await client.operate(key, ops, {})
-      expect((result.bins.map as { nested: Object }).nested).to.eql({ d: 3, e: 2, f: 1, g: 4 })
+      const bins: AerospikeBins = result.bins
+      expect((bins.map as { nested: Object }).nested).to.eql({ d: 3, e: 2, f: 1, g: 4 })
     })
   })
 

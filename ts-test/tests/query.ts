@@ -659,9 +659,11 @@ describe('Queries', function () {
       const query: Query = client.query(helper.namespace, testSet)
       query.where(filter.equal('i', 5))
 
-      return query.results().then(records => {
+      return query.results().then((records: AerospikeRecord[]) => {
         expect(records.length).to.eq(1)
-        expect(records[0].bins.name).to.eq('int match')
+
+        const bins: AerospikeBins = records[0].bins
+        expect(bins.name).to.eq('int match')
       })
     })
 
@@ -671,7 +673,8 @@ describe('Queries', function () {
 
       return query.results().then(records => {
         expect(records.length).to.eq(1)
-        expect(records[0].bins.name).to.eq('int match')
+        const bins: AerospikeBins = records[0].bins
+        expect(bins.name).to.eq('int match')
       })
     })
 
@@ -689,7 +692,8 @@ describe('Queries', function () {
           return query.results(policy)
             .then(records => {
               expect(records.length).to.eq(1)
-              expect(records[0].bins.li).to.eql(Buffer.from([0x93, 0x01, 0x05, 0x09]))
+              const bins: AerospikeBins = records[0].bins
+              expect(bins.li).to.eql(Buffer.from([0x93, 0x01, 0x05, 0x09]))
             })
         })
       })
@@ -809,8 +813,9 @@ describe('Queries', function () {
       await job.waitUntilDone()
 
       const key = keys[Math.floor(Math.random() * keys.length)]
-      const record = await client.get(key)
-      expect(record.bins.backgroundOps).to.equal(4)
+      const record: AerospikeRecord = await client.get(key)
+      const bins: AerospikeBins = record.bins
+      expect(bins.backgroundOps).to.equal(4)
     })
 
     it('should set TTL to the specified value #slow', async function () {

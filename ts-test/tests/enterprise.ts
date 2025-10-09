@@ -49,9 +49,10 @@ context('Enterprise server features', function () {
 
       await client.put(key, record, {}, policy)
       const result: AerospikeRecord = await client.get(key, policy)
+      const bins: AerospikeBins = result.bins
       await client.remove(key)
 
-      expect(result.bins.string).to.equal(record.string)
+      expect(bins.string).to.equal(record.string)
     })
   })
 
@@ -63,6 +64,7 @@ context('Enterprise server features', function () {
 
       await client.put(key, record)
       await client.remove(key, policy)
+      
       expect(await client.exists(key)).to.be.false
     })
   })

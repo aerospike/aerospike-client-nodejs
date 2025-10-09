@@ -32,6 +32,7 @@ const status: typeof statusModule = Aerospike.status
 
 describe('MRT functionality tests', function () {
   helper.skipUnlessVersionAndEnterprise('>= 8.0.0', this)
+  helper.skipUnlessStrongConsistency(this)
 
 
   const client: Cli = helper.client
