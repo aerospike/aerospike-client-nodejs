@@ -535,6 +535,7 @@ describe('Aerospike.exp', function () {
         const record: any = {ace: 'clive'}
 
         await client.put(key, record)
+
         const options: IndexOptions = {
           ns: helper.namespace,
           set: helper.set,
@@ -545,11 +546,13 @@ describe('Aerospike.exp', function () {
 
         await client.createExpIndex(options)
 
-
+        await new Promise(resolve => setTimeout(resolve, 5000))
         
         query.whereWithExp(Aerospike.filter.equal(null, 'clive'), exp_b64_match)
 
-        let res = await query.results()
+        const results: any = await query.results()
+
+        expect(results.length).to.eql(1)
 
         await client.indexRemove(helper.namespace, 'example_name_whereWithExp')
       })

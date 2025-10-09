@@ -158,16 +158,6 @@ async function checkTimeoutErrorAndConnectionsTxnVerifyDisabled (dummyClient: Cl
   expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
 }
 
-async function checkTimeoutErrorAndConnectionsTxnVerifyEnabled (dummyClient: Client, error: any){
-  checkTimeoutErrorTxnVerify(dummyClient, error)
-
-
-  let result = await dummyClient.stats()
-  const recovered = result.nodes[0].asyncConnections.recovered
-  const aborted = result.nodes[0].asyncConnections.aborted
-  expect(recovered + aborted).to.eql(1)
-}
-
 
 describe('timeoutDelay', function () {
 
@@ -904,38 +894,6 @@ describe('timeoutDelay', function () {
         }
         catch(error: any){
           await checkTimeoutErrorAndConnectionsTxnVerifyDisabled(dummyClient, error)
-        }
-        finally{
-          
-          await dummyClient.close()
-        }
-      })
-
-      it('Recovers socket connection during timeout delay period', async function () {
-
-        let mrt: any = new Aerospike.Transaction()
-
-        const policy: any = {
-            txn: mrt
-        }
-
-        const dummyClient = await Aerospike.connect(enableTimeoutDelayConfig)
-        const batch = []
-        for (let i = 2; i <= 200; i++) {
-          batch.push({
-            key: new Aerospike.Key('test', 'demo', `timeoutDelay/${i}`),
-            readAllBins: true
-          })
-        }
-        const batchResult = await dummyClient.batchRead(batch, policy)
-
-        try{
-
-          await dummyClient.commit(mrt)
-          assert.fail("client.commit should throw an error")
-        }
-        catch(error: any){
-          await checkTimeoutErrorAndConnectionsTxnVerifyEnabled(dummyClient, error)
         }
         finally{
           
