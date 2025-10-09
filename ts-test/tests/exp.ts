@@ -37,7 +37,6 @@ const keygen = helper.keygen
 const tempBin = 'ExpVar'
 
 describe('Aerospike.exp', function () {
-  helper.skipUnlessVersion('>= 5.0.0', this)
 
   const client: Cli = helper.client
 
@@ -369,6 +368,9 @@ describe('Aerospike.exp', function () {
     const exp_b64 = client.expressionToBase64(filterExpression)
     const exp_b64_exp_ops = client.expressionToBase64(exp.add(exp.binInt('intVal'), exp.binInt('intVal')))
 
+    const filterExpressionMatch = exp.binStr('ace')
+    const exp_b64_match = client.expressionToBase64(filterExpressionMatch)
+
     describe('postive tests', function () {
       it('works with expression operations', async function () {
 
@@ -529,10 +531,27 @@ describe('Aerospike.exp', function () {
 
         const query: Query = client.query(helper.namespace, helper.set)
 
-        
-        query.whereWithExp(Aerospike.filter.equal(null, 9), exp_b64)
+        const key: Key = new Aerospike.Key(helper.namespace, helper.set, "example")
+        const record: any = {ace: 'clive'}
 
-        await query.results()
+        await client.put(key, record)
+        const options: IndexOptions = {
+          ns: helper.namespace,
+          set: helper.set,
+          exp: exp_b64_match,
+          index: "example_name_whereWithExp",
+          datatype: Aerospike.indexDataType.STRING
+        }
+
+        await client.createExpIndex(options)
+
+
+        
+        query.whereWithExp(Aerospike.filter.equal(null, 'clive'), exp_b64_match)
+
+        let res = await query.results()
+
+        await client.indexRemove(helper.namespace, 'example_name_whereWithExp')
       })
 
       it('works with createExpIndex', async function () {
@@ -541,9 +560,10 @@ describe('Aerospike.exp', function () {
           ns: helper.namespace,
           set: helper.set,
           exp: exp_b64,
-          index: "example_name",
+          index: "example_name_create",
           datatype: Aerospike.indexDataType.NUMERIC
         }
+
 
         return client.createExpIndex(options)
       })
