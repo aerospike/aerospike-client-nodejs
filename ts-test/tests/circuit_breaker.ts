@@ -45,7 +45,6 @@ async function abort_until_circuit_breaker_flips(query: any, iterations: any) {
   for (i; i < 400; i++) {
       let stream: any = query.foreach(null, undefined, (error: any) => { error_result = error })
       stream.abort()
-      console.log("iteration: ", i)
       await new Promise(resolve => setTimeout(resolve, 40))
       if(error_result){
         break 
