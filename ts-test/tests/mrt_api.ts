@@ -47,7 +47,6 @@ describe('MRT API Tests', function () {
       expect(pool.getLength()).to.be.greaterThan(140);
       expect(pool.getCapacity()).to.eql(256)
       pool.removeAllTransactions()
-      console.log(pool)
     })
 
     it('Reaps completed transactions', async function () {

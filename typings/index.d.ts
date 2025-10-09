@@ -7790,6 +7790,12 @@ export class Config {
      */
     public rackId?: number;
     /**
+     * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
+     *
+     * @default null
+     */
+    public rackIds?: number[];
+    /**
      * Shared memory configuration.
      *
      * This allows multiple client instances running in separate
@@ -9091,7 +9097,7 @@ export class Scan {
      * {@link Scan#foreach}, which returns the results as a {@link RecordStream}
      * instead.
      *
-     * If pagination is enabled, the data emitted from the {@link RecordStream#event:error}
+     * If pagination is enabled, the data emitted from the {@link  RecordStream#on 'error'} 
      * event will automatically be assigned to {@link Scan#scanState}, allowing the next page
      * of records to be queried if {@link Scan#foreach} or {@link Scan#results} is called.
      *

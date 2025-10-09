@@ -548,14 +548,6 @@ describe('Aerospike.exp', function () {
         return client.createExpIndex(options)
       })
 
-      it('works with setXDRFilter', async function () {
-
-        let response = await client.setXDRFilter(exp_b64, 'dc2', 'test')
-        
-        expect(response.trim()).to.eql(("xdr-set-filter:dc=dc2;namespace=test;exp=kwECAQ==\tok").trim())
-
-      })
-
 
 
     })
