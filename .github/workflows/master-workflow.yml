@@ -1,9 +1,9 @@
 name: Master workflow
 
 on:
-  pull_request:
+  push:
     branches:
-      - master-stage
+      - stage
 
 jobs:
   master-get-jfrog-version:
