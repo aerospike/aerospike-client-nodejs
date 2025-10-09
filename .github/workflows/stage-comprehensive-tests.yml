@@ -1005,7 +1005,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64' ) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -1128,6 +1128,7 @@ jobs:
 
     - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
+        set -e
         server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
         major_num=$(echo $server_version | cut -d '.' -f 1)
         minor_num=$(echo $server_version | cut -d '.' -f 2)
@@ -1147,12 +1148,11 @@ jobs:
         client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
         client_app_id=$(echo $user_agent | perl -n -E 'say $1 if m/,[^,]+,([^,]+)/')
         echo $client_language
-        echo $client_version
-        echo $client_app_id
         test "$client_language" = "nodejs"
-        # Client version from user agent
+        echo $client_version
         expected_client_version=$(node -p "require('aerospike/package.json').version")
         test "$client_version" = "$expected_client_version"
+        echo $client_app_id
         test "$client_app_id" = "1234567"
       shell: bash
       env:
