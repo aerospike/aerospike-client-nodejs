@@ -305,6 +305,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
+        npm install -g pnpm
+        pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
         cd pnpm
@@ -316,6 +318,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
       run: |
+        npm install -g pnpm
+        pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
         cd pnpm
@@ -440,6 +444,9 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
+        curl -fsSL https://bun.sh/install | bash;
+        export PATH="$HOME/.bun/bin:$PATH";
+        bun --version;
         mkdir bun;
         cp ./scripts/basic_test.js bun/basic_test.js;
         cd bun;
@@ -451,6 +458,9 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
       run: |
+        curl -fsSL https://bun.sh/install | bash;
+        export PATH="$HOME/.bun/bin:$PATH";
+        bun --version;
         mkdir bun;
         cp ./scripts/basic_test.js bun/basic_test.js;
         cd bun;
