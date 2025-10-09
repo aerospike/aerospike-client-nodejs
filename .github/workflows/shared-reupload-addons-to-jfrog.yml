@@ -65,6 +65,7 @@ jobs:
       run: 
         jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         npm install --package-lock-only --ignore-scripts;
+        npm ci --ignore-scripts;
       env:
         NEW_VERSION: ${{ inputs.new_version }} 
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
