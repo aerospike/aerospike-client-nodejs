@@ -305,6 +305,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
+        cp ../../../package-lock.json package-lock.json;
+        npm ci --ignore-scripts;
         npm install -g pnpm
         pnpm --version
         mkdir pnpm
@@ -318,6 +320,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
       run: |
+        cp ../../../package-lock.json package-lock.json;
+        npm ci --ignore-scripts;
         npm install -g pnpm
         pnpm --version
         mkdir pnpm
@@ -444,6 +448,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
+        cp ../../../package-lock.json package-lock.json;
+        npm ci --ignore-scripts;
         curl -fsSL https://bun.sh/install | bash;
         export PATH="$HOME/.bun/bin:$PATH";
         bun --version;
@@ -458,6 +464,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
       run: |
+        cp ../../../package-lock.json package-lock.json;
+        npm ci --ignore-scripts;
         curl -fsSL https://bun.sh/install | bash;
         export PATH="$HOME/.bun/bin:$PATH";
         bun --version;
