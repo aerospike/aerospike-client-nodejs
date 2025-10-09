@@ -63,7 +63,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'macosx_x86_64') }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -94,15 +94,11 @@ jobs:
       working-directory: aerospike-client-c/vs
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.run_tests && (inputs.platform-tag != 'macosx_arm64' && inputs.platform-tag != 'macosx_x86_64') }}
-      uses: ./.github/actions/setup-docker-on-macos
-
-    - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      if: ${{ inputs.platform-tag -= 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.run_tests && (inputs.platform-tag != 'macosx_arm64' && inputs.platform-tag != 'macosx_x86_64') }}
+      if: ${{ inputs.platform-tag -= 'macosx_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
