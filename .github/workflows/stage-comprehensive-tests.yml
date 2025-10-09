@@ -1005,7 +1005,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64' ) }}
+    if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -1147,12 +1147,16 @@ jobs:
         client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
         client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
         client_app_id=$(echo $user_agent | perl -n -E 'say $1 if m/,[^,]+,([^,]+)/')
+        client_version="${client_version//$'\n'/}"
         echo $client_language
+        echo "nodejs"
         test "$client_language" = "nodejs"
         echo $client_version
-        expected_client_version=$(node -p "require('aerospike/package.json').version")
+        echo $expected_client_version
+        expected_client_version=$(node -p "releaseVersion=$(node -p "require('../../package.json').version.split('-')[0]")")
         test "$client_version" = "$expected_client_version"
         echo $client_app_id
+        echo "1234567"
         test "$client_app_id" = "1234567"
       shell: bash
       env:
