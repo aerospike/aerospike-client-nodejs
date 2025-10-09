@@ -8,6 +8,7 @@ permissions:
 
 on:
 
+
   workflow_call:
     inputs:
       nodejs-tags:
@@ -578,7 +579,7 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'macosx_x86_64' && inputs['platform-tag'] != 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'macosx_x86_64' && inputs['platform-tag'] != 'win_amd64' && inputs['platform-tag']  != 'macosx_arm64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -791,7 +792,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64' ) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -898,7 +899,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'macosx_x86_64' && inputs['platform-tag'] != 'win_amd64' && inputs['platform-tag'] != 'macosx_arm64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
