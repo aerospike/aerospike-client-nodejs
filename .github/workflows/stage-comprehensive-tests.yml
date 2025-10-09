@@ -828,7 +828,6 @@ jobs:
       run: |
         sudo tc qdisc add dev lo root netem delay 10ms
 
-
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
         container-name: aerospike
@@ -882,7 +881,7 @@ jobs:
         cd ..;
         npx tsc;
         npm run test --testfile=timeout_delay.js -- --testTimeoutDelay true --h localhost --port 3000;
-        sudo tc qdisc del dev lo root
+        sudo tc qdisc del dev lo root netem
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -1103,7 +1102,7 @@ jobs:
         const main = async () => {
           let client;
           try {
-            client = await Aerospike.connect({ hosts: '127.0.0.1:3000' });
+            client = await Aerospike.connect({ hosts: '127.0.0.1:3000', appId: '1234567' });
             while (true) {
               await new Promise(r => setTimeout(r, 1000));
             }
@@ -1146,12 +1145,15 @@ jobs:
         # User agent format: <format-version>,<client language>-<version>,...
         client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
         client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
+        client_app_id=$(echo $user_agent | perl -n -E 'say $1 if m/,[^,]+,([^,]+)/')
         echo $client_language
         echo $client_version
-        test "$client_language" = "node"
+        echo $client_app_id
+        test "$client_language" = "nodejs"
         # Client version from user agent
         expected_client_version=$(node -p "require('aerospike/package.json').version")
         test "$client_version" = "$expected_client_version"
+        test "$client_app_id" = "1234567"
       shell: bash
       env:
         CONTAINER_NAME: aerospike

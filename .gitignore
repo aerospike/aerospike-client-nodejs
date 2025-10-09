@@ -19,4 +19,4 @@ ts-test/node_modules/
 ts-test/metrics_sub_dir/*/*
 ts-test/features.conf
 scripts/build-c-client.sh-cclient-output.log
-tsconfig.tsbuildinfos
+tsconfig.tsbuildinfo

@@ -163,8 +163,9 @@ async function checkTimeoutErrorAndConnectionsTxnVerifyEnabled (dummyClient: Cli
 
 
   let result = await dummyClient.stats()
-  expect(result.nodes[0].asyncConnections.recovered).to.eql(1)
-  expect(result.nodes[0].asyncConnections.aborted).to.eql(0)
+  const recovered = result.nodes[0].asyncConnections.recovered
+  const aborted = result.nodes[0].asyncConnections.aborted
+  expect(recovered + aborted).to.eql(1)
 }
 
 

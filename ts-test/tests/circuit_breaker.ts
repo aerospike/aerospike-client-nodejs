@@ -111,7 +111,7 @@ describe('Circuit breaker functionality', function () {
         }
         finally{
           if(dummyClient){
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise(resolve => setTimeout(resolve, 3000))
             await dummyClient.close()
           }
         }
@@ -147,7 +147,7 @@ describe('Circuit breaker functionality', function () {
         }
         finally{
           if(dummyClient){
-            await new Promise(resolve => setTimeout(resolve, 500))
+            await new Promise(resolve => setTimeout(resolve, 3000))
             await dummyClient.close()
           }
         }
@@ -178,7 +178,7 @@ describe('Circuit breaker functionality', function () {
       }
       finally{
         if(dummyClient){
-          await new Promise(resolve => setTimeout(resolve, 500))
+          await new Promise(resolve => setTimeout(resolve, 3000))
           await dummyClient.close()
 
         }
@@ -206,7 +206,7 @@ describe('Circuit breaker functionality', function () {
       }
       finally{
         if(dummyClient){
-          await new Promise(resolve => setTimeout(resolve, 500))
+          await new Promise(resolve => setTimeout(resolve, 3000))
           await dummyClient.close()
         }
       }
@@ -227,7 +227,7 @@ describe('Circuit breaker functionality', function () {
       }
       finally{
         if(dummyClient){
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 3000))
         await dummyClient.close()
 
         }
@@ -267,7 +267,7 @@ describe('Circuit breaker functionality', function () {
       }
       finally{
         if(dummyClient){
-          await new Promise(resolve => setTimeout(resolve, 500))
+          await new Promise(resolve => setTimeout(resolve, 3000))
           await dummyClient.close()
         }
       }
