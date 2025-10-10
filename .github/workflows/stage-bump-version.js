@@ -1,20 +1,24 @@
 const semver = require('semver')
 
-const currentVersion = process.argv[2]
+const rawVersion = process.argv[2]
 
-const version = semver.parse(currentVersion)
+const rawDevVersion = process.argv[3]
 
-if (!version) {
+const version = semver.parse(rawVersion)
+
+const devVersion = semver.parse(rawDevVersion)
+
+
+if (!version || !devVersion) {
   console.error('Invalid version string')
   process.exit(1)
 }
 
-if (version.prerelease[0] === 'rc'){
-  version.inc('prerelease', 'rc')
-  console.log(version.format())
+if (semver.gt(devVersion, version)) {
+  devVersion.prerelease = ['rc', 1];
+  console.log(devVersion.format())
 }
-else {
-  version.prerelease = ['rc', 1];
-  console.log(version.format())
-
+else{
+  version.inc('prerelease', 'rc')
+  console.log(version.format()) 
 }
