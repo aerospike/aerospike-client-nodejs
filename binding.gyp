@@ -7,7 +7,9 @@
       },'OS=="linux"', {
         'build_arch%': 'aarch64'
       }]
-    ]
+    ],
+    "addon_version": "6.4.0"  # default value, real value supplied at build time
+
   },
   'targets': [
     {
@@ -78,6 +80,7 @@
         'src/main/map_operations.cc',
         'src/main/bit_operations.cc',
         'src/main/hll_operations.cc',
+        'src/main/metrics.cc',
         'src/main/policy.cc',
         'src/main/query.cc',
         'src/main/scan.cc',
@@ -186,7 +189,8 @@
             '-lyaml'
           ],
           'defines': [
-            'AS_USE_LIBUV'
+            'AS_USE_LIBUV',
+            "ADDON_VERSION=\"<(addon_version)\"",
           ],
           'include_dirs': [
             'aerospike-client-c/target/Linux-<(build_arch)/include',
@@ -203,7 +207,8 @@
             '-lyaml'
           ],
           'defines': [
-            'AS_USE_LIBUV'
+            'AS_USE_LIBUV',
+            "ADDON_VERSION=\"<(addon_version)\"",
           ],
           'include_dirs': [
             'aerospike-client-c/target/Darwin-<(build_arch)/include',
@@ -225,6 +230,7 @@
             'AS_USE_LIBUV',
             'AS_SHARED_IMPORT',
             '_TIMESPEC_DEFINED',
+            "ADDON_VERSION=\"<(addon_version)\"",
           ],
           'include_dirs': [
             'aerospike-client-c-output/include',

@@ -59,8 +59,9 @@ describe('Aerospike.exp_operations', function () {
           op.read('blob')
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
+        const bins: AerospikeBins = result.bins
         // console.log(result)
-        expect(result.bins.ExpVar).to.eql(4)
+        expect(bins.ExpVar).to.eql(4)
       })
     })
   })

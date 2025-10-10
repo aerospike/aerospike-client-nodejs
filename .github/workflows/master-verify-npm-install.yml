@@ -8,7 +8,9 @@ on:
         type: string
         required: false
         default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
-
+      new_version:
+        type: string
+        required: true
 jobs:
   run-npm-install-and-require-test:
     strategy:
@@ -26,7 +28,11 @@ jobs:
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
-      - name: verify runs and is aligned
+      - name: verify runs and is aligned with expect functionality
         run: |
-          npm install aerospike@6.3.0 --omit-dev;
-          node -e "const Aerospike = require('aerospike'); console.log(Aerospike.policy.replica);"
+          npm install disableuplo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
+          node ./node_modules/disableuplo/scripts/verify-aerospike-npm-scripts.js disableuplo;
+          npx --package disableuplo npm run install --prefix ./node_modules/disableuplo;
+          node -e "const Aerospike = require('disableuplo'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
+        env:
+          NEW_VERSION: ${{ inputs.new_version }}

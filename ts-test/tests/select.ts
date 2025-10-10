@@ -20,7 +20,7 @@
 
 import Aerospike, { status as statusModule, Client as Cli, Key, RecordMetadata, AerospikeBins, AerospikeError, AerospikeRecord, ReadPolicy} from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';
 
 const keygen: any = helper.keygen
@@ -43,16 +43,24 @@ describe('client.select()', function () {
 
       client.select(key, selected, function (err?: AerospikeError, record?: AerospikeRecord) {
         if (err) throw err
-        expect(record?.bins).to.have.all.keys(selected)
+        if(record){
+          const bins: AerospikeBins = record.bins
 
-        for (const bin in selected) {
-          expect(record?.bins[bin]).to.equal(bins[bin])
+          expect(bins).to.have.all.keys(selected)
+
+          for (const bin in selected) {
+            expect(bins[bin]).to.equal(bins[bin])
+          }
+
+          client.remove(key, function (err?: AerospikeError) {
+            if (err) throw err
+            done()
+          })
+        }
+        else{
+          assert.fail('no record was returned')
         }
 
-        client.remove(key, function (err?: AerospikeError) {
-          if (err) throw err
-          done()
-        })
       })
     })
   })

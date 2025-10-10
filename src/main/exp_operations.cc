@@ -79,6 +79,11 @@ int add_exp_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 			return AS_NODE_PARAM_ERR;
 		}
 	}
+	else if (exp_val->IsString()) {
+		Nan::Utf8String exp_b64(exp_val.As<String>());
+
+		exp = as_exp_from_base64(*exp_b64);
+	}
 
 	as_v8_debug(
 		log, "Adding exp operation %s (opcode %i) on bin %s to operations list",

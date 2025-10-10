@@ -20,19 +20,6 @@ on:
         type: string
         required: false
         default: ${{ vars.JFROG_REPO_NAME }}
-      #oidc-provider:
-      #  type: string
-      #  description: ""
-      #  required: false
-      #  default: gh-aerospike-clients
-      #oidc-audience:
-      #  type: string
-      #  description: ""
-      #  required: false
-      #  default: aerospike/clients
-    #secrets:
-    #  JFROG_PLATFORM_URL:
-    #    required: true
 
 jobs:
   upload-to-jfrog:
@@ -43,10 +30,10 @@ jobs:
     steps:
 
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -67,15 +54,6 @@ jobs:
         OLD_VERSION: ${{ inputs.old_version }}
         PACKAGE_MANAGER: npm
 
-    - name: list Artifacts
-      run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.OLD_VERSION }}
-      env:
-        OLD_VERSION: ${{ inputs.old_version }}
-
-
     - name: Move artifacts
       run: |
         tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz
@@ -83,35 +61,18 @@ jobs:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - name: check binding
-      run:
-        ls ${{ env.OLD_VERSION }}/lib/binding;
-        cp -r ${{ env.OLD_VERSION }}/lib/binding temp;
-      env:
-        OLD_VERSION: ${{ inputs.old_version }}
-      working-directory: downloaded-artifacts/aerospike
-
     - name: list version info
       run: 
         jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm install;
+        npm install --package-lock-only --ignore-scripts;
+        npm ci --ignore-scripts;
       env:
         NEW_VERSION: ${{ inputs.new_version }} 
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - name: check binding
-      run:
-        cp -r temp/* ${{ env.OLD_VERSION }}/lib/binding;
-        ls ${{ env.OLD_VERSION }}/lib/binding;
-      env:
-        OLD_VERSION: ${{ inputs.old_version }}
-      working-directory: downloaded-artifacts/aerospike
-
     - name: list version info
       run: 
         npm pack;
-        # $(node -p 'require("./package.json").version') use this to get aerospike-6.2.0.tgz version number
-        # write script to change version number
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo

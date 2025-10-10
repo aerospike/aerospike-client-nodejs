@@ -45,7 +45,7 @@ export type PartialAerospikeBinValue = null | undefined | boolean | string | num
  * Represents an object containing one or more `AerospikeBinValues` with associated string keys.
  */
 export type AerospikeBins = {
-    [key: string]: AerospikeBinValue
+    [key: string]: any
 };
 
 export const _transactionPool: any;
@@ -295,7 +295,7 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
-    public bins: B;
+    public bins: AerospikeRecord<B>;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
@@ -1239,7 +1239,7 @@ export class Query {
      */
     public select(...bins: string[]): void;
     /**
-     * Applies a SI to the query.
+     * Applies an index to the query.
      *
      * Use a SI to limit the results returned by the query.
      * This method takes SI created using the {@link
@@ -1269,7 +1269,7 @@ export class Query {
      */
     public where(predicate: filter.SindexFilterPredicate): void;
     /**
-     * Applies a SI on expression to the query.
+     * Applies an expression index to the query.
      *
      * Use a SI to limit the results returned by the query.
      * This method takes SI created using the {@link
@@ -1298,9 +1298,9 @@ export class Query {
      *
      * @see {@link filter} to create SI filters.
      */
-    public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp): void;
+    public whereWithExp(predicate: filter.SindexFilterPredicate, expression: AerospikeExp | string): void;
     /**
-     * Applies a SI on expression to the query.
+     * Applies a SI to the query using the index name.
      *
      * Use a SI to limit the results returned by the query.
      * This method takes SI created using the {@link
@@ -1925,6 +1925,22 @@ export namespace policy {
          */
         public compress?: boolean;
         /**
+         * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
+         * be applied to creating a connection plus optional user authentication. Otherwise,
+         * socket_timeout or total_timeout will be used depending on their values.
+         *
+         * If connect, socket and total timeouts are zero, the actual socket connect timeout
+         * is hard-coded to 2000ms.
+         *
+         * connect_timeout is useful when new connection creation is expensive (ie TLS connections)
+         * and it's acceptable to allow extra time to create a new connection compared to using an
+         * existing connection from the pool.
+         *
+         * @default: 0
+         * @since v6.4.0
+         */
+        public connectTimeout?: number;
+        /**
          * Optional expression filter. If filter exp exists and evaluates to false, the
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
@@ -1942,7 +1958,7 @@ export namespace policy {
          * * {@link Client.remove}
          * * {@link Client.select}
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Maximum number of retries before aborting the current command.
          * The initial attempt is not counted as a retry.
@@ -1977,6 +1993,25 @@ export namespace policy {
          * @default 0 (no socket idle time limit).
          */
         public socketTimeout?: number;
+        /**
+         * Number of milliseconds to wait after a socket read times out before closing the socket for
+         * good.  If set to zero, this feature will be disabled.
+         * 
+         * If, upon performing a database operation, the host finds the socket it was using timing out
+         * while reading, the client will receive a timeout error.  However, we don't always want to
+         * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+         * to recover the socket, thus saving the socket for future re-use.
+         * 
+         * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+         * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+         * away, effectively disabling this feature.
+         * 
+         * Please note that this feature only applies to sockets being read; write timeouts are not
+         * affected by this setting. Also, this feature does not apply to pipeline connections.
+         *
+         * @default 3000
+         */
+        public timeoutDelay?: number;
         /**
          * Total command timeout in milliseconds.
          *
@@ -2036,7 +2071,7 @@ export namespace policy {
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Specifies the behavior for the key.
          *
@@ -2189,7 +2224,7 @@ export namespace policy {
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Read policy for AP (availability) namespaces.
          *
@@ -2248,7 +2283,7 @@ export namespace policy {
          * in some cases.
          *
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Specifies the behavior for the generation value.
          *
@@ -2307,7 +2342,7 @@ export namespace policy {
          * command is ignored. This can be used to eliminate a client/server roundtrip
          * in some cases.
          */
-        public filterExpression?: AerospikeExp;
+        public filterExpression?: AerospikeExp | string;
         /**
          * Specifies the behavior for the generation value.
          *
@@ -2501,6 +2536,25 @@ export namespace policy {
          */
         public timeout?: number
         /**
+         * Number of milliseconds to wait after a socket read times out before closing the socket for
+         * good.  If set to zero, this feature will be disabled.
+         * 
+         * If, upon performing a database operation, the host finds the socket it was using timing out
+         * while reading, the client will receive a timeout error.  However, we don't always want to
+         * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+         * to recover the socket, thus saving the socket for future re-use.
+         * 
+         * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+         * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+         * away, effectively disabling this feature.
+         * 
+         * Please note that this feature only applies to sockets being read; write timeouts are not
+         * affected by this setting. Also, this feature does not apply to pipeline connections.
+         *
+         * @default 3000
+         */
+        public timeoutDelay?: number;
+        /**
          * Initializes a new InfoPolicy from the provided policy values.
          *
          * @param props - InfoPolicy values
@@ -2613,7 +2667,7 @@ export namespace policy {
         public reportSizeLimit?: number;
         /**
          * Number of cluster tend iterations between metrics notification events. One tend iteration
-         * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
+         * is defined as {@link Config.tenderInterval} (default 1 second) plus the time to tend all nodes.
          */
         public interval?: number;
         /**
@@ -3281,8 +3335,8 @@ export namespace policy {
          * For reads, try node on preferred racks first. If there are no nodes on preferred racks,
          * use SEQUENCE instead. Also use SEQUENCE for writes.
          *
-         * config.rackAware, config.rackId or as_config.rackIds, and server rack 
-         * configuration must also be set to enable this functionality.
+         * {@link Config.rackAware}, {@link Config.rackId} or {@link Config.rackIds}, and server rack.
+         * 
          */
         PREFER_RACK,
         /**
@@ -3515,7 +3569,7 @@ export class Client extends EventEmitter {
      *   return binValue
      * end
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult[]>;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy | null, batchApplyPolicy?: policy.BatchApplyPolicy | null): Promise<BatchResult<B>[]>;
 
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
@@ -3524,7 +3578,7 @@ export class Client extends EventEmitter {
      * the command completes. Includes the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3533,7 +3587,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param udf - Server UDF module/function and argList to apply.
@@ -3543,7 +3597,7 @@ export class Client extends EventEmitter {
      * the command completes, with the results of the batched command.
      *
      */
-    public batchApply(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchApply<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], udf: UDF, batchPolicy?: policy.BatchPolicy, batchApplyPolicy?: policy.BatchApplyPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      * Checks the existence of a batch of records from the database cluster.
@@ -3606,20 +3660,20 @@ export class Client extends EventEmitter {
      *
      *
      */
-    public batchExists(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchExists(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - An array of Keys used to locate the records in the cluster.
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchExists(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult[]>): void;
+    public batchExists<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null , callback: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      *
@@ -3700,20 +3754,20 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult[]>;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy): Promise<BatchResult<B>[]>;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param records - List of {@link BatchReadRecord} instances which each contain keys and bins to retrieve.
      * @param policy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRead(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRead<B extends AerospikeBins = AerospikeBins>(records: BatchReadRecord[], policy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Reads a batch of records from the database cluster.
@@ -3775,14 +3829,14 @@ export class Client extends EventEmitter {
      * })();
      *
      */
-    public batchGet(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * @param keys - An array of {@link Key | Keys}, used to locate the records in the cluster.
@@ -3790,7 +3844,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchGet(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult[]>): void;
+    public batchGet<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], policy: policy.BatchPolicy | null, callback: TypedCallback<BatchResult<B>[]>): void;
     /**
      * Remove multiple records.
      *
@@ -3856,20 +3910,20 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null): Promise<BatchResult[]>;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null): Promise<BatchResult<B>[]>;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param batchPolicy - The Batch Policy to use for this command.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      * @param keys - {@link Key} An array of keys, used to locate the records in the cluster.
      * @param batchPolicy - The Batch Policy to use for this command.
@@ -3877,7 +3931,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchRemove(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult[]>): void;
+    public batchRemove<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], batchPolicy?: policy.BatchPolicy | null, batchRemovePolicy?: policy.BatchRemovePolicy | null, callback?: TypedCallback<BatchResult<B>[]>): void;
 
     /**
      *
@@ -3945,14 +3999,14 @@ export class Client extends EventEmitter {
      *     await client.close();
      * })();
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchSelectRecord[]>;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy?: policy.BatchPolicy): Promise<BatchSelectRecord<B>[]>;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], callback: TypedCallback<BatchSelectRecord<B>[]>): void;
     /**
      * @param keys - An array of keys, used to locate the records in the cluster.
      * @param bins - An array of bin names for the bins to be returned for the given keys.
@@ -3960,7 +4014,7 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when
      * the command completes, with the results of the batched command.
      */
-    public batchSelect(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord[]>): void;
+    public batchSelect<B extends AerospikeBins = AerospikeBins>(keys: KeyOptions[], bins: string[], policy: policy.BatchPolicy, callback: TypedCallback<BatchSelectRecord<B>[]>): void;
     /**
     * Read/Write multiple records for specified batch keys in one batch call.
     *
@@ -4077,18 +4131,18 @@ export class Client extends EventEmitter {
     *     await client.close();
     * })();
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult[]>;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy | null): Promise<BatchResult<B>[]>;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
     * @param records - List of {@link BatchWriteRecord} instances which each contain keys and bins to retrieve.
     * @param policy - The Batch Policy to use for this command.
     * @param callback - The function to call when the command completes, Includes the results of the batched command.
     */
-    public batchWrite(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult[]>): void;
+    public batchWrite<B extends AerospikeBins = AerospikeBins>(records: BatchWriteRecord[], policy?: policy.BatchPolicy, callback?: TypedCallback<BatchResult<B>[]>): void;
     /**
      *
      * Closes the client connection to the cluster.
@@ -4243,7 +4297,7 @@ export class Client extends EventEmitter {
      */
     public contextToBase64(context: cdt.Context): string;
     /**
-     * Creates a blob secondary index.
+     * Creates an index on blob data.
      *
      * This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
@@ -4293,7 +4347,7 @@ export class Client extends EventEmitter {
      */
     public createBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a blob secondary index on an expression.
+     * Creates an expression index on blob data.
      *
      * This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.BLOB</code>.
@@ -4345,7 +4399,7 @@ export class Client extends EventEmitter {
     public createExpBlobIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
      *
-     * Creates a secondary index (SI) on an expression.
+     * Creates an expression index.
      *
      * @param options - Options for creating the index.
      * @param policy - The Info Policy to use for this command.
@@ -4415,7 +4469,7 @@ export class Client extends EventEmitter {
      */
     public createExpIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type Integer on an expression.
+     * Creates an expression index on integer data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
@@ -4471,7 +4525,7 @@ export class Client extends EventEmitter {
      */
     public createExpIntegerIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type String on an expression.
+     * Creates an expression index on string data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.STRING</code>.
@@ -4523,7 +4577,7 @@ export class Client extends EventEmitter {
      */
     public createExpStringIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a geospatial secondary secondary index on an expression.
+     * Creates an expression index on geospatial data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.GEO2DSPHERE</code>.
@@ -4575,7 +4629,7 @@ export class Client extends EventEmitter {
     public createExpGeo2DSphereIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
      *
-     * Creates a secondary index (SI).
+     * Creates a index (Secondary index).
      *
      * @remarks
      *
@@ -4584,8 +4638,7 @@ export class Client extends EventEmitter {
      * verify that the index has been created and populated with all the data use
      * the {@link IndexJob} instance returned by the callback.
      *
-     * Aerospike currently supports indexing of strings, integers and geospatial
-     * information in GeoJSON format.
+     * See {@link indexDataType} for supported index data types.
      *
      * ##### String Indexes
      *
@@ -4680,7 +4733,7 @@ export class Client extends EventEmitter {
      */
     public createIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type Integer.
+     * Creates an index on integer data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
@@ -4735,7 +4788,7 @@ export class Client extends EventEmitter {
      */
     public createIntegerIndex(options: IndexOptions, policy: policy.InfoPolicy | null, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a SI of type String.
+     * Creates an index on string data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.STRING</code>.
@@ -4786,7 +4839,7 @@ export class Client extends EventEmitter {
      */
     public createStringIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
     /**
-     * Creates a geospatial secondary secondary index.
+     * Creates an index on geospatial data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
      * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.GEO2DSPHERE</code>.
@@ -5292,6 +5345,23 @@ export class Client extends EventEmitter {
      * If the metadata contains data, the record exists. If the metadata contains null values, then the record does not exist.
      */
     public existsWithMetadata(key: KeyOptions, policy: policy.ReadPolicy, callback: TypedCallback<AerospikeRecord>): void;
+    /**
+     * Returns a serialized expression
+     *
+     * @param expression - {@link AerospikeExp}
+     *
+     * @return serialized expression - base64 representation of the expression
+     *
+     * @since v6.4.0
+     *
+     * @example
+     * 
+     * const expression = Aerospike.exp.eq(exp.binInt('i'), exp.int(37))
+     * 
+     * const base64_expression = client.expressionToBase64(expression)
+     *
+     */
+    public expressionToBase64(expression: AerospikeExp): string;
     /**
      * Using the key provided, reads a record from the database cluster.
      *
@@ -6132,7 +6202,7 @@ export class Client extends EventEmitter {
      * @returns A <code>Promise</code> that resolves to void.
      * 
      */
-    public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, policy?: InfoPolicy): Promise<string>;
+    public setXDRFilter(expression: AerospikeExp | string | null, dataCenter: string, namespace: string, policy?: InfoPolicy): Promise<string>;
 
     /**
      * Set XDR filter for given datacenter name and namespace. The expression filter indicates
@@ -6146,7 +6216,7 @@ export class Client extends EventEmitter {
      * function is provided, the method returns a <code>Promise<code> instead.
      * 
      */
-    public setXDRFilter(expression: AerospikeExp | null, dataCenter: string, namespace: string, callback: TypedCallback<string>): void;
+    public setXDRFilter(expression: AerospikeExp | string | null, dataCenter: string, namespace: string, callback: TypedCallback<string>): void;
 
     /**
      * Set XDR filter for given datacenter name and namespace. The expression filter indicates
@@ -6161,7 +6231,7 @@ export class Client extends EventEmitter {
      * function is provided, the method returns a <code>Promise<code> instead.
      *
      */
-    public setXDRFilter(expression: AerospikeExp, dataCenter: string, namespace: string, policy: InfoPolicy, callback: TypedCallback<string>): void;
+    public setXDRFilter(expression: AerospikeExp | string, dataCenter: string, namespace: string, policy: InfoPolicy, callback: TypedCallback<string>): void;
 
     /**
      * Removes records in specified namespace/set efficiently.
@@ -6451,7 +6521,7 @@ export class Client extends EventEmitter {
      */
     public changePassword(user: string, password: string, policy: policy.AdminPolicy | null, callback?: TypedCallback<void>): void;
     /**
-     * Create user with password and roles. Clear-text password will be hashed using bcrypt before sending to server.
+     * Create user with roles. PKI users are authenticated via TLS and a certificate instead of a password.
      *
      * @param user - User name for the new user.
      * @param password - User password in clear-text format.
@@ -6880,9 +6950,6 @@ export class Client extends EventEmitter {
      *
      * const Aerospike = require('aerospike')
      *
-     * function wait (ms) {
-     *     return new Promise(resolve => setTimeout(resolve, ms))
-     * }
      *
      * ;(async function () {
      *   let client
@@ -7439,6 +7506,8 @@ export class Config {
     public authMode?: auth;
     /**
     * Dynamic configuration provider. Determines how to retrieve cluster policies.
+    *
+    * An alternate way to enable dynamic config is to set environment variable AEROSPIKE_CLIENT_CONFIG_URL to the path of the config file before running the application.
     */
     public configProvider?: ConfigProvider;
     /**
@@ -7463,8 +7532,10 @@ export class Config {
     public clusterName?: string;
     /**
      *
-     * The number of cluster tend iterations that defines the window for {@link maxErrorRate} to be surpassed. One tend iteration is defined
-     * as {@link tenderInterval} plus the time to tend all nodes. At the end of the window, the error count is reset to zero and backoff state is removed on all nodes.
+     * The number of cluster tend iterations that defines the window for {@link maxErrorRate}.
+     * One tend iteration is defined as {@link tenderInterval} plus the time to tend all nodes.
+     * At the end of the window, the error count is reset to zero and backoff state is removed
+     * on all nodes.
      *
      * @type {number}
      *
@@ -7560,15 +7631,12 @@ export class Config {
     public maxConnsPerNode?: number;
     /**
      * Maximum number of errors allowed per node per error_rate_window before backoff algorithm returns
-     * `AEROSPIKE_MAX_ERROR_RATE` for database commands to that node. If max_error_rate is zero, there is no error limit.
+     * {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} for database commands to that node.
+     *
      * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
      * server device overload and server timeouts.
      *
-     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
-     *
-     * If the backoff algorithm has been activated, commands will fail with {@link
-     * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
-     * error count has been reset.
+     * The application should backoff or reduce the command load until {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} stops being returned.
      *
      * @default 100
      */
@@ -7721,6 +7789,12 @@ export class Config {
      * @since 3.8.0
      */
     public rackId?: number;
+    /**
+     * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
+     *
+     * @default null
+     */
+    public rackIds?: number[];
     /**
      * Shared memory configuration.
      *
@@ -9014,6 +9088,26 @@ export class Scan {
     public operate(operations: operations.Operation[], policy: policy.ScanPolicy, scanID: number, callback: TypedCallback<Job>): void;
     /**
      *
+     * Executes the Scan and collects the results into an array. On paginated queries,
+     * preparing the next page is also handled automatically.
+     *
+     * @remarks This method returns a Promise that contains the scan results
+     * as an array of records, when fulfilled. It should only be used if the scan
+     * is expected to return only few records; otherwise it is recommended to use
+     * {@link Scan#foreach}, which returns the results as a {@link RecordStream}
+     * instead.
+     *
+     * If pagination is enabled, the data emitted from the {@link  RecordStream#on 'error'} 
+     * event will automatically be assigned to {@link Scan#scanState}, allowing the next page
+     * of records to be queried if {@link Scan#foreach} or {@link Scan#results} is called.
+     *
+     * @param {ScanPolicy} [policy] - The Scan Policy to use for this operation.
+     *
+     * @returns {Promise<RecordObject[]>}
+     */
+    public results<B extends AerospikeBins = AerospikeBins>( policy?: policy.ScanPolicy): Promise<AerospikeRecord<B>[]>;
+    /**
+     *
      * Performs a read-only scan on each node in the cluster. As the scan
      * iterates through each partition, it returns the current version of each
      * record to the client.
@@ -9359,6 +9453,22 @@ export interface BasePolicyOptions {
      */
     compress?: boolean;
     /**
+     * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
+     * be applied to creating a connection plus optional user authentication. Otherwise,
+     * socket_timeout or total_timeout will be used depending on their values.
+     *
+     * If connect, socket and total timeouts are zero, the actual socket connect timeout
+     * is hard-coded to 2000ms.
+     *
+     * connect_timeout is useful when new connection creation is expensive (ie TLS connections)
+     * and it's acceptable to allow extra time to create a new connection compared to using an
+     * existing connection from the pool.
+     *
+     * @default: 0
+     * @since v6.4.0
+     */
+    connectTimeout?: number;
+    /**
      * Optional expression filter. If filter exp exists and evaluates to false, the
      * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
@@ -9376,7 +9486,7 @@ export interface BasePolicyOptions {
      * * {@link Client.remove}
      * * {@link Client.select}
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Maximum number of retries before aborting the current command.
      * The initial attempt is not counted as a retry.
@@ -9411,6 +9521,25 @@ export interface BasePolicyOptions {
      * @default 0 (no socket idle time limit).
      */
     socketTimeout?: number;
+    /**
+     * Number of milliseconds to wait after a socket read times out before closing the socket for
+     * good.  If set to zero, this feature will be disabled.
+     * 
+     * If, upon performing a database operation, the host finds the socket it was using timing out
+     * while reading, the client will receive a timeout error.  However, we don't always want to
+     * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+     * to recover the socket, thus saving the socket for future re-use.
+     * 
+     * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+     * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+     * away, effectively disabling this feature.
+     * 
+     * Please note that this feature only applies to sockets being read; write timeouts are not
+     * affected by this setting. Also, this feature does not apply to pipeline connections.
+     *
+     * @default 3000
+     */
+    timeoutDelay?: number;
     /**
      * Total command timeout in milliseconds.
      *
@@ -9461,7 +9590,7 @@ export interface BatchApplyPolicyOptions {
      * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Specifies the behavior for the key.
      *
@@ -9603,7 +9732,7 @@ export interface BatchReadPolicyOptions {
      * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Read policy for AP (availability) namespaces.
      *
@@ -9689,7 +9818,7 @@ export interface BatchRemovePolicyOptions {
      * in some cases.
      *
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Specifies the behavior for the generation value.
      *
@@ -9739,7 +9868,7 @@ export interface BatchWritePolicyOptions extends BasePolicyOptions {
      * command is ignored. This can be used to eliminate a client/server roundtrip
      * in some cases.
      */
-    filterExpression?: AerospikeExp;
+    filterExpression?: AerospikeExp | string;
     /**
      * Specifies the behavior for the generation value.
      *
@@ -9888,6 +10017,8 @@ export interface ConfigOptions {
     authMode?: auth;
     /**
     * Dynamic configuration provider. Determines how to retrieve cluster policies.
+    *
+    * An alternate way to enable dynamic config is to set environment variable AEROSPIKE_CLIENT_CONFIG_URL to the path of the config file before running the application.
     */
     configProvider?: ConfigProvider;
     /**
@@ -10009,15 +10140,12 @@ export interface ConfigOptions {
     maxConnsPerNode?: number;
     /**
      * Maximum number of errors allowed per node per error_rate_window before backoff algorithm returns
-     * `AEROSPIKE_MAX_ERROR_RATE` for database commands to that node. If max_error_rate is zero, there is no error limit.
+     * {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} for database commands to that node.
+     *
      * The counted error types are any error that causes the connection to close (socket errors and client timeouts),
      * server device overload and server timeouts.
      *
-     * The application should backoff or reduce the command load until `AEROSPIKE_MAX_ERROR_RATE` stops being returned.
-     *
-     * If the backoff algorithm has been activated, commands will fail with {@link
-     * status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} until the {@link errorRateWindow} has passed and the
-     * error count has been reset.
+     * The application should backoff or reduce the command load until {@link status.AEROSPIKE_MAX_ERROR_RATE | AEROSPIKE_MAX_ERROR_RATE} stops being returned.
      *
      * @default 100
      */
@@ -10173,9 +10301,7 @@ export interface ConfigOptions {
     /**
      * List of preferred racks in order of preference. If rack_ids is set, rack_id is ignored.
      *
-      @default null
-     * 
-     * @since 3.8.0
+     * @default null
      */
     rackIds?: number[];
     /**
@@ -10378,17 +10504,17 @@ export interface ConfigProvider {
     /**
     * Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
     * initialization and whenever the file changes. The policies fields in the file
-    * override all command policies.
+    * override all command policies as well as all policies specified in the Node.js Client {@link Config}.
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.
     * 
-    * If command-level policies are set in addition to a dynamic configuration policy, the dynamic configuration
-    * will take precedence over the command-level policy
     */
     path?: string;
     /**
-     * Check dynamic configuration file for changes after this number of cluster tend iterations.
+     * Interval in milliseconds between dynamic configuration check for file modifications.
+     * The value must be greater than or equal to the {Config.tenderInterval}.
+     * 
      */
     interval?: number;
 }
@@ -10414,6 +10540,21 @@ export interface ConnectionStats {
      * Total number of node connections closed since node creation.
      */
     closed: number;
+    /**
+     * Total number of recovered connections since node creation. A recovered connecton is a
+     * connection that timed out on a socket read and then independently drained (read all incoming
+     * data) so the connection can be put back into the connection pool. The recovery process is
+     * attempted when the `timeout_delay` policy is greater than zero.
+     */
+    recovered: number;
+
+    /**
+     * Total number of aborted connections since node creation. An aborted connecton is a connection
+     * that timed out on a socket read and the drain (read all incoming data) failed. The drain failure is
+     * mostly likely due a downed node and results in the connection being closed. The recovery process
+     * is attempted when the `timeout_delay` policy is greater than zero.
+     */
+    aborted: number;
 }
 /**
  * Event loop metrics.
@@ -10526,7 +10667,7 @@ export interface IndexOptions {
     /**
      * The expression on which values are to be indexed.
      */
-    exp?: AerospikeExp;
+    exp?: AerospikeExp | string;
     /**
      * The namespace on which the index is to be created.
      */
@@ -10609,6 +10750,25 @@ export interface InfoPolicyOptions extends BasePolicyOptions {
      * Maximum time in milliseconds to wait for the command to complete.
      */
     timeout?: number
+    /**
+     * Number of milliseconds to wait after a socket read times out before closing the socket for
+     * good.  If set to zero, this feature will be disabled.
+     * 
+     * If, upon performing a database operation, the host finds the socket it was using timing out
+     * while reading, the client will receive a timeout error.  However, we don't always want to
+     * close that socket right away; doing so introduces unwanted latencies.  It might be possible
+     * to recover the socket, thus saving the socket for future re-use.
+     * 
+     * The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+     * milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+     * away, effectively disabling this feature.
+     * 
+     * Please note that this feature only applies to sockets being read; write timeouts are not
+     * affected by this setting. Also, this feature does not apply to pipeline connections.
+     *
+     * @default 3000
+     */
+    timeoutDelay?: number;
 }
 
 /**
@@ -10711,7 +10871,7 @@ export interface MetricsPolicyOptions {
     reportSizeLimit?: number;
     /**
      * Number of cluster tend iterations between metrics notification events. One tend iteration
-     * is defined as as_config.tender_interval (default 1 second) plus the time to tend all nodes.
+     * is defined as {@link Config.tenderInterval} (default 1 second) plus the time to tend all nodes.
      */
     interval?: number;
     /**
@@ -10818,6 +10978,10 @@ export interface Node {
      */
     conns: ConnectionStats;
     /**
+     * Synchronous connection stats on this node.
+     */
+    syncConns: ConnectionStats;
+    /**
      * Namespace Metrics
      */
     metrics: Array<NamespaceMetrics>;
@@ -10893,7 +11057,6 @@ export interface NodeStats {
     /**
      * Connections stats for Synchronous Connections on this Node..
      *
-     * @remarks The Aerospike Node.js does not use synchronous connections.
      */
     syncConnections: ConnectionStats;
     /**
@@ -10902,6 +11065,8 @@ export interface NodeStats {
     asyncConnections: ConnectionStats;
     /**
      * Connection stats for Pipeline Connections on this Node.
+     * 
+     * @remarks The Aerospike Node.js client currently does not implement the pipelining feature.
      */
     pipelineConnections: ConnectionStats;
     /**
@@ -16300,13 +16465,13 @@ export namespace exp {
             /**
              * Aerospike Expression to be evaluated by this operation.
              */
-            public exp: AerospikeExp;
+            public exp: AerospikeExp | string;
             /**
              * @param Expression read flags or write flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} or {@link exp.expWriteFlags} for more information.
 
              */
             public flags: number;
-            constructor(op: ExpOperations, bin: string, exp: AerospikeExp, flags: number, props?: Record<string, AerospikeBinValue>);
+            constructor(op: ExpOperations, bin: string, exp: AerospikeExp | string, flags: number, props?: Record<string, AerospikeBinValue>);
         }
         /**
          * Read the value of the bin.
@@ -16316,7 +16481,7 @@ export namespace exp {
          * @param flags - Expression read flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} for more information.
          * @returns {Operation} Operation that can be passed to the {@link Client#operate} command.
          */
-        export const read: (bin: string, exp: AerospikeExp, flags?: number) => ExpOperation;
+        export const read: (bin: string, exp: AerospikeExp | string, flags?: number) => ExpOperation;
         /**
          * Update the value of the bin.
          *
@@ -16325,7 +16490,7 @@ export namespace exp {
          * @param flags - Expression write flags. <code>flags</code> must be an integer. See {@link exp.expWriteFlags} for more information.
          * @returns {Operation} Operation that can be passed to the {@link Client#operate} command.
          */
-        export const write: (bin: string, exp: AerospikeExp, flags?: number) => ExpOperation;
+        export const write: (bin: string, exp: AerospikeExp | string, flags?: number) => ExpOperation;
     }
 
     export {mapsExp as maps, listsExp as lists, operationsExp as operations}
@@ -17354,7 +17519,7 @@ export namespace filter {
         public datatype: indexDataType;
         public type: indexType;
         public indexName?: string;
-        public exp?: AerospikeExp;
+        public exp?: AerospikeExp | string;
     }
 
     /**
@@ -17366,7 +17531,7 @@ export namespace filter {
     }
 
     /**
-     * Filter predicate returned by {@link geoWithinGeoJSONRegion}, {@link geoContainsGeoJSONPoint}, {@link geoWithinRadius}, and {@link geoContainsPoint} for use in Secondary Index queries.
+     * Filter predicate returned by {@link contains} and {@link equal} for use in Secondary Index queries.
      */
     class RangePredicate extends SindexFilterPredicate {
         constructor(bin: string | null, min: number, max: number, dataType: indexDataType, indexType: indexType);
@@ -17400,7 +17565,7 @@ export namespace filter {
      */
     export function contains(bin: string | null, value: AerospikeBinValue, indexType?: indexType, ctx?: cdt.Context): filter.EqualPredicate;
     /**
-     * String/integer equality filter.
+     * String/integer/blob equality filter.
      *
      * The filter matches records with a bin that matches a specified
      * string or integer value.

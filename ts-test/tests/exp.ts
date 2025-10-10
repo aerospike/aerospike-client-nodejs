@@ -19,9 +19,9 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { AerospikeError, Client as Cli, exp as expr, operations, maps as Maps, GeoJSON as GJ, Key, AerospikeBins, cdt, AerospikeRecord, RecordMetadata, AerospikeExp} from 'aerospike';
+import Aerospike, { AerospikeError, Client as Cli, exp as expr, operations, maps as Maps, GeoJSON as GJ, Key, AerospikeBins, cdt, AerospikeRecord, RecordMetadata, AerospikeExp, ReadPolicy, BatchApplyPolicy, Key as K, UDF, BatchPolicy, BatchWriteRecord, batchType, BatchReadPolicy, Query, IndexOptions, BatchWritePolicy, BatchRemovePolicy} from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 
 const exp: typeof expr = Aerospike.exp
 const op: typeof operations = Aerospike.operations
@@ -37,7 +37,6 @@ const keygen = helper.keygen
 const tempBin = 'ExpVar'
 
 describe('Aerospike.exp', function () {
-  helper.skipUnlessVersion('>= 5.0.0', this)
 
   const client: Cli = helper.client
 
@@ -326,10 +325,11 @@ describe('Aerospike.exp', function () {
             exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
-        const result = await client.operate(key, ops, {})
+        const result: AerospikeRecord = await client.operate(key, ops, {})
         // console.log(result)
-        expect(result.bins.intVal).to.eql(2)
-        expect(result.bins.ExpVar).to.eql(4)
+        const bins: AerospikeBins = result.bins
+        expect(bins.intVal).to.eql(2)
+        expect(bins.ExpVar).to.eql(4)
       })
       it('evaluates exp_write op to true if bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
@@ -339,9 +339,10 @@ describe('Aerospike.exp', function () {
             exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
-        const result = await client.operate(key, ops, {})
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        const bins: AerospikeBins = result.bins
         // console.log(result)
-        expect(result.bins.intVal).to.eql(4)
+        expect(bins.intVal).to.eql(4)
       })
       it('evaluates exp_read op to true if temp bin equals the sum of bin and given value', async function () {
         const key = await createRecord({ intVal: 2 })
@@ -351,11 +352,246 @@ describe('Aerospike.exp', function () {
             exp.expWriteFlags.DEFAULT),
           op.read('intVal')
         ]
-        const result = await client.operate(key, ops, {})
+        const result: AerospikeRecord = await client.operate(key, ops, {})
         // console.log(result)
-        expect(result.bins.intVal).to.eql(2)
-        expect(result.bins.ExpVar).to.eql(4)
+        const bins: AerospikeBins = result.bins
+        expect(bins.intVal).to.eql(2)
+        expect(bins.ExpVar).to.eql(4)
       })
     })
+
   })
+
+
+  describe('expressionToBase64', function () {
+    const filterExpression = exp.eq(exp.int(2), exp.int(1))
+    const exp_b64 = client.expressionToBase64(filterExpression)
+    const exp_b64_exp_ops = client.expressionToBase64(exp.add(exp.binInt('intVal'), exp.binInt('intVal')))
+
+    const filterExpressionMatch = exp.binStr('ace')
+    const exp_b64_match = client.expressionToBase64(filterExpressionMatch)
+
+    describe('postive tests', function () {
+      it('works with expression operations', async function () {
+
+
+        const key = await createRecord({ intVal: 2 })
+
+        const exp_op = exp.operations.read(tempBin,
+          exp_b64_exp_ops,
+          exp.expWriteFlags.DEFAULT
+        )
+
+        const ops = [
+          exp_op,
+          op.read('intVal')
+        ]
+
+        const result = await client.operate(key, ops, {})
+        const bins: AerospikeBins = result.bins
+        // console.log(result)
+        expect(bins.intVal).to.eql(2)
+        expect(bins.ExpVar).to.eql(4)
+      })
+
+      it('works with BasePolicy', async function () {
+
+        const readPolicy: ReadPolicy = new Aerospike.policy.ReadPolicy({
+          filterExpression: exp_b64
+        })
+
+        const key = keygen.integer(helper.namespace, helper.set)()
+        await client.put(key, {example: 'record'})
+        try{
+          await client.get(key, readPolicy)
+          assert.fail("An error should have been caught!")
+        }
+        catch(error: any){
+          const trimmed = error.message.split(" ").slice(1).join(" ");
+          expect(trimmed).to.eql("The command was not performed because the filter expression was false.")
+          expect(error.code).to.eql(Aerospike.status.AEROSPIKE_FILTERED_OUT)
+        }
+      })
+
+      it('works with BatchPolicy', async function () {
+
+        await helper.udf.register('udf.lua')
+
+        const batchRecords: K[] = [
+          new Key(helper.namespace, helper.set, 'test/batch_apply/1'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/2'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/3'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/4'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/5')
+        ]
+
+
+        const policy: BatchPolicy = new Aerospike.BatchPolicy({
+          filterExpression: exp_b64
+        })
+
+        const udf: UDF = {
+          module: 'udf',
+          funcname: 'withArguments',
+          args: [[1, 2, 3]]
+        }
+
+        await client.batchApply(batchRecords, udf, policy)
+      })
+
+      it('works with BatchApplyPolicy', async function () {
+
+        await helper.udf.register('udf.lua')
+
+        const batchRecords: K[] = [
+          new Key(helper.namespace, helper.set, 'test/batch_apply/1'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/2'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/3'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/4'),
+          new Key(helper.namespace, helper.set, 'test/batch_apply/5')
+        ]
+
+
+        const policy: BatchApplyPolicy = new Aerospike.BatchApplyPolicy({
+          filterExpression: exp_b64
+        })
+
+        const udf: UDF = {
+          module: 'udf',
+          funcname: 'withArguments',
+          args: [[1, 2, 3]]
+        }
+
+        await client.batchApply(batchRecords, udf, null, policy)
+      })
+
+
+      it('works with BatchWritePolicy', async function () {
+
+
+        const policy: BatchWritePolicy = new Aerospike.BatchWritePolicy({
+            filterExpression: exp_b64
+        })
+
+        const batchRecords: BatchWriteRecord[] = [
+          {
+            type: Aerospike.batchType.BATCH_WRITE,
+            key: new Key(helper.namespace, helper.set, 'test/batch_write/1'),
+            ops: [Aerospike.operations.write('exampleBin', 1)],
+            policy
+          },
+          {
+            type: batchType.BATCH_WRITE,
+            key: new Key(helper.namespace, helper.set, 'test/batch_write/2'),
+            ops: [Aerospike.operations.write('exampleBin', 1)],
+            policy
+          }
+        ]
+
+
+        await client.batchWrite(batchRecords)
+      })
+
+      it('works with BatchReadPolicy', async function () {
+
+        const policy: BatchReadPolicy = new Aerospike.BatchReadPolicy({
+          filterExpression: exp_b64
+        })
+
+        await client.put(new Aerospike.Key('test', 'demo', 'batchTtl3'), { i: 2 }, { ttl: 10 })
+
+        const batch = [{
+          key: new Aerospike.Key('test', 'demo', 'batchTtl3'),
+          readAllBins: true,
+          policy
+        }]
+
+        const batchResult = await client.batchRead(batch, policy)
+
+      })
+
+      it('works with BatchRemovePolicy', async function () {
+
+        const policy: BatchRemovePolicy = new Aerospike.BatchReadPolicy({
+          filterExpression: exp_b64
+        })
+
+
+        const batchRecords: K[] = [
+          new Key(helper.namespace, helper.set, 'test/batch_remove/1'),
+        ]
+
+        await client.put(batchRecords[0], { i: 2 })
+
+        await client.batchRemove(batchRecords, null, policy)
+
+      })
+
+      it('works with whereWithExp', async function () {
+        this.timeout(10000)
+        const query: Query = client.query(helper.namespace, helper.set)
+
+        const key: Key = new Aerospike.Key(helper.namespace, helper.set, "example")
+        const record: any = {ace: 'clive'}
+
+        await client.put(key, record)
+
+        const options: IndexOptions = {
+          ns: helper.namespace,
+          set: helper.set,
+          exp: exp_b64_match,
+          index: "example_name_whereWithExp",
+          datatype: Aerospike.indexDataType.STRING
+        }
+
+        await client.createExpIndex(options)
+
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        
+        query.whereWithExp(Aerospike.filter.equal(null, 'clive'), exp_b64_match)
+
+        const results: any = await query.results()
+
+        expect(results.length).to.eql(1)
+
+        return client.indexRemove(helper.namespace, 'example_name_whereWithExp')
+      })
+
+      it('works with createExpIndex', async function () {
+
+        const options: IndexOptions = {
+          ns: helper.namespace,
+          set: helper.set,
+          exp: exp_b64,
+          index: "example_name_create",
+          datatype: Aerospike.indexDataType.NUMERIC
+        }
+
+
+        return client.createExpIndex(options)
+      })
+
+
+
+    })
+
+    describe('negative tests', function () {
+
+      it('fails on anything other than string or array type', async function () {
+
+        try{
+          client.expressionToBase64(10 as any)
+          assert.fail("An error should have been caught!")
+        }
+        catch(error: any){
+          expect(error.message).to.eql("Expression must be an array")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+
+      })
+
+    })
+
+  })
+
 })

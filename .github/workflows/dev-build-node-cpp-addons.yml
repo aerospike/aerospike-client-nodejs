@@ -1,32 +1,11 @@
-name: Build artifacts
-run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+name: Build Node C++ Addons
+run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
 
 # Builds manylinux wheels and source distribution
 # Optionally run tests on manylinux wheels
 # Then upload artifacts to Github
 
 on:
-  workflow_dispatch:
-    inputs:
-      run_tests:
-        description: "Run integration tests with the wheels after building them"
-        required: true
-        type: boolean
-        default: false
-      version:
-        type: string
-        required: true
-      use-server-rc:
-        type: boolean
-        required: true
-        default: false
-        description: 'Test against server release candidate? (e.g to test new server features)'
-      server-tag:
-        type: string
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag (e.g to test a client backport version)'
-
   workflow_call:
     inputs:
       # The "dev" tests test the artifacts against a server
@@ -53,15 +32,15 @@ on:
         required: false
         default: 'latest'
     secrets:
-      DOCKER_HUB_BOT_USERNAME:
+      soup_hat:
         required: true
-      DOCKER_HUB_BOT_PW:
+      cell_girl:
         required: true
-      MAC_M1_SELF_HOSTED_RUNNER_PW:
+      song_loss:
         required: true
 
 jobs:
-  build-bindings:
+  build-node-cpp-bindings:
     strategy:
       matrix:
         platform-tag: [
@@ -72,7 +51,7 @@ jobs:
           "win_amd64"
         ]
       fail-fast: false
-    uses: ./.github/workflows/build-bindings.yml
+    uses: ./.github/workflows/dev-build-node-cpp-bindings.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
       # Can't use env context here, so just copy from build-sdist env var

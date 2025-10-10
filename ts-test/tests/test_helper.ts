@@ -97,7 +97,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
       await this.createIndex(index, false)
     }
 
-    async createExpIndex(indexName: string, setName: string, exp: AerospikeExp, dataType: indexDataType, indexType: indexType) {
+    async createExpIndex(indexName: string, setName: string, exp: AerospikeExp | string, dataType: indexDataType, indexType: indexType) {
       const index = {
         ns: options.namespace,
         set: setName,
@@ -307,6 +307,10 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMetrics, 'Advanced metrics tests disabled')
   }
 
+  export function skipUnlessStrongConsistency(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testStrongConsistency, 'Advanced metrics tests disabled')
+  }
+
   export function skipUnlessDynamicConfig(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testDynamicConfig, 'Dynamic config tests disabled')
   }
@@ -323,17 +327,30 @@ Aerospike.setDefaultLogging(config.log ?? {})
     skipUnless(ctx, () => options.testMetricsKeyBusy, 'Metrics key busy test disabled')
   }
 
+  export function skipUnlessTimeoutDelay(this: any, ctx: Suite) {
+    skipUnless(ctx, () => options.testTimeoutDelay, 'timeout delay test disabled')
+  }
+
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
     before(() => {
       if(helper_client_exists){
         client.connect()
+        .catch((error: any) => {
+          console.error('ERROR:', error)
+          console.error('CONFIG:', client.config)
+          console.error("Client connection failed.")
+          console.error("Without a valid connection, tests cannot be run.")
+          console.error("Testing failed, exiting with error")
+          process.exit(1)
+        })        
         .then(() => serverInfoHelper.fetchInfo())
         .then(() => serverInfoHelper.fetchNamespaceInfo(options.namespace))
         .catch((error: any) => {
           console.error('ERROR:', error)
           console.error('CONFIG:', client.config)
-          throw error
+          console.error("Client connection failed, tests cannot be executed. Tests failed, exiting with error.")
+          process.exit(1)
         })
       }
     })

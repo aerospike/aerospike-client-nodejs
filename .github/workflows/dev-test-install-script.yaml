@@ -1,0 +1,59 @@
+name: Publish JFrog build to NPM
+
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      old_version:
+        type: string
+        required: false
+      new_version:
+        type: string
+        required: false
+    secrets:
+      # Just make all the secrets required to make things simpler...
+      NPMRC:
+        required: true
+      NPMRC_OFF:
+        required: true
+      NPM_TOKEN_OFF:
+        required: true
+
+
+jobs:
+  test-install-script:
+    runs-on: ubuntu-22.04
+    steps:
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+        registry-url: 'https://registry.npmjs.org'
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+        PACKAGE_MANAGER: npm
+
+    - name: Test install script for npm
+      run: |
+        tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz;
+        npm ci --ignore-scripts;
+        npm-run-all removeExtraBinaries build;
+        check-install-script-results.js;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}

@@ -205,8 +205,8 @@ typedef struct {
     uint32_t *query;
 } latency;
 
-void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log);
-void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, latency* latency, uint8_t bucket_max, as_ns_metrics** ns_metrics, uint8_t metrics_size, as_vector* labels, as_metrics_policy* policy, const LogInfo *log);
+void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, as_metrics_policy* policy, const LogInfo *log);
+void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, const LogInfo *log);
 int extract_blob_from_jsobject(uint8_t **data, int *len,
 							   v8::Local<v8::Object> obj, const LogInfo *log);
 int list_from_jsarray(as_list **list, v8::Local<v8::Array> array,
@@ -241,6 +241,8 @@ as_conn_stats_init_internal(as_conn_stats* stats)
 	stats->in_use = 0;
 	stats->opened = 0;
 	stats->closed = 0;
+	stats->aborted = 0;
+	stats->recovered = 0;
 };
 
 void
