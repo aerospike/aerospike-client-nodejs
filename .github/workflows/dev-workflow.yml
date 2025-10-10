@@ -9,6 +9,9 @@ on:
   pull_request:
     branches:
       - 'dev*'
+  push:
+    branches:
+      - 'dev*'
 
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
