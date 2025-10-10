@@ -14,11 +14,13 @@
   "dependencies": {
     "@types/tmp": "^0.2.6",
     "aerospike": "file:..",
+    "choma": "^1.2.1",
     "dockerode": "^4.0.9",
     "mocha": "^11.1.0",
-    "typescript": "^5.7.3",
+    "mocha-clean": "^1.0.0",
     "p-throttle": "^3.1.0",
-    "tmp": "^0.2.4"
+    "tmp": "^0.2.4",
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
     "@types/chai": "^5.0.1",
