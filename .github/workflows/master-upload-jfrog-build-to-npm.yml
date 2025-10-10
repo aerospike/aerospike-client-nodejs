@@ -67,6 +67,8 @@ jobs:
     - name: prepare install
       run: |
         node ./scripts/change-install-command.js;
+        npm install --package-lock-only --ignore-scripts;
+        npm ci --ignore-scripts;
         jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
         node ./scripts/verify-aerospike-npm-scripts.js aerospike;
       env:
