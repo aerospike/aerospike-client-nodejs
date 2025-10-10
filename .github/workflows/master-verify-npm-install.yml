@@ -32,7 +32,7 @@ jobs:
         run: |
           npm init -y;
           jq '.dependencies.disableupload="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
-          npm ci --production --ignore-scripts;
+          npm install --production --ignore-scripts;
           node ./scripts/verify-aerospike-npm-scripts.js;
           npx --package disableupload npm run install --prefix ./node_modules/disableupload;
           node -e "const Aerospike = require('disableupload'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
