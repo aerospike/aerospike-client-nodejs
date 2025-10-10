@@ -75,7 +75,7 @@ jobs:
       id: get-new-version
       run: |
         set -e
-        new_stage_version=$(node stage-bump-version.js ${{ needs.get-next-stage-jfrog-version.outputs.stage_version ${{ inputs.old_version }} }} ) 
+        new_stage_version=$(node stage-bump-version.js ${{ needs.get-next-stage-jfrog-version.outputs.stage_version}} ${{ inputs.old_version }} }} ) 
         echo "new_stage_version=$new_stage_version" >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 
