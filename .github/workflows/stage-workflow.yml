@@ -1,7 +1,7 @@
 name: Stage workflow
 
 on:
-  push:
+  pull_request:
     branches:
       - 'stage'
 

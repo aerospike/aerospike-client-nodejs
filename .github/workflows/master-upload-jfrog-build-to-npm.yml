@@ -54,7 +54,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "disableupload"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "disableUpload2"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
