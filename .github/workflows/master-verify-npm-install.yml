@@ -31,10 +31,10 @@ jobs:
       - name: verify runs and is aligned with expect functionality
         run: |
           npm init -y;
-          jq '.dependencies.disableUplo="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
+          jq '.dependencies.disableuplo="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
           npm install --production --ignore-scripts;
-          node ./node_modules/disableUplo/scripts/verify-aerospike-npm-scripts.js disableUplo;
-          npx --package disableUplo npm run install --prefix ./node_modules/disableUplo;
-          node -e "const Aerospike = require('disableUplo'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
+          node ./node_modules/disableuplo/scripts/verify-aerospike-npm-scripts.js disableuplo;
+          npx --package disableuplo npm run install --prefix ./node_modules/disableuplo;
+          node -e "const Aerospike = require('disableuplo'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
