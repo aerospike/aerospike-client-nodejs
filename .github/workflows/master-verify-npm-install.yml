@@ -31,10 +31,10 @@ jobs:
       - name: verify runs and is aligned with expect functionality
         run: |
           npm init -y;
-          jq '.dependencies.ad2="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
+          jq '.dependencies.disableUpload2="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
           npm install --production --ignore-scripts;
-          node ./node_modules/ad2/scripts/verify-aerospike-npm-scripts.js ad2;
-          npx --package ad2 npm run install --prefix ./node_modules/ad2;
-          node -e "const Aerospike = require('ad2'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
+          node ./node_modules/disableUpload2/scripts/verify-aerospike-npm-scripts.js disableUpload2;
+          npx --package disableUpload2 npm run install --prefix ./node_modules/disableUpload2;
+          node -e "const Aerospike = require('disableUpload2'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
