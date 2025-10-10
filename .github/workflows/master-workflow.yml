@@ -65,7 +65,7 @@ jobs:
       verify-npm-install,
       reupload-master-to-jfrog
     ]
-    uses: ./.github/workflows/shared-upload-npm-jfrog-build-to-npm-repo.yml
+    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
       new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
       pipeline-stage: 'master'
