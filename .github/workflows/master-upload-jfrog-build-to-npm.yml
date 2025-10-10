@@ -54,7 +54,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "disableuplo"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
@@ -81,7 +81,7 @@ jobs:
         NPMRC: ${{ secrets.NPMRC_RELEASE }}
 
     - run: |
-        npm publish;
+        npm publish --provenance;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OTP }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
