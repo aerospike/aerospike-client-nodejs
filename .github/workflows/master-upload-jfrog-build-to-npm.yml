@@ -63,12 +63,11 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
-      
+
     - name: prepare install
       run: |
         node ./scripts/change-install-command.js;
         jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm ci --ignore-scripts;
         node ./scripts/verify-aerospike-npm-scripts.js aerospike;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
