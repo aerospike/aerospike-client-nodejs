@@ -37,7 +37,7 @@ jobs:
       master_version: ${{ steps.get-next-master-jfrog-version.outputs.master_version }}
     steps:
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
@@ -68,7 +68,7 @@ jobs:
     steps:
 
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
         ref: ${{ inputs.ref }}
