@@ -21,7 +21,6 @@ on:
       NPM_TOKEN_OTP:
         required: true
 
-
 jobs:
   publish-jfrog-build-to-npm:
     runs-on: ubuntu-22.04
