@@ -24,7 +24,7 @@ jobs:
         if: ${{ matrix.os != 'windows-2022' }}
         run: rm -rf ${{ github.workspace }}/*
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
