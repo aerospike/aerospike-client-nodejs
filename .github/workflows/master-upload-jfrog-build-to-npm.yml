@@ -16,11 +16,9 @@ on:
         required: false
     secrets:
       # Just make all the secrets required to make things simpler...
-      NPMRC:
+      NPMRC_RELEASE:
         required: true
-      NPMRC_OFF:
-        required: true
-      NPM_TOKEN_OFF:
+      NPM_TOKEN_OTP:
         required: true
 
 jobs:
@@ -50,23 +48,32 @@ jobs:
     - name: Move artifacts
       run: |
         tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz;
-        node ./scripts/change-install-command.js;
-        node ./scripts/verify-aerospike-npm-scripts.js;
-        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm ci --ignore-scripts;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "disableupload"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
       run: |
        npm version ${{ env.NEW_VERSION }} --no-git-tag-version
       env:
         NEW_VERSION: ${{ inputs.new_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: prepare install
+      run: |
+        node ./scripts/change-install-command.js;
+        npm install --package-lock-only --ignore-scripts;
+        npm ci --ignore-scripts;
+        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+        node ./scripts/verify-aerospike-npm-scripts.js aerospike;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: npm rc
       run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
