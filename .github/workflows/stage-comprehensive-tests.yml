@@ -126,7 +126,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -269,7 +269,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -411,7 +411,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -550,7 +550,7 @@ jobs:
       run: aerolab cluster list
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -682,7 +682,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -787,7 +787,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -891,7 +891,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1013,7 +1013,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1118,7 +1118,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1207,7 +1207,7 @@ jobs:
         run: security unlock-keychain -p ${{ secrets.song_loss }}
 
       - name: Set up JFrog credentials
-        uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+        uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
         env:
           JF_URL: https://aerospike.jfrog.io
         with:
@@ -1327,7 +1327,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@c32bf10843e4071112c4ea3abf622d3b27cd8c17 # v4.7.0
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
