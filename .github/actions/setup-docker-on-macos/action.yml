@@ -37,5 +37,5 @@ runs:
 
   - name: Start Colima
     run: |
-      colima start --container-runtime containerd;
+      colima start --runtime containerd
     shell: bash
