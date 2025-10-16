@@ -13,5 +13,7 @@ runs:
     shell: bash
 
   - name: Start Docker Engine
-    run: colima start --runtime containerd
+    run: |
+      colima start --runtime containerd;
+      colima status;
     shell: bash
