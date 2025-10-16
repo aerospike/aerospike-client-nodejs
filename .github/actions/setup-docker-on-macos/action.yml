@@ -12,6 +12,10 @@ runs:
     run: brew install docker
     shell: bash
 
+  - name: Install Docker client
+    run: brew install nerdctl
+    shell: bash
+
   - name: Start Docker Engine
     run: |
       colima start --runtime containerd;

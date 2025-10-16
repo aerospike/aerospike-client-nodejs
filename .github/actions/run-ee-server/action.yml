@@ -74,20 +74,18 @@ runs:
       driver: docker-container
       use: true
     
-  - name: Build and push
-    uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
-    with:
-      # Don't want to use default Git context or else it will clone the whole Python client repo again
-      context: .github/workflows/docker-build-context
-      build-args: |
-        server_image=${{ env.IMAGE_NAME }}
-      tags: ${{ env.NEW_IMAGE_NAME }}
-      # setup-buildx-action configures Docker to use the docker-container build driver
-      # This driver doesn't publish an image locally by default
-      # so we have to manually enable it
-      load: true
-      cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
-      cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
+  - name: Build and push with nerdctl
+    run: |
+      export BUILDKIT_HOST=unix:///Users/runner/.colima/default/buildkitd.sock
+      nerdctl buildx create --use
+      nerdctl buildx build \
+        --build-arg server_image=${{ env.IMAGE_NAME }} \
+        --tag ${{ env.NEW_IMAGE_NAME }} \
+        --load \
+        --cache-from type=gha,scope=${{ env.IMAGE_NAME }} \
+        --cache-to type=gha,scope=${{ env.IMAGE_NAME }},mode=max \
+        .github/workflows/docker-build-context
+
 
 
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
