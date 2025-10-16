@@ -4,14 +4,36 @@ description: 'Install Docker using colima'
 runs:
   using: "composite"
   steps:
-  - name: Install Docker Engine
-    run: brew install colima
+  - name: Restore Homebrew + Colima cache
+    id: cache
+    uses: actions/cache@v4
+    with:
+      path: |
+        ~/Library/Caches/Homebrew
+        /usr/local/Cellar
+        ~/.colima
+      key: mac-docker-${{ runner.os }}-v1
+
+  - name: Ensure Homebrew is up-to-date
+    run: brew update
     shell: bash
 
-  - name: Install Docker client
-    run: brew install docker
+  - name: Install Colima + Docker if missing
+    run: |
+      brew list colima &>/dev/null || brew install colima
+      brew list docker &>/dev/null || brew install docker
     shell: bash
 
-  - name: Start Docker Engine
-    run: colima start
+  - name: Start Colima
+    run: colima start --memory 4 --cpu 2 || colima start --fresh --memory 4 --cpu 2
     shell: bash
+
+  - name: Save cache (only if not restored)
+    if: steps.cache.outputs.cache-hit != 'true'
+    uses: actions/cache/save@v4
+    with:
+      path: |
+        ~/Library/Caches/Homebrew
+        /usr/local/Cellar
+        ~/.colima
+      key: mac-docker-${{ runner.os }}-v1
