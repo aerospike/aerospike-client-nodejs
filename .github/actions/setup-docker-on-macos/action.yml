@@ -16,4 +16,5 @@ runs:
     run: |
       colima start --runtime containerd;
       colima status;
+      docker info;
     shell: bash
