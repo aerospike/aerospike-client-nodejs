@@ -66,8 +66,14 @@ runs:
   - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-security-and-sc >> $GITHUB_ENV
     shell: bash
 
-  # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
-  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+  - name: Cache Docker buildx
+    id: buildx-cache
+    uses: actions/cache@v3
+    with:
+      path: ~/.docker/cli-plugins
+      key: ${{ runner.os }}-docker-buildx
+
+  - if: steps.buildx-cache.outputs.cache-hit != 'true' && (runner.os == 'Windows' || runner.os == 'macOS')
     uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
 
   - name: Build and push
