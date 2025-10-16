@@ -24,10 +24,6 @@ runs:
       brew list docker &>/dev/null || brew install docker
     shell: bash
 
-  - name: Start Colima
-    run: colima start --memory 4 --cpu 2 || colima start --fresh --memory 4 --cpu 2
-    shell: bash
-
   - name: Save cache (only if not restored)
     if: steps.cache.outputs.cache-hit != 'true'
     uses: actions/cache/save@v4
@@ -37,3 +33,7 @@ runs:
         /usr/local/Cellar
         ~/.colima
       key: mac-docker-${{ runner.os }}-v1
+
+  - name: Start Colima
+    run: colima start
+    shell: bash
