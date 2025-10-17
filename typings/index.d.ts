@@ -16921,7 +16921,6 @@ export namespace exp {
      */
     export const digestModulo: _VAExp;
 
-    export const eq: _cmpExp;
     /**
      * Create equals (==) expression.
      *
@@ -16930,7 +16929,7 @@ export namespace exp {
      * @param right - right expression in comparison.
      * @return boolean value
      */
-    export const ne: _cmpExp;
+    export const eq: _cmpExp;
     /**
      * Create not equal (!=) expression.
      *
@@ -16939,373 +16938,382 @@ export namespace exp {
      * @param right - right expression in comparison.
      * @return boolean value
      */
+    export const ne: _cmpExp;
+    /**
+     * Create a greater than (>) expression.
+     *
+     *
+     * @param left - left expression in comparison.
+     * @param right - right expression in comparison.
+     * @return boolean value
+     */
     export const gt: _cmpExp;
-/**
- * Create a greater than or equals (>=) expression.
- *
- *
- * @param {number} left left expression in comparison.
- * @param {number} right right expression in comparison.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create a greater than or equals (>=) expression.
+     *
+     *
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const ge: _cmpExp;
-/**
- * Create a less than (<) expression.
- *
- *
- * @param {number} left left expression in comparison.
- * @param {number} right right expression in comparison.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create a less than (<) expression.
+     *
+     *
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const lt: _cmpExp;
-/**
- * Create a less than or equals (<=) expression.
- *
- *
- * @param {number} left left expression in comparison.
- * @param {number} right right expression in comparison.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create a less than or equals (<=) expression.
+     *
+     *
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {@link AerospikeExp} - boolean value
+     */
 
     export const le: _cmpExp;
-/**
- * Create expression that performs a regex match on a string bin or value
- * expression.
- *
- *
- * @param {number} options POSIX regex flags defined in regex.h.
- * @param {string} regex POSIX regex string.
- * @param cmpStr String expression to compare against.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create expression that performs a regex match on a string bin or value
+     * expression.
+     *
+     *
+     * @param {number} options POSIX regex flags defined in regex.h.
+     * @param {string} regex POSIX regex string.
+     * @param cmpStr String expression to compare against.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const cmpRegex: (options: regex, regex: string, cmpStr: AerospikeExp) => AerospikeExp;
-/**
- * Create a point within region or region contains point expression.
- *
- *
- * @param left - left expression in comparison.
- * @param right - right expression in comparison.
- * @return boolean value
- */
+    /**
+     * Create a point within region or region contains point expression.
+     *
+     *
+     * @param left - left expression in comparison.
+     * @param right - right expression in comparison.
+     * @return boolean value
+     */
     export const cmpGeo: _cmpExp;
-/**
- * Create "not" (!) operator expression.
- *
- *
- * @param expr - Boolean expression to negate.
- * @return boolean value
- */
+    /**
+     * Create "not" (!) operator expression.
+     *
+     *
+     * @param expr - Boolean expression to negate.
+     * @return boolean value
+     */
     export const not: (expr: AerospikeExp) => AerospikeExp;
 
-/**
- * Create "and" (&&) operator that applies to a variable number of expressions.
- *
- *
- * @param expr - Variable number of boolean expressions. Supports the spread operator.
- * @return boolean value
- */
+    /**
+     * Create "and" (&&) operator that applies to a variable number of expressions.
+     *
+     *
+     * @param expr - Variable number of boolean expressions. Supports the spread operator.
+     * @return boolean value
+     */
     export const and: _VAExp;
-/**
- * Create "or" (||) operator that applies to a variable number of expressions.
- *
- *
- * @param expr - Variable number of boolean expressions. Supports the spread operator.
- * @return boolean value
- */
+    /**
+     * Create "or" (||) operator that applies to a variable number of expressions.
+     *
+     *
+     * @param expr - Variable number of boolean expressions. Supports the spread operator.
+     * @return boolean value
+     */
     export const or: _VAExp;
-/**
- * Create expression that returns true if only one of the expressions are true.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of boolean expressions. Supports the spread operator.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create expression that returns true if only one of the expressions are true.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of boolean expressions. Supports the spread operator.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const exclusive: _VAExp;
-/**
- * Create "add" (+) operator that applies to a variable number of expressions.
- * Return the sum of all arguments.
- * All arguments must be the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "add" (+) operator that applies to a variable number of expressions.
+     * Return the sum of all arguments.
+     * All arguments must be the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const add: _VAExp;
-/**
- * Create "subtract" (-) operator that applies to a variable number of expressions.
- * If only one argument is provided, return the negation of that argument.
- * Otherwise, return the sum of the 2nd to Nth argument subtracted from the 1st
- * argument. All arguments must resolve to the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "subtract" (-) operator that applies to a variable number of expressions.
+     * If only one argument is provided, return the negation of that argument.
+     * Otherwise, return the sum of the 2nd to Nth argument subtracted from the 1st
+     * argument. All arguments must resolve to the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const sub: _VAExp;
-/**
- * Create "multiply" (*) operator that applies to a variable number of expressions.
- * Return the product of all arguments. If only one argument is supplied, return
- * that argument. All arguments must resolve to the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "multiply" (*) operator that applies to a variable number of expressions.
+     * Return the product of all arguments. If only one argument is supplied, return
+     * that argument. All arguments must resolve to the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const mul: _VAExp;
-/**
- * Create "divide" (/) operator that applies to a variable number of expressions.
- * If there is only one argument, returns the reciprocal for that argument.
- * Otherwise, return the first argument divided by the product of the rest.
- * All arguments must resolve to the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "divide" (/) operator that applies to a variable number of expressions.
+     * If there is only one argument, returns the reciprocal for that argument.
+     * Otherwise, return the first argument divided by the product of the rest.
+     * All arguments must resolve to the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const div: _VAExp;
-/**
- * Create "pow" operator that raises a "base" to the "exponent" power.
- * All arguments must resolve to floats.
- * Requires server version 5.6.0+.
- *
- *
- * @param base - Base value.
- * @param exponent - Exponent value.
- * @return {@link AerospikeExp} float value
- */
+    /**
+     * Create "pow" operator that raises a "base" to the "exponent" power.
+     * All arguments must resolve to floats.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param base - Base value.
+     * @param exponent - Exponent value.
+     * @return {@link AerospikeExp} float value
+     */
     export const pow: _powExp;
-/**
- * Create "log" operator for logarithm of "num" with base "base".
- * All arguments must resolve to floats.
- * Requires server version 5.6.0+.
- *
- *
- * @param num - Number.
- * @param base - Base value.
- * @return float value
- */
+    /**
+     * Create "log" operator for logarithm of "num" with base "base".
+     * All arguments must resolve to floats.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param num - Number.
+     * @param base - Base value.
+     * @return float value
+     */
     export const log: _logExp;
-/**
- * Create "modulo" (%) operator that determines the remainder of "numerator"
- * divided by "denominator". All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- * @param expr - Number to apply modulo to.
- * @return integer value
- */
+    /**
+     * Create "modulo" (%) operator that determines the remainder of "numerator"
+     * divided by "denominator". All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     * @param expr - Number to apply modulo to.
+     * @return integer value
+     */
     export const mod: _VAExp;
-/**
- * Create operator that returns absolute value of a number.
- * All arguments must resolve to integer or float.
- * Requires server version 5.6.0+.
- *
- * @param expr - Number to calcuate absolute value from.
- * @return number value
- */
+    /**
+     * Create operator that returns absolute value of a number.
+     * All arguments must resolve to integer or float.
+     * Requires server version 5.6.0+.
+     *
+     * @param expr - Number to calcuate absolute value from.
+     * @return number value
+     */
     export const abs: _VAExp;
-/**
- * Create expression that rounds a floating point number down to the closest integer value.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Floating point value to round down.
- * @return float-value
- */
+    /**
+     * Create expression that rounds a floating point number down to the closest integer value.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Floating point value to round down.
+     * @return float-value
+     */
     export const floor: _VAExp;
-/**
- * Create expression that rounds a floating point number up to the closest integer value.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Floating point value to round up.
- * @return integer-value
- */
+    /**
+     * Create expression that rounds a floating point number up to the closest integer value.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Floating point value to round up.
+     * @return integer-value
+     */
     export const ceil: _VAExp;
-/**
- * Create expression that converts a float to an integer.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer to convert to a float
- * @return  float value
- */
+    /**
+     * Create expression that converts a float to an integer.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer to convert to a float
+     * @return  float value
+     */
     export const toInt: _VAExp;
-/**
- * Create expression that converts an integer to a float.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer to convert to a float
- * @return float value
- */
+    /**
+     * Create expression that converts an integer to a float.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer to convert to a float
+     * @return float value
+     */
     export const toFloat: _VAExp;
-/**
- * Create integer "and" (&) operator that is applied to two or more integers.
- * All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer expressions. Compatible with spread operator.
- * @return integer value
- */
+    /**
+     * Create integer "and" (&) operator that is applied to two or more integers.
+     * All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer expressions. Compatible with spread operator.
+     * @return integer value
+     */
     export const intAnd: _VAExp;
-/**
- * Create integer "or" (|) operator that is applied to two or more integers.
- * All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer expressions. Compatible with spread operator.
- * @return integer value
- */
+    /**
+     * Create integer "or" (|) operator that is applied to two or more integers.
+     * All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer expressions. Compatible with spread operator.
+     * @return integer value
+     */
     export const intOr: _VAExp;
-/**
- * Create integer "xor" (^) operator that is applied to two or more integers.
- * All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer expressions. Compatible with spread operator.
- * @return integer value
- */
+    /**
+     * Create integer "xor" (^) operator that is applied to two or more integers.
+     * All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer expressions. Compatible with spread operator.
+     * @return integer value
+     */
     export const intXor: _VAExp;
-/**
- * Create integer "not" (~) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @return integer value
- */
+    /**
+     * Create integer "not" (~) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @return integer value
+     */
     export const intNot: _VAExp;
-/**
- * Create integer "left shift" (<<) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @param shift - Number of bits to shift by.
- * @return integer value
- */
+    /**
+     * Create integer "left shift" (<<) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @param shift - Number of bits to shift by.
+     * @return integer value
+     */
     export const intLshift: _shiftExp;
-/**
- * Create integer "logical right shift" (>>>) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @param shift - Number of bits to shift by.
- * @return integer value
- */
+    /**
+     * Create integer "logical right shift" (>>>) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @param shift - Number of bits to shift by.
+     * @return integer value
+     */
     export const intRshift: _shiftExp;
-/**
- * Create integer "arithmetic right shift" (>>) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @param  shift -  Number of bits to shift by.
- * @return integer value
- */
+    /**
+     * Create integer "arithmetic right shift" (>>) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @param  shift -  Number of bits to shift by.
+     * @return integer value
+     */
     export const intArshift: _shiftExp;
-/**
- * Create expression that returns count of integer bits that are set to 1.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - {@link AerospikeExp} integer
- * @return integer value
- */
+    /**
+     * Create expression that returns count of integer bits that are set to 1.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - {@link AerospikeExp} integer
+     * @return integer value
+     */
     export const intCount: _VAExp;
-/**
- * Create expression that scans integer bits from left (most significant bit) to
- * right (least significant bit), looking for a search bit value. When the
- * search value is found, the index of that bit (where the most significant bit is
- * index 0) is returned. If "search" is true, the scan will search for the bit
- * value 1. If "search" is false it will search for bit value 0.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - {@link AerospikeExp} integer
- * @return integer value
- */
+    /**
+     * Create expression that scans integer bits from left (most significant bit) to
+     * right (least significant bit), looking for a search bit value. When the
+     * search value is found, the index of that bit (where the most significant bit is
+     * index 0) is returned. If "search" is true, the scan will search for the bit
+     * value 1. If "search" is false it will search for bit value 0.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - {@link AerospikeExp} integer
+     * @return integer value
+     */
     export const intLscan: _VAExp;
-/**
- * Create expression that scans integer bits from right (least significant bit) to
- * left (most significant bit), looking for a search bit value. When the
- * search value is found, the index of that bit (where the most significant bit is
- * index 0) is returned. If "search" is true, the scan will search for the bit
- * value 1. If "search" is false it will search for bit value 0.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - {@link AerospikeExp} integer
- * @return integer value
- */
+    /**
+     * Create expression that scans integer bits from right (least significant bit) to
+     * left (most significant bit), looking for a search bit value. When the
+     * search value is found, the index of that bit (where the most significant bit is
+     * index 0) is returned. If "search" is true, the scan will search for the bit
+     * value 1. If "search" is false it will search for bit value 0.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - {@link AerospikeExp} integer
+     * @return integer value
+     */
     export const intRscan: _VAExp;
-/**
- * Create expression that returns the minimum value in a variable number of expressions.
- * All arguments must be the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param  expr - Variable number of integer or float expressions. Compatible with spread operator.
- * @return integer or float value
- */
+    /**
+     * Create expression that returns the minimum value in a variable number of expressions.
+     * All arguments must be the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param  expr - Variable number of integer or float expressions. Compatible with spread operator.
+     * @return integer or float value
+     */
     export const min: _VAExp;
-/**
- * Create expression that returns the maximum value in a variable number of expressions.
- * All arguments must be the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.
- * @return integer or float value
- */
+    /**
+     * Create expression that returns the maximum value in a variable number of expressions.
+     * All arguments must be the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.
+     * @return integer or float value
+     */
     export const max: _VAExp;
-/**
- * Conditionally select an expression from a variable number of expression pairs
- * followed by default expression action. Requires server version 5.6.0+.
- *
- *
- * @param expr - spread of expressions.
- * @return  first action expression where bool expression is true or action-default.
- */
+    /**
+     * Conditionally select an expression from a variable number of expression pairs
+     * followed by default expression action. Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - spread of expressions.
+     * @return  first action expression where bool expression is true or action-default.
+     */
     export const cond: _VAExp;
-/**
- * Define variables and expressions in scope.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of expression def followed by a scoped
- *  expression. Supports the spread operator
- * @return result of scoped expression.
- */
+    /**
+     * Define variables and expressions in scope.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of expression def followed by a scoped
+     *  expression. Supports the spread operator
+     * @return result of scoped expression.
+     */
     const letValue: _VAExp; // Your implementation
     export { letValue as let }; // Export as `let`
-/**
- * Assign variable to an expression that can be accessed later.
- * Requires server version 5.6.0+.
- *
- *
- * @param varName - Variable name.
- * @param  expr - The variable is set to the result of expr.
- * @return A variable name expression pair.
- */
+    /**
+     * Assign variable to an expression that can be accessed later.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param varName - Variable name.
+     * @param  expr - The variable is set to the result of expr.
+     * @return A variable name expression pair.
+     */
     export const def: (varName: string, expr: AerospikeExp) => AerospikeExp;
-/**
- * Retrieve expression value from a variable.
- * Requires server version 5.6.0+.
- *
- *
- * @param varName - Variable name.
- * @return value stored in variable.
- */
+    /**
+     * Retrieve expression value from a variable.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param varName - Variable name.
+     * @return value stored in variable.
+     */
     export const _var: (varName: string) => AerospikeExp;
 }
 /**
