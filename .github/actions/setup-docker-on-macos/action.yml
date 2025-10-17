@@ -16,10 +16,12 @@ runs:
       key: mac-docker-${{ runner.os }}-v3
 
   - name: Ensure Homebrew is up-to-date
+    if: steps.cache.outputs.cache-hit != 'true'
     run: brew update
     shell: bash
 
   - name: Install Colima + Docker if missing
+    if: steps.cache.outputs.cache-hit != 'true'
     run: |
       brew list go &>/dev/null || brew install go --quiet
       brew list lima &>/dev/null || brew install lima --quiet
