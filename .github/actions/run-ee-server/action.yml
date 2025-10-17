@@ -84,7 +84,7 @@ runs:
       load: true
       cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
       cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
-      shell: bash
+
 
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
