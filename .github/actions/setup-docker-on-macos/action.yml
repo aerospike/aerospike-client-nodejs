@@ -12,6 +12,7 @@ runs:
         ~/Library/Caches/Homebrew
         /usr/local/Cellar
         ~/.colima
+        ~/.lima
       key: mac-docker-${{ runner.os }}-v3
 
   - name: Ensure Homebrew is up-to-date
@@ -20,6 +21,7 @@ runs:
 
   - name: Install Colima + Docker if missing
     run: |
+      brew list lima &>/dev/null || brew install lima
       brew list colima &>/dev/null || brew install colima
       brew list docker &>/dev/null || brew install docker
       brew link --overwrite colima docker
@@ -33,6 +35,7 @@ runs:
         ~/Library/Caches/Homebrew
         /usr/local/Cellar
         ~/.colima
+        ~/.lima
       key: mac-docker-${{ runner.os }}-v3
 
   - name: Start Colima
