@@ -21,9 +21,10 @@ runs:
 
   - name: Install Colima + Docker if missing
     run: |
-      brew list lima &>/dev/null || brew install lima
-      brew list colima &>/dev/null || brew install colima
-      brew list docker &>/dev/null || brew install docker
+      brew list go &>/dev/null || brew install go --quiet
+      brew list lima &>/dev/null || brew install lima --quiet
+      brew list colima &>/dev/null || brew install colima --quiet
+      brew list docker &>/dev/null || brew install docker --quiet
       brew link --overwrite colima docker
     shell: bash
 
@@ -40,5 +41,6 @@ runs:
 
   - name: Start Colima
     run: |
-      colima start
+      export PATH="/usr/local/bin:$PATH"; 
+      colima start;
     shell: bash
