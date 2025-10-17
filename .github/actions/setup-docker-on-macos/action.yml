@@ -30,13 +30,20 @@ runs:
       brew link --overwrite colima docker
     shell: bash
 
+  - name: Install Colima + Docker if missing
+    if: steps.cache.outputs.cache-hit != 'false'
+    run: |
+      brew link --overwrite colima docker
+    shell: bash
+
   - name: Save cache (only if not restored)
-    if: steps.cache.outputs.cache-hit != 'true'
     uses: actions/cache/save@v4
     with:
       path: |
-        ~/Library/Caches/Homebrew
-        /usr/local/Cellar
+        /usr/local/Cellar/go
+        /usr/local/Cellar/lima
+        /usr/local/Cellar/colima
+        /usr/local/Cellar/docker
         ~/.colima
         ~/.lima
       key: mac-docker-${{ runner.os }}-v3
