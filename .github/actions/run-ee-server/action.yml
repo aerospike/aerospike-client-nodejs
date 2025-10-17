@@ -82,8 +82,8 @@ runs:
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
       load: true
-      cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
-      cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
+      #cache-from: type=gha,scope=${{ env.IMAGE_NAME }}
+      #cache-to: type=gha,scope=${{ env.IMAGE_NAME }},mode=max
 
 
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
