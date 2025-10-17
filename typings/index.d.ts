@@ -16922,7 +16922,7 @@ export namespace exp {
     export const digestModulo: _VAExp;
 
     /**
-     * Create equals (==) expression.
+     * Create equal (==) expression.
      *
      *
      * @param left - left expression in comparison.
