@@ -33,7 +33,8 @@ runs:
 
   - name: Download from JFrog
     run: |
-      jf rt download test-npm-dev-local/brew/v1/brew-cache-nodejs-v1.tar.gz
+      jf rt download test-npm-dev-local/brew/v1
+      sudo tar -xzf v1.tar.gz -C /usr/local/Cellar
     shell: bash
 
   - name: Turn off update
