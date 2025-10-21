@@ -6,10 +6,10 @@ on:
       - 'feature*'
       - 'bug*'
       - 'improvement*'
-    #paths:
-    #  - 'src/**'
-    #  - 'binding.gyp'
-    #  - 'package.json'
+    paths:
+      - 'src/**'
+      - 'binding.gyp'
+      - 'package.json'
 
 concurrency:
   group: dev-tests

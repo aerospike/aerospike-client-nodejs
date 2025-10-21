@@ -3,8 +3,9 @@ name: Stage workflow
 on:
   push:
     branches:
-      - 'dev'
-
+      - 'feature*'
+      - 'bug*'
+      - 'improvement*'
 jobs:
   stage-get-jfrog-version:
     uses: ./.github/workflows/stage-get-jfrog-version.yml
