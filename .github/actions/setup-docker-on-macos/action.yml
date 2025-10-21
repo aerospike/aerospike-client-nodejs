@@ -10,6 +10,11 @@ runs:
     id: brew-cache
     with:
       path: |
+        ~/Library/Caches/Homebrew/colima*
+        ~/Library/Caches/Homebrew/coreutils*
+        ~/Library/Caches/Homebrew/docker*
+        ~/Library/Caches/Homebrew/lima*
+        ~/Library/Caches/Homebrew/docker-completion*
         /usr/local/Cellar/coreutils
         /usr/local/Cellar/lima
         /usr/local/Cellar/colima
