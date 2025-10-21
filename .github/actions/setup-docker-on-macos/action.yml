@@ -28,16 +28,21 @@ runs:
     shell: bash
 
   - name: 'macOS: install timeout command'
-    run: brew install coreutils -q --display-times
+    run: brew link --overwrite --force colima docker coreutils lima docker-completion
     shell: bash
 
-  - name: Install Docker Engine
-    run: brew install colima -q --display-times
-    shell: bash
 
-  - name: Install Docker client
-    run: brew install docker -q --display-times
-    shell: bash
+  #- name: 'macOS: install timeout command'
+  #  run: brew install coreutils -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker Engine
+  #  run: brew install colima -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker client
+  #  run: brew install docker -q --display-times
+  #  shell: bash
 
   - name: Save cache
     if: steps.brew-cache.outputs.cache-hit == 'false'
