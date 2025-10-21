@@ -5,26 +5,27 @@ runs:
   using: "composite"
   steps:
 
-  - name: Configure Homebrew cache
-    uses: actions/cache@v4
-    id: brew-cache
-    with:
-      path: |
-        ~/Library/Caches/Homebrew/colima*
-        ~/Library/Caches/Homebrew/coreutils*
-        ~/Library/Caches/Homebrew/docker*
-        ~/Library/Caches/Homebrew/lima*
-        ~/Library/Caches/Homebrew/docker-completion*
-        /usr/local/Cellar/coreutils
-        /usr/local/Cellar/lima
-        /usr/local/Cellar/colima
-        /usr/local/Cellar/docker
-        /usr/local/Cellar/docker-completion
-      key: brew-v1
-      #restore-keys: brew-
+  #- name: Configure Homebrew cache
+  #  uses: actions/cache@v4
+  #  id: brew-cache
+  #  with:
+  #    path: |
+  #      ~/Library/Caches/Homebrew/colima*
+  #      ~/Library/Caches/Homebrew/coreutils*
+  #      ~/Library/Caches/Homebrew/docker*
+  #      ~/Library/Caches/Homebrew/lima*
+  #      ~/Library/Caches/Homebrew/docker-completion*
+  #      /usr/local/Cellar/coreutils
+  #      /usr/local/Cellar/lima
+  #      /usr/local/Cellar/colima
+  #      /usr/local/Cellar/docker
+  #      /usr/local/Cellar/docker-completion
+  #    key: brew-v1
+  #    #restore-keys: brew-
 
-  #- name: Download from JFrog
-  #  run: |
+  - name: Download from JFrog
+    run: |
+      jf rt download test-npm-dev-local/brew/v1/brew-cache-nodejs-v1.tar.gz
 
   - name: Turn off update
     run: export HOMEBREW_NO_AUTO_UPDATE=1
