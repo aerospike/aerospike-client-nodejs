@@ -10,11 +10,11 @@ runs:
     shell: bash
 
   - name: Install Docker Engine
-    run: brew install colima -q
+    run: brew install colima -q --display-times
     shell: bash
 
   - name: Install Docker client
-    run: brew install docker -q
+    run: brew install docker -q --display-times
     shell: bash
 
   - name: Start Docker Engine
