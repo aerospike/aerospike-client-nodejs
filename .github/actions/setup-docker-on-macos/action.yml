@@ -95,5 +95,5 @@ runs:
       MEM_GB=$((MEM_TOTAL / 1024 / 1024 / 1024))
       MEM_ALLOC=$((MEM_GB - 2))
       brew install qemu
-      colima start --cpu $CPU_MAX --memory $MEM_ALLOC --vm-type qemu --no-provision --disk 5 --runtime none 
+      colima start --cpu $CPU_MAX --memory $MEM_ALLOC --vm-type qemu --disk 5 --runtime none 
     shell: bash
