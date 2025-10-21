@@ -23,6 +23,9 @@ runs:
       key: brew-v1
       #restore-keys: brew-
 
+  #- name: Download from JFrog
+  #  run: |
+
   - name: Turn off update
     run: export HOMEBREW_NO_AUTO_UPDATE=1
     shell: bash
@@ -44,13 +47,28 @@ runs:
   #  run: brew install docker -q --display-times
   #  shell: bash
 
-  - name: Save cache
-    if: steps.brew-cache.outputs.cache-hit == 'false'
-    uses: actions/cache/save@v4
-    with:
-      path: ${{ inputs.path }}
-      key: brew-v1
+  - name: Upload binding binaries to JFrog Linux x86
+    run: |
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/colima*" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/coreutils*" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/docker*" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/docker-completion*" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/lima*" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/coreutils" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/colima" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/lima" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/docker" test-npm-dev-local/brew/v1
+      jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/docker-completion" test-npm-dev-local/brew/v1
+
+  #- name: Save cache
+  #  if: steps.brew-cache.outputs.cache-hit == 'false'
+  #  uses: actions/cache/save@v4
+  #  with:
+  #    path: ${{ inputs.path }}
+  #    key: brew-v1
 
   - name: Start Docker Engine
-    run: colima start --vm-type=vz --cpu 6 --memory 8
+    run: |
+      colima delete
+      colima start --arch x86_64
     shell: bash
