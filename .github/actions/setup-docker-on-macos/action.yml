@@ -52,5 +52,5 @@ runs:
       key: brew-v1
 
   - name: Start Docker Engine
-    run: colima start
+    run: colima start --vm-type=vz --cpu 6 --memory 8
     shell: bash
