@@ -47,6 +47,14 @@ runs:
   #  run: brew install docker -q --display-times
   #  shell: bash
 
+  - name: Set up JFrog credentials
+    uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+    env:
+      JF_URL: https://aerospike.jfrog.io
+    with:
+      oidc-provider-name: gh-aerospike-clients
+      oidc-audience: aerospike/clients
+
   - name: Upload binding binaries to JFrog Linux x86
     run: |
       jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/colima*" test-npm-dev-local/brew/v1
