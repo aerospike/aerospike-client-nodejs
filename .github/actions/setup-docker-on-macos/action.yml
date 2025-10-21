@@ -17,7 +17,6 @@ runs:
 
   - name: Turn off update
     run: |
-      brew update --preinstall
       cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/coreutils.rb" > .github/brew-formulae
       cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/docker.rb" >> .github/brew-formulae
       cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/colima.rb" >> .github/brew-formulae
