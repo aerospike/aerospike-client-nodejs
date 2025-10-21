@@ -59,6 +59,7 @@ runs:
       jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/lima" test-npm-dev-local/brew/v1
       jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/docker" test-npm-dev-local/brew/v1
       jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/docker-completion" test-npm-dev-local/brew/v1
+    shell: bash
 
   #- name: Save cache
   #  if: steps.brew-cache.outputs.cache-hit == 'false'
