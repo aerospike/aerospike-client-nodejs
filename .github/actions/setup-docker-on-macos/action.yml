@@ -34,7 +34,7 @@ runs:
   - name: Download from JFrog
     run: |
       jf rt download test-npm-dev-local/brew/v1
-      sudo tar -xzf ./brew/v1.tar.gz -C /usr/local/Cellar
+      sudo tar -xzf brew/v1.tar.gz -C /usr/local/Cellar
     shell: bash
 
   - name: Turn off update
