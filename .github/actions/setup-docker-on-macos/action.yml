@@ -34,6 +34,8 @@ runs:
   - name: Download from JFrog
     run: |
       jf rt download test-npm-dev-local/brew/v1 "v1/brew-cache-nodejs-v1.tar.gz"
+      ls ./v1
+      ls v1
       sudo tar -xzf ./v1/v1/brew-cache-nodejs-v1.tar.gz -C /usr/local/Cellar
     shell: bash
 
