@@ -60,16 +60,16 @@ runs:
   #  shell: bash
 
 
-  - name: Zip Homebrew formulas
-    run: |
-      tar -czf brew-cache-nodejs-v1.tar.gz \
-        -C /usr/local/Cellar coreutils colima lima docker docker-completion
-    shell: bash
-
-  - name: Upload binding binaries to JFrog Linux x86
-    run: |
-      jf rt upload --build-name brew-cache-nodejs --build-number v1 "brew-cache-nodejs-v1.tar.gz" test-npm-dev-local/brew/v1
-    shell: bash
+  #- name: Zip Homebrew formulas
+  #  run: |
+  #    tar -czf brew-cache-nodejs-v1.tar.gz \
+  #      -C /usr/local/Cellar coreutils colima lima docker docker-completion
+  #  shell: bash
+#
+  #- name: Upload binding binaries to JFrog Linux x86
+  #  run: |
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v1 "brew-cache-nodejs-v1.tar.gz" test-npm-dev-local/brew/v1
+  #  shell: bash
 
 
   #- name: Upload binding binaries to JFrog Linux x86
