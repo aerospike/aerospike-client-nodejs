@@ -16,13 +16,6 @@ runs:
       #restore-keys: brew-
 
   - name: Turn off update
-    run: |
-      cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/coreutils.rb" > .github/brew-formulae
-      cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/docker.rb" >> .github/brew-formulae
-      cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/colima.rb" >> .github/brew-formulae
-    shell: bash
-
-  - name: Turn off update
     run: export HOMEBREW_NO_AUTO_UPDATE=1
     shell: bash
 
