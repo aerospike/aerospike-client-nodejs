@@ -7,6 +7,7 @@ runs:
 
   - name: Configure Homebrew cache
     uses: actions/cache@v4
+    id: brew-cache
     with:
       path: |
         ~/Library/Caches/Homebrew/colima*
