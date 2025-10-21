@@ -90,6 +90,5 @@ runs:
 
   - name: Start Docker Engine
     run: |
-      colima delete
       colima start --arch x86_64
     shell: bash
