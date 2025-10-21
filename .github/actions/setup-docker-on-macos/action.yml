@@ -5,8 +5,30 @@ runs:
   using: "composite"
   steps:
 
+  - name: Configure Homebrew cache
+    uses: actions/cache@v2
+    with:
+      path: |
+        ~/Library/Caches/Homebrew/colima*
+        ~/Library/Caches/Homebrew/coreutils*
+        ~/Library/Caches/Homebrew/docker*
+      key: brew-v1
+      #restore-keys: brew-
+
+  - name: Turn off update
+    run: |
+      brew update --preinstall
+      cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/coreutils.rb" > .github/brew-formulae
+      cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/docker.rb" >> .github/brew-formulae
+      cat "$(brew --repository)/Library/Taps/homebrew/homebrew-core/Formula/colima.rb" >> .github/brew-formulae
+    shell: bash
+
   - name: Turn off update
     run: export HOMEBREW_NO_AUTO_UPDATE=1
+    shell: bash
+
+  - name: 'macOS: install timeout command'
+    run: brew install coreutils -q --display-times
     shell: bash
 
   - name: Install Docker Engine
@@ -16,6 +38,13 @@ runs:
   - name: Install Docker client
     run: brew install docker -q --display-times
     shell: bash
+
+  - name: Save cache
+    if: steps.brew-cache.outputs.cache-hit == 'false'
+    uses: actions/cache/save@v4
+    with:
+      path: ${{ inputs.path }}
+      key: brew-v1
 
   - name: Start Docker Engine
     run: colima start
