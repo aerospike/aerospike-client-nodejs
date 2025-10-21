@@ -59,6 +59,7 @@ runs:
     run: |
       tar -czf brew-cache-nodejs-v1.tar.gz \
         -C /usr/local/Cellar coreutils colima lima docker docker-completion
+    shell: bash
 
   - name: Upload binding binaries to JFrog Linux x86
     run: |
