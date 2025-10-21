@@ -5,16 +5,16 @@ runs:
   using: "composite"
   steps:
 
-  - name: Install Docker Engine
-    run: brew install colima
+  - name: Turn off update
+    run: export HOMEBREW_NO_AUTO_UPDATE=1
     shell: bash
 
   - name: Install Docker Engine
-    run: brew install colima
+    run: brew install colima -q
     shell: bash
 
   - name: Install Docker client
-    run: brew install docker
+    run: brew install docker -q
     shell: bash
 
   - name: Start Docker Engine
