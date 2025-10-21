@@ -10,11 +10,6 @@ runs:
     id: brew-cache
     with:
       path: |
-        ~/Library/Caches/Homebrew/colima*
-        ~/Library/Caches/Homebrew/coreutils*
-        ~/Library/Caches/Homebrew/docker*
-        ~/Library/Caches/Homebrew/lima*
-        ~/Library/Caches/Homebrew/docker-completion*
         /usr/local/Cellar/coreutils
         /usr/local/Cellar/lima
         /usr/local/Cellar/colima
@@ -57,11 +52,6 @@ runs:
 
   - name: Upload binding binaries to JFrog Linux x86
     run: |
-      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/colima*" test-npm-dev-local/brew/v1
-      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/coreutils*" test-npm-dev-local/brew/v1
-      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/docker*" test-npm-dev-local/brew/v1
-      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/docker-completion*" test-npm-dev-local/brew/v1
-      jf rt upload --build-name brew-cache-nodejs --build-number v1 "~/Library/Caches/Homebrew/lima*" test-npm-dev-local/brew/v1
       jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/coreutils" test-npm-dev-local/brew/v1
       jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/colima" test-npm-dev-local/brew/v1
       jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/lima" test-npm-dev-local/brew/v1
