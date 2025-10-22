@@ -90,9 +90,5 @@ runs:
 
   - name: Start Colima with max CPU and RAM
     run: |
-      CPU_MAX=$(sysctl -n hw.ncpu)
-      MEM_TOTAL=$(sysctl -n hw.memsize)
-      MEM_GB=$((MEM_TOTAL / 1024 / 1024 / 1024))
-      MEM_ALLOC=$((MEM_GB - 2))
-      colima start --cpu $CPU_MAX --memory $MEM_ALLOC --disk 20 --vz-rosetta
+      colima start --cpu 1 --memory 1 --disk 10
     shell: bash
