@@ -93,5 +93,6 @@ runs:
 
   - name: Start Colima with max CPU and RAM
     run: |
-      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20
+      mkdir -p /tmp/colima
+      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mounts /tmp/colima
     shell: bash
