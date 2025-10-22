@@ -90,5 +90,5 @@ runs:
 
   - name: Start Colima with max CPU and RAM
     run: |
-      colima start --cpu 1 --memory 1 --disk 10
+      colima start
     shell: bash
