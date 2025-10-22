@@ -90,6 +90,6 @@ runs:
 
   - name: Start Colima with max CPU and RAM
     run: |
-      brew install colima
+      brew install qemu
       colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mount-type 9p
     shell: bash
