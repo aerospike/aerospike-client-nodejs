@@ -36,6 +36,7 @@ runs:
       jf rt download test-npm-dev-local/brew/v3 "v3/brew-cache-nodejs-v3.tar.gz"
       ls v3/brew
       sudo tar -xzf v3/brew/brew-cache-nodejs-v3.tar.gz -C /usr/local/Cellar
+      sudo mkdir -p /usr/local/Cellar
       ls /usr/local/Cellar
     shell: bash
 
