@@ -43,36 +43,36 @@ runs:
     run: export HOMEBREW_NO_AUTO_UPDATE=1
     shell: bash
 
+  - name: 'macOS: install timeout command'
+    run: brew link --overwrite --force colima docker coreutils lima docker-completion capstone dtc libslirp libssh snappy vde qemu
+    shell: bash
+
   #- name: 'macOS: install timeout command'
-  #  run: brew link --overwrite --force colima docker coreutils lima docker-completion capstone dtc libslirp libssh snappy vde qemu
+  #  run: brew install coreutils -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker Engine
+  #  run: brew install colima -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker client
+  #  run: brew install docker -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker client
+  #  run: brew install qemu -q --display-times
+  #  shell: bash
+#
+  #- name: Zip Homebrew formulas
+  #  run: |
+  #    tar -czf brew-cache-nodejs-v3.tar.gz \
+  #      -C /usr/local/Cellar coreutils colima lima docker docker-completion capstone dtc libslirp libssh snappy vde qemu
   #  shell: bash
 
-  - name: 'macOS: install timeout command'
-    run: brew install coreutils -q --display-times
-    shell: bash
-
-  - name: Install Docker Engine
-    run: brew install colima -q --display-times
-    shell: bash
-
-  - name: Install Docker client
-    run: brew install docker -q --display-times
-    shell: bash
-
-  - name: Install Docker client
-    run: brew install qemu -q --display-times
-    shell: bash
-
-  - name: Zip Homebrew formulas
-    run: |
-      tar -czf brew-cache-nodejs-v3.tar.gz \
-        -C /usr/local/Cellar coreutils colima lima docker docker-completion capstone dtc libslirp libssh snappy vde qemu
-    shell: bash
-
-  - name: Upload binding binaries to JFrog Linux x86
-    run: |
-      jf rt upload --build-name brew-cache-nodejs --build-number v3 "brew-cache-nodejs-v3.tar.gz" test-npm-dev-local/brew/v3
-    shell: bash
+  #- name: Upload binding binaries to JFrog Linux x86
+  #  run: |
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v3 "brew-cache-nodejs-v3.tar.gz" test-npm-dev-local/brew/v3
+  #  shell: bash
 
 
   #- name: Upload binding binaries to JFrog Linux x86
@@ -93,5 +93,5 @@ runs:
 
   - name: Start Colima with max CPU and RAM
     run: |
-      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mount-type VirtioFS 
+      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mount-type virtiofs
     shell: bash
