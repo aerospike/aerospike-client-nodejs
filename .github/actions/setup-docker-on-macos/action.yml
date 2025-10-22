@@ -93,6 +93,6 @@ runs:
 
   - name: Start Colima with max CPU and RAM
     run: |
-      mkdir -p /tmp/colima
-      colima start
+      brew install qemu -q --display-times
+      colima start --vm-type qemu
     shell: bash
