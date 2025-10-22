@@ -31,48 +31,47 @@ runs:
   #    key: brew-v2
   #    #restore-keys: brew-
 
-  #- name: Download from JFrog
-  #  run: |
-  #    jf rt download test-npm-dev-local/brew/v2 "v2/brew-cache-nodejs-v2.tar.gz"
-  #    ls v2/brew
-  #    sudo tar -xzf v2/brew/brew-cache-nodejs-v2.tar.gz -C /usr/local/Cellar
-  #  shell: bash
+  - name: Download from JFrog
+    run: |
+      jf rt download test-npm-dev-local/brew/v2 "v2/brew-cache-nodejs-v2.tar.gz"
+      ls v2/brew
+      sudo tar -xzf v2/brew/brew-cache-nodejs-v2.tar.gz -C /usr/local/Cellar
+    shell: bash
 
   - name: Turn off update
     run: export HOMEBREW_NO_AUTO_UPDATE=1
     shell: bash
 
-  #- name: 'macOS: install timeout command'
-  #  run: brew link --overwrite --force colima docker coreutils lima docker-completion
-  #  shell: bash
-
-
   - name: 'macOS: install timeout command'
-    run: brew install coreutils -q --display-times
+    run: brew link --overwrite --force colima docker coreutils lima docker-completion
     shell: bash
 
-  - name: Install Docker Engine
-    run: brew install colima -q --display-times
-    shell: bash
-
-  - name: Install Docker client
-    run: brew install docker -q --display-times
-    shell: bash
-
-  - name: Install Docker client
-    run: brew install qemu -q --display-times
-    shell: bash
-
-  - name: Zip Homebrew formulas
-    run: |
-      tar -czf brew-cache-nodejs-v2.tar.gz \
-        -C /usr/local/Cellar coreutils colima lima docker docker-completion capstone dtc libslirp libssh ncurses snappy vde
-    shell: bash
-
-  - name: Upload binding binaries to JFrog Linux x86
-    run: |
-      jf rt upload --build-name brew-cache-nodejs --build-number v2 "brew-cache-nodejs-v2.tar.gz" test-npm-dev-local/brew/v2
-    shell: bash
+  #- name: 'macOS: install timeout command'
+  #  run: brew install coreutils -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker Engine
+  #  run: brew install colima -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker client
+  #  run: brew install docker -q --display-times
+  #  shell: bash
+#
+  #- name: Install Docker client
+  #  run: brew install qemu -q --display-times
+  #  shell: bash
+#
+  #- name: Zip Homebrew formulas
+  #  run: |
+  #    tar -czf brew-cache-nodejs-v2.tar.gz \
+  #      -C /usr/local/Cellar coreutils colima lima docker docker-completion capstone dtc libslirp libssh ncurses snappy vde
+  #  shell: bash
+#
+  #- name: Upload binding binaries to JFrog Linux x86
+  #  run: |
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v2 "brew-cache-nodejs-v2.tar.gz" test-npm-dev-local/brew/v2
+  #  shell: bash
 
 
   #- name: Upload binding binaries to JFrog Linux x86
@@ -93,5 +92,5 @@ runs:
 
   - name: Start Colima with max CPU and RAM
     run: |
-      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mount-type 9p --tty=false
+      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mount-type 9p
     shell: bash
