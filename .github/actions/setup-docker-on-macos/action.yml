@@ -42,9 +42,9 @@ runs:
     run: export HOMEBREW_NO_AUTO_UPDATE=1
     shell: bash
 
-  - name: 'macOS: install timeout command'
-    run: brew link --overwrite --force colima docker coreutils lima docker-completion
-    shell: bash
+  #- name: 'macOS: install timeout command'
+  #  run: brew link --overwrite --force colima docker coreutils lima docker-completion
+  #  shell: bash
 
 
   - name: 'macOS: install timeout command'
