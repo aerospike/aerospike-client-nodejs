@@ -43,7 +43,7 @@ runs:
     shell: bash
 
   - name: 'macOS: install timeout command'
-    run: brew link --overwrite --force colima docker coreutils lima docker-completion
+    run: brew link --overwrite --force colima docker coreutils lima docker-completion capstone dtc libslirp libssh ncurses snappy vde
     shell: bash
 
   #- name: 'macOS: install timeout command'
