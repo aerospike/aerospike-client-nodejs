@@ -28,15 +28,15 @@ runs:
   #      /usr/local/Cellar/colima
   #      /usr/local/Cellar/docker
   #      /usr/local/Cellar/docker-completion
-  #    key: brew-v1
+  #    key: brew-v2
   #    #restore-keys: brew-
 
-  - name: Download from JFrog
-    run: |
-      jf rt download test-npm-dev-local/brew/v1 "v1/brew-cache-nodejs-v1.tar.gz"
-      ls v1/brew
-      sudo tar -xzf v1/brew/brew-cache-nodejs-v1.tar.gz -C /usr/local/Cellar
-    shell: bash
+  #- name: Download from JFrog
+  #  run: |
+  #    jf rt download test-npm-dev-local/brew/v2 "v2/brew-cache-nodejs-v2.tar.gz"
+  #    ls v2/brew
+  #    sudo tar -xzf v2/brew/brew-cache-nodejs-v2.tar.gz -C /usr/local/Cellar
+  #  shell: bash
 
   - name: Turn off update
     run: export HOMEBREW_NO_AUTO_UPDATE=1
@@ -47,38 +47,41 @@ runs:
     shell: bash
 
 
-  #- name: 'macOS: install timeout command'
-  #  run: brew install coreutils -q --display-times
-  #  shell: bash
-#
-  #- name: Install Docker Engine
-  #  run: brew install colima -q --display-times
-  #  shell: bash
-#
-  #- name: Install Docker client
-  #  run: brew install docker -q --display-times
-  #  shell: bash
+  - name: 'macOS: install timeout command'
+    run: brew install coreutils -q --display-times
+    shell: bash
+
+  - name: Install Docker Engine
+    run: brew install colima -q --display-times
+    shell: bash
+
+  - name: Install Docker client
+    run: brew install docker -q --display-times
+    shell: bash
+
+  - name: Install Docker client
+    run: brew install qemu -q --display-times
+    shell: bash
+
+  - name: Zip Homebrew formulas
+    run: |
+      tar -czf brew-cache-nodejs-v2.tar.gz \
+        -C /usr/local/Cellar coreutils colima lima docker docker-completion capstone dtc libslirp libssh ncurses snappy vde
+    shell: bash
+
+  - name: Upload binding binaries to JFrog Linux x86
+    run: |
+      jf rt upload --build-name brew-cache-nodejs --build-number v2 "brew-cache-nodejs-v2.tar.gz" test-npm-dev-local/brew/v2
+    shell: bash
 
 
-  #- name: Zip Homebrew formulas
-  #  run: |
-  #    tar -czf brew-cache-nodejs-v1.tar.gz \
-  #      -C /usr/local/Cellar coreutils colima lima docker docker-completion
-  #  shell: bash
-#
   #- name: Upload binding binaries to JFrog Linux x86
   #  run: |
-  #    jf rt upload --build-name brew-cache-nodejs --build-number v1 "brew-cache-nodejs-v1.tar.gz" test-npm-dev-local/brew/v1
-  #  shell: bash
-
-
-  #- name: Upload binding binaries to JFrog Linux x86
-  #  run: |
-  #    jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/coreutils/*" test-npm-dev-local/brew/v1
-  #    jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/colima/*" test-npm-dev-local/brew/v1
-  #    jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/lima/*" test-npm-dev-local/brew/v1
-  #    jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/docker/*" test-npm-dev-local/brew/v1
-  #    jf rt upload --build-name brew-cache-nodejs --build-number v1 "/usr/local/Cellar/docker-completion/*" test-npm-dev-local/brew/v1
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v2 "/usr/local/Cellar/coreutils/*" test-npm-dev-local/brew/v2
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v2 "/usr/local/Cellar/colima/*" test-npm-dev-local/brew/v2
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v2 "/usr/local/Cellar/lima/*" test-npm-dev-local/brew/v2
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v2 "/usr/local/Cellar/docker/*" test-npm-dev-local/brew/v2
+  #    jf rt upload --build-name brew-cache-nodejs --build-number v2 "/usr/local/Cellar/docker-completion/*" test-npm-dev-local/brew/v2
   #  shell: bash
 
   #- name: Save cache
@@ -86,10 +89,9 @@ runs:
   #  uses: actions/cache/save@v4
   #  with:
   #    path: ${{ inputs.path }}
-  #    key: brew-v1
+  #    key: brew-v2
 
   - name: Start Colima with max CPU and RAM
     run: |
-      brew install qemu
-      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mount-type 9p
+      colima start --vm-type qemu --cpu 2 --memory 4 --disk 20 --mount-type 9p --tty=false
     shell: bash
