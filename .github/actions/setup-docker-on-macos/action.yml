@@ -36,6 +36,7 @@ runs:
       jf rt download test-npm-dev-local/brew/v2 "v2/brew-cache-nodejs-v2.tar.gz"
       ls v2/brew
       sudo tar -xzf v2/brew/brew-cache-nodejs-v2.tar.gz -C /usr/local/Cellar
+      ls /usr/local/Cellar
     shell: bash
 
   - name: Turn off update
