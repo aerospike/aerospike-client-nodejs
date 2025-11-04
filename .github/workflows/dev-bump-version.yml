@@ -30,7 +30,7 @@
           token: ${{ secrets.desk_mood }}
 
       - name: Set up JFrog credentials
-        uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+        uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
         env:
           JF_URL: https://aerospike.jfrog.io
         with:
