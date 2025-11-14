@@ -1492,7 +1492,7 @@ export class Query {
      *
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this command.
+     * @param policy - The Write Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
      *
@@ -1525,7 +1525,7 @@ export class Query {
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this command.
+     * @param policy - The Write Policy to use for this command.
      * @param callback - The function to call when the command completes.
      *
      * @returns Promise that resolves to a Job instance.
@@ -1534,7 +1534,7 @@ export class Query {
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this command.
+     * @param policy - The Write Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
      * @param callback - The function to call when the command completes.
