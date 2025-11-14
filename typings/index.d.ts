@@ -1513,7 +1513,7 @@ export class Query {
      *   client.close()
      * })
      */
-    public operate(operations: operations.Operation[], policy?: policy.QueryPolicy | null, queryID?: number| null): Promise<Job>;
+    public operate(operations: operations.Operation[], policy?: policy.WritePolicy | null, queryID?: number| null): Promise<Job>;
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
@@ -1530,7 +1530,7 @@ export class Query {
      *
      * @returns Promise that resolves to a Job instance.
      */
-    public operate(operations: operations.Operation[], policy: policy.QueryPolicy | null, callback?: TypedCallback<Job>): void;
+    public operate(operations: operations.Operation[], policy: policy.WritePolicy | null, callback?: TypedCallback<Job>): void;
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
@@ -1541,7 +1541,7 @@ export class Query {
      *
      * @returns Promise that resolves to a Job instance.
      */
-    public operate(operations: operations.Operation[], policy: policy.QueryPolicy | null, queryID: number| null, callback?: TypedCallback<Job>): void;
+    public operate(operations: operations.Operation[], policy: policy.WritePolicy | null, queryID: number| null, callback?: TypedCallback<Job>): void;
 }
 
 export namespace cdt {
