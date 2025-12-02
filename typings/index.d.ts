@@ -295,7 +295,7 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
-    public bins: AerospikeRecord<B>;
+    public bins: B;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
