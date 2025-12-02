@@ -823,7 +823,7 @@ export class BatchResult<B extends AerospikeBins = AerospikeBins> {
     /**
      * Construct a new BatchResult instance.
      */
-    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: B, inDoubt: boolean);
+    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: AerospikeRecord<B>, inDoubt: boolean);
     /**
      * Result code for this returned record. If not {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK}, the record will be null.
      */
@@ -832,7 +832,7 @@ export class BatchResult<B extends AerospikeBins = AerospikeBins> {
      * Record result for the requested key. This record will only be populated when the result is
      * {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK} or {@link statusNamespace.AEROSPIKE_ERR_UDF|AEROSPIKE_ERR_UDF}.
      */
-    record: B;
+    record: AerospikeRecord<B>;
     /**
      * It is possible that a write command completed even though the client
      * returned this error. This may be the case when a client error occurs
