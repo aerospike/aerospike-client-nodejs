@@ -33,6 +33,11 @@ jobs:
       stage_version: ${{ steps.get-next-stage-jfrog-version.outputs.stage_version }}
     steps:
     # Checkout the branch where we want to bump the new version
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         token: ${{ secrets.desk_mood }}
@@ -61,6 +66,11 @@ jobs:
     outputs:
       new_stage_version: ${{ steps.get-new-version.outputs.new_stage_version }}
     steps:
+
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
