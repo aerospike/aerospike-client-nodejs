@@ -38,10 +38,9 @@
     "host": "https://www.npmjs.com/package/aerospike"
   },
   "scripts": {
-    "preinstall": "npm install @mapbox/node-pre-gyp",
+    "preinstall": "npm install @mapbox/node-pre-gyp@1.0.11",
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "test-prereq": "cd ts-test; npm install ..; npm i --save-dev @types/jest; npm i --save-dev @types/chai; cd ..;",
     "test": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
@@ -59,28 +58,28 @@
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
   "dependencies": {
-    "bindings": "^1.5.0",
-    "minimatch": "^3.1.2",
-    "nan": "^2.22.0",
-    "node-gyp": "^10.1.0",
-    "npm-run-all": "^4.1.5"
+    "bindings": "1.5.0",
+    "minimatch": "3.1.2",
+    "nan": "2.22.0",
+    "node-gyp": "10.1.0",
+    "npm-run-all": "4.1.5"
   },
   "devDependencies": {
-    "@mapbox/node-pre-gyp": "^1.0.11",
-    "@types/node": "^24.7.0",
-    "chai": "^4.4.1",
-    "choma": "^1.2.1",
-    "codecov": "^3.8.3",
-    "eslint": "^8.57.1",
-    "globals": "^15.11.0",
-    "husky": "^9.0.11",
-    "mocha": "^10.4.0",
-    "mocha-clean": "^1.0.0",
-    "standard": "^17.1.0",
-    "typedoc": "^0.26.7",
-    "typedoc-plugin-rename-defaults": "^0.7.1",
-    "typescript": "^5.6.2",
-    "typescript-eslint": "^8.8.1"
+    "@mapbox/node-pre-gyp": "1.0.11",
+    "@types/node": "24.7.0",
+    "chai": "4.4.1",
+    "choma": "1.2.1",
+    "codecov": "3.8.3",
+    "eslint": "8.57.1",
+    "globals": "15.11.0",
+    "husky": "9.0.11",
+    "mocha": "10.4.0",
+    "mocha-clean": "1.0.0",
+    "standard": "17.1.0",
+    "typedoc": "0.26.7",
+    "typedoc-plugin-rename-defaults": "0.7.1",
+    "typescript": "5.6.2",
+    "typescript-eslint": "8.8.1"
   },
   "standard": {
     "ignore": [
