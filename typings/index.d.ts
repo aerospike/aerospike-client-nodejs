@@ -41,11 +41,18 @@ export enum ScalarOperations {
  * Represents a basic value in an Aerospike bin.
  */
 export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
+
+/**
+ * Bin name - maximum 15 characters.
+ * @remarks Names exceeding 15 characters will result in ERR_PARAM at runtime.
+ */
+type BinName = string;
+
 /**
  * Represents an object containing one or more `AerospikeBinValues` with associated string keys.
  */
 export type AerospikeBins = {
-    [key: string]: any
+    [key: BinName]: AerospikeBinValue
 };
 
 export const _transactionPool: any;
@@ -295,7 +302,7 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
-    public bins: AerospikeRecord<B>;
+    public bins: B;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
@@ -823,7 +830,7 @@ export class BatchResult<B extends AerospikeBins = AerospikeBins> {
     /**
      * Construct a new BatchResult instance.
      */
-    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: B, inDoubt: boolean);
+    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: AerospikeRecord<B>, inDoubt: boolean);
     /**
      * Result code for this returned record. If not {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK}, the record will be null.
      */
