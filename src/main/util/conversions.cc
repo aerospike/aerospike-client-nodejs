@@ -1500,7 +1500,13 @@ int privileges_from_jsarray(as_privilege*** privileges, int* privileges_size, Lo
 	}
 	return AS_NODE_PARAM_OK;
 }
-			
+
+int throw_bin_name_error(char *bin_name, const LogInfo *log)
+{
+	as_v8_error(log, "Bin name length exceeded (max. %i): %s",
+				AS_BIN_NAME_MAX_LEN, bin_name);
+	return AS_NODE_PARAM_ERR;
+}
 
 int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 							 const LogInfo *log)
@@ -1518,38 +1524,48 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 		const Local<Value> value = Nan::Get(obj, name).ToLocalChecked();
 
 		Nan::Utf8String n(name);
-		if (strlen(*n) > AS_BIN_NAME_MAX_SIZE) {
-			as_v8_error(log, "Bin name length exceeded (max. %i): %s",
-						AS_BIN_NAME_MAX_SIZE, *n);
-			return AS_NODE_PARAM_ERR;
-		}
-
+		
 		if (value->IsUndefined()) {
 			as_v8_error(log, "Bin value 'undefined' not supported: %s", *n);
 			return AS_NODE_PARAM_ERR;
 		}
 		if (value->IsNull()) {
-			as_record_set_nil(rec, *n);
+			bool success = as_record_set_nil(rec, *n);
+			if (!success) {
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (value->IsBoolean()) {
-			as_record_set_bool(rec, *n, Nan::To<bool>(value).FromJust());
+			bool success = as_record_set_bool(rec, *n, Nan::To<bool>(value).FromJust());
+			if (!success) {
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (value->IsString()) {
-			as_record_set_strp(rec, *n, strdup(*Nan::Utf8String(value)), true);
+			char* string_value = strdup(*Nan::Utf8String(value));
+			bool success = as_record_set_strp(rec, *n, string_value, true);
+			if (!success) {
+				cf_free(string_value);
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (is_double_value(value)) {
-			as_record_set_double(rec, *n, double_value(value));
+			bool success = as_record_set_double(rec, *n, double_value(value));
+			if (!success) {
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (value->IsInt32() || value->IsUint32() || value->IsNumber()) {
-			as_record_set_int64(rec, *n, Nan::To<int64_t>(value).FromJust());
+			bool success = as_record_set_int64(rec, *n, Nan::To<int64_t>(value).FromJust());
+			if (!success) {
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
-#if (NODE_MAJOR_VERSION > 10) ||                                               \
-	(NODE_MAJOR_VERSION == 10 && NODE_MINOR_VERSION >= 4)
 		if (value->IsBigInt()) {
 			Local<BigInt> bigint_value = value.As<BigInt>();
 			bool lossless = true;
@@ -1559,10 +1575,12 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 								 "converted to int64_t losslessly");
 				return AS_NODE_PARAM_ERR;
 			}
-			as_record_set_int64(rec, *n, int64_value);
+			bool success = as_record_set_int64(rec, *n, int64_value);
+			if (!success) {
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
-#endif
 		if (node::Buffer::HasInstance(value)) {
 			int size = 0;
 			uint8_t *data = NULL;
@@ -1571,11 +1589,20 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 				as_v8_error(log, "Extractingb blob from a js object failed");
 				return AS_NODE_PARAM_ERR;
 			}
-			as_record_set_rawp(rec, *n, data, size, true);
+			bool success = as_record_set_rawp(rec, *n, data, size, true);
+			if (!success) {
+				cf_free(data);
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (is_geojson_value(value)) {
-			as_record_set_geojson_strp(rec, *n, geojson_as_string(value), true);
+			char* string_value = geojson_as_string(value);
+			bool success = as_record_set_geojson_strp(rec, *n, string_value, true);
+			if (!success) {
+				cf_free(string_value);
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (value->IsArray()) {
@@ -1584,7 +1611,11 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 				AS_NODE_PARAM_OK) {
 				return AS_NODE_PARAM_ERR;
 			}
-			as_record_set_list(rec, *n, list);
+			bool success = as_record_set_list(rec, *n, list);
+			if (!success) {
+				as_list_destroy(list);
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (value->IsMap()) {
@@ -1593,7 +1624,11 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 				AS_NODE_PARAM_OK) {
 				return AS_NODE_PARAM_ERR;
 			}
-			as_record_set_map(rec, *n, map);
+			bool success = as_record_set_map(rec, *n, map);
+			if (!success) {
+				as_map_destroy(map);
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 		if (value->IsObject()) {
@@ -1602,7 +1637,11 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 				AS_NODE_PARAM_OK) {
 				return AS_NODE_PARAM_ERR;
 			}
-			as_record_set_map(rec, *n, map);
+			bool success = as_record_set_map(rec, *n, map);
+			if (!success) {
+				as_map_destroy(map);
+				return throw_bin_name_error(*n, log);
+			}
 			continue;
 		}
 

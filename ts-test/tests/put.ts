@@ -349,18 +349,158 @@ describe('client.put()', function () {
         }).then(() => client.remove(key))
     })
 
-    it('should return a parameter error when bin length exceeds 15 chars', function () {
-      const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
-      const bins: AerospikeBins = { 'bin-name-size-16': 'bin name with 16 chars' }
+    context('should return a parameter error when bin length exceeds 15 chars', function () {
+      it('null value', async function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16': null }
 
-      return client.put(key, bins)
-        .then(() => 'no error')
-        .catch((error: any) => error)
-        .then((error: any) => {
-          expect(error).to.be.instanceof(AerospikeError)
-            .that.has.property('code', Aerospike.status.ERR_REQUEST_INVALID)
-        })
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('boolean value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16': true }
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('string value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16': 'bin name with 16 chars' }
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('double value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16': 0.48245 }
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('number value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16': -40 }
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('big int value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16': BigInt("18446744073709551615") }
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('buffer value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16': Buffer.from([0x01, 0x00, 0xFF]) }
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('geojson value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16':  new GeoJSON.Point(103.8, 1.283) }
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('array value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const bins: AerospikeBins = { 'bin-name-size-16':  [9, 4, 2]}
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('map value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+        const map = new Map([
+          ["a", 1],
+          ["b", 2],
+          ["c", 3],
+        ]);
+        const bins: AerospikeBins = { 'bin-name-size-16':  map}
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
+      it('object value', function () {
+        const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/put/' })()
+
+        const bins: AerospikeBins = { 'bin-name-size-16':  {a: 1, b: 2}}
+
+        return client.put(key, bins)
+          .then(() => 'no error')
+          .catch((error: any) => error)
+          .then((error: any) => {
+            expect(error).to.be.instanceof(AerospikeError)
+              .that.has.property('code', Aerospike.status.ERR_PARAM)
+          })
+      })
+
     })
+
   })
 
   it('should delete a bin when writing null to it', async function () {

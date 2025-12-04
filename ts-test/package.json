@@ -16,9 +16,9 @@
     "aerospike": "file:..",
     "dockerode": "^4.0.9",
     "mocha": "^11.1.0",
-    "typescript": "^5.7.3",
     "p-throttle": "^3.1.0",
-    "tmp": "^0.2.4"
+    "tmp": "^0.2.4",
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
     "@types/chai": "^5.0.1",
