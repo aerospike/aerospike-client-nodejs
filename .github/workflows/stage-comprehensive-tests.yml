@@ -78,7 +78,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
@@ -221,7 +221,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
@@ -363,7 +363,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
@@ -515,7 +515,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -635,7 +635,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -775,7 +775,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -880,7 +880,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -994,7 +994,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -1094,7 +1094,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -1200,7 +1200,7 @@ jobs:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       # Need to be able to save Docker Hub credentials to keychain
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
@@ -1308,7 +1308,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
