@@ -33,6 +33,6 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "@gerrit0/mini-shiki": "<3.19.0"
+    "@gerrit0/mini-shiki": "<=3.18.0"
   }
 }
