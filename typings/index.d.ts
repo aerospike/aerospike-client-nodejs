@@ -16601,7 +16601,8 @@ export namespace exp {
     type _metaExp = () => AerospikeExp;
     type _nilExp = () => AerospikeExp;
     type _infExp = () => AerospikeExp;
-    type _wildcardExp = () => AerospikeExp
+    type _wildcardExp = () => AerospikeExp;
+    type _unknownExp = () => AerospikeExp;
     type _cmpExp = (left: AerospikeExp, right: AerospikeExp) => AerospikeExp;
     type _VAExp = (...expr: AerospikeExp[]) => AerospikeExp;
     type _shiftExp = (expr: AerospikeExp, shift: AerospikeExp) => AerospikeExp;
@@ -16701,6 +16702,16 @@ export namespace exp {
      * @return {@link AerospikeExp}
      */
     export const wildcard: _wildcardExp;
+    /**
+     * Create an 'unknown' value. Used to intentionally fail an expression.
+     * The failure can be ignored with {@link expWriteFlags.EVAL_NO_FAIL} or
+     * {@link expReadFlags.NO_FAIL}.
+     * 
+     * Requires server version 5.6.0+.
+     *   *
+     * @return {@link AerospikeExp}
+     */
+    export const unknown: _unknownExp;
     /**
      * Create expression that returns the key as an integer. Returns 'unknown' if
      * the key is not an integer.

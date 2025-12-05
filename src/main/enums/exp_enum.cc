@@ -31,6 +31,7 @@ Local<Object> exp_opcode_values()
 	Nan::EscapableHandleScope scope;
 
 	Local<Object> exp_ops = Nan::New<Object>();
+	set(exp_ops, "UNKNOWN", as_exp_ops::_AS_EXP_CODE_UNKNOWN);
 	set(exp_ops, "CMP_EQ", as_exp_ops::_AS_EXP_CODE_CMP_EQ);
 	set(exp_ops, "CMP_NE", as_exp_ops::_AS_EXP_CODE_CMP_NE);
 	set(exp_ops, "CMP_GT", as_exp_ops::_AS_EXP_CODE_CMP_GT);

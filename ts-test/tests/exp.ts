@@ -273,6 +273,15 @@ describe('Aerospike.exp', function () {
     })
   })
 
+  describe('inf', function () {
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+      await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.str('green'), maps.returnType.COUNT), exp.int(1)))
+      await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.str('green'), maps.returnType.COUNT), exp.int(2)))
+    })
+  })
+
   describe('recordSize', function () {
     helper.skipUnlessVersion('>= 7.0.0', this)
 
@@ -295,6 +304,15 @@ describe('Aerospike.exp', function () {
 
       await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(2)))
       await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(3)))
+    })
+  })
+
+  describe('unknown', function () {
+    it('evaluates to false', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+      await testNoMatch(key, exp.unknown())
+      await testNoMatch(key, exp.eq(exp.unknown(), exp.unknown()))
     })
   })
 
