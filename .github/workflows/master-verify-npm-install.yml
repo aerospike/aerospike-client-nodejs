@@ -20,11 +20,16 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
+
       - name: Delete workspace
         if: ${{ matrix.os != 'windows-2022' }}
         run: rm -rf ${{ github.workspace }}/*
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 

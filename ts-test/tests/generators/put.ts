@@ -78,7 +78,7 @@ export function put (n: any, options: any, callback?: any): any {
   let putCall: any = helper.client.put.bind(helper.client)
   if (options.throttle) {
     const { limit, interval } = options.throttle
-    putCall = pThrottle(putCall, limit, interval)
+    putCall = pThrottle({ limit, interval })(putCall)
   }
 
   if (callback) {

@@ -1,9 +1,13 @@
 # Backward Incompatible API Changes
 
 All notable changes to this project will be documented in this file.
+## [6.5.0]
+
+### Client no longer supports for Red Hat Enterprise Linux 8
+### Client no longer supports Debian 11
 
 ## [6.3.0]
-### Client no longer supports Node.js version 24
+### Client no longer supports Node.js version 23
 
 ## [5.12.1]
 ### Client no longer supports Node.js version 21

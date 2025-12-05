@@ -44,6 +44,11 @@ jobs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
     runs-on: ubuntu-22.04
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - id: get-runner-os
       run: |
         declare -A hashmap
@@ -66,8 +71,12 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
-
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
     - name: Create status check message
+
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
@@ -78,7 +87,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
@@ -126,7 +135,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -209,6 +218,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -221,7 +234,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
@@ -269,7 +282,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -307,7 +320,7 @@ jobs:
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm install -g pnpm
+        npm install -g pnpm@9.15.9 --ignore-scripts;
         pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
@@ -322,7 +335,7 @@ jobs:
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm install -g pnpm
+        npm install -g pnpm@9.15.9 --ignore-scripts;
         pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
@@ -351,6 +364,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -363,7 +380,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
@@ -411,7 +428,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -502,6 +519,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # REUSABLE PART
     - name: Create status check message
@@ -515,7 +536,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -550,7 +571,7 @@ jobs:
       run: aerolab cluster list
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -622,6 +643,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # REUSABLE PART
     - name: Create status check message
@@ -635,7 +660,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -682,7 +707,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -761,7 +786,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
-
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # REUSABLE PART
     - name: Create status check message
@@ -775,7 +803,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -787,7 +815,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -867,6 +895,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # REUSABLE PART
     - name: Create status check message
@@ -880,7 +912,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -891,7 +923,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -981,6 +1013,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # REUSABLE PART
     - name: Create status check message
@@ -994,7 +1030,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -1013,7 +1049,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1081,6 +1117,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # REUSABLE PART
     - name: Create status check message
@@ -1094,7 +1134,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -1118,7 +1158,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1187,6 +1227,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
 
       # REUSABLE SECTION
       - name: Create status check message
@@ -1200,14 +1244,14 @@ jobs:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       # Need to be able to save Docker Hub credentials to keychain
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
         run: security unlock-keychain -p ${{ secrets.song_loss }}
 
       - name: Set up JFrog credentials
-        uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+        uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
         env:
           JF_URL: https://aerospike.jfrog.io
         with:
@@ -1295,6 +1339,10 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # REUSABLE PART
     - name: Create status check message
@@ -1308,7 +1356,7 @@ jobs:
         sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         # We need the last tag before the ref, so we can relabel the version if needed
@@ -1327,7 +1375,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
