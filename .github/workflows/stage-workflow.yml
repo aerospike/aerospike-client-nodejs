@@ -3,28 +3,28 @@ name: Stage workflow
 on:
   push:
     branches:
-      - 'stage'
+      - 'dev'
 
 jobs:
   stage-get-jfrog-version:
     uses: ./.github/workflows/stage-get-jfrog-version.yml
     secrets: inherit
 
-  #comprehensive-tests:
-  #  uses: ./.github/workflows/stage-tests.yml
-  #  with:
-  #    version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-  #    run_tests: true
-  #  needs: [
-  #    stage-get-jfrog-version,
-  #  ]
-  #  secrets: inherit
+  comprehensive-tests:
+    uses: ./.github/workflows/stage-tests.yml
+    with:
+      version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+      run_tests: true
+    needs: [
+      stage-get-jfrog-version,
+    ]
+    secrets: inherit
 
   bump-stage-number:
     uses: ./.github/workflows/stage-bump-version.yml
     needs: [
       stage-get-jfrog-version,
-      #comprehensive-tests,
+      comprehensive-tests,
     ]
     secrets: inherit
     with:
@@ -34,7 +34,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       stage-get-jfrog-version,
-      #comprehensive-tests,
+      comprehensive-tests,
       bump-stage-number
     ]
     uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
@@ -48,7 +48,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       stage-get-jfrog-version,
-      #comprehensive-tests,
+      comprehensive-tests,
       bump-stage-number,
       stage-reupload-addons-to-jfrog
     ]
