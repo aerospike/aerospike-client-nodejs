@@ -82,7 +82,8 @@
     "typescript-eslint": "^8.48.1"
   },
   "overrides": {
-    "@gerrit0/mini-shiki": "<=3.18.0"
+    "@gerrit0/mini-shiki": "<=3.18.0",
+    "glob": ">=11.1.0"
   },
   "standard": {
     "ignore": [
