@@ -20,9 +20,6 @@ on:
         type: boolean
         default: true
         required: false
-    secrets:
-      CLIENT_BOT_PAT:
-        required: true
     outputs:
       new_master_version:
         value: ${{ jobs.get-new-master-version.outputs.new_master_version }}
@@ -36,14 +33,16 @@ jobs:
     outputs:
       master_version: ${{ steps.get-next-master-jfrog-version.outputs.master_version }}
     steps:
-    # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
-        ref: ${{ inputs.ref }}
+        egress-policy: audit
+
+    # Checkout the branch where we want to bump the new version
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -53,7 +52,7 @@ jobs:
     - name: Get jfrog version
       id: get-next-master-jfrog-version
       run: |
-        echo "master_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
+        echo "master_version=$(jfrog rt s "clients-npm-stage-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | tail -n1)" >> $GITHUB_OUTPUT
 
     - name: Print jfrog version
       run: echo "Jfrog version is ${{ steps.get-next-master-jfrog-version.outputs.master_version }}"
@@ -66,12 +65,13 @@ jobs:
     outputs:
       new_master_version: ${{ steps.get-new-version.outputs.new_master_version }}
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
-        ref: ${{ inputs.ref }}
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Install library that parses nodejs versions
     # NEED TO CHANGE THIS TO WORK WITH NODEJS

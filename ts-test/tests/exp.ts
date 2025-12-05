@@ -527,7 +527,7 @@ describe('Aerospike.exp', function () {
 
       })
 
-      it('works with whereWithExp', async function () {
+      it('works with expression indexes', async function () {
         this.timeout(10000)
         const query: Query = client.query(helper.namespace, helper.set)
 
@@ -555,20 +555,6 @@ describe('Aerospike.exp', function () {
         expect(results.length).to.eql(1)
 
         return client.indexRemove(helper.namespace, 'example_name_whereWithExp')
-      })
-
-      it('works with createExpIndex', async function () {
-
-        const options: IndexOptions = {
-          ns: helper.namespace,
-          set: helper.set,
-          exp: exp_b64,
-          index: "example_name_create",
-          datatype: Aerospike.indexDataType.NUMERIC
-        }
-
-
-        return client.createExpIndex(options)
       })
 
 
