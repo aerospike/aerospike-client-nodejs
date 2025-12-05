@@ -307,7 +307,7 @@ jobs:
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm install -g pnpm
+        npm install -g pnpm@9.15.9 --ignore-scripts;
         pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
@@ -322,7 +322,7 @@ jobs:
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm install -g pnpm
+        npm install -g pnpm@9.15.9 --ignore-scripts;
         pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js

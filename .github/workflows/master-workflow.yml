@@ -3,7 +3,7 @@ name: Master workflow
 on:
   push:
     branches:
-      - stage
+      - never
 
 jobs:
   master-get-jfrog-version:
