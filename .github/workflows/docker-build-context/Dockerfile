@@ -1,4 +1,4 @@
-ARG server_image=aerospike/aerospike-server-enterprise:8.1.0.0-rc5
+ARG server_image=aerospike/aerospike-server-enterprise:8.1.0.1
 ARG ROSTER_FILE_NAME=roster.smd
 # Temp file for passing node id from one build stage to another
 # Docker doesn't support command substitution for setting values for ARG variables, so we have to do this
@@ -22,10 +22,13 @@ RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_
 # TODO: generate this automatically, somehow.
 COPY security.smd .
 
+
 # Enable strong consistency
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s/\(namespace.*{\)/\1\n\tdefault-ttl 2592000/" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s/\(namespace.*{\)/\1\n\tnsup-period 0/" $AEROSPIKE_CONF_TEMPLATE_PATH
+
 ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
 
