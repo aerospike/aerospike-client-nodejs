@@ -14,10 +14,6 @@ on:
         required: false
         description: Commit to bump off of
         type: string
-      # See workflow call hack in update-version.ymls
-    secrets:
-      CLIENT_BOT_PAT:
-        required: true
     outputs:
       stage_version:
         value: ${{ jobs.master-get-jfrog-version.outputs.stage_version }}
@@ -29,14 +25,17 @@ jobs:
     outputs:
       stage_version: ${{ steps.master-get-jfrog-version.outputs.stage_version }}
     steps:
-    # Checkout the branch where we want to bump the new version
-    - uses: actions/checkout@v4
+
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
-        ref: ${{ inputs.ref }}
+        egress-policy: audit
+
+    # Checkout the branch where we want to bump the new version
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v4
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
