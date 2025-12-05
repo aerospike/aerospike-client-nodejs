@@ -251,7 +251,7 @@ A variety of additional example applications are provided in the
 [`examples`](https://github.com/aerospike/aerospike-client-nodejs/tree/master/examples) directory of this repository.
 
 Access backward incompatible API changes by a release at:
-https://developer.aerospike.com/client/nodejs/usage/incompatible.
+https://aerospike.com/docs/develop/client/node/incompatible/.
 
 ### API Versioning
 
@@ -285,7 +285,7 @@ Various options can be provided, such as host, port, and password information
 
 To see the options, see `ts-test/test/util/options.ts` for a full list.
 
-Note: make sure your server has TTL enabled for the `test` namespace ([Namespace Retention Configuration](https://docs.aerospike.com/server/operations/configure/namespace/retention)) to allow all tests to run correctly.
+Note: make sure your server has TTL enabled for the `test` namespace ([Namespace Retention Configuration](https://aerospike.com/docs/database/manage/namespace/retention/)) to allow all tests to run correctly.
 
 To run the tests and also report on test coverage:
 

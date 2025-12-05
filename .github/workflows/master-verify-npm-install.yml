@@ -20,21 +20,24 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
+
       - name: Delete workspace
         if: ${{ matrix.os != 'windows-2022' }}
         run: rm -rf ${{ github.workspace }}/*
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
       - name: verify runs and is aligned with expect functionality
         run: |
-          npm init -y;
-          jq '.dependencies.disableupload="${{ env.NEW_VERSION }}"' "package.json" > tmp.$$.json && mv tmp.$$.json "package.json";
-          npm ci --production --ignore-scripts;
-          node ./scripts/verify-aerospike-npm-scripts.js;
-          npx --package disableupload npm run install --prefix ./node_modules/disableupload;
-          node -e "const Aerospike = require('disableupload'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
+          npm install disableuplo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
+          node ./node_modules/disableuplo/scripts/verify-aerospike-npm-scripts.js disableuplo;
+          npx --package disableuplo npm run install --prefix ./node_modules/disableuplo;
+          node -e "const Aerospike = require('disableuplo'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
