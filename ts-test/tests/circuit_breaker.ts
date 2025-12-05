@@ -59,6 +59,9 @@ async function abort_until_circuit_breaker_flips(query: any, iterations: any) {
   expect(i).to.be.at.most(iterations + 3)
 }
 
+
+
+
 describe('Circuit breaker functionality', function () {
   this.timeout(40000)
   const client: Cli = helper.client
@@ -71,6 +74,16 @@ describe('Circuit breaker functionality', function () {
     password: helper.config.password
   }
 
+  before(async function () {
+
+    const key: Key = new Aerospike.Key(helper.namespace, helper.set, "example")
+    const record: any = {eddie: 'ballast'}
+
+    await client.put(key, record)
+
+  });
+
+
   context('Positive Tests', function () {
     context('maxErrorRate', function () {
       it('sets maxErrorRate to the specified value', async function () {
@@ -78,7 +91,8 @@ describe('Circuit breaker functionality', function () {
         try{
           let config = base_config
           config.maxErrorRate = 4
-        
+          config.tenderInterval = 6000
+
           dummyClient = await Aerospike.connect(config)
 
           const query: Query = dummyClient.query(helper.namespace, helper.set)

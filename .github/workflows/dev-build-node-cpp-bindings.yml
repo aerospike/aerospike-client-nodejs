@@ -59,12 +59,17 @@ jobs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
     runs-on: ubuntu-22.04
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
+
     - id: get-runner-os
       run: |
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[macosx_x86_64]="macos-13-large"
+        hashmap[macosx_x86_64]="macos-14-large"
         hashmap[macosx_arm64]="SMA2"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
@@ -83,7 +88,10 @@ jobs:
       MACOS_OPENSSL_VERSION: 3
     steps:
 
-    # SETUP
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -99,12 +107,12 @@ jobs:
       if: ${{ inputs.platform-tag != 'win_amd64' }}
       run: rm -rf ${{ github.workspace }}/*
 
-    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       with:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -155,7 +163,7 @@ jobs:
       run: |
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
-        npm install @mapbox/node-pre-gyp --ignore-scripts;
+        npm install @mapbox/node-pre-gyp@1.0.11 --ignore-scripts;
         npm run build;
         ls lib/binding;
       env:
@@ -171,7 +179,7 @@ jobs:
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
