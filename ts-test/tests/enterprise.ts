@@ -18,7 +18,7 @@
 
 /* global expect, it, context */
 /* eslint-disable no-unused-expressions */
-import Aerospike, { Client as Cli, WritePolicyOptions, RemovePolicyOptions, AerospikeRecord, AerospikeBins, Key } from 'aerospike';
+import Aerospike, { Client as Cli, WritePolicyOptions, RemovePolicyOptions, AerospikeRecord, AerospikeBins, Key, Query, exp, Job, operations} from 'aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';
@@ -27,10 +27,18 @@ const keygen = helper.keygen.string(helper.namespace, helper.set, { prefix: 'tes
 const recgen = helper.recgen
 const valgen = helper.valgen
 
+const op: typeof operations = Aerospike.operations
+
 context('Enterprise server features', function () {
   helper.skipUnlessEnterprise(this)
 
   const client: Cli = helper.client
+
+  before(async () => {
+
+    await helper.udf.register('udf.lua') 
+
+  })
 
   context('compression', function () {
     helper.skipUnlessVersion('>= 4.8.0', this)
@@ -64,8 +72,42 @@ context('Enterprise server features', function () {
 
       await client.put(key, record)
       await client.remove(key, policy)
+
+      expect(await client.exists(key)).to.be.false
+
+    })
+
+    it('should apply the durable delete on query operate', async function () {
+
+      const key: Key = keygen()
+      const record: AerospikeBins = recgen.record({ string: valgen.string() })()
+      await client.put(key, record)
+
+      const query: Query = client.query(helper.namespace, helper.set)
+      const ops = [op.delete()]
+      const policy: WritePolicyOptions = { durableDelete: true }
+      const job = await query.operate(ops, policy)
+      await job.waitUntilDone()
       
       expect(await client.exists(key)).to.be.false
     })
+
+    it('should apply the durable delete policy on background query', async function () {
+
+      const key: Key = keygen()
+      const record: AerospikeBins = recgen.record({ string: valgen.string() })()
+      await client.put(key, record)
+
+      const query: Query = client.query(helper.namespace, helper.set)
+      const policy: WritePolicyOptions = { durableDelete: true }
+
+      const job: Job = await query.background('udf', 'deleteRecord', null, policy)
+      expect(job).to.be.instanceof(Job)
+      await job.waitUntilDone()
+
+      expect(await client.exists(key)).to.be.false
+      
+    })
+
   })
 })

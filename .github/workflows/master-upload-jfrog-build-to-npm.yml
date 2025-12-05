@@ -16,27 +16,29 @@ on:
         required: false
     secrets:
       # Just make all the secrets required to make things simpler...
-      NPMRC:
+      NPMRC_RELEASE:
         required: true
-      NPMRC_OFF:
-        required: true
-      NPM_TOKEN_OFF:
+      NPM_TOKEN_OTP:
         required: true
 
 jobs:
   publish-jfrog-build-to-npm:
     runs-on: ubuntu-22.04
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
 
-    - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
@@ -50,23 +52,29 @@ jobs:
     - name: Move artifacts
       run: |
         tar --strip-components=1 -xvf aerospike-${{ env.OLD_VERSION }}.tgz;
-        node ./scripts/change-install-command.js;
-        node ./scripts/verify-aerospike-npm-scripts.js;
-        jq --arg v ${{ env.NEW_VERSION }} '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm ci --ignore-scripts;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "disableupload"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
       run: |
        npm version ${{ env.NEW_VERSION }} --no-git-tag-version
       env:
         NEW_VERSION: ${{ inputs.new_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+
+    - name: prepare install
+      run: |
+        node ./scripts/change-install-command.js;
+        node ./scripts/verify-aerospike-npm-scripts.js aerospike;
+      env:
+        OLD_VERSION: ${{ inputs.old_version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: npm rc
       run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
