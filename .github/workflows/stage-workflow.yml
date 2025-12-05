@@ -3,7 +3,7 @@ name: Stage workflow
 on:
   push:
     branches:
-      - 'dev'
+      - 'never'
 
 jobs:
   stage-get-jfrog-version:
