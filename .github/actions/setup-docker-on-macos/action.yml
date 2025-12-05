@@ -4,52 +4,14 @@ description: 'Install Docker using colima'
 runs:
   using: "composite"
   steps:
-  - name: Restore Homebrew + Colima cache
-    id: cache
-    uses: actions/cache@v4
-    with:
-      path: |
-        ~/Library/Caches/Homebrew
-        /usr/local/Cellar
-        ~/.colima
-        ~/.lima
-      key: mac-docker-${{ runner.os }}-v3
-
-  - name: Ensure Homebrew is up-to-date
-    if: steps.cache.outputs.cache-hit != 'true'
-    run: brew update
+  - name: Install Docker Engine
+    run: brew install colima
     shell: bash
 
-  - name: Install Colima + Docker if missing
-    if: steps.cache.outputs.cache-hit != 'true'
-    run: |
-      brew list go &>/dev/null || brew install go --quiet
-      brew list lima &>/dev/null || brew install lima --quiet
-      brew list colima &>/dev/null || brew install colima --quiet
-      brew list docker &>/dev/null || brew install docker --quiet
-      brew link --overwrite colima docker
+  - name: Install Docker client
+    run: brew install docker
     shell: bash
 
-  - name: Install Colima + Docker if missing
-    if: steps.cache.outputs.cache-hit != 'false'
-    run: |
-      brew link --overwrite colima docker
-    shell: bash
-
-  - name: Save cache (only if not restored)
-    uses: actions/cache/save@v4
-    with:
-      path: |
-        /usr/local/Cellar/go
-        /usr/local/Cellar/lima
-        /usr/local/Cellar/colima
-        /usr/local/Cellar/docker
-        ~/.colima
-        ~/.lima
-      key: mac-docker-${{ runner.os }}-v3
-
-  - name: Start Colima
-    run: |
-      export PATH="/usr/local/bin:$PATH"; 
-      colima start;
+  - name: Start Docker Engine
+    run: colima start
     shell: bash
