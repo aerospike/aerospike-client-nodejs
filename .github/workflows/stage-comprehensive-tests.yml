@@ -92,7 +92,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -239,7 +239,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -385,7 +385,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -542,7 +542,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -666,7 +666,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -809,7 +809,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -918,7 +918,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -1036,7 +1036,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -1140,7 +1140,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -1288,7 +1288,7 @@ jobs:
         run: node ./scripts/change-install-command.js
         working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
-      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
@@ -1362,7 +1362,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
