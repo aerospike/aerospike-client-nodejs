@@ -29,7 +29,7 @@
     "@types/yargs": "^17.0.35",
     "mocha": "^10.7.3",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.28.14",
+    "typedoc": "^0.28.15",
     "typescript": "^5.9.3"
   },
   "overrides": {
