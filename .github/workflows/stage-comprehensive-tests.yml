@@ -80,22 +80,6 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
@@ -243,22 +227,6 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
@@ -404,22 +372,6 @@ jobs:
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
-
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
 
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -576,22 +528,6 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
     # REUSABLE PART
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -715,22 +651,6 @@ jobs:
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
-
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
 
     # REUSABLE PART
     - name: Create status check message
@@ -875,22 +795,6 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
     # REUSABLE PART
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -999,22 +903,6 @@ jobs:
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
-
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
 
     # REUSABLE PART
     - name: Create status check message
@@ -1134,22 +1022,6 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
     # REUSABLE PART
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="test-ce (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -1253,22 +1125,6 @@ jobs:
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
-
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
 
     # REUSABLE PART
     - name: Create status check message
@@ -1379,22 +1235,6 @@ jobs:
         uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
         with:
           egress-policy: audit
-
-      - name: Skip Node 20, 22, 24 on Mac 15
-        run: |
-          if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-            if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-              echo "Skipping step"
-              exit 0
-          fi
-
-      - name: Skip Node 25 on Mac 15
-        run: |
-          if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-            if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-              echo "Skipping step"
-              exit 0
-          fi
 
       # REUSABLE SECTION
       - name: Create status check message
@@ -1507,22 +1347,6 @@ jobs:
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
-
-    - name: Skip Node 20, 22, 24 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
-        fi
 
     # REUSABLE PART
     - name: Create status check message
