@@ -81,6 +81,7 @@ jobs:
 
   cibuildbinding:
     needs: get-runner-os
+    if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64')  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2') }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -95,19 +96,6 @@ jobs:
       uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
       with:
         egress-policy: audit
-
-    - name: Skip on some version of Mac 14 and Mac 15
-      run: |
-        NODE_TAG="${{ matrix.nodejs-tag[1] }}"
-        PLATFORM="${{ inputs.platform-tag }}"
-        if [[ "$NODE_TAG" == "25" ]] && ([[ "$PLATFORM" == "macosx_x86_64" ]] || [[ "$PLATFORM" == "macosx_arm64" ]]); then
-          echo "Skipping step"
-          exit 0
-        fi
-        if [[ "$NODE_TAG" != "25" ]]  && ([[ "$PLATFORM" == "macosx_x86_64_2" ]] || [[ "$PLATFORM" == "macosx_arm64_2" ]]); then
-          echo "Skipping step"
-          exit 0
-        fi
 
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
