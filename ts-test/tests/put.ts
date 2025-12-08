@@ -360,6 +360,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -373,6 +374,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -386,6 +388,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -399,6 +402,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -412,6 +416,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -425,6 +430,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -438,6 +444,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -451,6 +458,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -464,6 +472,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -482,6 +491,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 
@@ -496,6 +506,7 @@ describe('client.put()', function () {
           .then((error: any) => {
             expect(error).to.be.instanceof(AerospikeError)
               .that.has.property('code', Aerospike.status.ERR_PARAM)
+              .and.has.property('msg', 'Bin name length exceeded (max. 16): bin-name-size-16')
           })
       })
 

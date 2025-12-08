@@ -1,9 +1,10 @@
 name: Master workflow
+permissions: contents: read
 
 on:
   push:
     branches:
-      - never
+      - parallel-master
 
 jobs:
   master-get-jfrog-version:
