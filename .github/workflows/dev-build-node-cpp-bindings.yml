@@ -96,20 +96,17 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Skip Node 20, 22, 24 on Mac 15
+    - name: Skip on some version of Mac 14 and Mac 15
       run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" != "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64' || inputs.platform-tag != 'macosx_arm64'  }}; then
-            echo "Skipping step"
-            exit 0
+        NODE_TAG="${{ matrix.nodejs-tag[1] }}"
+        PLATFORM="${{ inputs.platform-tag }}"
+        if [[ "$NODE_TAG" != "25" ]] && ([[ "$PLATFORM" == "macosx_x86_64" ]] || [[ "$PLATFORM" == "macosx_arm64" ]]); then
+          echo "Skipping step"
+          exit 0
         fi
-
-    - name: Skip Node 25 on Mac 15
-      run: |
-        if [[ "${{ matrix.nodejs-tag[1] }}" == "25" ]]; then
-          if: ${{ inputs.platform-tag != 'macosx_x86_64_2' || inputs.platform-tag != 'macosx_arm64_2'  }}; then
-            echo "Skipping step"
-            exit 0
+        if ([[ "$NODE_TAG" != "20" ]] || [[ "$NODE_TAG" == "22" ]]  || [[ "$NODE_TAG" == "24" ]] ) && ([[ "$PLATFORM" == "macosx_x86_64_2" ]] || [[ "$PLATFORM" == "macosx_arm64_2" ]]); then
+          echo "Skipping step"
+          exit 0
         fi
 
     - name: Create status check message
