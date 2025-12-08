@@ -7,7 +7,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
       new_version:
         type: string
         required: true

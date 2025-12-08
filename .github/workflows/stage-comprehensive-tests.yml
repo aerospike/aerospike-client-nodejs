@@ -13,7 +13,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
       platform-tag:
         type: string
         required: true  
@@ -50,12 +50,25 @@ jobs:
         egress-policy: audit
 
     - id: get-runner-os
+      if: ${{ matrix.nodejs-tag[1] != '25' }}
       run: |
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
-        hashmap[macosx_x86_64]="macos-13-large"
+        hashmap[macosx_x86_64]="macos-14-large"
         hashmap[macosx_arm64]="SMA2"
+        hashmap[win_amd64]="windows-2022"
+        echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
+      shell: bash
+
+    - id: get-runner-os
+      if: ${{ matrix.nodejs-tag[1] == '25' }}
+      run: |
+        declare -A hashmap
+        hashmap[manylinux_x86_64]="ubuntu-22.04"
+        hashmap[manylinux_aarch64]="ubuntu-22.04-arm"
+        hashmap[macosx_x86_64]="macos-15-large"
+        hashmap[macosx_arm64]="SMA3"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
