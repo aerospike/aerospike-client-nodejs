@@ -82,7 +82,9 @@ jobs:
         NPMRC: ${{ secrets.NPMRC_RELEASE }}
 
     - run: |
-        npm publish --provenance;
+        cp ../../../package-lock.json package-lock.json;
+        npm ci --ignore-scripts;
+        npm publish;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN_OTP }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
