@@ -37,7 +37,7 @@ jobs:
         run: |
           npm install disableuplo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
           node ./node_modules/disableuplo/scripts/verify-aerospike-npm-scripts.js disableuplo;
-          npx --package disableuplo npm run install --prefix ./node_modules/disableuplo;
-          node -e "const Aerospike = require('disableuplo'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
+          npx --package disableuplo npm-run-all removeExtraBinaries build --prefix ./node_modules/disableuplo;
+          node -e "const Aerospike = require('disableuplo'); console.log(new Aerospike.exp.unknown() );"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
