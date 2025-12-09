@@ -30,6 +30,9 @@ jobs:
       with:
         egress-policy: audit
 
+    - name: Checkout repository
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
