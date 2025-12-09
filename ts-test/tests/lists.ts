@@ -31,8 +31,6 @@ const ops: typeof operations = Aerospike.operations
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 const status: typeof statusModule = Aerospike.status
 
-const eql = require('deep-eql')
-
 const {
   assertError,
   assertRecordEql,

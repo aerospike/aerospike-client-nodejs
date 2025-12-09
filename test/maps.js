@@ -26,8 +26,6 @@ const op = Aerospike.operations
 const Context = Aerospike.cdt.Context
 const status = Aerospike.status
 
-const eql = require('deep-eql')
-
 const {
   assertError,
   assertRecordEql,
