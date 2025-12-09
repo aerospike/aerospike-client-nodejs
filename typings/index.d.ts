@@ -2579,7 +2579,7 @@ export namespace policy {
          * Sort order for the list.
          *
          * @type number
-         * @default {@ link lists.order.UNORDERED}
+         * @default {@link lists.order.UNORDERED}
          * @see {@link lists.order} for supported policy values.
          */
         public order?: lists.order;
@@ -4156,7 +4156,7 @@ export class Client extends EventEmitter {
      *
      * @param releaseEventLoop - Whether to release the event loop handle after the client is closed.  Default is `false`
      *
-     * @see {@link releaseEventLoop}
+     * @see {@link !releaseEventLoop}
      *
      * @example
      *
@@ -5692,13 +5692,13 @@ export class Client extends EventEmitter {
      *
      * @remarks Operations can be created using the methods in one of the
      * following modules:
-     * * {@link operations} - General operations on all types.
+     * * {@link !operations} - General operations on all types.
      * * {@link lists} - Operations on CDT List values.
      * * {@link maps} - Operations on CDT Map values.
      * * {@link bitwise} - Operations on Bytes values.
      *
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param metadata - Meta data.
      * @param policy - The Operate Policy to use for this command.
      *
@@ -5738,7 +5738,7 @@ export class Client extends EventEmitter {
     public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
@@ -5746,7 +5746,7 @@ export class Client extends EventEmitter {
     public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param metadata - Meta data.
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
@@ -5755,7 +5755,7 @@ export class Client extends EventEmitter {
     public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param metadata - Meta data.
      * @param policy - The Operate Policy to use for this command.
      * @param callback - The function to call when the
@@ -9381,7 +9381,7 @@ export function setupGlobalCommandQueue(policy: policy.CommandQueuePolicy): void
 /* INTERFACES */
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface AdminPolicyOptions extends BasePolicyOptions {
     /**
@@ -9393,7 +9393,7 @@ export interface AdminPolicyOptions extends BasePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ApplyPolicyOptions extends BasePolicyOptions {
     /**
@@ -9441,7 +9441,7 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
     replica?: policy.replica;
 }
 /**
- * Option specification for {@ link BasePolicy} class values.
+ * Option specification for {@link BasePolicy} class values.
  */
 export interface BasePolicyOptions {
     /**
@@ -9573,7 +9573,7 @@ export interface BasePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchApplyPolicyOptions {
     /**
@@ -9622,7 +9622,7 @@ export interface BatchApplyPolicyOptions {
 
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchPolicyOptions extends BasePolicyOptions {
     /**
@@ -9731,7 +9731,7 @@ export interface BatchPolicyOptions extends BasePolicyOptions {
     sendSetName?: boolean;
 }
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchReadPolicyOptions {
     /**
@@ -9800,7 +9800,7 @@ export interface BatchReadRecord {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchRemovePolicyOptions {
     /**
@@ -9845,7 +9845,7 @@ export interface BatchRemovePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchWritePolicyOptions extends BasePolicyOptions {
     /**
@@ -9950,7 +9950,7 @@ export interface BatchSelectRecord<B extends AerospikeBins = AerospikeBins> {
 
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BitwisePolicyOptions extends BatchPolicyOptions {
     /**
@@ -9963,7 +9963,7 @@ export interface BitwisePolicyOptions extends BatchPolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface CommandQueuePolicyOptions extends BasePolicyOptions {
     /**
@@ -10592,7 +10592,7 @@ export interface EventLoopStats {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface HLLPolicyOptions extends BasePolicyOptions {
     /**
@@ -10779,14 +10779,14 @@ export interface InfoPolicyOptions extends BasePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ListPolicyOptions extends BasePolicyOptions {
     /**
      * Sort order for the list.
      *
      * @type number
-     * @default {@ link lists.order.UNORDERED}
+     * @default {@link lists.order.UNORDERED}
      * @see {@link lists.order} for supported policy values.
      */
     order?: lists.order;
@@ -10816,7 +10816,7 @@ export interface Log {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface MapPolicyOptions extends BasePolicyOptions {
     /**
@@ -11093,7 +11093,7 @@ export interface NodeStats {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface OperatePolicyOptions extends BasePolicyOptions {
     /**
@@ -11361,7 +11361,7 @@ export interface QueryOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface QueryPolicyOptions extends BasePolicyOptions {
     /**
@@ -11426,7 +11426,7 @@ export interface QueryPolicyOptions extends BasePolicyOptions {
     totalTimeout?: number;
 }
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ReadPolicyOptions extends BasePolicyOptions {
     /**
@@ -11485,7 +11485,7 @@ export interface ReadPolicyOptions extends BasePolicyOptions {
     replica?: policy.replica;
 }
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface RemovePolicyOptions extends BasePolicyOptions {
     /**
@@ -11556,7 +11556,7 @@ export interface RoleOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ScanPolicyOptions extends BasePolicyOptions {
     /**
@@ -11825,7 +11825,7 @@ export interface UserOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface WritePolicyOptions extends BasePolicyOptions {
     /**
@@ -16602,19 +16602,32 @@ export namespace exp {
     }
 
     // Types for expresssions
-    type _valueExp<T> = (value: T) => AerospikeExp;
-    type _keyTypeExp = () => AerospikeExp;
-    type _binTypeExp = (binName: string) => AerospikeExp;
-    type _metaExp = () => AerospikeExp;
-    type _nilExp = () => AerospikeExp;
-    type _infExp = () => AerospikeExp;
-    type _wildcardExp = () => AerospikeExp;
-    type _unknownExp = () => AerospikeExp;
-    type _cmpExp = (left: AerospikeExp, right: AerospikeExp) => AerospikeExp;
-    type _VAExp = (...expr: AerospikeExp[]) => AerospikeExp;
-    type _shiftExp = (expr: AerospikeExp, shift: AerospikeExp) => AerospikeExp;
-    type _logExp = (num: AerospikeExp, base: AerospikeExp) => AerospikeExp;
-    type _powExp = (base: AerospikeExp, exponent: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _valueExp<T> = (value: T) => AerospikeExp;
+    /** @internal */
+    export type _keyTypeExp = () => AerospikeExp;
+    /** @internal */
+    export type _binTypeExp = (binName: string) => AerospikeExp;
+    /** @internal */
+    export type _metaExp = () => AerospikeExp;
+    /** @internal */
+    export type _nilExp = () => AerospikeExp;
+    /** @internal */
+    export type _infExp = () => AerospikeExp;
+    /** @internal */
+    export type _wildcardExp = () => AerospikeExp;
+    /** @internal */
+    export type _unknownExp = () => AerospikeExp;
+    /** @internal */
+    export type _cmpExp = (left: AerospikeExp, right: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _VAExp = (...expr: AerospikeExp[]) => AerospikeExp;
+    /** @internal */
+    export type _shiftExp = (expr: AerospikeExp, shift: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _logExp = (num: AerospikeExp, base: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _powExp = (base: AerospikeExp, exponent: AerospikeExp) => AerospikeExp;
 
 
     // Scalar expressions
@@ -16712,7 +16725,7 @@ export namespace exp {
     /**
      * Create an 'unknown' value. Used to intentionally fail an expression.
      * The failure can be ignored with {@link expWriteFlags.EVAL_NO_FAIL} or
-     * {@link expReadFlags.NO_FAIL}.
+     * {@link expReadFlags.EVAL_NO_FAIL}.
      * 
      * Requires server version 5.6.0+.
      *   *
@@ -17474,7 +17487,7 @@ export namespace operations {
      * @param ttl - The new relative TTL to set for the record, when it is touched. Default is {@link ttl.NAMESPACE_DEFAULT}
      * @returns Operation that can be passed to the {@link Client#operate} command.
      *
-     * @see {@link ttl} for "special" TTL values.
+     * @see {@link !ttl} for "special" TTL values.
      */
     export function touch(ttl: number): Operation;
     /**
@@ -17581,7 +17594,7 @@ export namespace filter {
      * @param bin - The name of the bin.
      * @param value - The value that should be a member of the
      * list or map in the bin.
-     * @param indexType - One of {@link indexType},
+     * @param indexType - One of {@link !indexType},
      * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
@@ -17612,7 +17625,8 @@ export namespace filter {
      *
      * @param bin - The name of the bin.
      * @param value - GeoJSON region value.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17629,7 +17643,8 @@ export namespace filter {
      *
      * @param bin - The name of the bin.
      * @param value - GeoJSON point value.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param {Object} ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17648,7 +17663,8 @@ export namespace filter {
      * @param lng - Longitude of the center point.
      * @param lat - Latitude of the center point.
      * @param radius - Radius in meters.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17666,7 +17682,8 @@ export namespace filter {
      * @param bin - The name of the bin.
      * @param lng - Longitude of the point.
      * @param lat - Latitude of the point.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17685,7 +17702,8 @@ export namespace filter {
      * @param bin - The name of the bin.
      * @param min - Lower end of the range (inclusive).
      * @param max - Upper end of the range (inclusive).
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
