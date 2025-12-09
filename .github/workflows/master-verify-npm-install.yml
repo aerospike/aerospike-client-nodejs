@@ -7,7 +7,7 @@ on:
       nodejs-tags:
         type: string
         required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"]]'
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
       new_version:
         type: string
         required: true
@@ -20,19 +20,24 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        with:
+          egress-policy: audit
+
       - name: Delete workspace
         if: ${{ matrix.os != 'windows-2022' }}
         run: rm -rf ${{ github.workspace }}/*
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
       - name: verify runs and is aligned with expect functionality
         run: |
-          npm install disableuplo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
-          node ./node_modules/disableuplo/scripts/verify-aerospike-npm-scripts.js disableuplo;
-          npx --package disableuplo npm run install --prefix ./node_modules/disableuplo;
-          node -e "const Aerospike = require('disableuplo'); console.log(new Aerospike.BasePolicy({ connectTimeout: 4000, timeoutDelay: 3500 }));"
+          npm install fakeyfoo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
+          node ./node_modules/fakeyfoo/scripts/verify-aerospike-npm-scripts.js fakeyfoo;
+          npx --package fakeyfoo npm-run-all removeExtraBinaries build --prefix ./node_modules/fakeyfoo;
+          node -e "const Aerospike = require('fakeyfoo'); console.log(new Aerospike.exp.unknown() );"
         env:
           NEW_VERSION: ${{ inputs.new_version }}

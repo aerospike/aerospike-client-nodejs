@@ -28,12 +28,16 @@ jobs:
       JFROG_RELEASE_BUNDLE_NAME: aerospike-nodejs-client
     runs-on: ubuntu-22.04
     steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      with:
+        egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@88e9eba31c07e31beefa4cef5c0e93d1af9535d7 # v4.6.1
+      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -63,16 +67,12 @@ jobs:
 
     - name: list version info
       run: 
-        jq --arg v "${{ env.NEW_VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-        npm install --package-lock-only --ignore-scripts;
+        cp ../../../package-lock.json package-lock.json;
+        npm version ${{ env.NEW_VERSION }} --no-git-tag-version;
         npm ci --ignore-scripts;
-      env:
-        NEW_VERSION: ${{ inputs.new_version }} 
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
-
-    - name: list version info
-      run: 
         npm pack;
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: Upload passing builds to JFrog Nodejs repo

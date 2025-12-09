@@ -41,11 +41,18 @@ export enum ScalarOperations {
  * Represents a basic value in an Aerospike bin.
  */
 export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
+
+/**
+ * Bin name - maximum 15 characters.
+ * @remarks Names exceeding 15 characters will result in ERR_PARAM at runtime.
+ */
+type BinName = string;
+
 /**
  * Represents an object containing one or more `AerospikeBinValues` with associated string keys.
  */
 export type AerospikeBins = {
-    [key: string]: any
+    [key: BinName]: AerospikeBinValue
 };
 
 export const _transactionPool: any;
@@ -295,7 +302,7 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
-    public bins: AerospikeRecord<B>;
+    public bins: B;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.
@@ -823,7 +830,7 @@ export class BatchResult<B extends AerospikeBins = AerospikeBins> {
     /**
      * Construct a new BatchResult instance.
      */
-    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: B, inDoubt: boolean);
+    public constructor(status: typeof statusNamespace[keyof typeof statusNamespace], record: AerospikeRecord<B>, inDoubt: boolean);
     /**
      * Result code for this returned record. If not {@link statusNamespace.AEROSPIKE_OK|AEROSPIKE_OK}, the record will be null.
      */
@@ -1492,7 +1499,7 @@ export class Query {
      *
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this command.
+     * @param policy - The Write Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
      *
@@ -1513,7 +1520,7 @@ export class Query {
      *   client.close()
      * })
      */
-    public operate(operations: operations.Operation[], policy?: policy.QueryPolicy | null, queryID?: number| null): Promise<Job>;
+    public operate(operations: operations.Operation[], policy?: policy.WritePolicy | null, queryID?: number| null): Promise<Job>;
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
@@ -1525,23 +1532,23 @@ export class Query {
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this command.
+     * @param policy - The Write Policy to use for this command.
      * @param callback - The function to call when the command completes.
      *
      * @returns Promise that resolves to a Job instance.
      */
-    public operate(operations: operations.Operation[], policy: policy.QueryPolicy | null, callback?: TypedCallback<Job>): void;
+    public operate(operations: operations.Operation[], policy: policy.WritePolicy | null, callback?: TypedCallback<Job>): void;
     /**
      * @param operations - List of write
      * operations to perform on the matching records.
-     * @param policy - The Query Policy to use for this command.
+     * @param policy - The Write Policy to use for this command.
      * @param queryID - Job ID to use for the query; will be assigned
      * randomly if zero or undefined.
      * @param callback - The function to call when the command completes.
      *
      * @returns Promise that resolves to a Job instance.
      */
-    public operate(operations: operations.Operation[], policy: policy.QueryPolicy | null, queryID: number| null, callback?: TypedCallback<Job>): void;
+    public operate(operations: operations.Operation[], policy: policy.WritePolicy | null, queryID: number| null, callback?: TypedCallback<Job>): void;
 }
 
 export namespace cdt {
@@ -2572,7 +2579,7 @@ export namespace policy {
          * Sort order for the list.
          *
          * @type number
-         * @default {@ link lists.order.UNORDERED}
+         * @default {@link lists.order.UNORDERED}
          * @see {@link lists.order} for supported policy values.
          */
         public order?: lists.order;
@@ -4149,7 +4156,7 @@ export class Client extends EventEmitter {
      *
      * @param releaseEventLoop - Whether to release the event loop handle after the client is closed.  Default is `false`
      *
-     * @see {@link releaseEventLoop}
+     * @see {@link !releaseEventLoop}
      *
      * @example
      *
@@ -5685,13 +5692,13 @@ export class Client extends EventEmitter {
      *
      * @remarks Operations can be created using the methods in one of the
      * following modules:
-     * * {@link operations} - General operations on all types.
+     * * {@link !operations} - General operations on all types.
      * * {@link lists} - Operations on CDT List values.
      * * {@link maps} - Operations on CDT Map values.
      * * {@link bitwise} - Operations on Bytes values.
      *
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param metadata - Meta data.
      * @param policy - The Operate Policy to use for this command.
      *
@@ -5731,7 +5738,7 @@ export class Client extends EventEmitter {
     public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], metadata?: RecordMetadata | null, policy?: policy.OperatePolicy | null): Promise<AerospikeRecord<B>>;
     /**
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
      * function is provided, the method returns a <code>Promise<code> instead.
@@ -5739,7 +5746,7 @@ export class Client extends EventEmitter {
     public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param metadata - Meta data.
      * @param callback - The function to call when the
      * command completes with the results of the command; if no callback
@@ -5748,7 +5755,7 @@ export class Client extends EventEmitter {
     public operate<B extends AerospikeBins = AerospikeBins>(key: KeyOptions, operations: operations.Operation[], metadata: RecordMetadata, callback: TypedCallback<AerospikeRecord<B>>): void;
     /**
      * @param key - The key of the record.
-     * @param operations - List of {@link operations.Operation | Operations} to perform on the record.
+     * @param operations - List of {@link !operations } to perform on the record.
      * @param metadata - Meta data.
      * @param policy - The Operate Policy to use for this command.
      * @param callback - The function to call when the
@@ -9374,7 +9381,7 @@ export function setupGlobalCommandQueue(policy: policy.CommandQueuePolicy): void
 /* INTERFACES */
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface AdminPolicyOptions extends BasePolicyOptions {
     /**
@@ -9386,7 +9393,7 @@ export interface AdminPolicyOptions extends BasePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ApplyPolicyOptions extends BasePolicyOptions {
     /**
@@ -9434,7 +9441,7 @@ export interface ApplyPolicyOptions extends BasePolicyOptions {
     replica?: policy.replica;
 }
 /**
- * Option specification for {@ link BasePolicy} class values.
+ * Option specification for {@link BasePolicy} class values.
  */
 export interface BasePolicyOptions {
     /**
@@ -9566,7 +9573,7 @@ export interface BasePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchApplyPolicyOptions {
     /**
@@ -9615,7 +9622,7 @@ export interface BatchApplyPolicyOptions {
 
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchPolicyOptions extends BasePolicyOptions {
     /**
@@ -9724,7 +9731,7 @@ export interface BatchPolicyOptions extends BasePolicyOptions {
     sendSetName?: boolean;
 }
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchReadPolicyOptions {
     /**
@@ -9793,7 +9800,7 @@ export interface BatchReadRecord {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchRemovePolicyOptions {
     /**
@@ -9838,7 +9845,7 @@ export interface BatchRemovePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BatchWritePolicyOptions extends BasePolicyOptions {
     /**
@@ -9943,7 +9950,7 @@ export interface BatchSelectRecord<B extends AerospikeBins = AerospikeBins> {
 
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface BitwisePolicyOptions extends BatchPolicyOptions {
     /**
@@ -9956,7 +9963,7 @@ export interface BitwisePolicyOptions extends BatchPolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface CommandQueuePolicyOptions extends BasePolicyOptions {
     /**
@@ -10585,7 +10592,7 @@ export interface EventLoopStats {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface HLLPolicyOptions extends BasePolicyOptions {
     /**
@@ -10772,14 +10779,14 @@ export interface InfoPolicyOptions extends BasePolicyOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ListPolicyOptions extends BasePolicyOptions {
     /**
      * Sort order for the list.
      *
      * @type number
-     * @default {@ link lists.order.UNORDERED}
+     * @default {@link lists.order.UNORDERED}
      * @see {@link lists.order} for supported policy values.
      */
     order?: lists.order;
@@ -10809,7 +10816,7 @@ export interface Log {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface MapPolicyOptions extends BasePolicyOptions {
     /**
@@ -11086,7 +11093,7 @@ export interface NodeStats {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface OperatePolicyOptions extends BasePolicyOptions {
     /**
@@ -11354,7 +11361,7 @@ export interface QueryOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface QueryPolicyOptions extends BasePolicyOptions {
     /**
@@ -11419,7 +11426,7 @@ export interface QueryPolicyOptions extends BasePolicyOptions {
     totalTimeout?: number;
 }
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ReadPolicyOptions extends BasePolicyOptions {
     /**
@@ -11478,7 +11485,7 @@ export interface ReadPolicyOptions extends BasePolicyOptions {
     replica?: policy.replica;
 }
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface RemovePolicyOptions extends BasePolicyOptions {
     /**
@@ -11549,7 +11556,7 @@ export interface RoleOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface ScanPolicyOptions extends BasePolicyOptions {
     /**
@@ -11818,7 +11825,7 @@ export interface UserOptions {
 }
 
 /**
- * Option specification for {@ link AdminPolicy} class values.
+ * Option specification for {@link AdminPolicy} class values.
  */
 export interface WritePolicyOptions extends BasePolicyOptions {
     /**
@@ -16595,18 +16602,32 @@ export namespace exp {
     }
 
     // Types for expresssions
-    type _valueExp<T> = (value: T) => AerospikeExp;
-    type _keyTypeExp = () => AerospikeExp;
-    type _binTypeExp = (binName: string) => AerospikeExp;
-    type _metaExp = () => AerospikeExp;
-    type _nilExp = () => AerospikeExp;
-    type _infExp = () => AerospikeExp;
-    type _wildcardExp = () => AerospikeExp
-    type _cmpExp = (left: AerospikeExp, right: AerospikeExp) => AerospikeExp;
-    type _VAExp = (...expr: AerospikeExp[]) => AerospikeExp;
-    type _shiftExp = (expr: AerospikeExp, shift: AerospikeExp) => AerospikeExp;
-    type _logExp = (num: AerospikeExp, base: AerospikeExp) => AerospikeExp;
-    type _powExp = (base: AerospikeExp, exponent: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _valueExp<T> = (value: T) => AerospikeExp;
+    /** @internal */
+    export type _keyTypeExp = () => AerospikeExp;
+    /** @internal */
+    export type _binTypeExp = (binName: string) => AerospikeExp;
+    /** @internal */
+    export type _metaExp = () => AerospikeExp;
+    /** @internal */
+    export type _nilExp = () => AerospikeExp;
+    /** @internal */
+    export type _infExp = () => AerospikeExp;
+    /** @internal */
+    export type _wildcardExp = () => AerospikeExp;
+    /** @internal */
+    export type _unknownExp = () => AerospikeExp;
+    /** @internal */
+    export type _cmpExp = (left: AerospikeExp, right: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _VAExp = (...expr: AerospikeExp[]) => AerospikeExp;
+    /** @internal */
+    export type _shiftExp = (expr: AerospikeExp, shift: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _logExp = (num: AerospikeExp, base: AerospikeExp) => AerospikeExp;
+    /** @internal */
+    export type _powExp = (base: AerospikeExp, exponent: AerospikeExp) => AerospikeExp;
 
 
     // Scalar expressions
@@ -16701,6 +16722,16 @@ export namespace exp {
      * @return {@link AerospikeExp}
      */
     export const wildcard: _wildcardExp;
+    /**
+     * Create an 'unknown' value. Used to intentionally fail an expression.
+     * The failure can be ignored with {@link expWriteFlags.EVAL_NO_FAIL} or
+     * {@link expReadFlags.EVAL_NO_FAIL}.
+     * 
+     * Requires server version 5.6.0+.
+     *   *
+     * @return {@link AerospikeExp}
+     */
+    export const unknown: _unknownExp;
     /**
      * Create expression that returns the key as an integer. Returns 'unknown' if
      * the key is not an integer.
@@ -16921,16 +16952,15 @@ export namespace exp {
      */
     export const digestModulo: _VAExp;
 
-    export const eq: _cmpExp;
     /**
-     * Create equals (==) expression.
+     * Create equal (==) expression.
      *
      *
      * @param left - left expression in comparison.
      * @param right - right expression in comparison.
      * @return boolean value
      */
-    export const ne: _cmpExp;
+    export const eq: _cmpExp;
     /**
      * Create not equal (!=) expression.
      *
@@ -16939,373 +16969,382 @@ export namespace exp {
      * @param right - right expression in comparison.
      * @return boolean value
      */
+    export const ne: _cmpExp;
+    /**
+     * Create a greater than (>) expression.
+     *
+     *
+     * @param left - left expression in comparison.
+     * @param right - right expression in comparison.
+     * @return boolean value
+     */
     export const gt: _cmpExp;
-/**
- * Create a greater than or equals (>=) expression.
- *
- *
- * @param {number} left left expression in comparison.
- * @param {number} right right expression in comparison.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create a greater than or equals (>=) expression.
+     *
+     *
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const ge: _cmpExp;
-/**
- * Create a less than (<) expression.
- *
- *
- * @param {number} left left expression in comparison.
- * @param {number} right right expression in comparison.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create a less than (<) expression.
+     *
+     *
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const lt: _cmpExp;
-/**
- * Create a less than or equals (<=) expression.
- *
- *
- * @param {number} left left expression in comparison.
- * @param {number} right right expression in comparison.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create a less than or equals (<=) expression.
+     *
+     *
+     * @param {number} left left expression in comparison.
+     * @param {number} right right expression in comparison.
+     * @return {@link AerospikeExp} - boolean value
+     */
 
     export const le: _cmpExp;
-/**
- * Create expression that performs a regex match on a string bin or value
- * expression.
- *
- *
- * @param {number} options POSIX regex flags defined in regex.h.
- * @param {string} regex POSIX regex string.
- * @param cmpStr String expression to compare against.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create expression that performs a regex match on a string bin or value
+     * expression.
+     *
+     *
+     * @param {number} options POSIX regex flags defined in regex.h.
+     * @param {string} regex POSIX regex string.
+     * @param cmpStr String expression to compare against.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const cmpRegex: (options: regex, regex: string, cmpStr: AerospikeExp) => AerospikeExp;
-/**
- * Create a point within region or region contains point expression.
- *
- *
- * @param left - left expression in comparison.
- * @param right - right expression in comparison.
- * @return boolean value
- */
+    /**
+     * Create a point within region or region contains point expression.
+     *
+     *
+     * @param left - left expression in comparison.
+     * @param right - right expression in comparison.
+     * @return boolean value
+     */
     export const cmpGeo: _cmpExp;
-/**
- * Create "not" (!) operator expression.
- *
- *
- * @param expr - Boolean expression to negate.
- * @return boolean value
- */
+    /**
+     * Create "not" (!) operator expression.
+     *
+     *
+     * @param expr - Boolean expression to negate.
+     * @return boolean value
+     */
     export const not: (expr: AerospikeExp) => AerospikeExp;
 
-/**
- * Create "and" (&&) operator that applies to a variable number of expressions.
- *
- *
- * @param expr - Variable number of boolean expressions. Supports the spread operator.
- * @return boolean value
- */
+    /**
+     * Create "and" (&&) operator that applies to a variable number of expressions.
+     *
+     *
+     * @param expr - Variable number of boolean expressions. Supports the spread operator.
+     * @return boolean value
+     */
     export const and: _VAExp;
-/**
- * Create "or" (||) operator that applies to a variable number of expressions.
- *
- *
- * @param expr - Variable number of boolean expressions. Supports the spread operator.
- * @return boolean value
- */
+    /**
+     * Create "or" (||) operator that applies to a variable number of expressions.
+     *
+     *
+     * @param expr - Variable number of boolean expressions. Supports the spread operator.
+     * @return boolean value
+     */
     export const or: _VAExp;
-/**
- * Create expression that returns true if only one of the expressions are true.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of boolean expressions. Supports the spread operator.
- * @return {@link AerospikeExp} - boolean value
- */
+    /**
+     * Create expression that returns true if only one of the expressions are true.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of boolean expressions. Supports the spread operator.
+     * @return {@link AerospikeExp} - boolean value
+     */
     export const exclusive: _VAExp;
-/**
- * Create "add" (+) operator that applies to a variable number of expressions.
- * Return the sum of all arguments.
- * All arguments must be the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "add" (+) operator that applies to a variable number of expressions.
+     * Return the sum of all arguments.
+     * All arguments must be the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const add: _VAExp;
-/**
- * Create "subtract" (-) operator that applies to a variable number of expressions.
- * If only one argument is provided, return the negation of that argument.
- * Otherwise, return the sum of the 2nd to Nth argument subtracted from the 1st
- * argument. All arguments must resolve to the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "subtract" (-) operator that applies to a variable number of expressions.
+     * If only one argument is provided, return the negation of that argument.
+     * Otherwise, return the sum of the 2nd to Nth argument subtracted from the 1st
+     * argument. All arguments must resolve to the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const sub: _VAExp;
-/**
- * Create "multiply" (*) operator that applies to a variable number of expressions.
- * Return the product of all arguments. If only one argument is supplied, return
- * that argument. All arguments must resolve to the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "multiply" (*) operator that applies to a variable number of expressions.
+     * Return the product of all arguments. If only one argument is supplied, return
+     * that argument. All arguments must resolve to the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const mul: _VAExp;
-/**
- * Create "divide" (/) operator that applies to a variable number of expressions.
- * If there is only one argument, returns the reciprocal for that argument.
- * Otherwise, return the first argument divided by the product of the rest.
- * All arguments must resolve to the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
- * @return {@link AerospikeExp} integer or float value
- */
+    /**
+     * Create "divide" (/) operator that applies to a variable number of expressions.
+     * If there is only one argument, returns the reciprocal for that argument.
+     * Otherwise, return the first argument divided by the product of the rest.
+     * All arguments must resolve to the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.  Supports the spread operator.
+     * @return {@link AerospikeExp} integer or float value
+     */
     export const div: _VAExp;
-/**
- * Create "pow" operator that raises a "base" to the "exponent" power.
- * All arguments must resolve to floats.
- * Requires server version 5.6.0+.
- *
- *
- * @param base - Base value.
- * @param exponent - Exponent value.
- * @return {@link AerospikeExp} float value
- */
+    /**
+     * Create "pow" operator that raises a "base" to the "exponent" power.
+     * All arguments must resolve to floats.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param base - Base value.
+     * @param exponent - Exponent value.
+     * @return {@link AerospikeExp} float value
+     */
     export const pow: _powExp;
-/**
- * Create "log" operator for logarithm of "num" with base "base".
- * All arguments must resolve to floats.
- * Requires server version 5.6.0+.
- *
- *
- * @param num - Number.
- * @param base - Base value.
- * @return float value
- */
+    /**
+     * Create "log" operator for logarithm of "num" with base "base".
+     * All arguments must resolve to floats.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param num - Number.
+     * @param base - Base value.
+     * @return float value
+     */
     export const log: _logExp;
-/**
- * Create "modulo" (%) operator that determines the remainder of "numerator"
- * divided by "denominator". All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- * @param expr - Number to apply modulo to.
- * @return integer value
- */
+    /**
+     * Create "modulo" (%) operator that determines the remainder of "numerator"
+     * divided by "denominator". All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     * @param expr - Number to apply modulo to.
+     * @return integer value
+     */
     export const mod: _VAExp;
-/**
- * Create operator that returns absolute value of a number.
- * All arguments must resolve to integer or float.
- * Requires server version 5.6.0+.
- *
- * @param expr - Number to calcuate absolute value from.
- * @return number value
- */
+    /**
+     * Create operator that returns absolute value of a number.
+     * All arguments must resolve to integer or float.
+     * Requires server version 5.6.0+.
+     *
+     * @param expr - Number to calcuate absolute value from.
+     * @return number value
+     */
     export const abs: _VAExp;
-/**
- * Create expression that rounds a floating point number down to the closest integer value.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Floating point value to round down.
- * @return float-value
- */
+    /**
+     * Create expression that rounds a floating point number down to the closest integer value.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Floating point value to round down.
+     * @return float-value
+     */
     export const floor: _VAExp;
-/**
- * Create expression that rounds a floating point number up to the closest integer value.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Floating point value to round up.
- * @return integer-value
- */
+    /**
+     * Create expression that rounds a floating point number up to the closest integer value.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Floating point value to round up.
+     * @return integer-value
+     */
     export const ceil: _VAExp;
-/**
- * Create expression that converts a float to an integer.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer to convert to a float
- * @return  float value
- */
+    /**
+     * Create expression that converts a float to an integer.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer to convert to a float
+     * @return  float value
+     */
     export const toInt: _VAExp;
-/**
- * Create expression that converts an integer to a float.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer to convert to a float
- * @return float value
- */
+    /**
+     * Create expression that converts an integer to a float.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer to convert to a float
+     * @return float value
+     */
     export const toFloat: _VAExp;
-/**
- * Create integer "and" (&) operator that is applied to two or more integers.
- * All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer expressions. Compatible with spread operator.
- * @return integer value
- */
+    /**
+     * Create integer "and" (&) operator that is applied to two or more integers.
+     * All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer expressions. Compatible with spread operator.
+     * @return integer value
+     */
     export const intAnd: _VAExp;
-/**
- * Create integer "or" (|) operator that is applied to two or more integers.
- * All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer expressions. Compatible with spread operator.
- * @return integer value
- */
+    /**
+     * Create integer "or" (|) operator that is applied to two or more integers.
+     * All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer expressions. Compatible with spread operator.
+     * @return integer value
+     */
     export const intOr: _VAExp;
-/**
- * Create integer "xor" (^) operator that is applied to two or more integers.
- * All arguments must resolve to integers.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer expressions. Compatible with spread operator.
- * @return integer value
- */
+    /**
+     * Create integer "xor" (^) operator that is applied to two or more integers.
+     * All arguments must resolve to integers.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer expressions. Compatible with spread operator.
+     * @return integer value
+     */
     export const intXor: _VAExp;
-/**
- * Create integer "not" (~) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @return integer value
- */
+    /**
+     * Create integer "not" (~) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @return integer value
+     */
     export const intNot: _VAExp;
-/**
- * Create integer "left shift" (<<) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @param shift - Number of bits to shift by.
- * @return integer value
- */
+    /**
+     * Create integer "left shift" (<<) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @param shift - Number of bits to shift by.
+     * @return integer value
+     */
     export const intLshift: _shiftExp;
-/**
- * Create integer "logical right shift" (>>>) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @param shift - Number of bits to shift by.
- * @return integer value
- */
+    /**
+     * Create integer "logical right shift" (>>>) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @param shift - Number of bits to shift by.
+     * @return integer value
+     */
     export const intRshift: _shiftExp;
-/**
- * Create integer "arithmetic right shift" (>>) operator.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Integer expression.
- * @param  shift -  Number of bits to shift by.
- * @return integer value
- */
+    /**
+     * Create integer "arithmetic right shift" (>>) operator.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Integer expression.
+     * @param  shift -  Number of bits to shift by.
+     * @return integer value
+     */
     export const intArshift: _shiftExp;
-/**
- * Create expression that returns count of integer bits that are set to 1.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - {@link AerospikeExp} integer
- * @return integer value
- */
+    /**
+     * Create expression that returns count of integer bits that are set to 1.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - {@link AerospikeExp} integer
+     * @return integer value
+     */
     export const intCount: _VAExp;
-/**
- * Create expression that scans integer bits from left (most significant bit) to
- * right (least significant bit), looking for a search bit value. When the
- * search value is found, the index of that bit (where the most significant bit is
- * index 0) is returned. If "search" is true, the scan will search for the bit
- * value 1. If "search" is false it will search for bit value 0.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - {@link AerospikeExp} integer
- * @return integer value
- */
+    /**
+     * Create expression that scans integer bits from left (most significant bit) to
+     * right (least significant bit), looking for a search bit value. When the
+     * search value is found, the index of that bit (where the most significant bit is
+     * index 0) is returned. If "search" is true, the scan will search for the bit
+     * value 1. If "search" is false it will search for bit value 0.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - {@link AerospikeExp} integer
+     * @return integer value
+     */
     export const intLscan: _VAExp;
-/**
- * Create expression that scans integer bits from right (least significant bit) to
- * left (most significant bit), looking for a search bit value. When the
- * search value is found, the index of that bit (where the most significant bit is
- * index 0) is returned. If "search" is true, the scan will search for the bit
- * value 1. If "search" is false it will search for bit value 0.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - {@link AerospikeExp} integer
- * @return integer value
- */
+    /**
+     * Create expression that scans integer bits from right (least significant bit) to
+     * left (most significant bit), looking for a search bit value. When the
+     * search value is found, the index of that bit (where the most significant bit is
+     * index 0) is returned. If "search" is true, the scan will search for the bit
+     * value 1. If "search" is false it will search for bit value 0.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - {@link AerospikeExp} integer
+     * @return integer value
+     */
     export const intRscan: _VAExp;
-/**
- * Create expression that returns the minimum value in a variable number of expressions.
- * All arguments must be the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param  expr - Variable number of integer or float expressions. Compatible with spread operator.
- * @return integer or float value
- */
+    /**
+     * Create expression that returns the minimum value in a variable number of expressions.
+     * All arguments must be the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param  expr - Variable number of integer or float expressions. Compatible with spread operator.
+     * @return integer or float value
+     */
     export const min: _VAExp;
-/**
- * Create expression that returns the maximum value in a variable number of expressions.
- * All arguments must be the same type (integer or float).
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of integer or float expressions.
- * @return integer or float value
- */
+    /**
+     * Create expression that returns the maximum value in a variable number of expressions.
+     * All arguments must be the same type (integer or float).
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of integer or float expressions.
+     * @return integer or float value
+     */
     export const max: _VAExp;
-/**
- * Conditionally select an expression from a variable number of expression pairs
- * followed by default expression action. Requires server version 5.6.0+.
- *
- *
- * @param expr - spread of expressions.
- * @return  first action expression where bool expression is true or action-default.
- */
+    /**
+     * Conditionally select an expression from a variable number of expression pairs
+     * followed by default expression action. Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - spread of expressions.
+     * @return  first action expression where bool expression is true or action-default.
+     */
     export const cond: _VAExp;
-/**
- * Define variables and expressions in scope.
- * Requires server version 5.6.0+.
- *
- *
- * @param expr - Variable number of expression def followed by a scoped
- *  expression. Supports the spread operator
- * @return result of scoped expression.
- */
+    /**
+     * Define variables and expressions in scope.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param expr - Variable number of expression def followed by a scoped
+     *  expression. Supports the spread operator
+     * @return result of scoped expression.
+     */
     const letValue: _VAExp; // Your implementation
     export { letValue as let }; // Export as `let`
-/**
- * Assign variable to an expression that can be accessed later.
- * Requires server version 5.6.0+.
- *
- *
- * @param varName - Variable name.
- * @param  expr - The variable is set to the result of expr.
- * @return A variable name expression pair.
- */
+    /**
+     * Assign variable to an expression that can be accessed later.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param varName - Variable name.
+     * @param  expr - The variable is set to the result of expr.
+     * @return A variable name expression pair.
+     */
     export const def: (varName: string, expr: AerospikeExp) => AerospikeExp;
-/**
- * Retrieve expression value from a variable.
- * Requires server version 5.6.0+.
- *
- *
- * @param varName - Variable name.
- * @return value stored in variable.
- */
+    /**
+     * Retrieve expression value from a variable.
+     * Requires server version 5.6.0+.
+     *
+     *
+     * @param varName - Variable name.
+     * @return value stored in variable.
+     */
     export const _var: (varName: string) => AerospikeExp;
 }
 /**
@@ -17448,7 +17487,7 @@ export namespace operations {
      * @param ttl - The new relative TTL to set for the record, when it is touched. Default is {@link ttl.NAMESPACE_DEFAULT}
      * @returns Operation that can be passed to the {@link Client#operate} command.
      *
-     * @see {@link ttl} for "special" TTL values.
+     * @see {@link !ttl} for "special" TTL values.
      */
     export function touch(ttl: number): Operation;
     /**
@@ -17555,7 +17594,7 @@ export namespace filter {
      * @param bin - The name of the bin.
      * @param value - The value that should be a member of the
      * list or map in the bin.
-     * @param indexType - One of {@link indexType},
+     * @param indexType - One of {@link !indexType},
      * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
@@ -17586,7 +17625,8 @@ export namespace filter {
      *
      * @param bin - The name of the bin.
      * @param value - GeoJSON region value.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17603,7 +17643,8 @@ export namespace filter {
      *
      * @param bin - The name of the bin.
      * @param value - GeoJSON point value.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param {Object} ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17622,7 +17663,8 @@ export namespace filter {
      * @param lng - Longitude of the center point.
      * @param lat - Latitude of the center point.
      * @param radius - Radius in meters.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17640,7 +17682,8 @@ export namespace filter {
      * @param bin - The name of the bin.
      * @param lng - Longitude of the point.
      * @param lat - Latitude of the point.
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.
@@ -17659,7 +17702,8 @@ export namespace filter {
      * @param bin - The name of the bin.
      * @param min - Lower end of the range (inclusive).
      * @param max - Upper end of the range (inclusive).
-     * @param indexType - One of {@link indexType}, i.e. LIST or MAPVALUES.
+     * @param indexType - One of {@link !indexType},
+     * i.e. LIST, MAPVALUES or MAPKEYS.
      * @param ctx - The {@link cdt.Context} of the index.
      *
      * @returns Secondary Index filter predicate, that can be applied to queries using {@link Query#where}.

@@ -273,6 +273,15 @@ describe('Aerospike.exp', function () {
     })
   })
 
+  describe('inf', function () {
+    it('evaluates to true if any expression evaluates to true', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+      await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.str('green'), maps.returnType.COUNT), exp.int(1)))
+      await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.str('green'), maps.returnType.COUNT), exp.int(2)))
+    })
+  })
+
   describe('recordSize', function () {
     helper.skipUnlessVersion('>= 7.0.0', this)
 
@@ -295,6 +304,15 @@ describe('Aerospike.exp', function () {
 
       await testNoMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(2)))
       await testMatch(key, exp.eq(exp.maps.getByValueRange(exp.binMap('tags'), exp.inf(), exp.wildcard(), maps.returnType.COUNT), exp.int(3)))
+    })
+  })
+
+  describe('unknown', function () {
+    it('evaluates to false', async function () {
+      const key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })
+
+      await testNoMatch(key, exp.unknown())
+      await testNoMatch(key, exp.eq(exp.unknown(), exp.unknown()))
     })
   })
 
@@ -527,7 +545,7 @@ describe('Aerospike.exp', function () {
 
       })
 
-      it('works with whereWithExp', async function () {
+      it('works with expression indexes', async function () {
         this.timeout(10000)
         const query: Query = client.query(helper.namespace, helper.set)
 
@@ -555,20 +573,6 @@ describe('Aerospike.exp', function () {
         expect(results.length).to.eql(1)
 
         return client.indexRemove(helper.namespace, 'example_name_whereWithExp')
-      })
-
-      it('works with createExpIndex', async function () {
-
-        const options: IndexOptions = {
-          ns: helper.namespace,
-          set: helper.set,
-          exp: exp_b64,
-          index: "example_name_create",
-          datatype: Aerospike.indexDataType.NUMERIC
-        }
-
-
-        return client.createExpIndex(options)
       })
 
 

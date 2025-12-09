@@ -2,32 +2,71 @@
 
 All notable changes to this project will be documented in this file.
 
-## [6.3.0]
+## [6.5.0]
+* **Breaking Changes**
+  * [CLIENT-3951] - Dropped support for MacOS 13.
+
 * **New Features**
-  - [CLIENT-3407] - Added support for metrics improvements: deeper granularity and additional metrics.
-  - [CLIENT-3408] - Added support for Dynamic Client Configuration
-  - [CLIENT-3266] - Added support for preventing password use for Public Key Infrastructure (PKI) users.
-  - [CLIENT-3396] - Added support for Expression Indexes.
-  - [CLIENT-3645] - Added support for policy.replica.RANDOM
+  * [CLIENT-3837] - Added support for MacOS 26.
+  * [CLIENT-3681] - Added support for `unknown` expression.
+
 * **Bug Fixes**
-  - [CLIENT-3507] - Fixed metrics_policy.reportDir passing an invalid string when enabling metrics.
-  - [CLIENT-3635] - Fixed Segmentation fault when parsing invalid privilege, roles, and whitelist to admin functions.
-  - [CLIENT-3636] - Added missing function client.setPassword()
-  - [CLIENT-3637] - Fixed issue with error objects are not being returned by Role based Authentication Control (RBAC) functions.  All RBAC functions are also now awaitable.
-  - [CLIENT-3643] - Fixed bug where adminPolicy is uninitialized during Role Based Authentication Commands.
-  - [CLIENT-3644] - Fixed issue with error not being returned when the client configuration is invalid.
+  * [CLIENT-3931] - Fixed issue with bin name length check allowing length 16 bin names.  
+  * [CLIENT-3932] - Fixed issue causing omission of records with a bin name of length 16 without error.
+  * [CLIENT-3949] - Corrected type definition for record parameter in BatchResult class.
+  * [CLIENT-3950] - Corrected type definition for bins parameter in AerospikeRecord.
+
+## [6.4.0]
+* **Breaking Changes**
+  * [CLIENT-3684] - Dropped support for RHEL 8.
+  * [CLIENT-3684] - Dropped support for Debian 11.
+
+* **New Features**
+  * [CLIENT-3684] - Added support for RHEL 10.
+  * [CLIENT-3684] - Added support for Debian 13.
+  * [CLIENT-3804] - Added support for policy.connectTimeout. 
+  * [CLIENT-3416] - Added support for recovering a connection after a client timeout. 
+  * [CLIENT-3587] - Added support for user agent: sends client type, library version, and app ID to server. 
+  * [CLIENT-2130] - Added support for client.expressionToBase64. 
+  * [CLIENT-2038] - Added support for base64 encoded expressions in API's which accept expressions.
+
+* **Bug Fixes**
+  * [CLIENT-3801] - Fixed issue with extended metrics missing statistics on synchronous connections.
+  * [CLIENT-3667] - Fixed issue with MetricsPolicy not being applied in the client configuration.
+
+## [6.3.0]
+* **Breaking Changes**
+  * [CLIENT-3951] - Dropped support for Node.js 23.
+
+* **New Features**
+  * [CLIENT-3407] - Added support for metrics improvements: deeper granularity and additional metrics.
+  * [CLIENT-3408] - Added support for Dynamic Client Configuration
+  * [CLIENT-3266] - Added support for preventing password use for Public Key Infrastructure (PKI) users.
+  * [CLIENT-3396] - Added support for Expression Indexes.
+  * [CLIENT-3645] - Added support for policy.replica.RANDOM
+
+* **Bug Fixes**
+  * [CLIENT-3507] - Fixed metrics_policy.reportDir passing an invalid string when enabling metrics.
+  * [CLIENT-3635] - Fixed Segmentation fault when parsing invalid privilege, roles, and whitelist to admin functions.
+  * [CLIENT-3636] - Added missing function client.setPassword()
+  * [CLIENT-3637] - Fixed issue with error objects are not being returned by Role based Authentication Control (RBAC) functions.  All RBAC functions are also now awaitable.
+  * [CLIENT-3643] - Fixed bug where adminPolicy is uninitialized during Role Based Authentication Commands.
+  * [CLIENT-3644] - Fixed issue with error not being returned when the client configuration is invalid.
+
 * **Documentation**
- - [CLIENT-1865] - Clarified Filter Documentation.
- - [CLIENT-3234] - Documented that compression is an Enterprise Feature.
+  * [CLIENT-1865] - Clarified Filter Documentation.
+  * [CLIENT-3234] - Documented that compression is an Enterprise Feature.
+
 * **Improvements**
- - [CLIENT-3409] - Added generics to some typescript defintions (Thanks @bit0r1n!)
+  * [CLIENT-3409] - Added generics to some typescript defintions (Thanks @bit0r1n!)
 
 ## [6.2.0]
 * **New Features**
-  - [CLIENT-1595] - Added config.rackIds. Accepts list of preferred racks. Used when replica policy is PREFER_RACK.
-  - [CLIENT-2152] - Added client.setXDRFilter.
-  - [CLIENT-3266] - Added onLockingOnly parameter to apply, write, batchApply, and batchWrite policies.
-  - [CLIENT-3396] - Added txnRoll and txnVerify policies to config policies.
+  * [CLIENT-1595] - Added config.rackIds. Accepts list of preferred racks. Used when replica policy is PREFER_RACK.
+  * [CLIENT-2152] - Added client.setXDRFilter.
+  * [CLIENT-3266] - Added onLockingOnly parameter to apply, write, batchApply, and batchWrite policies.
+  * [CLIENT-3396] - Added txnRoll and txnVerify policies to config policies.
+
 * **Bug Fixes**
   * [CLIENT-3388] - Added Replica field for operate, read, and apply policy classes.
   * [CLIENT-3389] - Fixed issue with BATCH_APPLY and BATCH_REMOVE records not being configured correctly for writes.
@@ -61,6 +100,9 @@ All notable changes to this project will be documented in this file.
   * [CLIENT-3235] - Fixed version mismatch with the windows C++ add-on which caused the client to fail on windows.
 
 ## [6.0.0]
+* **Breaking Changes**
+  * [CLIENT-3952] - Dropped support for MacOS 12.
+
 * **Description**
   * The new features in this release require server version 8.0.0 or above.
 
