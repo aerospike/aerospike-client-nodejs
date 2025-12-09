@@ -68,6 +68,7 @@ jobs:
     - name: list version info
       run: 
         cp ../../../package-lock.json package-lock.json;
+        npm version ${{ env.NEW_VERSION }} --no-git-tag-version;
         npm ci --ignore-scripts;
         npm pack;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
