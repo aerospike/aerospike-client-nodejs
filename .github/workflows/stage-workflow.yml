@@ -30,19 +30,19 @@ jobs:
     with:
       old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
 
-  stage-reupload-addons-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      stage-get-jfrog-version,
-      #comprehensive-tests,
-      bump-stage-number
-    ]
-    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
-    with:
-      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-      new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
-      pipeline-stage: 'stage'
-    secrets: inherit
+  #stage-reupload-addons-to-jfrog:
+  #  name: Upload artifacts to JFrog
+  #  needs: [
+  #    stage-get-jfrog-version,
+  #    #comprehensive-tests,
+  #    bump-stage-number
+  #  ]
+  #  uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
+  #  with:
+  #    old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+  #    new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
+  #    pipeline-stage: 'stage'
+  #  secrets: inherit
 
   upload-npm-package-to-jfrog:
     name: Upload artifacts to JFrog
@@ -50,7 +50,7 @@ jobs:
       stage-get-jfrog-version,
       #comprehensive-tests,
       bump-stage-number,
-      stage-reupload-addons-to-jfrog
+      #stage-reupload-addons-to-jfrog
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
