@@ -31,6 +31,7 @@ const {
   assertRecordEql,
   assertResultEql,
   assertResultSatisfy,
+  expect,
   cleanup,
   createRecord,
   expectError,
@@ -541,7 +542,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.removeByKeyList('map', ['a', 'c'], maps.returnType.VALUE)))
-        .then(assertResultSatisfy(result => eql(result.map.sort(), [1, 3])))
+        .then(assertResultSatisfy((result) => expect((result.map).sort()).to.eql([1, 3])))
         .then(assertRecordEql({ map: { b: 2 } }))
         .then(cleanup())
     })
@@ -550,7 +551,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.removeByKeyList('map', ['a', 'x', 'y', 'z', 'c'], maps.returnType.VALUE)))
-        .then(assertResultSatisfy(result => eql(result.map.sort(), [1, 3])))
+        .then(assertResultSatisfy((result) => expect((result.map).sort()).to.eql([1, 3])))
         .then(assertRecordEql({ map: { b: 2 } }))
         .then(cleanup())
     })
@@ -1150,7 +1151,7 @@ describe('client.operate() - CDT Map operations', function () {
               .withContext(ctx => ctx.addMapKey('nested'))
               .andReturn(maps.returnType.KEY)
           ))
-          .then(assertResultSatisfy(result => eql(result.map.sort(), ['b', 'c'])))
+          .then(assertResultSatisfy((result) => expect((result.map).sort()).to.eql(['b', 'c'])))
           .then(cleanup())
       })
     })
@@ -1212,7 +1213,7 @@ describe('client.operate() - CDT Map operations', function () {
       return initState()
         .then(createRecord({ map: { a: 1, b: 2, c: 3 } }))
         .then(operate(maps.getByValueRange('map', 2, null, maps.returnType.VALUE)))
-        .then(assertResultSatisfy(result => eql(result.map.sort(), [2, 3])))
+        .then(assertResultSatisfy((result) => expect((result.map).sort()).to.eql([2, 3])))
         .then(cleanup())
     })
 
