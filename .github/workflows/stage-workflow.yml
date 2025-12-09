@@ -50,7 +50,7 @@ jobs:
       stage-get-jfrog-version,
       #comprehensive-tests,
       bump-stage-number,
-      stage-reupload-addons-to-jfrog
+      #stage-reupload-addons-to-jfrog
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
