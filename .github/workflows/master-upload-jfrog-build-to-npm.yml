@@ -88,4 +88,6 @@ jobs:
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
         npm publish;
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
