@@ -7,14 +7,14 @@ All notable changes to this project will be documented in this file.
   * [CLIENT-3951] - Dropped support for MacOS 13.
 
 * **New Features**
-  * [CLIENT-3837] - Added support for MacOS 26.
-  * [CLIENT-3681] - Added support for `unknown` expression.
+  - [CLIENT-3837] - Added support for MacOS 26.
+  - [CLIENT-3681] - Added support for `unknown` expression.
 
 * **Bug Fixes**
   * [CLIENT-3931] - Fixed issue with bin name length check allowing length 16 bin names.  
-  * [CLIENT-3932] - Fixed issue causing omission of records with a bin name of length 16 without error.
+  * [CLIENT-3932] - Fixed issue with bin name length check allowing length 16 bin names.
   * [CLIENT-3949] - Corrected type definition for record parameter in BatchResult class.
-  * [CLIENT-3950] - Corrected type definition for bins parameter in AerospikeRecord.
+  * [CLIENT-3950] - Corrected type defintion for bins parameter in AerospikeRecord.
 
 ## [6.4.0]
 * **Breaking Changes**

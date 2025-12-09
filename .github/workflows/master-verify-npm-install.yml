@@ -35,9 +35,9 @@ jobs:
 
       - name: verify runs and is aligned with expect functionality
         run: |
-          npm install fakeyfoo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
-          node ./node_modules/fakeyfoo/scripts/verify-aerospike-npm-scripts.js fakeyfoo;
-          npx --package fakeyfoo npm-run-all removeExtraBinaries build --prefix ./node_modules/fakeyfoo;
-          node -e "const Aerospike = require('fakeyfoo'); console.log(new Aerospike.exp.unknown() );"
+          npm install disableuplo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
+          node ./node_modules/disableuplo/scripts/verify-aerospike-npm-scripts.js disableuplo;
+          npx --package disableuplo npm-run-all removeExtraBinaries build --prefix ./node_modules/disableuplo;
+          node -e "const Aerospike = require('disableuplo'); console.log(new Aerospike.exp.unknown() );"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
