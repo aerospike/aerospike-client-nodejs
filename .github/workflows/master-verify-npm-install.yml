@@ -40,6 +40,6 @@ jobs:
           npm --prefix ./node_modules/fakeyfoo install @mapbox/node-pre-gyp --ignore-scripts
           npx --package fakeyfoo npm run removeExtraBinaries --prefix ./node_modules/fakeyfoo;
           npx --package fakeyfoo npm run build --prefix ./node_modules/fakeyfoo;
-          node -e "const Aerospike = require('fakeyfoo'); console.log(new Aerospike.exp.unknown() );"
+          node -e "const Aerospike = require('fakeyfoo'); console.log(Aerospike.exp.unknown());"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
