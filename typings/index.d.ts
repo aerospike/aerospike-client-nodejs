@@ -53,7 +53,11 @@ type BinName = string;
  */
 export type AerospikeBins = {
 <<<<<<< HEAD
+<<<<<<< HEAD
     [key: BinName]: AerospikeBinValue
+=======
+    [key: string]: any
+>>>>>>> master
 =======
     [key: string]: any
 >>>>>>> master

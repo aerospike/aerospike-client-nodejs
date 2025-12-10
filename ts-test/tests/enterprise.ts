@@ -72,7 +72,6 @@ context('Enterprise server features', function () {
 
       await client.put(key, record)
       await client.remove(key, policy)
-<<<<<<< HEAD
 
       expect(await client.exists(key)).to.be.false
 
@@ -89,8 +88,6 @@ context('Enterprise server features', function () {
       const policy: WritePolicyOptions = { durableDelete: true }
       const job = await query.operate(ops, policy)
       await job.waitUntilDone()
-=======
->>>>>>> master
       
       expect(await client.exists(key)).to.be.false
     })
