@@ -33,7 +33,7 @@ function wait (ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-context('admin commands', async function () {
+context('admin commands', function () {
 
   if (helper.config.user != 'superuser') {
     helper.skip(this, "Requires RBAC to be enabled.")

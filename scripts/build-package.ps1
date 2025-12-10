@@ -32,14 +32,6 @@ function build_nodejs_client {
 # del install.ps1
 
 # cd D:\a\aerospike-client-nodejs\aerospike-client-nodejs
- 
-
-build_nodejs_client v18
-Copy-Item -Recurse build\release\* lib\binding\node-v108-win32-x64
-Remove-Item .\lib\binding\node-v108-win32-x64\obj
-Remove-Item .\lib\binding\node-v108-win32-x64\aerospike.pdb
-Remove-Item .\lib\binding\node-v108-win32-x64\aerospike.ipdb
-Remove-Item .\lib\binding\node-v108-win32-x64\aerospike.iobj
 
 build_nodejs_client v20
 Copy-Item -Recurse build\release\* lib\binding\node-v115-win32-x64
@@ -62,4 +54,9 @@ Remove-Item .\lib\binding\node-v137-win32-x64\aerospike.pdb
 Remove-Item .\lib\binding\node-v137-win32-x64\aerospike.ipdb
 Remove-Item .\lib\binding\node-v137-win32-x64\aerospike.iobj
 
-nvm use v24.0.0
+build_nodejs_client v25
+Copy-Item -Recurse build\release\* lib\binding\node-v141-win32-x64
+Remove-Item -Recurse .\lib\binding\node-v141-win32-x64\obj
+Remove-Item .\lib\binding\node-v141-win32-x64\aerospike.pdb
+Remove-Item .\lib\binding\node-v141-win32-x64\aerospike.ipdb
+Remove-Item .\lib\binding\node-v141-win32-x64\aerospike.iobj

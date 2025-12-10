@@ -1,4 +1,7 @@
 name: Master workflow
+permissions:
+  id-token: write
+  contents: write
 
 on:
   push:

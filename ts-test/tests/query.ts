@@ -252,7 +252,7 @@ describe('Queries', function () {
   describe('query.whereWithIndexName()', function () {
     it('adds a filter predicate to the query', function () {
       const query: Query = client.query(helper.namespace, helper.set)
-      query.whereWithIndexName(Aerospike.filter.equal('a', 9), 'indexName')
+      query.whereWithIndexName(Aerospike.filter.equal(null, 9), 'indexName')
       expect(query.filters.length).to.equal(1)
       expect(query.filters[0].indexName).to.equal('indexName')
     })

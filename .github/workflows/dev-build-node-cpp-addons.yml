@@ -5,6 +5,7 @@ run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, use-server-r
 # Optionally run tests on manylinux wheels
 # Then upload artifacts to Github
 
+
 on:
   workflow_call:
     inputs:
@@ -47,7 +48,9 @@ jobs:
           "manylinux_x86_64",
           "manylinux_aarch64",
           "macosx_x86_64",
+          "macosx_x86_64_2",
           "macosx_arm64",
+          "macosx_arm64_2",
           "win_amd64"
         ]
       fail-fast: false
