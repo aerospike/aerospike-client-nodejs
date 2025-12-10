@@ -2,11 +2,7 @@ const Aerospike = require('aerospike')
 
 // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
 const config = {
-<<<<<<< HEAD
   hosts: '127.0.0.1 :3000'
-=======
-  hosts: '127.0.0.1 :3000',
->>>>>>> master
 }
 
 const key = new Aerospike.Key('test', 'demo', 'demo')
@@ -19,25 +15,15 @@ Aerospike.connect(config)
       b: Buffer.from('world'),
       d: new Aerospike.Double(3.1415),
       g: Aerospike.GeoJSON.Point(103.913, 1.308),
-<<<<<<< HEAD
       l: [1, 'a', { x: 'y' }],
       m: { foo: 4, bar: 7 }
-=======
-      l: [1, 'a', {x: 'y'}],
-      m: {foo: 4, bar: 7}
->>>>>>> master
     }
     const meta = { ttl: 10000 }
     const policy = new Aerospike.WritePolicy({
       exists: Aerospike.policy.exists.CREATE_OR_REPLACE,
       // Timeouts disabled, latency dependent on server location. Configure as needed.
-<<<<<<< HEAD
       socketTimeout: 0,
       totalTimeout: 0
-=======
-      socketTimeout : 0, 
-      totalTimeout : 0
->>>>>>> master
     })
 
     return client.put(key, bins, meta, policy)
@@ -58,21 +44,12 @@ Aerospike.connect(config)
       })
       .then(record => {
         console.log(record.bins) // => { i: 124,
-<<<<<<< HEAD
         //      s: 'hello',
         //      b: <Buffer 77 6f 72 6c 64>,
         //      d: 3.1415,
         //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
         //      l: [ 1, 'a', { x: 'y' }, 'z' ],
         //      m: { foo: 4 } }
-=======
-                                 //      s: 'hello',
-                                 //      b: <Buffer 77 6f 72 6c 64>,
-                                 //      d: 3.1415,
-                                 //      g: '{"type":"Point","coordinates":[103.913,1.308]}',
-                                 //      l: [ 1, 'a', { x: 'y' }, 'z' ],
-                                 //      m: { foo: 4 } }
->>>>>>> master
       })
       .then(() => client.close())
   })
@@ -81,8 +58,4 @@ Aerospike.connect(config)
     if (error.client) {
       error.client.close()
     }
-<<<<<<< HEAD
   })
-=======
-  })
->>>>>>> master
