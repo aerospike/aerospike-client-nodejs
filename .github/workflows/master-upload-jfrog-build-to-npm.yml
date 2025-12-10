@@ -61,7 +61,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "fakeyfoo"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
@@ -87,7 +87,7 @@ jobs:
     - run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm publish --provenance;
+        npm publish;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}

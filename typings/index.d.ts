@@ -52,11 +52,7 @@ type BinName = string;
  * Represents an object containing one or more `AerospikeBinValues` with associated string keys.
  */
 export type AerospikeBins = {
-<<<<<<< HEAD
     [key: BinName]: AerospikeBinValue
-=======
-    [key: string]: any
->>>>>>> master
 };
 
 export const _transactionPool: any;
@@ -306,7 +302,7 @@ export class AerospikeRecord<B extends AerospikeBins = AerospikeBins> {
      *
      * @type {AerospikeBins}
      */
-    public bins: AerospikeRecord<B>;
+    public bins: B;
 
     /**
      * The record's remaining time-to-live in seconds before it expires.

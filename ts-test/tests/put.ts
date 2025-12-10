@@ -551,11 +551,7 @@ describe('client.put()', function () {
           expect(record2.key).to.eql(key)
           expect(result_bins).to.eql(bins)
 
-<<<<<<< HEAD
           result_bins.i = (result_bins.i as number) + 1;
-=======
-          result_bins.i = result_bins.i + 1;
->>>>>>> master
 
           client.put(record2.key, result_bins, meta, function (err?: ASError, key3?: Key) {
             if (err) throw err
