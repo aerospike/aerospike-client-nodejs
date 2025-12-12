@@ -54,6 +54,6 @@ jobs:
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
+      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
       pipeline-stage: 'stage'
     secrets: inherit
