@@ -40,9 +40,9 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Download from JFrog
-      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
+      run: jf rt download "clients-npm-public-prod-local/aerospike/${{ env.VERSION }}/*"
       env:
-        VERSION: ${{ inputs.new_version }}
+        VERSION: 6.5.0
 
     - name: Move bindings to lib/binding
       run: |
