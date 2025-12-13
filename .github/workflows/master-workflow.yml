@@ -20,24 +20,24 @@ jobs:
     ]
     secrets: inherit
 
-  publish-to-npm:
-    name: Publish to npm
-    needs: [
-      master-get-jfrog-version,
-      bump-master-number,
-    ]
-    uses: ./.github/workflows/master-upload-jfrog-build-to-npm.yml
-    with:
-      old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
-      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
-    secrets: inherit
+  #publish-to-npm:
+  #  name: Publish to npm
+  #  needs: [
+  #    master-get-jfrog-version,
+  #    bump-master-number,
+  #  ]
+  #  uses: ./.github/workflows/master-upload-jfrog-build-to-npm.yml
+  #  with:
+  #    old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
+  #    new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+  #  secrets: inherit
 
   verify-npm-install:
     name: verify npm clean install works correctly
     needs: [
       master-get-jfrog-version,
       bump-master-number,
-      publish-to-npm
+      #publish-to-npm
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
