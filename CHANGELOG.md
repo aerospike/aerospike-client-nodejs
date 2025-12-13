@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.5.1]
+* **Bug Fixes**
+  * [CLIENT-3966] - Corrected type definition for record property in BatchResult Class.
+
 ## [6.5.0]
 * **Breaking Changes**
   * [CLIENT-3951] - Dropped support for MacOS 13.
