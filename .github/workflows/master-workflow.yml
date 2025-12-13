@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches:
-      - stage
+      - Nodejs-Client-6.5.1-Mock-Rel
 
 jobs:
   master-get-jfrog-version:
