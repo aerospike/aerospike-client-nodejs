@@ -40,7 +40,7 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Download from JFrog
-      run: jf rt download "clients-npm-dev--local/aerospike/${{ env.VERSION }}/*"
+      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
       env:
         VERSION:  ${{ inputs.new_version }}
 

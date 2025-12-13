@@ -23,21 +23,21 @@ jobs:
     uses: ./.github/workflows/dev-bump-version.yml
     secrets: inherit
 
-  build-node-cpp-addons:
-    uses: ./.github/workflows/dev-build-node-cpp-addons.yml
-    needs: [
-      bump-dev-number
-    ]
-    with:
-      version: ${{ needs.bump-dev-number.outputs.dev_version }}
-      run_tests: false
-    secrets: inherit
+  #build-node-cpp-addons:
+  #  uses: ./.github/workflows/dev-build-node-cpp-addons.yml
+  #  needs: [
+  #    bump-dev-number
+  #  ]
+  #  with:
+  #    version: ${{ needs.bump-dev-number.outputs.dev_version }}
+  #    run_tests: false
+  #  secrets: inherit
 
   upload-addons-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      build-node-cpp-addons
+      #build-node-cpp-addons
     ]
     uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
     with:
@@ -48,7 +48,7 @@ jobs:
     name: upload package to JFrog NPM
     needs: [
       bump-dev-number,
-      build-node-cpp-addons,
+      #build-node-cpp-addons,
       upload-addons-to-jfrog,
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
