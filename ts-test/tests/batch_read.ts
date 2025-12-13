@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, BatchReadRecord, BatchResult, AerospikeRecord, BatchReadPolicyOptions, BatchPolicyOptions, AerospikeError } from 'aerospike';
+import Aerospike, { Client, BatchReadRecord, BatchResult, AerospikeRecord, BatchReadPolicyOptions, BatchPolicyOptions, AerospikeError, AerospikeBins } from 'aerospike';
 import * as helper from './test_helper';
 import { expect } from 'chai';
 
@@ -36,7 +36,7 @@ describe('client.batchRead()', function () {
   const client: Client = helper.client
 
   before(function () {
-    const nrecords: number = 10
+    const nrecords: number = 15
     const generators: any = {
       keygen: keygen.string(helper.namespace, helper.set, { prefix: 'test/batch_read/', random: false }),
       recgen: recgen.record({
@@ -48,6 +48,30 @@ describe('client.batchRead()', function () {
       metagen: metagen.constant({ ttl: 1000 })
     }
     return putgen.put(nrecords, generators)
+  })
+
+  it('Uses correct typescript defintion', async function () {
+    const batchRecords: BatchReadRecord[] = [
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/11') },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/13') },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/15') },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/no_such_key') },
+      { key: new Key(helper.namespace, helper.set, 'test/batch_read/not_either') }
+    ]
+
+    const batchKeys = batchRecords.map((key) => ({
+        type: Aerospike.batchType.BATCH_READ,
+        key: key,
+        readAllBins: true,
+    }));
+
+    const results: BatchResult[] = await client.batchRead(batchRecords)
+
+    // If no error, typescript works
+    const bins = results
+        .map((row) => row.record.bins)
+        .filter((c: AerospikeBins | undefined) => !!c);
+
   })
 
   it('returns the status whether each key was found or not', function (done) {

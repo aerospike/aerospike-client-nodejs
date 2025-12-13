@@ -21,7 +21,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
           egress-policy: audit
 
@@ -35,11 +35,11 @@ jobs:
 
       - name: verify runs and is aligned with expect functionality
         run: |
-          npm install aerospike@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
-          node ./node_modules/aerospike/scripts/verify-aerospike-npm-scripts.js aerospike;
-          npm --prefix ./node_modules/aerospike install @mapbox/node-pre-gyp --ignore-scripts
-          npx --package aerospike npm run removeExtraBinaries --prefix ./node_modules/aerospike;
-          npx --package aerospike npm run build --prefix ./node_modules/aerospike;
-          node -e "const Aerospike = require('aerospike'); console.log(Aerospike.exp.unknown());"
+          npm install takeytoo@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
+          node ./node_modules/takeytoo/scripts/verify-aerospike-npm-scripts.js takeytoo;
+          npm --prefix ./node_modules/takeytoo install @mapbox/node-pre-gyp --ignore-scripts
+          npx --package takeytoo npm run removeExtraBinaries --prefix ./node_modules/takeytoo;
+          npx --package takeytoo npm run build --prefix ./node_modules/takeytoo;
+          node -e "const Aerospike = require('takeytoo'); console.log(Aerospike.exp.unknown());"
         env:
           NEW_VERSION: ${{ inputs.new_version }}

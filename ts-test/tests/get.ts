@@ -151,13 +151,24 @@ describe('client.get()', function () {
     })
   })
 
-  it('should return a Promise that resolves to a Record', function () {
+  it('compiles the typescript correctly', function () {
     const key: K = keygen.string(helper.namespace, helper.set, { prefix: 'test/get/' })()
 
     return client.put(key, { i: 42 })
       .then(() => client.get(key))
       .then((record: AerospikeRecord) => expect(record.bins).to.eql({ i: 42 }))
       .then(() => client.remove(key))
+  })
+
+  it('compiles the typescript correctly', async function () {
+
+    const key = new Aerospike.Key(helper.namespace, helper.set, 'myKey');
+
+    await client.put(key, {mybin: 1})
+    const record = await client.get(key);
+    
+    const value = record.bins['myBin'];
+
   })
 
   it('fetches a record given the digest', function () {

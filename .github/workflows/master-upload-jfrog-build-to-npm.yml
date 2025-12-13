@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@df199fb7be9f65074067a9eb93f12bb4c5547cf2 # v2.13.3
+      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
       with:
         egress-policy: audit
 
@@ -61,7 +61,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "takeytoo"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
@@ -74,7 +74,7 @@ jobs:
     - name: prepare install
       run: |
         node ./scripts/change-install-command.js;
-        node ./scripts/verify-aerospike-npm-scripts.js aerospike;
+        node ./scripts/verify-aerospike-npm-scripts.js takeytoo;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
@@ -87,7 +87,7 @@ jobs:
     - run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm publish --provenance;
+        npm publish --dry-run;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
