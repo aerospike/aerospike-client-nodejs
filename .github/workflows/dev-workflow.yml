@@ -41,7 +41,7 @@ jobs:
     ]
     uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      new_version: 6.5.1-dev.3
     secrets: inherit
 
   upload-npm-package-to-jfrog:
@@ -53,6 +53,6 @@ jobs:
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      new_version: 6.5.1-dev.3
       pipeline-stage: 'dev'
     secrets: inherit
