@@ -1,4 +1,4 @@
-import * as Buffer from "buffer";
+/// <reference types="node" />
 import { EventEmitter, Stream } from "stream";
 
 /**
