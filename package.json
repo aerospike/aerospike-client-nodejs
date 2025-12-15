@@ -66,7 +66,7 @@
   },
   "devDependencies": {
     "@mapbox/node-pre-gyp": "^2.0.3",
-    "@types/node": "^24.7.0",
+    "@types/node": "^25.0.2",
     "chai": "^6.2.0",
     "choma": "^1.2.1",
     "eslint": "^9.39.1",
