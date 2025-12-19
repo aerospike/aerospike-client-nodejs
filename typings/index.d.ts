@@ -1,5 +1,6 @@
 /// <reference types="node" />
-import { EventEmitter, Stream } from "stream";
+import { EventEmitter } from "events";
+import { Stream } from "stream";
 
 /**
  * Codes representing each of the various scalar operation types.
