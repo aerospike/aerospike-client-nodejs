@@ -29,10 +29,8 @@ jobs:
       old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
       new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
     secrets:
-      NPMRC_RELEASE:
-        required: true
-      NPM_TOKEN_OTP:
-        required: true
+      NPMRC_RELEASE: ${{ secrets.NPMRC_RELEASE }}
+      AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
 
   verify-npm-install:
     name: verify npm clean install works correctly
@@ -73,8 +71,7 @@ jobs:
 #      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
 #      pipeline-stage: 'master'
 #    secrets:
-#      room_lane:
-#        required: true
+#      room_lane: ${{ secrets.room_lane }}
 
 #
 #  ff-master-to-stage:

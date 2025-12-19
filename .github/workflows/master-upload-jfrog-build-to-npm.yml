@@ -17,7 +17,7 @@ on:
     secrets:
       NPMRC_RELEASE:
         required: true
-      NPM_TOKEN_OTP:
+      AUTH_TOKEN:
         required: true
 
 jobs:

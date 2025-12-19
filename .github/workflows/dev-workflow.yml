@@ -31,12 +31,9 @@ jobs:
       version: ${{ needs.bump-dev-number.outputs.dev_version }}
       run_tests: false
     secrets:
-      soup_hat:
-        required: true
-      cell_girl:
-        required: true
-      song_loss:
-        required: true
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}
 
   upload-addons-to-jfrog:
     name: Upload artifacts to JFrog
@@ -60,5 +57,4 @@ jobs:
       new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
       pipeline-stage: 'dev'
     secrets:
-      plane_grass:
-        required: true
+      plane_grass: ${{ secrets.plane_grass }}

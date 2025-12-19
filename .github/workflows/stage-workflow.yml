@@ -18,12 +18,9 @@ jobs:
      stage-get-jfrog-version,
    ]
     secrets:
-      soup_hat:
-        required: true
-      cell_girl:
-        required: true
-      song_loss:
-        required: true
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}
 
   bump-stage-number:
     uses: ./.github/workflows/stage-bump-version.yml
@@ -60,5 +57,4 @@ jobs:
       new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
       pipeline-stage: 'stage'
     secrets:
-      aisle_thank:
-        required: true
+      aisle_thank: ${{ secrets.aisle_thank }}
