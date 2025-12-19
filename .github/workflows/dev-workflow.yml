@@ -8,7 +8,7 @@ name: Dev workflow
 on:
   push:
     branches:
-      - 'CLIENT*'
+      - 'remove-secret-inherit*'
 
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
