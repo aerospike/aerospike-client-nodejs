@@ -9,9 +9,6 @@ permissions:
 
 on:
   workflow_call:
-    secrets:
-      desk_mood:
-        required: true
     outputs:
       stage_version:
         value: ${{ jobs.get-jfrog-stage-version.outputs.stage_version }}
@@ -32,8 +29,6 @@ jobs:
 
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        token: ${{ secrets.desk_mood }}
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1

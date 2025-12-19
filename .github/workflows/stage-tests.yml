@@ -15,7 +15,7 @@ on:
       server-tag:
         type: string
         required: false
-        default: '8.1.0.0-rc5'
+        default: '8.1.0.1'
     secrets:
       soup_hat:
         required: true
@@ -44,4 +44,7 @@ jobs:
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       version: ${{ inputs.version }}
-    secrets: inherit
+    secrets:
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}

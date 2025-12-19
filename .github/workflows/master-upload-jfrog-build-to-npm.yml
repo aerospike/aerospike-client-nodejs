@@ -15,10 +15,9 @@ on:
         type: string
         required: false
     secrets:
-      # Just make all the secrets required to make things simpler...
       NPMRC_RELEASE:
         required: true
-      NPM_TOKEN_OTP:
+      AUTH_TOKEN:
         required: true
 
 jobs:

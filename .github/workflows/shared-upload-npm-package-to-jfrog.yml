@@ -29,11 +29,11 @@ on:
       #  default: aerospike/clients
     secrets:
       plane_grass:
-        required: true
+        required: false
       aisle_thank:
-        required: true
+        required: false
       room_lane:
-        required: true
+        required: false
 
 jobs:
   upload-to-jfrog:
