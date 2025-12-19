@@ -6,9 +6,9 @@ name: Dev workflow
 
 
 on:
-  pull_request:
+  push:
     branches:
-      - 'disabled'
+      - 'dev'
 
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
