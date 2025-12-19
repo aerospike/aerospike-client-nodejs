@@ -10,15 +10,15 @@ jobs:
     uses: ./.github/workflows/stage-get-jfrog-version.yml
     secrets: inherit
 
-  #omprehensive-tests:
-  # uses: ./.github/workflows/stage-tests.yml
-  # with:
-  #   version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-  #   run_tests: true
-  # needs: [
-  #   stage-get-jfrog-version,
-  # ]
-  # secrets: inherit
+  comprehensive-tests:
+   uses: ./.github/workflows/stage-tests.yml
+   with:
+     version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+     run_tests: true
+   needs: [
+     stage-get-jfrog-version,
+   ]
+   secrets: inherit
 
   bump-stage-number:
     uses: ./.github/workflows/stage-bump-version.yml
