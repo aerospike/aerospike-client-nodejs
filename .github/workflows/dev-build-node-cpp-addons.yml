@@ -62,4 +62,10 @@ jobs:
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
       version: ${{ inputs.version }}
-    secrets: inherit
+    secrets:
+      soup_hat:
+        required: true
+      cell_girl:
+        required: true
+      song_loss:
+        required: true

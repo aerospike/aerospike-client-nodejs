@@ -11,14 +11,12 @@ on:
 jobs:
   master-get-jfrog-version:
     uses: ./.github/workflows/master-get-jfrog-version.yml
-    secrets: inherit
 
   bump-master-number:
     uses: ./.github/workflows/master-bump-version.yml
     needs: [
       master-get-jfrog-version,
     ]
-    secrets: inherit
 
   publish-to-npm:
     name: Publish to npm
@@ -30,7 +28,11 @@ jobs:
     with:
       old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
       new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
-    secrets: inherit
+    secrets:
+      NPMRC_RELEASE:
+        required: true
+      NPM_TOKEN_OTP:
+        required: true
 
   verify-npm-install:
     name: verify npm clean install works correctly
@@ -42,7 +44,6 @@ jobs:
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
       new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
-    secrets: inherit
 
 #  reupload-master-to-jfrog:
 #    name: Upload artifacts to JFrog
@@ -57,7 +58,6 @@ jobs:
 #      old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
 #      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
 #      pipeline-stage: 'master'
-#    secrets: inherit
 #
 #  reupload-master-to-jfrog-npm-repo:
 #    name: Upload artifacts to JFrog
@@ -72,7 +72,9 @@ jobs:
 #    with:
 #      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
 #      pipeline-stage: 'master'
-#    secrets: inherit
+#    secrets:
+#      room_lane:
+#        required: true
 
 #
 #  ff-master-to-stage:
@@ -86,7 +88,6 @@ jobs:
 #    with:
 #      ref_to_merge: origin/stage-CICD
 #      base_branch: master-test
-#    secrets: inherit
 #
 #  ff-stage-to-dev:
 #    uses: ./.github/workflows/fast-forward-merge.yml
@@ -99,5 +100,4 @@ jobs:
 #    with:
 #      ref_to_merge: origin/dev
 #      base_branch: stage
-#    secrets: inherit
 
