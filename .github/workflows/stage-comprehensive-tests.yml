@@ -1007,7 +1007,6 @@ jobs:
 
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
@@ -1020,7 +1019,6 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
