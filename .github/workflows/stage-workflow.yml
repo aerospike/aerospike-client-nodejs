@@ -3,58 +3,58 @@ name: Stage workflow
 on:
   push:
     branches:
-      - '6.5.2*'
+      - 'disabled'
 
 jobs:
-#  stage-get-jfrog-version:
-#    uses: ./.github/workflows/stage-get-jfrog-version.yml
-#
-#  comprehensive-tests:
-#    uses: ./.github/workflows/stage-tests.yml
-#    with:
-#      version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-#      run_tests: true
-#    needs: [
-#      stage-get-jfrog-version,
-#    ]
-#    secrets:
-#      soup_hat: ${{ secrets.soup_hat }}
-#      cell_girl: ${{ secrets.cell_girl }}
-#      song_loss: ${{ secrets.song_loss }}
-#
-#  bump-stage-number:
-#    uses: ./.github/workflows/stage-bump-version.yml
-#    needs: [
-#      stage-get-jfrog-version,
-#      #comprehensive-tests,
-#    ]
-#    with:
-#      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-#
-#  stage-reupload-addons-to-jfrog:
+  stage-get-jfrog-version:
+    uses: ./.github/workflows/stage-get-jfrog-version.yml
+
+  comprehensive-tests:
+    uses: ./.github/workflows/stage-tests.yml
+    with:
+      version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+      run_tests: true
+    needs: [
+      stage-get-jfrog-version,
+    ]
+    secrets:
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}
+
+  bump-stage-number:
+    uses: ./.github/workflows/stage-bump-version.yml
+    needs: [
+      stage-get-jfrog-version,
+      #comprehensive-tests,
+    ]
+    with:
+      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+
+  stage-reupload-addons-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      stage-get-jfrog-version,
+      comprehensive-tests,
+      bump-stage-number
+    ]
+    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
+    with:
+      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+      new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
+      pipeline-stage: 'stage'
+
+#  upload-npm-package-to-jfrog:
 #    name: Upload artifacts to JFrog
 #    needs: [
 #      stage-get-jfrog-version,
 #      comprehensive-tests,
-#      bump-stage-number
+#      bump-stage-number,
+#      stage-reupload-addons-to-jfrog
 #    ]
-#    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
+#    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
 #    with:
-#      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-#      new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
+#      new_version: 6.5.2-rc.3
 #      pipeline-stage: 'stage'
-
-  upload-npm-package-to-jfrog:
-    name: Upload artifacts to JFrog
-    #needs: [
-    #  stage-get-jfrog-version,
-    #  comprehensive-tests,
-    #  bump-stage-number,
-    #  stage-reupload-addons-to-jfrog
-    #]
-    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
-    with:
-      new_version: 6.5.2-rc.3
-      pipeline-stage: 'stage'
-    secrets:
-      aisle_thank: ${{ secrets.aisle_thank }}
+#    secrets:
+#      aisle_thank: ${{ secrets.aisle_thank }}
