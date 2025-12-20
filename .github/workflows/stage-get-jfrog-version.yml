@@ -6,9 +6,6 @@ permissions:
 
 on:
   workflow_call:
-    secrets:
-      desk_mood:
-        required: true
     outputs:
       dev_version:
         value: ${{ jobs.stage-get-jfrog-version.outputs.dev_version }}
@@ -28,11 +25,9 @@ jobs:
         egress-policy: audit
 
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      with:
-        token: ${{ secrets.desk_mood }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:

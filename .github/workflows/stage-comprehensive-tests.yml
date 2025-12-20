@@ -28,7 +28,7 @@ on:
       server-tag:
         required: false
         type: string
-        default: '8.1.0.0'
+        default: '8.1.0.1'
         description: 'Server docker image tag'
     secrets:
       soup_hat:
@@ -57,9 +57,8 @@ jobs:
         map[win_amd64]="windows-2022"
         map[macosx_x86_64]="macos-14-large"
         map[macosx_x86_64_2]="macos-15-large"
-        map[macosx_arm64_2]="SMA2"
+        map[macosx_arm64]="SMA2"
         map[macosx_arm64_2]="SMA3"
-    
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
 
@@ -139,7 +138,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -286,7 +285,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -432,7 +431,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -512,6 +511,159 @@ jobs:
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
+  test-yarn:
+    needs: get-runner-os
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'macosx_x86_64') }}
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    strategy:
+      matrix:
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+      fail-fast: false
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      with:
+        egress-policy: audit
+
+    - name: Create status check message
+      run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+      with: 
+        node-version: ${{ matrix.nodejs-tag[1] }}
+
+    - name: 'Windows: Install C client deps'
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: nuget restore
+      working-directory: aerospike-client-c/vs
+
+    - name: 'macOS x86: Setup Docker using colima for testing'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
+
+    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
+      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/run-ee-server-for-ext-container
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.soup_hat }}
+        docker-hub-password: ${{ secrets.cell_girl }}
+
+    - name: Remove aerospike docker image
+      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
+      run: |
+        if docker ps -aq | grep -q .; then
+          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
+        else
+          echo "No containers to remove."
+        fi
+
+    # TODO: combine this composite action and the above into one
+    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
+      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
+      uses: ./.github/actions/run-ee-server-for-ext-container
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.soup_hat }}
+        docker-hub-password: ${{ secrets.cell_girl }}
+
+
+    - name: Set up JFrog credentials
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: gh-aerospike-clients
+        oidc-audience: aerospike/clients
+
+    - name: Download Artifacts from Jfrog
+      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+        PACKAGE_MANAGER: npm
+
+    - name: list Artifacts
+      run: |
+        ls downloaded-artifacts
+        ls downloaded-artifacts/aerospike
+        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+
+    - name: Move artifacts
+      run: |
+        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: check binding
+      run:
+        ls lib/binding;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+
+    - name: Run tests
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
+      run: |
+        cp ../../../package-lock.json package-lock.json
+        npm ci --ignore-scripts
+        npm install -g yarn
+        yarn --version
+        mkdir yarn
+        cp ./scripts/basic_test.js yarn/basic_test.js
+        cd yarn
+        echo '{}' > package.json
+        NODE_ENV=production yarn add ../
+        node basic_test.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    - name: Run tests
+      if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
+      run: |
+        cp ../../../package-lock.json package-lock.json
+        npm ci --ignore-scripts
+        npm install -g yarn --ignore-scripts
+        yarn --version
+        mkdir yarn
+        cp ./scripts/basic_test.js yarn/basic_test.js
+        cd yarn
+        echo '{}' > package.json
+        NODE_ENV=production yarn add ../
+        node basic_test.js
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+
+    #- name: Debug server
+    #  run: |
+    #    docker ps;
+    #    docker logs aerospike;
+
+
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+        status: ${{ job.status }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
+
   test-set-xdr-filter:
     needs: get-runner-os
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64') }}
@@ -575,7 +727,7 @@ jobs:
       run: aerolab cluster list
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -711,7 +863,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -781,7 +933,7 @@ jobs:
 
   test-tsc-compile:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64') }}
+    if: ${{ inputs.run_tests }}
     strategy:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
@@ -819,7 +971,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -855,7 +1007,6 @@ jobs:
 
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
@@ -868,7 +1019,6 @@ jobs:
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
       run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
@@ -927,7 +1077,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1046,14 +1196,14 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.1
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1150,7 +1300,7 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.1
 
     - name: Add 10ms latency to Docker traffic
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -1162,7 +1312,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1255,7 +1405,7 @@ jobs:
         run: security unlock-keychain -p ${{ secrets.song_loss }}
 
       - name: Set up JFrog credentials
-        uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+        uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
         env:
           JF_URL: https://aerospike.jfrog.io
         with:
@@ -1372,14 +1522,14 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.0
+      run: docker run -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.0.1
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
