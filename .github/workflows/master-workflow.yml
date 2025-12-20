@@ -94,7 +94,7 @@ jobs:
       bump-master-number,
       publish-to-npm,
       verify-npm-install-scripts,
-      verify-npm-install-prod
+      verify-npm-install-prod,
       verify-npm-install,
       reupload-master-to-jfrog
     ]
