@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches:
-      - '6.5.2*'
+      - 'stage'
 
 jobs:
   master-get-jfrog-version:

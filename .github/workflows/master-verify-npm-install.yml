@@ -39,28 +39,28 @@ jobs:
       - name: verify runs and is aligned with expect functionality
         if: ${{ inputs.scenario == 'omitscripts' }}
         run: |
-          npm install fingalabes@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
-          node ./node_modules/fingalabes/scripts/verify-aerospike-npm-scripts.js fingalabes;
-          npm --prefix ./node_modules/fingalabes install @mapbox/node-pre-gyp --ignore-scripts
-          npx --package fingalabes npm run removeExtraBinaries --prefix ./node_modules/fingalabes;
-          npx --package fingalabes npm run build --prefix ./node_modules/fingalabes;
-          node -e "const Aerospike = require('fingalabes'); console.log(Aerospike.exp.unknown());"
+          npm install fingalabest@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
+          node ./node_modules/fingalabest/scripts/verify-aerospike-npm-scripts.js fingalabest;
+          npm --prefix ./node_modules/fingalabest install @mapbox/node-pre-gyp --ignore-scripts
+          npx --package fingalabest npm run removeExtraBinaries --prefix ./node_modules/fingalabest;
+          npx --package fingalabest npm run build --prefix ./node_modules/fingalabest;
+          node -e "const Aerospike = require('fingalabest'); console.log(Aerospike.exp.unknown());"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
 
       - name: verify runs and is aligned with expect functionality
         if: ${{ inputs.scenario  == 'omitdev'  }}
         run: |
-          npm install fingalabes@${{ env.NEW_VERSION }} --omit=dev;
-          node -e "const Aerospike = require('fingalabes'); console.log(Aerospike.exp.unknown());"
+          npm install fingalabest@${{ env.NEW_VERSION }} --omit=dev;
+          node -e "const Aerospike = require('fingalabest'); console.log(Aerospike.exp.unknown());"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
 
       - name: verify runs and is aligned with expect functionality
         if: ${{ inputs.scenario  == 'omitnone'  }}
         run: |
-          npm install fingalabes@${{ env.NEW_VERSION }};
-          node -e "const Aerospike = require('fingalabes'); console.log(Aerospike.exp.unknown());"
+          npm install fingalabest@${{ env.NEW_VERSION }};
+          node -e "const Aerospike = require('fingalabest'); console.log(Aerospike.exp.unknown());"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
 
