@@ -22,7 +22,8 @@ try {
   process.exit(1)
 }
 
-if (preInstallScript !== 'npm install @mapbox/node-pre-gyp') {
+if (preInstallScript !== '') {
+  console.log(preInstallScript)
   console.error('❌ preinstall script does not match expected value')
   process.exit(1)
 }
