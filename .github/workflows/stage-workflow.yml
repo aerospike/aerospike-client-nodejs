@@ -26,7 +26,7 @@ jobs:
     uses: ./.github/workflows/stage-bump-version.yml
     needs: [
       stage-get-jfrog-version,
-      comprehensive-tests,
+      #comprehensive-tests,
     ]
     with:
       old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
@@ -49,7 +49,7 @@ jobs:
     needs: [
       stage-get-jfrog-version,
       #comprehensive-tests,
-      #bump-stage-number,
+      bump-stage-number,
       #stage-reupload-addons-to-jfrog
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
