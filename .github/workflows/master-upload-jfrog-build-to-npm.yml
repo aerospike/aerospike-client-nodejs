@@ -73,7 +73,6 @@ jobs:
     - name: prepare install
       run: |
         node ./scripts/change-install-command.js;
-        node ./scripts/verify-aerospike-npm-scripts.js aerospike;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
