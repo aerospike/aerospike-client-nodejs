@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [6.5.2]
+* **Bug Fixes**
+  * [CLIENT-3967] - Fixed issue with non-abstract types resolving to any in typescript description file.
+  * [CLIENT-4032] - Fixed issue with package installation when omitting developer dependencies.
+
 ## [6.5.1]
 * **Bug Fixes**
   * [CLIENT-3966] - Corrected type definition for record property in BatchResult Class.

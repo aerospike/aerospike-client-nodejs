@@ -6,9 +6,9 @@ name: Dev workflow
 
 
 on:
-  pull_request:
+  push:
     branches:
-      - 'disabled'
+      - '6.5.2*'
 
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
@@ -21,38 +21,40 @@ on:
 jobs:
   bump-dev-number:
     uses: ./.github/workflows/dev-bump-version.yml
-    secrets: inherit
 
-  #build-node-cpp-addons:
-  #  uses: ./.github/workflows/dev-build-node-cpp-addons.yml
-  #  needs: [
-  #    bump-dev-number
-  #  ]
-  #  with:
-  #    version: ${{ needs.bump-dev-number.outputs.dev_version }}
-  #    run_tests: false
-  #  secrets: inherit
+  build-node-cpp-addons:
+    uses: ./.github/workflows/dev-build-node-cpp-addons.yml
+    needs: [
+      bump-dev-number
+    ]
+    with:
+      version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      run_tests: false
+    secrets:
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}
 
   upload-addons-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      #build-node-cpp-addons
+      build-node-cpp-addons
     ]
     uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
     with:
-      new_version: 6.5.1-dev.3
-    secrets: inherit
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
 
   upload-npm-package-to-jfrog:
     name: upload package to JFrog NPM
     needs: [
       bump-dev-number,
-      #build-node-cpp-addons,
+      build-node-cpp-addons,
       upload-addons-to-jfrog,
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: 6.5.1-dev.3
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
       pipeline-stage: 'dev'
-    secrets: inherit
+    secrets:
+      plane_grass: ${{ secrets.plane_grass }}

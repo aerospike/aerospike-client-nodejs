@@ -15,10 +15,9 @@ on:
         type: string
         required: false
     secrets:
-      # Just make all the secrets required to make things simpler...
       NPMRC_RELEASE:
         required: true
-      NPM_TOKEN_OTP:
+      AUTH_TOKEN:
         required: true
 
 jobs:
@@ -34,7 +33,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@5b06f730cc5a6f55d78b30753f8583454b08c0aa # v4.8.1
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -61,7 +60,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "fingalabe"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
@@ -74,7 +73,7 @@ jobs:
     - name: prepare install
       run: |
         node ./scripts/change-install-command.js;
-        node ./scripts/verify-aerospike-npm-scripts.js aerospike;
+        node ./scripts/verify-aerospike-npm-scripts.js fingalabe;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
@@ -87,7 +86,7 @@ jobs:
     - run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm publish --provenance;
+        npm publish;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
