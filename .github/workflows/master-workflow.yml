@@ -32,7 +32,7 @@ jobs:
       NPMRC_RELEASE: ${{ secrets.NPMRC_RELEASE }}
       AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
 
-  verify-npm-install:
+  verify-npm-install-scripts:
     name: verify npm clean install works correctly
     needs: [
       master-get-jfrog-version,
@@ -42,6 +42,34 @@ jobs:
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
       new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+      scenario: 'omitscripts'
+
+  verify-npm-install-prod:
+    name: verify npm clean install works correctly
+    needs: [
+      master-get-jfrog-version,
+      bump-master-number,
+      publish-to-npm,
+      verify-npm-install-scripts
+    ]
+    uses: ./.github/workflows/master-verify-npm-install.yml
+    with:
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+      scenario: 'omitdev'
+
+  verify-npm-install:
+    name: verify npm clean install works correctly
+    needs: [
+      master-get-jfrog-version,
+      bump-master-number,
+      publish-to-npm,
+      verify-npm-install-scripts,
+      verify-npm-install-prod
+    ]
+    uses: ./.github/workflows/master-verify-npm-install.yml
+    with:
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+      scenario: 'omitnone'
 
 #  reupload-master-to-jfrog:
 #    name: Upload artifacts to JFrog
@@ -49,6 +77,8 @@ jobs:
 #      master-get-jfrog-version,
 #      bump-master-number,
 #      publish-to-npm,
+#      verify-npm-install-scripts,
+#      verify-npm-install-prod,
 #      verify-npm-install
 #    ]
 #    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
@@ -63,6 +93,8 @@ jobs:
 #      master-get-jfrog-version,
 #      bump-master-number,
 #      publish-to-npm,
+#      verify-npm-install-scripts,
+#      verify-npm-install-prod
 #      verify-npm-install,
 #      reupload-master-to-jfrog
 #    ]

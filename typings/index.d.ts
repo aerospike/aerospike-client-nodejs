@@ -1,4 +1,5 @@
 /// <reference types="node" />
+
 import { EventEmitter } from "events";
 import { Stream } from "stream";
 
