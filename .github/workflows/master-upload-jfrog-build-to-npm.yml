@@ -60,7 +60,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "fingalabest"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
@@ -73,7 +73,7 @@ jobs:
     - name: prepare install
       run: |
         node ./scripts/change-install-command.js;
-        node ./scripts/verify-aerospike-npm-scripts.js fingalabe;
+        node ./scripts/verify-aerospike-npm-scripts.js aerospike;
       env:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}

@@ -3,7 +3,7 @@ name: Stage workflow
 on:
   push:
     branches:
-      - '6.5.2*'
+      - 'disabled'
 
 jobs:
   stage-get-jfrog-version:
@@ -26,7 +26,7 @@ jobs:
     uses: ./.github/workflows/stage-bump-version.yml
     needs: [
       stage-get-jfrog-version,
-      comprehensive-tests,
+      #comprehensive-tests,
     ]
     with:
       old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
