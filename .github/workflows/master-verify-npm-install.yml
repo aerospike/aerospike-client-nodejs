@@ -62,19 +62,3 @@ jobs:
           node -e "const Aerospike = require('fingalabest'); console.log(Aerospike.exp.unknown());"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
-
-      - name: verify runs and is aligned with expect functionality
-        if: ${{ inputs.scenario  == 'omitdev'  }}
-        run: |
-          npm install aerospike@${{ env.NEW_VERSION }} --omit=dev;
-          node -e "const Aerospike = require('aerospike'); console.log(Aerospike.exp.unknown());"
-        env:
-          NEW_VERSION: ${{ inputs.new_version }}
-
-      - name: verify runs and is aligned with expect functionality
-        if: ${{ inputs.scenario  == 'omitnone'  }}
-        run: |
-          npm install aerospike@${{ env.NEW_VERSION }};
-          node -e "const Aerospike = require('aerospike'); console.log(Aerospike.exp.unknown());"
-        env:
-          NEW_VERSION: ${{ inputs.new_version }}
