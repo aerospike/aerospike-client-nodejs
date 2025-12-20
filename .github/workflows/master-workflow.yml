@@ -71,39 +71,39 @@ jobs:
       new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
       scenario: 'omitnone'
 
-  reupload-master-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      master-get-jfrog-version,
-      bump-master-number,
-      publish-to-npm,
-      verify-npm-install-scripts,
-      verify-npm-install-prod,
-      verify-npm-install
-    ]
-    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
-    with:
-      old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
-      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
-      pipeline-stage: 'master'
-
-  reupload-master-to-jfrog-npm-repo:
-    name: Upload artifacts to JFrog
-    needs: [
-      master-get-jfrog-version,
-      bump-master-number,
-      publish-to-npm,
-      verify-npm-install-scripts,
-      verify-npm-install-prod
-      verify-npm-install,
-      reupload-master-to-jfrog
-    ]
-    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
-    with:
-      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
-      pipeline-stage: 'master'
-    secrets:
-      room_lane: ${{ secrets.room_lane }}
+#  reupload-master-to-jfrog:
+#    name: Upload artifacts to JFrog
+#    needs: [
+#      master-get-jfrog-version,
+#      bump-master-number,
+#      publish-to-npm,
+#      verify-npm-install-scripts,
+#      verify-npm-install-prod,
+#      verify-npm-install
+#    ]
+#    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
+#    with:
+#      old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
+#      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+#      pipeline-stage: 'master'
+#
+#  reupload-master-to-jfrog-npm-repo:
+#    name: Upload artifacts to JFrog
+#    needs: [
+#      master-get-jfrog-version,
+#      bump-master-number,
+#      publish-to-npm,
+#      verify-npm-install-scripts,
+#      verify-npm-install-prod
+#      verify-npm-install,
+#      reupload-master-to-jfrog
+#    ]
+#    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
+#    with:
+#      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+#      pipeline-stage: 'master'
+#    secrets:
+#      room_lane: ${{ secrets.room_lane }}
 
 #
 #  ff-master-to-stage:

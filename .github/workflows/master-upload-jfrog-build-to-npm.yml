@@ -60,7 +60,7 @@ jobs:
 
     - name: change package name
       run: |
-        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
+        sed -i 's/"name": "[^"]*"/"name": "lammyfine"/' package.json
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
