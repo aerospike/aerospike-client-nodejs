@@ -1679,15 +1679,33 @@ export namespace cdt {
          * @return {CdtContext} Updated CDT context, so calls can be chained.
          */
         public addMapKey(key: string): CdtContext;
+         /**
+         * Lookup map by base map's key. If the map at key is not found,
+         * create it with the given sort order at that key.
+         *
+         * @param {any} key - Map key
+         * @param {number} order - Sort order used if a map is created
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addMapKeyCreate(key: string, order?: maps.order): CdtContext;
         /**
-        * Lookup map by base map's key. If the map at key is not found,
-        * create it with the given sort order at that key.
+        * At the current context, causes a query to return a list of all the children
+        * of the current item. For a map, this will recurse into the map elements.
+        * For a list, this will include all the children in the list.
         *
-        * @param {any} key - Map key
-        * @param {number} order - Sort order used if a map is created
         * @return {CdtContext} Updated CDT context, so calls can be chained.
         */
-        public addMapKeyCreate(key: string, order?: maps.order): CdtContext;
+        public addAllChildren(): CdtContext;
+        /**
+         * All children of the current level will be selected, and then the filter expression
+         * is applied to each item in turn.  Items that cause the expression to evaluate to true will be added to the
+         * list of items returned in a query for this level.  Items that cause the expression to evaluate to false
+         * will be filtered out
+         *
+         * @param {AerospikExp} filterExpression - Aerospike expression. Must resolve to a boolean expression.
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addAllChildrenWithFilter(filterExpression: AerospikeExp | string): CdtContext;
         /**
          * Lookup map by value.
          *
@@ -16477,7 +16495,6 @@ export namespace exp {
             public exp: AerospikeExp | string;
             /**
              * @param Expression read flags or write flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} or {@link exp.expWriteFlags} for more information.
-
              */
             public flags: number;
             constructor(op: ExpOperations, bin: string, exp: AerospikeExp | string, flags: number, props?: Record<string, AerospikeBinValue>);
@@ -16545,6 +16562,95 @@ export namespace exp {
          * Ignore failures caused by the expression resolving to unknown or a non-bin type.
          */
         EVAL_NO_FAIL = 16
+    }
+
+    /**
+     * @readonly
+     * @remarks Expression write bit flags. Use BITWISE OR to combine flags.
+     */
+    export enum pathSelectFlags {
+        /**
+         * Return a tree from the root (bin) level to the bottom of the tree,
+         * with only non-filtered out nodes.
+         */
+        MATCHING_TREE,
+        /**
+         * Return the list of the values of the nodes finally selected by the context.
+         * For maps, this returns the value of each (key, value) pair.
+         */
+        VALUE = 1,
+        /**
+         * Return the list of the values of the nodes finally selected by the context.
+         * This is a synonym for AS_EXP_PATH_SELECT_VALUE to make it clear in your
+         * source code that you're expecting a list.
+         */
+        LIST_VALUE = 1,
+        /**
+         * Return the list of map values of the nodes finally selected by the context.
+         * This is a synonym for AS_EXP_PATH_SELECT_VALUE to make it clear in your
+         * source code that you're expecting a map.  See also
+         * AS_EXP_PATH_SELECT_MAP_KEY_VALUE.
+         */
+        MAP_VALUE = 1,
+        /**
+         * Return the list of map keys of the nodes finally selected by the context.
+         */
+        MAP_KEY,
+        /**
+         * Returns the list of map (key, value) pairs of the nodes finally selected
+         * by the context.  This is a synonym for setting both
+         * AS_EXP_PATH_SELECT_MAP_KEY and AS_EXP_PATH_SELECT_MAP_VALUE bits together.
+         */
+        MAP_KEY_VALUE,
+        /**
+         * If the expression in the context hits an invalid type (e.g., selects
+         * as an integer when the value is a string), do not fail the operation;
+         * just ignore those elements.  Interpret an expression that returns UNKNOWN
+         * as false instead.
+         */
+        NO_FAIL = 16
+    }
+
+    /**
+     * @readonly
+     * @remarks Path expression modify operation flags.
+     */
+    export enum pathModifyFlags {
+        /**
+         * If the expression in the context hits an invalid type, the operation
+         * will fail.  This is the default behavior.
+         */
+        DEFAULT,
+         /**
+          * If the expression in the context hits an invalid type (e.g., selects
+          * as an integer when the value is a string), do not fail the operation;
+          * just ignore those elements.  Interpret UNKNOWN as false instead.
+          */
+        NO_FAIL = 16,
+    }
+
+    /**
+     * @readonly
+     * @remarks Path expression modify operation flags.
+     */
+    export enum loopVarPart {
+        /**
+         * Access the key part of the loop variable.
+         * For maps, this refers to the map key.
+         * For lists, this refers to the list index.
+         * 
+         */
+        KEY,
+        /**
+         * Access the value part of the loop variable.
+         * For maps, this refers to the map value.
+         * For lists, this refers to the list item value.
+         */
+        VALUE,
+         /**
+          * Returns a list of indexes.
+          */
+        INDEX,
     }
 
     /**
@@ -17348,6 +17454,110 @@ export namespace exp {
      * @return value stored in variable.
      */
     export const _var: (varName: string) => AerospikeExp;
+    /**
+     * Float expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarFloat: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Float expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarInt: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * List expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarList: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Map expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarMap: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Str expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarStr: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Blob expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarBlob: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Bool expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarBool: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Nil expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarNil: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * GeoJSON expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarGeoJSON: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * HLL expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarHLL: (varId: exp.loopVar) => AerospikeExp;
+
+    /**
+     * Path select expression.
+     * Used in path expressions.
+     *
+     * @param bin - bin name.
+     * @param valueType - expression value type.
+     * @param flags - path selct flags.
+     * @param ctx - CDT Context.
+     * @return path modify expression.
+     */
+    export const selectByPath: (bin: AerospikeExp, valueType: exp.type, flags: exp.pathSelectFlags, ctx: cdt.Context) => AerospikeExp;
+    /**
+     * Path modify expression.
+     * Used in path expressions.
+     *
+     * @param bin - bin name.
+     * @param valueType - expression value type.
+     * @param modExp - expression for modificaiton.
+     * @param flags - path selct flags.
+     * @param ctx - CDT Context.
+     * @return path modify expression.
+     */
+    export const modifyByPath: (bin: AerospikeExp, valueType: exp.type, modExp: AerospikeExp, flags: exp.pathModifyFlags, ctx: cdt.Context) => AerospikeExp;
 }
 /**
  * @remarks This module provides functions to easily define operations to
@@ -17492,6 +17702,27 @@ export namespace operations {
      * @see {@link !ttl} for "special" TTL values.
      */
     export function touch(ttl: number): Operation;
+    /**
+     * Path select operation.
+     * Used in path expressions.
+     *
+     * @param bin - bin name.
+     * @param context - CDT Context.
+     * @param flags - path selct flags.
+     * @return path select operation.
+     */
+    export function selectByPath(bin: string, context: cdt.Context, flags: exp.pathSelectFlags): Operation;
+    /**
+     * Path modify operation.
+     * Used in path expressions.
+     *
+     * @param bin - bin name.
+     * @param context - CDT Context.
+     * @param modExp - expression for modificaiton.
+     * @param flags - path selct flags.
+     * @return path modify operation.
+     */
+    export function modifyByPath(bin: string, context: cdt.Context, modExp: AerospikeExp, flags: exp.pathModifyFlags): Operation;
     /**
      * Deletes the record.
      *

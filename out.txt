@@ -1,0 +1,2 @@
+link eth0 state up
+link eth0 state up in 0

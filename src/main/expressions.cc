@@ -58,11 +58,11 @@ NAN_METHOD(AerospikeClient::ExpressionToBase64)
 
 }
 
-int free_entries(Local<Array> entries_ary, as_exp_entry *entries,
+int free_entries(Local<Array> entries_ary, as_exp_entry *entries, int length,
 				 const LogInfo *log)
 {
 	int rc = AS_NODE_PARAM_OK;
-	int i = 0, length = entries_ary->Length();
+	int i = 0;
 	as_exp_entry *entry = entries;
 	for (i = 0; i < length; i++, entry++) {
 		Local<Object> entry_obj =
@@ -112,6 +112,12 @@ int free_entries(Local<Array> entries_ary, as_exp_entry *entries,
 		if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
 			if (entry->v.ctx)
 				as_cdt_ctx_destroy(entry->v.ctx);
+			continue;
+		}
+
+		if (Nan::Has(entry_obj, Nan::New("exp").ToLocalChecked()).FromJust()) {
+			if (entry->v.expr)
+				as_exp_destroy(entry->v.expr);
 			continue;
 		}
 
@@ -198,9 +204,33 @@ int convert_entry(Local<Object> entry_obj, as_exp_entry *entry,
 
 	if (Nan::Has(entry_obj, Nan::New("ctx").ToLocalChecked()).FromJust()) {
 		entry->v.ctx =
-			get_optional_cdt_context_heap(&rc, entry_obj, "ctx", log);
+			get_cdt_context_heap(&rc, entry_obj, "ctx", log);
 		return rc;
 	}
+
+	if (Nan::Has(entry_obj, Nan::New("exp").ToLocalChecked()).FromJust()) {
+		as_exp* exp = NULL;
+		Local<Value> exp_obj =
+			Nan::Get(entry_obj, Nan::New("exp").ToLocalChecked())
+				.ToLocalChecked();
+		if (exp_obj->IsArray()) {
+			Local<Array> exp_ary = Local<Array>::Cast(exp_obj);
+			if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+				return AS_NODE_PARAM_ERR;
+			}
+		}
+		else if (exp_obj->IsString()) {
+			Nan::Utf8String exp_b64(exp_obj.As<String>());
+			exp = as_exp_from_base64(*exp_b64);
+		}
+		else{
+			as_v8_error(log, "Type error: expression property should be array or string");
+			return AS_NODE_PARAM_ERR;
+		}
+		entry->v.expr = exp;
+		return rc;
+	}
+
 
 	if (Nan::Has(entry_obj, Nan::New("listPolicy").ToLocalChecked())
 			.FromJust()) {
@@ -260,13 +290,14 @@ int compile_expression(Local<Array> entries_ary, as_exp **filter_exp,
 			Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 		if ((rc = convert_entry(entry_obj, entry, log)) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Error converting expression entry: %i", i);
-			goto done;
+			free_entries(entries_ary, entries, ++i, log);
+			return rc;
 		}
 		entry++;
 	}
 	*filter_exp = as_exp_compile(entries, length);
 
 done:
-	free_entries(entries_ary, entries, log);
+	free_entries(entries_ary, entries, entries_ary->Length(), log);
 	return rc;
 }
