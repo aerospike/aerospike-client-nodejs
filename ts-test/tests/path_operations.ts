@@ -51,7 +51,7 @@ describe('Path Operations', async function () {
   async function verifySelectByPath(bin: string, context: cdt.Context, flags: number, expected: any) {
   
     const ops: operations.Operation[] = [
-      op.selectByPath(bin, context, flags)
+      op.selectByPath(bin, flags, context)
     ]
   
     const result: any = await client.operate(key, ops)
@@ -63,7 +63,7 @@ describe('Path Operations', async function () {
   async function verifyModifyByPath(bin: string, context: cdt.Context, expression: AerospikeExp, flags: number, expected: any) {
 
     const ops: operations.Operation[] = [
-      op.modifyByPath(bin, context, expression, flags),
+      op.modifyByPath(bin, expression, flags, context),
     ]
 
 
@@ -118,7 +118,6 @@ describe('Path Operations', async function () {
         context('bin', function () {
 
           it('accepts exp.mapBin', async function () {
-            const ctx: cdt.Context = new Context().addMapKey('book').addAllChildren().addMapKey('price')
 
             const modExpression = exp.float(14.0)
 
@@ -192,10 +191,17 @@ describe('Path Operations', async function () {
 
 
           it('modifies with standard expression', async function () {
-            const ctx: cdt.Context = new Context().addMapKey('book').addAllChildren().addMapKey('price')
 
             const modExpression = exp.float(14.0)
 
+            
+            await verifyModifyByPath('c_example', addAllChildren, modExpression, pathModifyFlags.DEFAULT, {book: 14})
+  
+          })
+
+          it('modifies with result remove expression', async function () {
+
+            const modExpression = exp.resultRemove()
             
             await verifyModifyByPath('c_example', addAllChildren, modExpression, pathModifyFlags.DEFAULT, {book: 14})
   
@@ -536,11 +542,9 @@ describe('Path Operations', async function () {
       context('arguments', function () {
         context('bin', function () {
 
-                          //const selectByPath = exp.selectByPath(exp.binMap('floatMap'), exp.type.LIST, noFailFlags, addAllChildren)
-
           it('Does not accept non-string values', async function () {
             const ops: operations.Operation[] = [
-              op.selectByPath(2 as any, addAllChildren, exp.pathSelectFlags.MATCHING_TREE)
+              op.selectByPath(2 as any, exp.pathSelectFlags.MATCHING_TREE, addAllChildren)
             ]
           
             try{
@@ -559,7 +563,7 @@ describe('Path Operations', async function () {
             const selectByPath = exp.selectByPath(exp.binMap('floatMap'), null as any, exp.pathSelectFlags.MATCHING_TREE, addAllChildren)
 
             const ops: operations.Operation[] = [
-              op.selectByPath('floatMap', null as any, exp.pathSelectFlags.MATCHING_TREE)
+              op.selectByPath('floatMap',  exp.pathSelectFlags.MATCHING_TREE, null as any)
             ]
 
             try{
@@ -575,7 +579,7 @@ describe('Path Operations', async function () {
         context('pathSelectFlags', function () {
           it('Doe not accept non-number values', async function () {
             const ops: operations.Operation[] = [
-              op.selectByPath('floatMap', addAllChildren, 'invalid' as any)
+              op.selectByPath('floatMap', 'invalid' as any,  addAllChildren)
             ]
 
             try{
@@ -600,7 +604,7 @@ describe('Path Operations', async function () {
 
           it('Does not accept non-string values', async function () {
             const ops: operations.Operation[] = [
-              op.modifyByPath(2 as any, addAllChildren, exp.float(14.0), exp.pathModifyFlags.DEFAULT),
+              op.modifyByPath(2 as any, exp.float(14.0), exp.pathModifyFlags.DEFAULT, addAllChildren),
             ]
 
             try{
@@ -617,7 +621,7 @@ describe('Path Operations', async function () {
         context('context', function () {
           it('Doe not accept non-number values', async function () {
             const ops: operations.Operation[] = [
-              op.modifyByPath('floatMap', null as any, exp.float(14.0), exp.pathModifyFlags.DEFAULT),
+              op.modifyByPath('floatMap', exp.float(14.0), exp.pathModifyFlags.DEFAULT, null as any),
             ]
 
             try{
@@ -633,7 +637,7 @@ describe('Path Operations', async function () {
         context('modExp', function () {
           it('Doe not accept non-expression values', async function () {
             const ops: operations.Operation[] = [
-              op.modifyByPath('floatMap', addAllChildren, null as any, exp.pathModifyFlags.DEFAULT),
+              op.modifyByPath('floatMap', null as any, exp.pathModifyFlags.DEFAULT, addAllChildren),
             ]
 
             try{
@@ -649,7 +653,7 @@ describe('Path Operations', async function () {
         context('pathModifyFlags', function () {
           it('Doe not accept non-number values', async function () {
             const ops: operations.Operation[] = [
-              op.modifyByPath('floatMap', addAllChildren, exp.float(14.0), null as any),
+              op.modifyByPath('floatMap', exp.float(14.0), null as any, addAllChildren),
             ]
 
             try{

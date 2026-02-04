@@ -31,6 +31,9 @@ NAN_METHOD(AerospikeClient::ContextToBase64)
 {
 	TYPE_CHECK_REQ(info[0], IsObject, "Context must be an object");
 
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
 	as_cdt_ctx context;
 	bool has_context = false;
 	
@@ -47,7 +50,8 @@ NAN_METHOD(AerospikeClient::ContextToBase64)
 		delete [] serializedContext;
 	}
 	else{
-		Nan::ThrowError("Context is invalid, cannot serialize");
+		as_v8_error(client->log, "Context is invalid, cannot serialize");
+		return AS_NODE_PARAM_ERR;
 	}
 
 }
@@ -62,7 +66,7 @@ NAN_METHOD(AerospikeClient::ContextFromBase64)
 	char* serializedContext = NULL;
 	if (info[0]->IsObject()) {
 		if(get_string_property(&serializedContext, info[0].As<Object>(), "context", NULL) != AS_NODE_PARAM_OK){
-			as_v8_error(client->log, "Type error: value should be an Object");
+			as_v8_error(client->log, "Type error: Serialized context is invalid");
 			return AS_NODE_PARAM_ERR;
 		}
 	}
@@ -348,11 +352,11 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 					return context;
 				}
 				as_cdt_ctx_add_all_children_with_filter(context, exp);
-				as_v8_detail(log, "Adding All Children context");
+				as_v8_detail(log, "Adding All Children context With Filter context");
 			}
 			else if (v8value->IsUndefined() || v8value->IsNull()) {
 				as_cdt_ctx_add_all_children(context);
-				as_v8_detail(log, "Adding All Children With Filter context");
+				as_v8_detail(log, "Adding All Children");
 			}
 			else {
 				as_v8_error(log, "error: value should be an expression, null, or undefined");

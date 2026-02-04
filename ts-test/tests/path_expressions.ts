@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { maps as Maps, AerospikeBins, RecordMetadata, Key, AerospikeRecord, AerospikeExp, operations, exp as expModule, cdt, GeoJSON} from 'aerospike';
+import Aerospike, { maps as Maps, AerospikeBins, RecordMetadata, Key, AerospikeRecord, AerospikeExp, operations, exp as expModule, cdt, GeoJSON, hll} from 'aerospike';
 
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 
@@ -71,25 +71,15 @@ describe('Aerospike.exp.selectByPath', async function () {
 
   }
 
-  const hll1 = Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
-            0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-
-  const hll2 = Buffer.from([8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
-            0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+  const hllCats: Buffer = Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
+    0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 
   const record = {
     c_example: {
@@ -116,9 +106,7 @@ describe('Aerospike.exp.selectByPath', async function () {
     nilList: [null, null, null],
     geoList: [new GeoJSON.Point(50.913, 50.308), new GeoJSON.Point(0.913, 0.308), new GeoJSON.Point(0.913, 0.308)],
     mapList: [{a: 1}, {b: 2}, {c: 3}],
-    listList: [[1], [2], [3]],
-    hllList: [hll1, hll2, hll2]
-
+    listList: [[1], [2], [3]]
     //boolList: [2.4, 4.8, 7.2],
     //nNilList: [[2.4, 4.8, 7.2]],
     //dnNilList: [[[2.4, 4.8, 7.2]]],
@@ -134,7 +122,6 @@ describe('Aerospike.exp.selectByPath', async function () {
         context('bin', function () {
 
           it('accepts exp.mapBin', async function () {
-            const ctx: cdt.Context = new Context().addMapKey('book').addAllChildren().addMapKey('price')
 
             const modExpression = exp.float(14.0)
 
@@ -172,9 +159,9 @@ describe('Aerospike.exp.selectByPath', async function () {
         context('flags', function () {
 
 
-          context('pathSelectFlags', function () {
+          context('pathModifyFlags', function () {
 
-            context('MATCHING_TREE', function () {
+            context('DEFAULT', function () {
 
               const flags = pathModifyFlags.DEFAULT
               const noFailFlags = pathModifyFlags.DEFAULT | pathModifyFlags.NO_FAIL
@@ -215,13 +202,22 @@ describe('Aerospike.exp.selectByPath', async function () {
 
 
           it('modifies with standard expression', async function () {
-            const ctx: cdt.Context = new Context().addMapKey('book').addAllChildren().addMapKey('price')
 
             const modExpression = exp.float(14.0)
 
             const modifyByPath = exp.modifyByPath(exp.binMap('c_example'), exp.type.MAP, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
             
             await verifyModifyByPath('c_example', modifyByPath, {book: 14})
+  
+          })
+
+          it('modifies with result remove expression', async function () {
+
+            const modExpression = exp.resultRemove()
+
+            const modifyByPath = exp.modifyByPath(exp.binMap('c_example'), exp.type.MAP, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
+            
+            await verifyModifyByPath('c_example', modifyByPath, {})
   
           })
 
@@ -290,7 +286,6 @@ describe('Aerospike.exp.selectByPath', async function () {
               const modExpression = exp.cond(exp.eq(exp.loopVarBlob(exp.loopVarPart.VALUE), exp.bytes(Buffer.from('bob'))), exp.bytes(Buffer.from('pass')), exp.bytes(Buffer.from('fail')))
 
               const modifyByPath = exp.modifyByPath(exp.binList('blobList'), exp.type.LIST, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
-              console.log(Buffer.from('bob'))
               await verifyModifyByPath('blobList', modifyByPath, [ Buffer.from('pass'), Buffer.from('fail'), Buffer.from('fail') ]  )
 
             })
@@ -304,15 +299,63 @@ describe('Aerospike.exp.selectByPath', async function () {
 
             })
 
-            it('loopVarNil has correct exp ops code', async function () {
-              const loopVar = exp.loopVarNil(exp.loopVarPart.VALUE)
-              expect(loopVar[1].intVal).to.eql(exp.type.NIL)
+            it('use loopVarNil Expression', async function () {
+              const expression = exp.eq(exp.loopVarNil(exp.loopVarPart.VALUE), exp.nil())
+
+              const ctx: cdt.Context = new Context().addAllChildrenWithFilter(expression)
+
+              const selectByPath = exp.selectByPath(exp.binList('nilList'), exp.type.LIST, pathSelectFlags.MAP_VALUE, ctx)
+
+              await verifySelectByPath('nilList', selectByPath, [null, null, null])
+
+
 
             })
 
-            it('loopVarHLL has correct exp ops code', async function () {
-              const loopVar = exp.loopVarHLL(exp.loopVarPart.VALUE)
-              expect(loopVar[1].intVal).to.eql(exp.type.HLL)
+            it('use loopVarHLL Expression', async function () {
+
+
+              //filter_expr = GE(hll.HLLGetCount(bin=LoopVarHLL(var_id=aerospike.EXP_LOOPVAR_VALUE)), 0).compile()
+
+              //const selectByPath = exp.selectByPath(exp.binMap('hll'), exp.type.LIST, pathSelectFlags.VALUE, ctx)
+              // hll_ops.hll_add(bin_name=self.MAP_WITH_HLL_BIN_NAME, values=[i for i in range(5000)], index_bit_count=4, mh_bit_count=4),
+
+              const ops = [
+                hll.add('hll' as any, [...Array(5000).keys()], 4, 4),
+                hll.getCount('hll')
+              ]
+
+              let result: any = await client.operate(key, ops)
+
+              result = await client.get(key)
+
+              console.log(result.bins.hll)
+
+              const hllValue: any = result.bins.hll
+
+              const mapHll: any = {
+                'a': hllValue
+              }
+
+              console.log(exp.loopVarHLL(exp.loopVarPart.VALUE))
+              const selectExpression = exp.ge(exp.hll.getCount(exp.loopVarHLL(exp.loopVarPart.VALUE)), exp.int(0))
+
+              const ctx: cdt.Context = new Context().addAllChildren()
+
+              await client.put(key, { hllMap: mapHll })
+
+              const ops2 = [
+                op.selectByPath('hllMap', exp.pathSelectFlags.VALUE, ctx)
+              ]
+
+
+
+              const result2: any = await client.operate(key, ops2)
+
+              console.log(selectExpression)
+              console.log(result2.bins.hllMap)
+              expect(result2.bins.hllMap).to.eql([hllValue])
+
 
             })
 
@@ -356,7 +399,6 @@ describe('Aerospike.exp.selectByPath', async function () {
 
             it('use loopVarStr Expression with loopVarPart.KEY', async function () {
               const loopVar = exp.loopVarStr(exp.loopVarPart.KEY)
-              console.log(loopVar)
 
               expect(loopVar[2].intVal).to.eql(0)
 
@@ -422,6 +464,22 @@ describe('Aerospike.exp.selectByPath', async function () {
             const selectByPath = exp.selectByPath(exp.binList('dnFloatList'), exp.type.LIST, pathSelectFlags.VALUE, ctx)
   
             await verifySelectByPath('dnFloatList', selectByPath, record.dnFloatList[0])
+          })
+
+          it('Adds addAllChildren with filter', async function () {
+            const ctx: cdt.Context = new Context().addListIndex(0).addAllChildrenWithFilter(exp.eq(exp.bool(true), exp.bool(true)))
+
+            const selectByPath = exp.selectByPath(exp.binList('dnFloatList'), exp.type.LIST, pathSelectFlags.VALUE, ctx)
+  
+            await verifySelectByPath('dnFloatList', selectByPath, record.dnFloatList[0])
+          })
+
+          it('Adds addAllChildren with filter that evaluates to false', async function () {
+            const ctx: cdt.Context = new Context().addListIndex(0).addAllChildrenWithFilter(exp.eq(exp.bool(true), exp.bool(false)))
+
+            const selectByPath = exp.selectByPath(exp.binList('dnFloatList'), exp.type.LIST, pathSelectFlags.VALUE, ctx)
+  
+            await verifySelectByPath('dnFloatList', selectByPath, [])
           })
 
         })

@@ -290,7 +290,7 @@ int compile_expression(Local<Array> entries_ary, as_exp **filter_exp,
 			Nan::Get(entries_ary, i).ToLocalChecked().As<Object>();
 		if ((rc = convert_entry(entry_obj, entry, log)) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Error converting expression entry: %i", i);
-			free_entries(entries_ary, entries, ++i, log);
+			free_entries(entries_ary, entries, i, log);
 			return rc;
 		}
 		entry++;

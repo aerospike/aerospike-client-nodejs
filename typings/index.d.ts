@@ -16581,15 +16581,14 @@ export namespace exp {
         VALUE = 1,
         /**
          * Return the list of the values of the nodes finally selected by the context.
-         * This is a synonym for AS_EXP_PATH_SELECT_VALUE to make it clear in your
+         * This is a synonym for {@link exp.pathSelectFlags.VALUE} to make it clear in your
          * source code that you're expecting a list.
          */
         LIST_VALUE = 1,
         /**
          * Return the list of map values of the nodes finally selected by the context.
-         * This is a synonym for AS_EXP_PATH_SELECT_VALUE to make it clear in your
-         * source code that you're expecting a map.  See also
-         * AS_EXP_PATH_SELECT_MAP_KEY_VALUE.
+         * This is a synonym for {@link exp.pathSelectFlags.VALUE}  to make it clear in your
+         * source code that you're expecting a map.
          */
         MAP_VALUE = 1,
         /**
@@ -16599,13 +16598,14 @@ export namespace exp {
         /**
          * Returns the list of map (key, value) pairs of the nodes finally selected
          * by the context.  This is a synonym for setting both
-         * AS_EXP_PATH_SELECT_MAP_KEY and AS_EXP_PATH_SELECT_MAP_VALUE bits together.
+         * {@link exp.pathSelectFlags.MAP_KEY} and {@link exp.pathSelectFlags.MAP_VALUE}  bits together.
+         * The list is formatted as [key0, value0, key1, value1...].
          */
         MAP_KEY_VALUE,
         /**
          * If the expression in the context hits an invalid type (e.g., selects
          * as an integer when the value is a string), do not fail the operation;
-         * just ignore those elements.  Interpret an expression that returns UNKNOWN
+         * just ignore those elements. Interpret an expression that returns UNKNOWN
          * as false instead.
          */
         NO_FAIL = 16
@@ -16618,7 +16618,7 @@ export namespace exp {
     export enum pathModifyFlags {
         /**
          * If the expression in the context hits an invalid type, the operation
-         * will fail.  This is the default behavior.
+         * will fail. This is the default behavior.
          */
         DEFAULT,
          /**
@@ -16638,7 +16638,6 @@ export namespace exp {
          * Access the key part of the loop variable.
          * For maps, this refers to the map key.
          * For lists, this refers to the list index.
-         * 
          */
         KEY,
         /**
@@ -17541,9 +17540,9 @@ export namespace exp {
      *
      * @param bin - bin name.
      * @param valueType - expression value type.
-     * @param flags - path selct flags.
+     * @param flags - path select flags.
      * @param ctx - CDT Context.
-     * @return path modify expression.
+     * @return path select expression.
      */
     export const selectByPath: (bin: AerospikeExp, valueType: exp.type, flags: exp.pathSelectFlags, ctx: cdt.Context) => AerospikeExp;
     /**
@@ -17553,11 +17552,14 @@ export namespace exp {
      * @param bin - bin name.
      * @param valueType - expression value type.
      * @param modExp - expression for modificaiton.
-     * @param flags - path selct flags.
+     * @param flags - path modify flags.
      * @param ctx - CDT Context.
      * @return path modify expression.
      */
     export const modifyByPath: (bin: AerospikeExp, valueType: exp.type, modExp: AerospikeExp, flags: exp.pathModifyFlags, ctx: cdt.Context) => AerospikeExp;
+
+    export const resultRemove: () => AerospikeExp;
+
 }
 /**
  * @remarks This module provides functions to easily define operations to
@@ -17708,10 +17710,10 @@ export namespace operations {
      *
      * @param bin - bin name.
      * @param context - CDT Context.
-     * @param flags - path selct flags.
-     * @return path select operation.
+     * @param flags - path select flags.
+     * @returns Operation that can be passed to the {@link Client#operate} command.
      */
-    export function selectByPath(bin: string, context: cdt.Context, flags: exp.pathSelectFlags): Operation;
+    export function selectByPath(bin: string, flags: exp.pathSelectFlags, context: cdt.Context): Operation;
     /**
      * Path modify operation.
      * Used in path expressions.
@@ -17719,10 +17721,10 @@ export namespace operations {
      * @param bin - bin name.
      * @param context - CDT Context.
      * @param modExp - expression for modificaiton.
-     * @param flags - path selct flags.
-     * @return path modify operation.
+     * @param flags - path modify flags.
+     * @returns Operation that can be passed to the {@link Client#operate} command.
      */
-    export function modifyByPath(bin: string, context: cdt.Context, modExp: AerospikeExp, flags: exp.pathModifyFlags): Operation;
+    export function modifyByPath(bin: string, modExp: AerospikeExp, flags: exp.pathModifyFlags, context: cdt.Context): Operation;
     /**
      * Deletes the record.
      *

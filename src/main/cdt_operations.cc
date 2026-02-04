@@ -28,7 +28,7 @@ extern "C" {
 
 using namespace v8;
 
-bool add_select_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *context, struct as_exp* mod_exp, Local<Object> obj,
+bool add_select_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *context, Local<Object> obj,
 				 LogInfo *log)
 {
 	as_exp_path_select_flags flags;
@@ -41,8 +41,6 @@ bool add_select_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *cont
 
 	as_status status = as_operations_select_by_path(&err, ops, bin, context, flags);
 	if(status){
-
-		printf("FAILED TO ADD OPERATION\n");
 		return false;
 	}
 	else{
@@ -50,7 +48,7 @@ bool add_select_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *cont
 	}
 }
 
-bool add_modify_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *context, struct as_exp* mod_exp, Local<Object> obj,
+bool add_modify_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *context, Local<Object> obj,
 				 LogInfo *log)
 {
 	as_exp_path_modify_flags flags;
@@ -80,7 +78,10 @@ bool add_modify_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *cont
 	}
 
 
-	as_status status = as_operations_modify_by_path(&err, ops, bin, context, mod_exp, flags);
+	as_status status = as_operations_modify_by_path(&err, ops, bin, context, exp, flags);
+
+	as_exp_destroy(exp);
+
 	if(status){
 		return false;
 	}
@@ -90,7 +91,7 @@ bool add_modify_by_path_op(as_operations *ops, const char *bin, as_cdt_ctx *cont
 }
 
 typedef bool (*CDTOperation)(as_operations *ops, const char *bin,
-							  as_cdt_ctx *context, struct as_exp* mod_exp, Local<Object> op,
+							  as_cdt_ctx *context, Local<Object> op,
 							  LogInfo *log);
 
 typedef struct {
@@ -119,34 +120,19 @@ int add_cdt_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 
 	bool with_context;
 	as_cdt_ctx context;
-	if (get_optional_cdt_context(&context, &with_context, op, "context", log) !=
+	if (get_optional_cdt_context(&context, &with_context, op, "ctx", log) !=
 		AS_NODE_PARAM_OK) {
 		free(bin);
 		return AS_NODE_PARAM_ERR;
 	}
 
-	as_exp *exp = NULL;
-	Local<Value> exp_val =
-		Nan::Get(op, Nan::New("modExp").ToLocalChecked()).ToLocalChecked();
-	if (exp_val->IsArray()) {
-		Local<Array> exp_ary = Local<Array>::Cast(exp_val);
-		if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
-			return AS_NODE_PARAM_ERR;
-		}
-	}
-	else if (exp_val->IsString()) {
-		Nan::Utf8String exp_b64(exp_val.As<String>());
-		exp = as_exp_from_base64(*exp_b64);
-	}
-
 	as_v8_debug(
-		log,
-		"Adding cdt operation %s (opcode %i) on bin %s to operations list",
+		log, "Adding cdt operation %s (opcode %i) on bin %s to operations",
 		entry->op_name, opcode, bin);
-	bool success = (entry->op_function)(ops, bin, with_context ? &context : NULL, exp, op, log);
+
+	bool success = (entry->op_function)(ops, bin, with_context ? &context : NULL, op, log);
 
 	free(bin);
-	as_exp_destroy(exp);
 	if (with_context)
 		as_cdt_ctx_destroy(&context);
 

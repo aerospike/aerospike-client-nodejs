@@ -27,7 +27,7 @@ using namespace v8;
 #define set(__obj, __name, __value)                                            \
 	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Local<Object> expPathModifyFlags()
+Local<Object> pathModifyFlags()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();

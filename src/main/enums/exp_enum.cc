@@ -20,7 +20,6 @@
 extern "C" {
 #include <aerospike/as_status.h>
 #include <aerospike/as_exp.h>
-#include <aerospike/as_cdt_internal.h>
 }
 
 using namespace v8;
@@ -85,7 +84,6 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "CDT_LIST_MOD", as_exp_ops::_AS_EXP_CODE_CDT_LIST_MOD);
 	set(exp_ops, "CDT_MAP_CRMOD", as_exp_ops::_AS_EXP_CODE_CDT_MAP_CRMOD);
 	set(exp_ops, "CDT_MAP_CR", as_exp_ops::_AS_EXP_CODE_CDT_MAP_CR);
-	set(exp_ops, "CDT_MAP_MOD", as_exp_ops::_AS_EXP_CODE_CDT_MAP_MOD);
 	set(exp_ops, "CDT_MAP_MOD", as_exp_ops::_AS_EXP_CODE_CDT_MAP_MOD);
 	set(exp_ops, "MERGE", as_exp_ops::_AS_EXP_CODE_MERGE);
 	set(exp_ops, "CTX", as_exp_ops::_AS_EXP_CODE_CTX);

@@ -25,7 +25,7 @@
 
 v8::Local<v8::Object> auth_mode_enum_values();
 v8::Local<v8::Object> bitwise_enum_values();
-v8::Local<v8::Object> cdtCtxType();
+v8::Local<v8::Object> ctxType();
 v8::Local<v8::Object> cdtOpContext();
 v8::Local<v8::Object> cdt_opcode_values();
 v8::Local<v8::Object> generation_policy_values();
@@ -45,9 +45,9 @@ v8::Local<v8::Object> status();
 v8::Local<v8::Object> ttl_enum_values();
 v8::Local<v8::Object> batchTypes();
 v8::Local<v8::Object> queryDuration();
+v8::Local<v8::Object> pathModifyFlags();
+v8::Local<v8::Object> pathSelectFlags();
 v8::Local<v8::Object> privilegeCode();
-v8::Local<v8::Object> expPathModifyFlags();
-v8::Local<v8::Object> expPathSelectFlags();
 v8::Local<v8::Object> expReadFlags();
 v8::Local<v8::Object> expWriteFlags();
 v8::Local<v8::Object> abortStatus();

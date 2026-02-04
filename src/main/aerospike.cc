@@ -147,7 +147,7 @@ NAN_MODULE_INIT(Aerospike)
 	// enumerations
 	export("bitwise", bitwise_enum_values());
 	export("cdtOpContext", cdtOpContext());
-	export("cdtCtxType", cdtCtxType());
+	export("ctxType", ctxType());
 	export("hll", hll_enum_values());
 	export("indexDataType", indexDataType());
 	export("indexType", indexType());
@@ -172,8 +172,8 @@ NAN_MODULE_INIT(Aerospike)
 	export("batchTypes", batchTypes());
 	export("queryDuration", queryDuration());
 	export("privilegeCode", privilegeCode());
-	export("expPathModifyFlags", expPathModifyFlags());
-	export("expPathSelectFlags", expPathSelectFlags());
+	export("pathModifyFlags", pathModifyFlags());
+	export("pathSelectFlags", pathSelectFlags());
 	export("expReadFlags", expReadFlags());
 	export("expWriteFlags", expWriteFlags());
 	export("abortStatus", abortStatus());
