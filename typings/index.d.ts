@@ -17706,7 +17706,9 @@ export namespace exp {
      *      exp.operations.write('floatList', modifyByPath, exp.expWriteFlags.DEFAULT)
      *    ]
      *
-     *    const result = await client.operate(key, ops)
+     *    await client.operate(key, ops)
+     * 
+     *    const result = await client.get(key)
      *
      *    console.log(result.bins) // { floatList: [ 8.88, 17.76, 26.64 ] }
      * 
@@ -17722,7 +17724,65 @@ export namespace exp {
      * @return path modify expression.
      */
     export const modifyByPath: (bin: AerospikeExp, valueType: exp.type, modExp: AerospikeExp, flags: exp.pathModifyFlags, ctx: cdt.Context) => AerospikeExp;
-
+    /**
+     * Result remove expression.
+     * Used primarily to remove the result of a path expression.
+     *
+     * 
+     * @example <caption>Simple result remove expression.</caption>
+     *
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     * 
+     *    const modExpression = exp.resultRemove()
+     *
+     *    const modifyByPath = exp.modifyByPath(exp.binMap('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
+     *     * 
+     *    const ops = [
+     *      exp.operations.write('floatList', modifyByPath, exp.expWriteFlags.DEFAULT)
+     *    ]
+     *
+     *    await client.operate(key, ops)
+     * 
+     *    const result = await client.get(key)
+     *
+     *    console.log(result.bins) // { floatList: [ 2.4, 4.8, 7.2 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * @param bin - bin name.
+     * @param valueType - expression value type.
+     * @param flags - path select flags.
+     * @param ctx - CDT Context.
+     * @return path select expression.
+     */
     export const resultRemove: () => AerospikeExp;
 
 }

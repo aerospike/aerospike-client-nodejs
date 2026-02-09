@@ -30,13 +30,17 @@ const Context = Aerospike.cdt.Context
  
     const addAllChildren = new Context().addAllChildren()
  
- 
+    const modExpression = exp.resultRemove()
+
+    const modifyByPath = exp.modifyByPath(exp.binMap('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
+    
     const ops = [
-      op.selectByPath('floatList', exp.pathSelectFlags.VALUE, addAllChildren)
+      exp.operations.write('floatList', modifyByPath, exp.expWriteFlags.DEFAULT)
     ]
 
-    const result = await client.operate(key, ops)
-
+    await client.operate(key, ops)
+ 
+    const result = await client.get(key)
 
     console.log(result.bins) // { floatList: [ 2.4, 4.8, 7.2 ] }
  
