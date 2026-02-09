@@ -51,7 +51,8 @@ NAN_METHOD(AerospikeClient::ContextToBase64)
 	}
 	else{
 		as_v8_error(client->log, "Context is invalid, cannot serialize");
-		return AS_NODE_PARAM_ERR;
+
+		return Nan::ThrowError("Context is invalid, cannot serialize");
 	}
 
 }
@@ -67,7 +68,7 @@ NAN_METHOD(AerospikeClient::ContextFromBase64)
 	if (info[0]->IsObject()) {
 		if(get_string_property(&serializedContext, info[0].As<Object>(), "context", NULL) != AS_NODE_PARAM_OK){
 			as_v8_error(client->log, "Type error: Serialized context is invalid");
-			return AS_NODE_PARAM_ERR;
+			return Nan::ThrowError("Type error: Serialized context is invalid");
 		}
 	}
 
@@ -252,7 +253,12 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 	Nan::HandleScope scope;
 	Local<Value> maybe_context_obj =
 		Nan::Get(obj, Nan::New(prop).ToLocalChecked()).ToLocalChecked();
-	if (!maybe_context_obj->IsObject()) {
+	if (maybe_context_obj->IsUndefined() || maybe_context_obj->IsNull()) {
+		as_v8_detail(log, "No CDT context set");
+		*rc = AS_NODE_PARAM_OK;
+		return NULL;
+	}
+	else if (!maybe_context_obj->IsObject()) {
 		as_v8_error(log, "Type error: context should be an Object");
 		*rc = AS_NODE_PARAM_ERR;
 		return NULL;
@@ -342,6 +348,7 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
+			break;
 		case (AS_CDT_CTX_EXP):
 			if (v8value->IsArray()) {
 				Local<Array> exp_ary = Local<Array>::Cast(v8value);	

@@ -102,11 +102,6 @@ describe('Path Operations', async function () {
     mapList: [{a: 1}, {b: 2}, {c: 3}],
     listList: [[1], [2], [3]],
 
-
-    //boolList: [2.4, 4.8, 7.2],
-    //nNilList: [[2.4, 4.8, 7.2]],
-    //dnNilList: [[[2.4, 4.8, 7.2]]],
-
   }
 
   context('Positive tests', function () {
@@ -121,7 +116,6 @@ describe('Path Operations', async function () {
 
             const modExpression = exp.float(14.0)
 
-            
             await verifyModifyByPath('c_example', addAllChildren, modExpression, pathModifyFlags.DEFAULT, {book: 14})
 
           })
@@ -203,7 +197,7 @@ describe('Path Operations', async function () {
 
             const modExpression = exp.resultRemove()
             
-            await verifyModifyByPath('c_example', addAllChildren, modExpression, pathModifyFlags.DEFAULT, {book: 14})
+            await verifyModifyByPath('c_example', addAllChildren, modExpression, pathModifyFlags.DEFAULT, {})
   
           })
 
@@ -559,25 +553,21 @@ describe('Path Operations', async function () {
         })
 
         context('context', function () {
-          it('Doe not accept non-number values', async function () {
-            const selectByPath = exp.selectByPath(exp.binMap('floatMap'), null as any, exp.pathSelectFlags.MATCHING_TREE, addAllChildren)
-
-            const ops: operations.Operation[] = [
-              op.selectByPath('floatMap',  exp.pathSelectFlags.MATCHING_TREE, null as any)
-            ]
-
+          it('Does not accept non-context values', async function () {
             try{
-              const result: any = await client.operate(key, ops)
-              assert.fail("An error should have been caught!")
+              const ops: operations.Operation[] = [
+                op.selectByPath('floatMap',  exp.pathSelectFlags.MATCHING_TREE, null as any)
+                
+              ]
             }
             catch(error: any){
-              expect(error.message).to.eql("Operations array invalid")
+              expect(error.message).to.eql("ctx must be a CDT Context (array)")
             }          
           })
         })
 
         context('pathSelectFlags', function () {
-          it('Doe not accept non-number values', async function () {
+          it('Does not accept non-number values', async function () {
             const ops: operations.Operation[] = [
               op.selectByPath('floatMap', 'invalid' as any,  addAllChildren)
             ]
@@ -619,23 +609,23 @@ describe('Path Operations', async function () {
         })
 
         context('context', function () {
-          it('Doe not accept non-number values', async function () {
-            const ops: operations.Operation[] = [
-              op.modifyByPath('floatMap', exp.float(14.0), exp.pathModifyFlags.DEFAULT, null as any),
-            ]
+          it('Does not accept non-number values', async function () {
 
             try{
-              await client.operate(key, ops)
+              const ops: operations.Operation[] = [
+                op.modifyByPath('floatMap', exp.float(14.0), exp.pathModifyFlags.DEFAULT, null as any),
+              ]
+
               assert.fail("An error should have been caught!")
             }
             catch(error: any){
-              expect(error.message).to.eql("Operations array invalid")
+              expect(error.message).to.eql("ctx must be a CDT Context (array)")
             }          
           })
         })
 
         context('modExp', function () {
-          it('Doe not accept non-expression values', async function () {
+          it('Does not accept non-expression values', async function () {
             const ops: operations.Operation[] = [
               op.modifyByPath('floatMap', null as any, exp.pathModifyFlags.DEFAULT, addAllChildren),
             ]
@@ -651,7 +641,7 @@ describe('Path Operations', async function () {
         })
 
         context('pathModifyFlags', function () {
-          it('Doe not accept non-number values', async function () {
+          it('Does not accept non-number values', async function () {
             const ops: operations.Operation[] = [
               op.modifyByPath('floatMap', exp.float(14.0), null as any, addAllChildren),
             ]
@@ -671,6 +661,21 @@ describe('Path Operations', async function () {
 
 
       })
+    })
+  })
+
+
+  context('Typescript', function () {
+    it('selectByPath', function () {
+      const ops: operations.Operation[] = [
+        op.selectByPath('floatMap', pathSelectFlags.VALUE, addAllChildren)
+      ]
+    })
+
+    it('modifyByPath', function () {
+      const ops: operations.Operation[] = [
+        op.modifyByPath('floatMap', exp.float(14.0), exp.pathModifyFlags.DEFAULT, addAllChildren),
+      ]
     })
   })
 

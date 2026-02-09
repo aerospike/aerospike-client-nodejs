@@ -314,11 +314,7 @@ describe('Aerospike.exp.selectByPath', async function () {
 
             it('use loopVarHLL Expression', async function () {
 
-
-              //filter_expr = GE(hll.HLLGetCount(bin=LoopVarHLL(var_id=aerospike.EXP_LOOPVAR_VALUE)), 0).compile()
-
-              //const selectByPath = exp.selectByPath(exp.binMap('hll'), exp.type.LIST, pathSelectFlags.VALUE, ctx)
-              // hll_ops.hll_add(bin_name=self.MAP_WITH_HLL_BIN_NAME, values=[i for i in range(5000)], index_bit_count=4, mh_bit_count=4),
+              Aerospike.wrapHLL(true)
 
               const ops = [
                 hll.add('hll' as any, [...Array(5000).keys()], 4, 4),
@@ -329,16 +325,14 @@ describe('Aerospike.exp.selectByPath', async function () {
 
               result = await client.get(key)
 
-              console.log(result.bins.hll)
-
               const hllValue: any = result.bins.hll
+              expect(result.bins.hll).to.be.instanceOf(Aerospike.HyperLogLog)
 
               const mapHll: any = {
                 'a': hllValue
               }
 
-              console.log(exp.loopVarHLL(exp.loopVarPart.VALUE))
-              const selectExpression = exp.ge(exp.hll.getCount(exp.loopVarHLL(exp.loopVarPart.VALUE)), exp.int(0))
+              const selectExpression = exp.ge(exp.hll.getCount(exp.loopVarStr(exp.loopVarPart.VALUE)), exp.int(0))
 
               const ctx: cdt.Context = new Context().addAllChildren()
 
@@ -348,13 +342,10 @@ describe('Aerospike.exp.selectByPath', async function () {
                 op.selectByPath('hllMap', exp.pathSelectFlags.VALUE, ctx)
               ]
 
-
-
               const result2: any = await client.operate(key, ops2)
 
-              console.log(selectExpression)
-              console.log(result2.bins.hllMap)
               expect(result2.bins.hllMap).to.eql([hllValue])
+              expect(result2.bins.hllMap[0]).to.be.instanceOf(Aerospike.HyperLogLog)
 
 
             })
@@ -670,12 +661,12 @@ describe('Aerospike.exp.selectByPath', async function () {
             }
             catch(error: any){
               expect(error.message).to.eql("bin is not iterable")
-            }          
+            }
           })
         })
 
         context('valueType', function () {
-          it('Doe not accept non-number values', async function () {
+          it('Does not accept non-number values', async function () {
             const selectByPath = exp.selectByPath(exp.binMap('floatMap'), null as any, exp.pathSelectFlags.MATCHING_TREE, addAllChildren)
 
             try{
@@ -689,7 +680,7 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('pathSelectFlags', function () {
-          it('Doe not accept non-number values', async function () {
+          it('Does not accept non-number values', async function () {
             const selectByPath = exp.selectByPath(exp.binMap('floatMap'), exp.type.LIST, null as any, addAllChildren)
 
             try{
@@ -703,15 +694,14 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('context', function () {
-          it('Doe not accept non-number values', async function () {
-            const selectByPath = exp.selectByPath(exp.binMap('floatMap'), exp.type.LIST, exp.pathSelectFlags.MATCHING_TREE, null as any)
+          it('Does not accept non-number values', async function () {
 
             try{
-              await verifySelectByPath('floatMap', selectByPath, null)
+              const selectByPath = exp.selectByPath(exp.binMap('floatMap'), exp.type.LIST, exp.pathSelectFlags.MATCHING_TREE, null as any)
               assert.fail("An error should have been caught!")
             }
             catch(error: any){
-              expect(error.message).to.eql("Operations array invalid")
+              expect(error.message).to.eql("ctx must be a CDT Context")
             }          
           })
         })
@@ -740,7 +730,7 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('valueType', function () {
-          it('Doe not accept non-number values', async function () {
+          it('Does not accept non-number values', async function () {
             const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), null as any, exp.float(14.0), exp.pathModifyFlags.DEFAULT, addAllChildren)
 
             try{
@@ -754,7 +744,7 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('modExp', function () {
-          it('Doe not accept non-number values', async function () {
+          it('Does not accept non-number values', async function () {
             const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), exp.type.LIST, null as any, exp.pathModifyFlags.DEFAULT, addAllChildren)
 
             try{
@@ -768,28 +758,26 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('pathModifyFlags', function () {
-          it('Doe not accept non-number values', async function () {
-            const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), exp.type.LIST, exp.float(14.0), exp.pathModifyFlags.DEFAULT, null as any)
+          it('Does not accept non-number values', async function () {
 
             try{
-              await verifyModifyByPath('floatMap', modifyByPath, null)
+              const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), exp.type.LIST, exp.float(14.0), null as any, addAllChildren)
               assert.fail("An error should have been caught!")
             }
             catch(error: any){
-              expect(error.message).to.eql("Operations array invalid")
+              expect(error.message).to.eql("flags must be a number")
             }          
           })
         })
         context('context', function () {
-          it('Doe not accept non-number values', async function () {
-            const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), exp.type.LIST, exp.float(14.0), exp.pathModifyFlags.DEFAULT, null as any)
+          it('Does not accept non-number values', async function () {
 
             try{
-              await verifyModifyByPath('floatMap', modifyByPath, null)
+              const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), exp.type.LIST, exp.float(14.0), exp.pathModifyFlags.DEFAULT, null as any)
               assert.fail("An error should have been caught!")
             }
             catch(error: any){
-              expect(error.message).to.eql("Operations array invalid")
+              expect(error.message).to.eql("ctx must be a CDT Context")
             }          
           })
         })
@@ -798,6 +786,16 @@ describe('Aerospike.exp.selectByPath', async function () {
 
 
       })
+    })
+  })
+
+  context('Typescript', function () {
+    it('selectByPath', function () {
+      const selectByPath: AerospikeExp = exp.selectByPath(exp.binMap('floatMap'), exp.type.LIST, exp.pathSelectFlags.MATCHING_TREE, addAllChildren)
+    })
+
+    it('modifyByPath', function () {
+      const modifyByPath: AerospikeExp = exp.modifyByPath(exp.binMap('floatMap'), exp.type.LIST, exp.float(14.0), exp.pathModifyFlags.DEFAULT, addAllChildren)
     })
   })
 

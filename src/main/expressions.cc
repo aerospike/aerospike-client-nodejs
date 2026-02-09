@@ -1,4 +1,4 @@
-/*******************************************************************************
+	/*******************************************************************************
  * Copyright 2020-2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -297,7 +297,6 @@ int compile_expression(Local<Array> entries_ary, as_exp **filter_exp,
 	}
 	*filter_exp = as_exp_compile(entries, length);
 
-done:
 	free_entries(entries_ary, entries, entries_ary->Length(), log);
 	return rc;
 }

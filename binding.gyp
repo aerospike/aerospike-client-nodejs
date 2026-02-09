@@ -70,6 +70,7 @@
         'src/main/aerospike.cc',
         'src/main/client.cc',
         'src/main/transaction.cc',
+        'src/main/hyperloglog.cc',
         'src/main/config.cc',
         'src/main/events.cc',
         'src/main/cdt_ctx.cc',

@@ -798,8 +798,65 @@ export class Transaction {
     public setTimeout(timeout: number): void;
 }
 
-
-
+/**
+ * Represents a HyperLogLog value. This can be returned from the server or created in order to be sent to the server.
+ *
+ * @example <caption>Put a bin with a HyperLogLog type.</caption>
+ *
+ * const Aerospike = require('aerospike')
+ *
+ * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+ * var config = {
+ *   hosts: '192.168.33.10:3000',
+ *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+ *   policies: {
+ *     read : new Aerospike.ReadPolicy({socketTimeout : 0, totalTimeout : 0}),
+ *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+ *    }
+ * }
+ *
+ * const key = new Aerospike.Key('test', 'demo', 'myKey')
+ * const hllCats: Buffer = Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
+ *   0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+ * 
+ * // HLL object representing the set ('jaguar', 'leopard', 'lion', 'tiger')
+ * // with an index bit size of 8, and minhash bit size of 0.
+ * const hyperloglog = new Aerospike.HyperLogLog(hllCats)
+ * 
+ * const bins = {hll: hyperloglog}
+ *
+ * ;(async () => {
+ *   let client = await Aerospike.connect(config)
+ * 
+ *   await Aerospike.wrapHLL(true)
+ *   await client.put(key, bins)
+ *
+ *   const record = await client.get(key)
+ *
+ *   console.log(record.bins.hll) // HyperLogLog { ...
+ * 
+ *   await client.close()
+ * })();
+ *
+ * @since v6.6.0
+ */
+export class HyperLogLog {
+    /**
+     * Construct a new HyperLogLog instance.
+     */
+    public constructor(buffer: Buffer);
+    /**
+     * Bytes value for HyperLogLog bin.
+     */
+    buffer: Buffer;
+}
 
 /**
  * In the Aerospike database, each record (similar to a row in a relational database) stores
@@ -9383,6 +9440,23 @@ export function connect(config: ConfigOptions, callback: TypedCallback<Client>):
  */
 export function setDefaultLogging(logInfo: Log): void;
 /**
+ * Determines if HLL server values should be wrapped in the {@link HyperLogLog} class.
+ *
+ * @param {boolean} enable - If <code>true</code> , HLL values returned from the server will be wrapped in the {@link HyperLogLog} class.
+ * If <code>false</code> , HLL values will be returned as bytes objects.
+ * Default is <code>false</code> .
+ *
+ * @since v6.6.0
+ *
+ * @example
+ *
+ * const Aerospike = require('aerospike')
+ *
+ * Aerospike.wrapHLL(true)
+ *
+ */
+export function wrapHLL(enable: boolean): void;
+/**
  * Configures the global command queue. (Disabled by default.)
  *
  * @remarks Note that there is only one instance of the command queue that
@@ -17538,6 +17612,51 @@ export namespace exp {
      * Path select expression.
      * Used in path expressions.
      *
+     * 
+     * @example <caption>Simple path select expression.</caption>
+     *
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     * 
+     *    const selectByPath = exp.selectByPath(exp.binList('floatList'), exp.type.LIST, exp.pathSelectFlags.VALUE, addAllChildren)
+     * 
+     *    const ops = [
+     *      exp.operations.read('floatList', selectByPath, exp.expReadFlags.DEFAULT)
+     *    ]
+     *
+     *    const result = await client.operate(key, ops)
+     *
+     *    console.log(result.bins) // { floatList: [ 2.4, 4.8, 7.2 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
      * @param bin - bin name.
      * @param valueType - expression value type.
      * @param flags - path select flags.
@@ -17549,6 +17668,52 @@ export namespace exp {
      * Path modify expression.
      * Used in path expressions.
      *
+     * @example <caption>Simple path modify expression.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     *    
+     *    const modExpression = exp.mul(exp.loopVarFloat(exp.loopVarPart.VALUE), exp.float(3.7))
+     * 
+     *    const modifyByPath = exp.modifyByPath(exp.binList('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)     
+     * 
+     * 
+     *    const ops = [
+     *      exp.operations.write('floatList', modifyByPath, exp.expWriteFlags.DEFAULT)
+     *    ]
+     *
+     *    const result = await client.operate(key, ops)
+     *
+     *    console.log(result.bins) // { floatList: [ 8.88, 17.76, 26.64 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
      * @param bin - bin name.
      * @param valueType - expression value type.
      * @param modExp - expression for modificaiton.
@@ -17708,6 +17873,52 @@ export namespace operations {
      * Path select operation.
      * Used in path expressions.
      *
+     * @example <caption>Simple path select operation.</caption>
+     *
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * const op = Aerospike.operations
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     * 
+     * 
+     *    const ops = [
+     *      op.selectByPath('floatList', exp.pathSelectFlags.VALUE, addAllChildren)
+     *    ]
+     *
+     *    const result = await client.operate(key, ops)
+     *
+     *
+     *    console.log(result.bins) // { floatList: [ 2.4, 4.8, 7.2 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * 
      * @param bin - bin name.
      * @param context - CDT Context.
      * @param flags - path select flags.
@@ -17718,6 +17929,53 @@ export namespace operations {
      * Path modify operation.
      * Used in path expressions.
      *
+     * @example <caption>Simple path modify expression.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * const op = Aerospike.operations
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     *    
+     *    const modExpression = exp.mul(exp.loopVarFloat(exp.loopVarPart.VALUE), exp.float(3.7)) 
+     * 
+     *    const ops = [
+     *      op.modifyByPath('floatList', modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
+     *    ]
+     *
+     *    await client.operate(key, ops)
+     *
+     *    const result = await client.get(key)
+     *
+     *    console.log(result.bins) // { floatList: [ 8.88, 17.76, 26.64 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * 
      * @param bin - bin name.
      * @param context - CDT Context.
      * @param modExp - expression for modificaiton.
