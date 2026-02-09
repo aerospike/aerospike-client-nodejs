@@ -561,7 +561,7 @@ describe('Path Operations', async function () {
               ]
             }
             catch(error: any){
-              expect(error.message).to.eql("ctx must be a CDT Context (array)")
+              expect(error.message).to.eql("ctx must be a CDT Context")
             }          
           })
         })
@@ -619,7 +619,7 @@ describe('Path Operations', async function () {
               assert.fail("An error should have been caught!")
             }
             catch(error: any){
-              expect(error.message).to.eql("ctx must be a CDT Context (array)")
+              expect(error.message).to.eql("ctx must be a CDT Context")
             }          
           })
         })
