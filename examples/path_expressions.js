@@ -17,17 +17,12 @@
 //
 const Aerospike = require('aerospike')
 const shared = require('./shared')
-const bins = shared.cli.parseBins(argv.bins)
 
 const Context = Aerospike.cdt.Context
 
 shared.runner()
 
 async function pathExpressions (client, argv) {
-
-  const client = await Aerospike.connect(config)
-    
-
   const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
 
   const bins = {
@@ -37,13 +32,13 @@ async function pathExpressions (client, argv) {
   await client.put(key, bins)
 
   const addAllChildren = new Context().addAllChildren()
-  
+
   const modExpression = Aerospike.exp.mul(Aerospike.exp.loopVarFloat(Aerospike.exp.loopVarPart.VALUE), Aerospike.exp.float(3.7))
 
-  const modifyByPath = Aerospike.exp.modifyByPath(exp.binList('floatList'), Aerospike.exp.type.LIST, modExpression, Aerospike.exp.pathModifyFlags.DEFAULT, addAllChildren)
+  const modifyByPath = Aerospike.exp.modifyByPath(Aerospike.exp.binList('floatList'), Aerospike.exp.type.LIST, modExpression, Aerospike.exp.pathModifyFlags.DEFAULT, addAllChildren)
 
   const ops = [
-    Aerospike.exp.operations.write('floatList', modifyByPath, exp.expWriteFlags.DEFAULT)
+    Aerospike.exp.operations.write('floatList', modifyByPath, Aerospike.exp.expWriteFlags.DEFAULT)
   ]
 
   const result = await client.operate(key, ops)
@@ -51,7 +46,6 @@ async function pathExpressions (client, argv) {
   console.log(result.bins) // { floatList: [ 8.88, 17.76, 26.64 ] }
 
   await client.close()
-
 }
 
 exports.command = 'pathExpressions'

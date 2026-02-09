@@ -17534,7 +17534,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarFloat: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarFloat: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * Float expression loop variable.
      * Used in path expressions.
@@ -17542,7 +17542,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarInt: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarInt: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * List expression loop variable.
      * Used in path expressions.
@@ -17550,7 +17550,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarList: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarList: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * Map expression loop variable.
      * Used in path expressions.
@@ -17558,7 +17558,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarMap: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarMap: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * Str expression loop variable.
      * Used in path expressions.
@@ -17566,7 +17566,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarStr: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarStr: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * Blob expression loop variable.
      * Used in path expressions.
@@ -17574,7 +17574,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarBlob: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarBlob: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * Bool expression loop variable.
      * Used in path expressions.
@@ -17582,7 +17582,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarBool: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarBool: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * Nil expression loop variable.
      * Used in path expressions.
@@ -17590,7 +17590,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarNil: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarNil: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * GeoJSON expression loop variable.
      * Used in path expressions.
@@ -17598,7 +17598,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarGeoJSON: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarGeoJSON: (varId: exp.loopVarPart) => AerospikeExp;
     /**
      * HLL expression loop variable.
      * Used in path expressions.
@@ -17606,7 +17606,7 @@ export namespace exp {
      * @param varId - loop variable part.
      * @return loop variable expression.
      */
-    export const loopVarHLL: (varId: exp.loopVar) => AerospikeExp;
+    export const loopVarHLL: (varId: exp.loopVarPart) => AerospikeExp;
 
     /**
      * Path select expression.
