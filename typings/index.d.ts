@@ -17536,7 +17536,7 @@ export namespace exp {
      */
     export const loopVarFloat: (varId: exp.loopVarPart) => AerospikeExp;
     /**
-     * Float expression loop variable.
+     * Int expression loop variable.
      * Used in path expressions.
      *
      * @param varId - loop variable part.
