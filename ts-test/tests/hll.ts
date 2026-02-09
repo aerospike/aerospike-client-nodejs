@@ -19,9 +19,9 @@
 /* eslint-env mocha */
 
 
-import Aerospike, { hll as hllModule, status as statusModule, HLLPolicy} from 'aerospike';
+import Aerospike, { hll as hllModule, status as statusModule, HLLPolicy, HyperLogLog} from 'aerospike';
 
-import { expect } from 'chai'; 
+import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';
 
 const hll: typeof hllModule = Aerospike.hll
@@ -42,7 +42,6 @@ const {
 const isDouble = (number: string) => typeof number === 'number' && parseInt(number, 10) !== number
 
 describe('client.operate() - HyperLogLog operations', function () {
-  helper.skipUnlessVersion('>= 4.9.0', this)
 
   // HLL object representing the set ('jaguar', 'leopard', 'lion', 'tiger')
   // with an index bit size of 8, and minhash bit size of 0.
@@ -55,6 +54,95 @@ describe('client.operate() - HyperLogLog operations', function () {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+  afterEach(() => {
+    Aerospike.wrapHLL(false)
+  })
+
+  describe('aerospike.HyperLogLog', function () {
+    const client = helper.client
+
+    const hyperloglog = new Aerospike.HyperLogLog(hllCats)
+    const key = new Aerospike.Key('test', 'dataset', 123);
+
+    it('creates a HyperLogLog Class type', function () {
+      const hyperloglog = new Aerospike.HyperLogLog(hllCats)
+      console.log(hyperloglog)
+
+    })
+
+    it('HyperLogLog class has correct constructor values', function () {
+      expect(hyperloglog).to.be.instanceOf(Aerospike.HyperLogLog)
+      expect(hyperloglog.constructor).to.equal(Aerospike.HyperLogLog)
+      expect(hyperloglog.constructor.name).to.eql("HyperLogLog")
+
+
+    })
+
+    it('put a hyperLogLog record', async function () {
+      const hyperloglog = new Aerospike.HyperLogLog(hllCats)
+      await client.put(key, {hll: hyperloglog})
+    })
+
+    it('get a hyperLogLog record', async function () {
+      const hyperloglog = new Aerospike.HyperLogLog(hllCats)
+      Aerospike.wrapHLL(true)
+
+      await client.put(key, {hll: hyperloglog})
+      const record = await client.get(key)
+
+      expect(record.bins.hll).to.be.instanceOf(Aerospike.HyperLogLog)
+      expect(record.bins.hll.constructor).to.equal(Aerospike.HyperLogLog)
+      expect(record.bins.hll.constructor.name).to.eql("HyperLogLog")
+    })
+
+    it('does not get a hyperLogLog record with wrapHLL false', async function () {
+      const hyperloglog = new Aerospike.HyperLogLog(hllCats)
+      Aerospike.wrapHLL(false)
+      await client.put(key, {hll: hyperloglog})
+      const record = await client.get(key)
+      console.log(record.bins)
+      expect(record.bins.hll).not.to.be.instanceOf(Aerospike.HyperLogLog)
+
+    })
+
+    context('Negative tests', function () {
+      it('fails to make HyperLogLog with non-buffer', async function () {
+
+        try{
+          const hyperloglog = new Aerospike.HyperLogLog("hllCats" as any)
+          assert.fail("An error should have been caught!")
+        }
+        catch(error: any){
+          expect(error.message).to.eql("buffer must be a Buffer")
+          expect(error instanceof TypeError).to.eql(true)
+        }
+      })
+
+      it('fails to call wrapHLL with non-boolean', async function () {
+
+        try{
+          Aerospike.wrapHLL(43 as any)
+          assert.fail("An error should have been caught!")
+        }
+        catch(error: any){
+          expect(error.message).to.eql("wrapHLL requires exactly one boolean argument")
+        }
+      })
+
+    })
+
+    context('Typescript tests', function () {
+      it('HyperLogLog', async function () {
+        const hyperloglog: HyperLogLog = new Aerospike.HyperLogLog(hllCats)
+      })
+
+      it('Aerospike.wrapHLL', async function () {
+        Aerospike.wrapHLL(false)
+      })
+
+    })
+  })
 
   describe('hll.init', function () {
     it('initializes a HLL bin value', function () {

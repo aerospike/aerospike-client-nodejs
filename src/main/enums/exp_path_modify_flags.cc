@@ -19,7 +19,7 @@
 
 extern "C" {
 #include <aerospike/as_status.h>
-#include <aerospike/as_exp_operations.h>
+#include <aerospike/as_operations.h>
 }
 
 using namespace v8;
@@ -27,12 +27,12 @@ using namespace v8;
 #define set(__obj, __name, __value)                                            \
 	Nan::Set(__obj, Nan::New(__name).ToLocalChecked(), Nan::New(__value))
 
-Local<Object> expReadFlags()
+Local<Object> pathModifyFlags()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
-	set(obj, "DEFAULT", AS_EXP_READ_DEFAULT);
-	set(obj, "EVAL_NO_FAIL", AS_EXP_READ_EVAL_NO_FAIL);
+	set(obj, "DEFAULT", AS_EXP_PATH_MODIFY_DEFAULT);
+	set(obj, "NO_FAIL", AS_EXP_PATH_MODIFY_NO_FAIL);
 
 	return scope.Escape(obj);
 }

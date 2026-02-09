@@ -798,8 +798,65 @@ export class Transaction {
     public setTimeout(timeout: number): void;
 }
 
-
-
+/**
+ * Represents a HyperLogLog value. This can be returned from the server or created in order to be sent to the server.
+ *
+ * @example <caption>Put a bin with a HyperLogLog type.</caption>
+ *
+ * const Aerospike = require('aerospike')
+ *
+ * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+ * var config = {
+ *   hosts: '192.168.33.10:3000',
+ *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+ *   policies: {
+ *     read : new Aerospike.ReadPolicy({socketTimeout : 0, totalTimeout : 0}),
+ *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+ *    }
+ * }
+ *
+ * const key = new Aerospike.Key('test', 'demo', 'myKey')
+ * const hllCats: Buffer = Buffer.from([0, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16, 0, 0, 0, 0,
+ *   0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 65, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ *   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+ * 
+ * // HLL object representing the set ('jaguar', 'leopard', 'lion', 'tiger')
+ * // with an index bit size of 8, and minhash bit size of 0.
+ * const hyperloglog = new Aerospike.HyperLogLog(hllCats)
+ * 
+ * const bins = {hll: hyperloglog}
+ *
+ * ;(async () => {
+ *   let client = await Aerospike.connect(config)
+ * 
+ *   await Aerospike.wrapHLL(true)
+ *   await client.put(key, bins)
+ *
+ *   const record = await client.get(key)
+ *
+ *   console.log(record.bins.hll) // HyperLogLog { ...
+ * 
+ *   await client.close()
+ * })();
+ *
+ * @since v6.6.0
+ */
+export class HyperLogLog {
+    /**
+     * Construct a new HyperLogLog instance.
+     */
+    public constructor(buffer: Buffer);
+    /**
+     * Bytes value for HyperLogLog bin.
+     */
+    buffer: Buffer;
+}
 
 /**
  * In the Aerospike database, each record (similar to a row in a relational database) stores
@@ -1679,15 +1736,33 @@ export namespace cdt {
          * @return {CdtContext} Updated CDT context, so calls can be chained.
          */
         public addMapKey(key: string): CdtContext;
+         /**
+         * Lookup map by base map's key. If the map at key is not found,
+         * create it with the given sort order at that key.
+         *
+         * @param {any} key - Map key
+         * @param {number} order - Sort order used if a map is created
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addMapKeyCreate(key: string, order?: maps.order): CdtContext;
         /**
-        * Lookup map by base map's key. If the map at key is not found,
-        * create it with the given sort order at that key.
+        * At the current context, causes a query to return a list of all the children
+        * of the current item. For a map, this will recurse into the map elements.
+        * For a list, this will include all the children in the list.
         *
-        * @param {any} key - Map key
-        * @param {number} order - Sort order used if a map is created
         * @return {CdtContext} Updated CDT context, so calls can be chained.
         */
-        public addMapKeyCreate(key: string, order?: maps.order): CdtContext;
+        public addAllChildren(): CdtContext;
+        /**
+         * All children of the current level will be selected, and then the filter expression
+         * is applied to each item in turn.  Items that cause the expression to evaluate to true will be added to the
+         * list of items returned in a query for this level.  Items that cause the expression to evaluate to false
+         * will be filtered out
+         *
+         * @param {AerospikExp} filterExpression - Aerospike expression. Must resolve to a boolean expression.
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addAllChildrenWithFilter(filterExpression: AerospikeExp | string): CdtContext;
         /**
          * Lookup map by value.
          *
@@ -9365,6 +9440,23 @@ export function connect(config: ConfigOptions, callback: TypedCallback<Client>):
  */
 export function setDefaultLogging(logInfo: Log): void;
 /**
+ * Determines if HLL server values should be wrapped in the {@link HyperLogLog} class.
+ *
+ * @param {boolean} enable - If <code>true</code> , HLL values returned from the server will be wrapped in the {@link HyperLogLog} class.
+ * If <code>false</code> , HLL values will be returned as bytes objects.
+ * Default is <code>false</code> .
+ *
+ * @since v6.6.0
+ *
+ * @example
+ *
+ * const Aerospike = require('aerospike')
+ *
+ * Aerospike.wrapHLL(true)
+ *
+ */
+export function wrapHLL(enable: boolean): void;
+/**
  * Configures the global command queue. (Disabled by default.)
  *
  * @remarks Note that there is only one instance of the command queue that
@@ -16477,7 +16569,6 @@ export namespace exp {
             public exp: AerospikeExp | string;
             /**
              * @param Expression read flags or write flags. <code>flags</code> must be an integer. See {@link exp.expReadFlags} or {@link exp.expWriteFlags} for more information.
-
              */
             public flags: number;
             constructor(op: ExpOperations, bin: string, exp: AerospikeExp | string, flags: number, props?: Record<string, AerospikeBinValue>);
@@ -16545,6 +16636,94 @@ export namespace exp {
          * Ignore failures caused by the expression resolving to unknown or a non-bin type.
          */
         EVAL_NO_FAIL = 16
+    }
+
+    /**
+     * @readonly
+     * @remarks Expression write bit flags. Use BITWISE OR to combine flags.
+     */
+    export enum pathSelectFlags {
+        /**
+         * Return a tree from the root (bin) level to the bottom of the tree,
+         * with only non-filtered out nodes.
+         */
+        MATCHING_TREE,
+        /**
+         * Return the list of the values of the nodes finally selected by the context.
+         * For maps, this returns the value of each (key, value) pair.
+         */
+        VALUE = 1,
+        /**
+         * Return the list of the values of the nodes finally selected by the context.
+         * This is a synonym for {@link exp.pathSelectFlags.VALUE} to make it clear in your
+         * source code that you're expecting a list.
+         */
+        LIST_VALUE = 1,
+        /**
+         * Return the list of map values of the nodes finally selected by the context.
+         * This is a synonym for {@link exp.pathSelectFlags.VALUE}  to make it clear in your
+         * source code that you're expecting a map.
+         */
+        MAP_VALUE = 1,
+        /**
+         * Return the list of map keys of the nodes finally selected by the context.
+         */
+        MAP_KEY,
+        /**
+         * Returns the list of map (key, value) pairs of the nodes finally selected
+         * by the context.  This is a synonym for setting both
+         * {@link exp.pathSelectFlags.MAP_KEY} and {@link exp.pathSelectFlags.MAP_VALUE}  bits together.
+         * The list is formatted as [key0, value0, key1, value1...].
+         */
+        MAP_KEY_VALUE,
+        /**
+         * If the expression in the context hits an invalid type (e.g., selects
+         * as an integer when the value is a string), do not fail the operation;
+         * just ignore those elements. Interpret an expression that returns UNKNOWN
+         * as false instead.
+         */
+        NO_FAIL = 16
+    }
+
+    /**
+     * @readonly
+     * @remarks Path expression modify operation flags.
+     */
+    export enum pathModifyFlags {
+        /**
+         * If the expression in the context hits an invalid type, the operation
+         * will fail. This is the default behavior.
+         */
+        DEFAULT,
+         /**
+          * If the expression in the context hits an invalid type (e.g., selects
+          * as an integer when the value is a string), do not fail the operation;
+          * just ignore those elements.  Interpret UNKNOWN as false instead.
+          */
+        NO_FAIL = 16,
+    }
+
+    /**
+     * @readonly
+     * @remarks Path expression modify operation flags.
+     */
+    export enum loopVarPart {
+        /**
+         * Access the key part of the loop variable.
+         * For maps, this refers to the map key.
+         * For lists, this refers to the list index.
+         */
+        KEY,
+        /**
+         * Access the value part of the loop variable.
+         * For maps, this refers to the map value.
+         * For lists, this refers to the list item value.
+         */
+        VALUE,
+         /**
+          * Returns a list of indexes.
+          */
+        INDEX,
     }
 
     /**
@@ -17348,6 +17527,264 @@ export namespace exp {
      * @return value stored in variable.
      */
     export const _var: (varName: string) => AerospikeExp;
+    /**
+     * Float expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarFloat: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Float expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarInt: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * List expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarList: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Map expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarMap: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Str expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarStr: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Blob expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarBlob: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Bool expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarBool: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * Nil expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarNil: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * GeoJSON expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarGeoJSON: (varId: exp.loopVar) => AerospikeExp;
+    /**
+     * HLL expression loop variable.
+     * Used in path expressions.
+     *
+     * @param varId - loop variable part.
+     * @return loop variable expression.
+     */
+    export const loopVarHLL: (varId: exp.loopVar) => AerospikeExp;
+
+    /**
+     * Path select expression.
+     * Used in path expressions.
+     *
+     * 
+     * @example <caption>Simple path select expression.</caption>
+     *
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     * 
+     *    const selectByPath = exp.selectByPath(exp.binList('floatList'), exp.type.LIST, exp.pathSelectFlags.VALUE, addAllChildren)
+     * 
+     *    const ops = [
+     *      exp.operations.read('floatList', selectByPath, exp.expReadFlags.DEFAULT)
+     *    ]
+     *
+     *    const result = await client.operate(key, ops)
+     *
+     *    console.log(result.bins) // { floatList: [ 2.4, 4.8, 7.2 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * @param bin - bin name.
+     * @param valueType - expression value type.
+     * @param flags - path select flags.
+     * @param ctx - CDT Context.
+     * @return path select expression.
+     */
+    export const selectByPath: (bin: AerospikeExp, valueType: exp.type, flags: exp.pathSelectFlags, ctx: cdt.Context) => AerospikeExp;
+    /**
+     * Path modify expression.
+     * Used in path expressions.
+     *
+     * @example <caption>Simple path modify expression.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     *    
+     *    const modExpression = exp.mul(exp.loopVarFloat(exp.loopVarPart.VALUE), exp.float(3.7))
+     * 
+     *    const modifyByPath = exp.modifyByPath(exp.binList('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)     
+     * 
+     * 
+     *    const ops = [
+     *      exp.operations.write('floatList', modifyByPath, exp.expWriteFlags.DEFAULT)
+     *    ]
+     *
+     *    await client.operate(key, ops)
+     * 
+     *    const result = await client.get(key)
+     *
+     *    console.log(result.bins) // { floatList: [ 8.88, 17.76, 26.64 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * @param bin - bin name.
+     * @param valueType - expression value type.
+     * @param modExp - expression for modificaiton.
+     * @param flags - path modify flags.
+     * @param ctx - CDT Context.
+     * @return path modify expression.
+     */
+    export const modifyByPath: (bin: AerospikeExp, valueType: exp.type, modExp: AerospikeExp, flags: exp.pathModifyFlags, ctx: cdt.Context) => AerospikeExp;
+    /**
+     * Result remove expression.
+     * Used primarily to remove the result of a path expression.
+     *
+     * 
+     * @example <caption>Simple result remove expression.</caption>
+     *
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     * 
+     *    const modExpression = exp.resultRemove()
+     *
+     *    const modifyByPath = exp.modifyByPath(exp.binMap('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
+     *     * 
+     *    const ops = [
+     *      exp.operations.write('floatList', modifyByPath, exp.expWriteFlags.DEFAULT)
+     *    ]
+     *
+     *    await client.operate(key, ops)
+     * 
+     *    const result = await client.get(key)
+     *
+     *    console.log(result.bins) // { floatList: [ 2.4, 4.8, 7.2 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * @param bin - bin name.
+     * @param valueType - expression value type.
+     * @param flags - path select flags.
+     * @param ctx - CDT Context.
+     * @return path select expression.
+     */
+    export const resultRemove: () => AerospikeExp;
+
 }
 /**
  * @remarks This module provides functions to easily define operations to
@@ -17492,6 +17929,120 @@ export namespace operations {
      * @see {@link !ttl} for "special" TTL values.
      */
     export function touch(ttl: number): Operation;
+    /**
+     * Path select operation.
+     * Used in path expressions.
+     *
+     * @example <caption>Simple path select operation.</caption>
+     *
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * const op = Aerospike.operations
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     * 
+     * 
+     *    const ops = [
+     *      op.selectByPath('floatList', exp.pathSelectFlags.VALUE, addAllChildren)
+     *    ]
+     *
+     *    const result = await client.operate(key, ops)
+     *
+     *
+     *    console.log(result.bins) // { floatList: [ 2.4, 4.8, 7.2 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * 
+     * @param bin - bin name.
+     * @param context - CDT Context.
+     * @param flags - path select flags.
+     * @returns Operation that can be passed to the {@link Client#operate} command.
+     */
+    export function selectByPath(bin: string, flags: exp.pathSelectFlags, context: cdt.Context): Operation;
+    /**
+     * Path modify operation.
+     * Used in path expressions.
+     *
+     * @example <caption>Simple path modify expression.</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * // INSERT HOSTNAME AND PORT NUMBER OF AEROSPIKE SERVER NODE HERE!
+     * var config = {
+     *   hosts: '192.168.33.10:3000',
+     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
+     *   policies: {
+     *     write : new Aerospike.WritePolicy({socketTimeout : 0, totalTimeout : 0}),
+     *    }
+     * }
+     * 
+     * const Context = Aerospike.cdt.Context
+     * const exp = Aerospike.exp
+     * const op = Aerospike.operations
+     * 
+     * const key = new Aerospike.Key('test', 'demo', 'mykey1')
+     * 
+     * const bins = {
+     *    floatList: [2.4, 4.8, 7.2]
+     * }
+     * 
+     * ;(async () => {
+     *    const client = await Aerospike.connect(config)
+     *      
+     *    await client.put(key, bins)
+     * 
+     *    const addAllChildren = new Context().addAllChildren()
+     *    
+     *    const modExpression = exp.mul(exp.loopVarFloat(exp.loopVarPart.VALUE), exp.float(3.7)) 
+     * 
+     *    const ops = [
+     *      op.modifyByPath('floatList', modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
+     *    ]
+     *
+     *    await client.operate(key, ops)
+     *
+     *    const result = await client.get(key)
+     *
+     *    console.log(result.bins) // { floatList: [ 8.88, 17.76, 26.64 ] }
+     * 
+     *    await client.close()
+     * 
+     * })();
+     * 
+     * 
+     * @param bin - bin name.
+     * @param context - CDT Context.
+     * @param modExp - expression for modificaiton.
+     * @param flags - path modify flags.
+     * @returns Operation that can be passed to the {@link Client#operate} command.
+     */
+    export function modifyByPath(bin: string, modExp: AerospikeExp, flags: exp.pathModifyFlags, context: cdt.Context): Operation;
     /**
      * Deletes the record.
      *
