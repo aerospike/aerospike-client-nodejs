@@ -17,6 +17,7 @@
 #pragma once
 
 extern "C" {
+#include <aerospike/as_status.h>
 #include <aerospike/as_operations.h>
 }
 
@@ -38,10 +39,12 @@ int add_hll_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
 			   LogInfo *log);
 int add_exp_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
 			   LogInfo *log);
+int add_cdt_op(as_operations *ops, uint32_t opcode, v8::Local<v8::Object> op,
+			   LogInfo *log);
 int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 							 v8::Local<v8::Object> obj, const char *prop,
 							 const LogInfo *log);
-as_cdt_ctx* get_optional_cdt_context_heap(int * rc,
+as_cdt_ctx* get_cdt_context_heap(int * rc,
                              v8::Local<v8::Object> obj, const char *prop,
                              const LogInfo *log);
 int get_v8_cdt_context(as_cdt_ctx *context, v8::Local<v8::Array> items);
@@ -60,3 +63,4 @@ const uint32_t MAP_OPS_OFFSET = 0x0200;
 const uint32_t BIT_OPS_OFFSET = 0x0300;
 const uint32_t HLL_OPS_OFFSET = 0x0400;
 const uint32_t EXPOP_OPS_OFFSET = 0x0500;
+const uint32_t CDT_OPS_OFFSET = 0x0600;
