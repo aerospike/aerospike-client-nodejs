@@ -58,10 +58,10 @@ jobs:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "fakospike"/' package.json
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "fakospike"/' package.json
+    #  working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
       run: |
