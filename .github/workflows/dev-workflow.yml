@@ -5,10 +5,10 @@ name: Dev workflow
 # 3. Whenever a PR is merged to `dev`, bump version number in `dev`
 
 
-on:
-  push:
-    branches:
-      - 'CLIENT*'
+#on:
+#  push:
+#    branches:
+#      - 'CLIENT*'
 
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:

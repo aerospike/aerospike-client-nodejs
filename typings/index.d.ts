@@ -17718,7 +17718,7 @@ export namespace exp {
      * 
      * @param bin - bin name.
      * @param valueType - expression value type.
-     * @param modExp - expression for modificaiton.
+     * @param modExp - expression for modification.
      * @param flags - path modify flags.
      * @param ctx - CDT Context.
      * @return path modify expression.
@@ -18038,7 +18038,7 @@ export namespace operations {
      * 
      * @param bin - bin name.
      * @param context - CDT Context.
-     * @param modExp - expression for modificaiton.
+     * @param modExp - expression for modification.
      * @param flags - path modify flags.
      * @returns Operation that can be passed to the {@link Client#operate} command.
      */
