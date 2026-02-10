@@ -58,18 +58,27 @@ extern "C" {
 #include "enums.h"
 #include "string.h"
 #include "transaction.h"
+#include "hyperloglog.h"
 
 using namespace node;
 using namespace v8;
 
 const char *DoubleType = "Double";
 const char *GeoJSONType = "GeoJSON";
+const char *HyperLogLogType = "HyperLogLog";
 const char *BinType = "Bin";
 const char *TransactionType = "Transaction";
 
 const int64_t MIN_SAFE_INTEGER = -1 * (std::pow(2, 53) - 1);
 const int64_t MAX_SAFE_INTEGER = std::pow(2, 53) - 1;
 const uint64_t UMAX_SAFE_INTEGER = std::pow(2, 53) - 1;
+
+bool g_wrap_hll = false; 
+
+bool is_hyperloglog_value(Local<Value> value)
+{
+	return instanceof (value, HyperLogLogType);
+}
 /*******************************************************************************
  *  FUNCTIONS
  ******************************************************************************/
@@ -1050,8 +1059,19 @@ Local<Value> val_to_jsvalue(as_val *val, const LogInfo *log)
 			// this constructor actually copies data into the new Buffer
 			Local<Object> buff =
 				Nan::CopyBuffer((char *)data, size).ToLocalChecked();
-
-			return scope.Escape(buff);
+			if(g_wrap_hll){
+				as_bytes_type btype = as_bytes_get_type(bval);
+				if(btype == AS_BYTES_HLL){
+					Local<Value> hll = HyperLogLog::NewInstance(buff);
+					return scope.Escape(hll);
+				}
+				else{
+					return scope.Escape(buff);
+				}
+			}
+			else{
+				return scope.Escape(buff);
+			}
 		}
 		break;
 	}
@@ -1378,6 +1398,32 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 		*value = (as_val *)as_integer_new(int64_value);
 #endif
 	}
+	else if (is_hyperloglog_value(v8value)) {
+		if (!v8value->IsObject()) {
+		    as_v8_error(log, "Unable to convert HyperLogLog to C Client's as_bytes");
+			return AS_NODE_PARAM_ERR;
+		}
+		Local<Value> maybe_buffer = Nan::Get(v8value.As<Object>(), Nan::New("buffer").ToLocalChecked()).ToLocalChecked();
+		if (!node::Buffer::HasInstance(maybe_buffer)) {
+		    as_v8_error(log, "Unable to convert HyperLogLog to C Client's as_bytes");
+			return AS_NODE_PARAM_ERR;
+		}
+		int size = 0;
+		uint8_t *data = NULL;
+		if (extract_blob_from_jsobject(&data, &size, maybe_buffer.As<Object>(),
+									   log) != AS_NODE_PARAM_OK) {
+			as_v8_error(log, "Extracting blob from a js object failed");
+			return AS_NODE_PARAM_ERR;
+		}
+		as_bytes *bytes = as_bytes_new_wrap(data, size, true);
+        if (bytes == NULL) {
+            free(data);
+            as_v8_error(log, "Unable to convert Node.js Buffer to C client's as_bytes");
+            return AS_NODE_PARAM_ERR;
+        }
+		*value = (as_val *)bytes;
+		bytes->type = AS_BYTES_HLL;
+	}
 	else if (node::Buffer::HasInstance(v8value)) {
 		int size = 0;
 		uint8_t *data = NULL;
@@ -1386,7 +1432,13 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 			as_v8_error(log, "Extracting blob from a js object failed");
 			return AS_NODE_PARAM_ERR;
 		}
-		*value = (as_val *)as_bytes_new_wrap(data, size, true);
+		as_bytes *bytes = as_bytes_new_wrap(data, size, true);
+        if (bytes == NULL) {
+            free(data);
+            as_v8_error(log, "Unable to convert Node.js Buffer to C client's as_bytes");
+            return AS_NODE_PARAM_ERR;
+        }
+		*value = (as_val *)bytes;
 	}
 	else if (v8value->IsArray()) {
 		if (list_from_jsarray((as_list **)value, Local<Array>::Cast(v8value),
@@ -1601,6 +1653,30 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 			bool success = as_record_set_geojson_strp(rec, *n, string_value, true);
 			if (!success) {
 				cf_free(string_value);
+				return throw_bin_name_error(*n, log);
+			}
+			continue;
+		}
+		if (is_hyperloglog_value(value)) {
+			if (!value->IsObject()) {
+			    as_v8_error(log, "Unable to convert HyperLogLog to C Client's as_bytes");
+				return AS_NODE_PARAM_ERR;
+			}
+			Local<Value> maybe_buffer = Nan::Get(value.As<Object>(), Nan::New("buffer").ToLocalChecked()).ToLocalChecked();
+			if (!node::Buffer::HasInstance(maybe_buffer)) {
+			    as_v8_error(log, "Unable to convert HyperLogLog to C Client's as_bytes");
+				return AS_NODE_PARAM_ERR;
+			}
+			int size = 0;
+			uint8_t *data = NULL;
+			if (extract_blob_from_jsobject(&data, &size, maybe_buffer.As<Object>(),
+										   log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Extracting blob from a js object failed");
+				return AS_NODE_PARAM_ERR;
+			}
+			bool success = as_record_set_raw_typep(rec, *n, data, size, AS_BYTES_HLL ,true);
+			if (!success) {
+				cf_free(data);
 				return throw_bin_name_error(*n, log);
 			}
 			continue;

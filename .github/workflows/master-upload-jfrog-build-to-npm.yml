@@ -25,12 +25,12 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
       with:
         egress-policy: audit
 
     - name: Checkout repository
-      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
@@ -40,7 +40,7 @@ jobs:
         oidc-provider-name: gh-aerospike-clients
         oidc-audience: aerospike/clients
 
-    - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f # v6.1.0
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
         registry-url: 'https://registry.npmjs.org'
@@ -58,10 +58,10 @@ jobs:
         OLD_VERSION: ${{ inputs.old_version }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - name: change package name
-      run: |
-        sed -i 's/"name": "[^"]*"/"name": "aerospike"/' package.json
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
+    #- name: change package name
+    #  run: |
+    #    sed -i 's/"name": "[^"]*"/"name": "fakospike"/' package.json
+    #  working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: change verison
       run: |
@@ -85,7 +85,7 @@ jobs:
     - run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-        npm publish;
+        npm publish  --provenance;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}

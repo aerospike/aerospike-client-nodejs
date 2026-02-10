@@ -18,6 +18,7 @@
 #include <node.h>
 
 extern "C" {
+#include <aerospike/as_status.h>
 #include <aerospike/as_exp.h>
 }
 
@@ -84,6 +85,9 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "CDT_MAP_CRMOD", as_exp_ops::_AS_EXP_CODE_CDT_MAP_CRMOD);
 	set(exp_ops, "CDT_MAP_CR", as_exp_ops::_AS_EXP_CODE_CDT_MAP_CR);
 	set(exp_ops, "CDT_MAP_MOD", as_exp_ops::_AS_EXP_CODE_CDT_MAP_MOD);
+	set(exp_ops, "MERGE", as_exp_ops::_AS_EXP_CODE_MERGE);
+	set(exp_ops, "CTX", as_exp_ops::_AS_EXP_CODE_CTX);
+
 
 	set(exp_ops, "END_OF_VA_ARGS", as_exp_ops::_AS_EXP_CODE_END_OF_VA_ARGS);
 
@@ -112,9 +116,14 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "MIN", as_exp_ops::_AS_EXP_CODE_MIN);
 	set(exp_ops, "MAX", as_exp_ops::_AS_EXP_CODE_MAX);
 
+
+	set(exp_ops, "RESULT_REMOVE", as_exp_ops::_AS_EXP_CODE_RESULT_REMOVE);
+	set(exp_ops, "LOOPVAR", as_exp_ops::_AS_EXP_CODE_LOOPVAR);
 	set(exp_ops, "COND", as_exp_ops::_AS_EXP_CODE_COND);
 	set(exp_ops, "LET", as_exp_ops::_AS_EXP_CODE_LET);
 	set(exp_ops, "VAR", as_exp_ops::_AS_EXP_CODE_VAR);
+	set(exp_ops, "QUOTE", as_exp_ops::_AS_EXP_CODE_QUOTE);
+	set(exp_ops, "CALL", as_exp_ops::_AS_EXP_CODE_CALL);
 
 	Local<Object> expop_ops = Nan::New<Object>();
 	set(expop_ops, "READ", as_operator::AS_OPERATOR_EXP_READ);
@@ -142,9 +151,15 @@ Local<Object> exp_opcode_values()
 	set(exp_type, "AUTO", as_exp_type::AS_EXP_TYPE_AUTO);
 	set(exp_type, "ERROR", as_exp_type::AS_EXP_TYPE_ERROR);
 
+	Local<Object> exp_loopvar_part = Nan::New<Object>();
+	set(exp_loopvar_part, "KEY", as_exp_loopvar_type::AS_EXP_LOOPVAR_KEY);
+	set(exp_loopvar_part, "VALUE", as_exp_loopvar_type::AS_EXP_LOOPVAR_VALUE);
+	set(exp_loopvar_part, "INDEX", as_exp_loopvar_type::AS_EXP_LOOPVAR_INDEX);
+
 	Local<Object> enums = Nan::New<Object>();
 	Nan::Set(enums, Nan::New("ops").ToLocalChecked(), exp_ops);
 	Nan::Set(enums, Nan::New("sys").ToLocalChecked(), exp_sys);
 	Nan::Set(enums, Nan::New("type").ToLocalChecked(), exp_type);
+	Nan::Set(enums, Nan::New("loopVarPart").ToLocalChecked(), exp_loopvar_part);
 	return scope.Escape(enums);
 }

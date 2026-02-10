@@ -4,11 +4,10 @@ name: Dev workflow
 # 2. If all of the tests pass, allow the PR to be merged into `dev`
 # 3. Whenever a PR is merged to `dev`, bump version number in `dev`
 
-
 on:
   push:
     branches:
-      - 'disabled'
+      - 'CLIENT*'
 
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
@@ -39,7 +38,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      #build-node-cpp-addons
+      build-node-cpp-addons
     ]
     uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
     with:
@@ -49,12 +48,12 @@ jobs:
     name: upload package to JFrog NPM
     needs: [
       bump-dev-number,
-      #build-node-cpp-addons,
+      build-node-cpp-addons,
       upload-addons-to-jfrog,
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: 6.5.1-dev.3
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
       pipeline-stage: 'dev'
     secrets:
       plane_grass: ${{ secrets.plane_grass }}

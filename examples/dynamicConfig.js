@@ -45,7 +45,7 @@ async function dynamicConfig (client, argv) {
   } catch (error) {
     console.log('Failed with: ' + error)
   } finally {
-    if (client) {
+    if (cli) {
       await cli.close()
     }
   }

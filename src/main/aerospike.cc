@@ -29,7 +29,7 @@ extern "C" {
 }
 
 #include "transaction.h"
-
+#include "hyperloglog.h"
 
 #define export(__name, __value)                                                \
 	Nan::Set(target, Nan::New(__name).ToLocalChecked(), __value)
@@ -112,6 +112,17 @@ NAN_METHOD(setDefaultLogging)
 	}
 }
 
+NAN_METHOD(wrapHLL) {
+    Nan::HandleScope scope;
+
+    if (info.Length() > 0 && info[0]->IsBoolean()) {
+		g_wrap_hll = Nan::To<bool>(info[0]).FromJust();
+    }
+    else{
+    	return Nan::ThrowError("wrapHLL requires exactly one boolean argument");
+    }
+}
+
 NAN_METHOD(client)
 {
 	Nan::HandleScope();
@@ -126,6 +137,7 @@ NAN_METHOD(transaction)
 	Local<Object> capacity_obj = info[0].As<Object>();
 	info.GetReturnValue().Set(Transaction::NewInstance(capacity_obj));
 }
+
 /**
  *  aerospike object.
  */
@@ -135,17 +147,26 @@ NAN_MODULE_INIT(Aerospike)
 
 	AerospikeClient::Init();
 	Transaction::Init();
+	HyperLogLog::Init();
+	Nan::Set(
+	    target,
+	    Nan::New("HyperLogLog").ToLocalChecked(),
+	    Nan::New(HyperLogLog::constructor())
+	);
 	NAN_EXPORT(target, client);
 	NAN_EXPORT(target, transaction);
 	NAN_EXPORT(target, get_cluster_count);
 	NAN_EXPORT(target, register_as_event_loop);
 	NAN_EXPORT(target, release_as_event_loop);
 	NAN_EXPORT(target, ref_as_event_loop);
+	NAN_EXPORT(target, wrapHLL);
 	NAN_EXPORT(target, unref_as_event_loop);
 	NAN_EXPORT(target, setDefaultLogging);
 
 	// enumerations
 	export("bitwise", bitwise_enum_values());
+	export("cdtOpContext", cdtOpContext());
+	export("ctxType", ctxType());
 	export("hll", hll_enum_values());
 	export("indexDataType", indexDataType());
 	export("indexType", indexType());
@@ -162,6 +183,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("bitOperations", bit_opcode_values());
 	export("hllOperations", hll_opcode_values());
 	export("expOperations", expop_opcode_values());
+	export("cdtOperations", cdt_opcode_values());
 	export("policy", policy());
 	export("status", status());
 	export("ttl", ttl_enum_values());
@@ -169,13 +191,14 @@ NAN_MODULE_INIT(Aerospike)
 	export("batchTypes", batchTypes());
 	export("queryDuration", queryDuration());
 	export("privilegeCode", privilegeCode());
+	export("pathModifyFlags", pathModifyFlags());
+	export("pathSelectFlags", pathSelectFlags());
 	export("expReadFlags", expReadFlags());
 	export("expWriteFlags", expWriteFlags());
 	export("abortStatus", abortStatus());
 	export("commitStatus", commitStatus());
 	export("txnState", txnState());
 	export("txnCapacity", txnCapacity());
-
 }
 
 NODE_MODULE(aerospike, Aerospike);

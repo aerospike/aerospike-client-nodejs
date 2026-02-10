@@ -15,7 +15,7 @@ on:
       server-tag:
         type: string
         required: false
-        default: '8.1.0.1'
+        default: '8.1.1.0'
     secrets:
       soup_hat:
         required: true
