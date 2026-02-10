@@ -16,7 +16,9 @@
 // *****************************************************************************
 
 const path = require('path')
-const yargs = require('yargs')
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+
 
 const VERSION = require('../package.json').version
 const commands = [
@@ -34,6 +36,7 @@ const commands = [
   'mrtAbort',
   'mrtCommit',
   'operate',
+  'pathExpressions',
   'put',
   'query',
   'remove',
@@ -44,7 +47,7 @@ const commands = [
 
 const squish = (str) => str.replace(/(^ +| +$)/gm, '').trim()
 
-yargs
+yargs(hideBin(process.argv))
   .usage(squish(`
     To execute one of the provided examples, run "node run <example>".
     To get more help for a specific example, run "node run <example> --help"
