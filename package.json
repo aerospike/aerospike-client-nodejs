@@ -69,7 +69,7 @@
     "@types/node": "^25.0.3",
     "chai": "^6.2.0",
     "choma": "^1.2.1",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "globals": "^17.3.0",
     "mocha": "^11.7.5",
     "mocha-clean": "^1.0.0",
