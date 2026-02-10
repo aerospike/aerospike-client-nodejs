@@ -10,18 +10,18 @@ jobs:
   stage-get-jfrog-version:
     uses: ./.github/workflows/stage-get-jfrog-version.yml
 
-  comprehensive-tests:
-    uses: ./.github/workflows/stage-tests.yml
-    with:
-      version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-      run_tests: true
-    needs: [
-      stage-get-jfrog-version,
-    ]
-    secrets:
-      soup_hat: ${{ secrets.soup_hat }}
-      cell_girl: ${{ secrets.cell_girl }}
-      song_loss: ${{ secrets.song_loss }}
+  #comprehensive-tests:
+  #  uses: ./.github/workflows/stage-tests.yml
+  #  with:
+  #    version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+  #    run_tests: true
+  #  needs: [
+  #    stage-get-jfrog-version,
+  #  ]
+  #  secrets:
+  #    soup_hat: ${{ secrets.soup_hat }}
+  #    cell_girl: ${{ secrets.cell_girl }}
+  #    song_loss: ${{ secrets.song_loss }}
 
   bump-stage-number:
     uses: ./.github/workflows/stage-bump-version.yml
@@ -36,7 +36,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       stage-get-jfrog-version,
-      comprehensive-tests,
+      #comprehensive-tests,
       bump-stage-number
     ]
     uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml

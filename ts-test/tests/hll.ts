@@ -67,7 +67,6 @@ describe('client.operate() - HyperLogLog operations', function () {
 
     it('creates a HyperLogLog Class type', function () {
       const hyperloglog = new Aerospike.HyperLogLog(hllCats)
-      console.log(hyperloglog)
 
     })
 
@@ -101,7 +100,6 @@ describe('client.operate() - HyperLogLog operations', function () {
       Aerospike.wrapHLL(false)
       await client.put(key, {hll: hyperloglog})
       const record = await client.get(key)
-      console.log(record.bins)
       expect(record.bins.hll).not.to.be.instanceOf(Aerospike.HyperLogLog)
 
     })
