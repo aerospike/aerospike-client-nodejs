@@ -107,7 +107,8 @@ describe('Aerospike.exp.selectByPath', async function () {
     geoList: [new GeoJSON.Point(50.913, 50.308), new GeoJSON.Point(0.913, 0.308), new GeoJSON.Point(0.913, 0.308)],
     mapList: [{a: 1}, {b: 2}, {c: 3}],
     listList: [[1], [2], [3]],
-    listListList: [[[1], [2], [3]]]
+    listListList: [[[1], [2], [3]]],
+    mixedList: [false, 12],
     //boolList: [2.4, 4.8, 7.2],
     //nNilList: [[2.4, 4.8, 7.2]],
     //dnNilList: [[[2.4, 4.8, 7.2]]],
@@ -193,6 +194,14 @@ describe('Aerospike.exp.selectByPath', async function () {
             context('NO_FAIL', function () {
               it('equals the correct numeric value', async function () {
                 expect(pathModifyFlags.NO_FAIL).to.eql(16)
+              })
+
+              it('returns the correct value when used with operate and NO_FAIL', async function () {
+                const modExpression = exp.cond(exp.eq(exp.loopVarInt(exp.loopVarPart.VALUE), exp.int(12)), exp.bool(false), exp.bool(true))
+
+                const modifyByPath = exp.modifyByPath(exp.binList('mixedList'), exp.type.LIST, modExpression, pathModifyFlags.NO_FAIL, addAllChildren)
+                
+                await verifyModifyByPath('mixedList', modifyByPath, [ false, true ]  )
               })
             })
 
@@ -414,7 +423,7 @@ describe('Aerospike.exp.selectByPath', async function () {
 
               })
 
-              it('use loopVarInt Expression with loopVarPart.VALUE', async function () {
+              it('use loopVarInt Expression with loopVarPart.INDEX', async function () {
                 const loopVar = exp.loopVarInt(exp.loopVarPart.INDEX)
 
                 const modExpression = exp.cond(exp.eq(loopVar, exp.int(1)), exp.bool(true), exp.bool(false))
@@ -534,6 +543,12 @@ describe('Aerospike.exp.selectByPath', async function () {
                 await verifySelectByPath('floatMap', selectByPath, record.floatMap)
               })
 
+              it('Does not fail even', async function () {
+                const selectByPath = exp.selectByPath(exp.binMap('floatMap'), exp.type.MAP, noFailFlags, addAllChildren)
+  
+                await verifySelectByPath('floatMap', selectByPath, record.floatMap)
+              })
+
             })
 
             context('VALUE', function () {
@@ -551,11 +566,7 @@ describe('Aerospike.exp.selectByPath', async function () {
                 await verifySelectByPath('floatMap', selectByPath, Object.values(record.floatMap))             
               })
 
-              it('returns the correct value when used with operate and NO_FAIL', async function () {
-                const selectByPath = exp.selectByPath(exp.binMap('floatMap'), exp.type.LIST, noFailFlags, addAllChildren)
-  
-                await verifySelectByPath('floatMap', selectByPath, Object.values(record.floatMap))
-              })
+
 
             })
 
@@ -650,6 +661,7 @@ describe('Aerospike.exp.selectByPath', async function () {
               it('equals the correct numeric value', async function () {
                 expect(pathSelectFlags.NO_FAIL).to.eql(16)
               })
+
             })
 
           })
