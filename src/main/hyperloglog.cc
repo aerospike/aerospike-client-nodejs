@@ -47,18 +47,12 @@ Local<Value> HyperLogLog::NewInstance(Local<Object> buffer)
 	Local<Value> argv[argc] = {buffer};
 
 	Local<Function> cons = Nan::New(constructor());
-	if (cons.IsEmpty()) {
-		Nan::ThrowError("HyperLogLog constructor not initialized");
-		return Nan::Undefined();
-	}
 	Nan::TryCatch try_catch;
-    v8::Local<v8::Context> context = Nan::GetCurrentContext();
-    Nan::MaybeLocal<Object> instance = cons->NewInstance(context, argc, argv);
+	Nan::MaybeLocal<Object> instance = Nan::NewInstance(cons, argc, argv);
 	if (try_catch.HasCaught()) {
 		try_catch.ReThrow();
 		return Nan::Undefined();
 	}
-    
 	return scope.Escape(instance.ToLocalChecked());
 }
 
