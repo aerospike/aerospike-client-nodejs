@@ -43,7 +43,7 @@ jobs:
           node ./node_modules/aerospike/scripts/verify-aerospike-npm-scripts.js aerospike;
           npx --package aerospike npm run removeExtraBinaries --prefix ./node_modules/aerospike;
           npx --package aerospike npm run build --prefix ./node_modules/aerospike;
-          node -e "const Aerospike = require('fakospike'); console.log(new Aerospike.HyperLogLog( Buffer.from([0, 8, 0, 0])))"
+          node -e "const Aerospike = require('aerospike'); console.log(new Aerospike.HyperLogLog( Buffer.from([0, 8, 0, 0])))"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
 
@@ -51,7 +51,7 @@ jobs:
         if: ${{ inputs.scenario  == 'omitdev'  }}
         run: |
           npm install aerospike@${{ env.NEW_VERSION }} --omit=dev;
-          node -e "const Aerospike = require('fakospike'); console.log(new Aerospike.HyperLogLog( Buffer.from([0, 8, 0, 0])))"
+          node -e "const Aerospike = require('aerospike'); console.log(new Aerospike.HyperLogLog( Buffer.from([0, 8, 0, 0])))"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
 
@@ -59,6 +59,6 @@ jobs:
         if: ${{ inputs.scenario  == 'omitnone'  }}
         run: |
           npm install aerospike@${{ env.NEW_VERSION }};
-          node -e "const Aerospike = require('fakospike'); console.log(new Aerospike.HyperLogLog( Buffer.from([0, 8, 0, 0])))"
+          node -e "const Aerospike = require('aerospike'); console.log(new Aerospike.HyperLogLog( Buffer.from([0, 8, 0, 0])))"
         env:
           NEW_VERSION: ${{ inputs.new_version }}
