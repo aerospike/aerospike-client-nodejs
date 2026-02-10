@@ -29,14 +29,14 @@ async function pathExpressions (client, argv) {
     floatList: [2.4, 4.8, 7.2]
   }
 
-  if(!argv.multiplier) {
+  if (!argv.multiplier) {
     argv.multiplier = 0.5
   }
   await client.put(key, bins)
 
   const addAllChildren = new Context().addAllChildren()
 
-  const modExpression = Aerospike.exp.mul(Aerospike.exp.loopVarFloat(Aerospike.exp.loopVarPart.VALUE), Aerospike.exp.float(argv.multiplier ))
+  const modExpression = Aerospike.exp.mul(Aerospike.exp.loopVarFloat(Aerospike.exp.loopVarPart.VALUE), Aerospike.exp.float(argv.multiplier))
 
   const modifyByPath = Aerospike.exp.modifyByPath(Aerospike.exp.binList('floatList'), Aerospike.exp.type.LIST, modExpression, Aerospike.exp.pathModifyFlags.DEFAULT, addAllChildren)
 
