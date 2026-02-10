@@ -40,7 +40,7 @@ jobs:
         if: ${{ inputs.scenario == 'omitscripts' }}
         run: |
           npm install fakospike@${{ env.NEW_VERSION }} --omit=dev --ignore-scripts;
-          node ./node_modules/fakospike/scripts/verify-fakospike-npm-scripts.js fakospike;
+          node ./node_modules/fakospike/scripts/verify-aerospike-npm-scripts.js fakospike;
           npx --package fakospike npm run removeExtraBinaries --prefix ./node_modules/fakospike;
           npx --package fakospike npm run build --prefix ./node_modules/fakospike;
           node -e "const fakospike = require('fakospike'); console.log(fakospike.exp.unknown());"
