@@ -544,7 +544,7 @@ context('admin commands', function () {
         await client.setPassword(username2, password, policy)
       }
       catch(error: any){
-        console.log(error)
+        console.log()
       }
       await wait(waitMs)
 

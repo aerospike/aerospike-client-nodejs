@@ -29,11 +29,14 @@ async function pathExpressions (client, argv) {
     floatList: [2.4, 4.8, 7.2]
   }
 
+  if(!argv.multiplier) {
+    argv.multiplier = 0.5
+  }
   await client.put(key, bins)
 
   const addAllChildren = new Context().addAllChildren()
 
-  const modExpression = Aerospike.exp.mul(Aerospike.exp.loopVarFloat(Aerospike.exp.loopVarPart.VALUE), Aerospike.exp.float(3.7))
+  const modExpression = Aerospike.exp.mul(Aerospike.exp.loopVarFloat(Aerospike.exp.loopVarPart.VALUE), Aerospike.exp.float(argv.multiplier ))
 
   const modifyByPath = Aerospike.exp.modifyByPath(Aerospike.exp.binList('floatList'), Aerospike.exp.type.LIST, modExpression, Aerospike.exp.pathModifyFlags.DEFAULT, addAllChildren)
 
@@ -41,14 +44,16 @@ async function pathExpressions (client, argv) {
     Aerospike.exp.operations.write('floatList', modifyByPath, Aerospike.exp.expWriteFlags.DEFAULT)
   ]
 
-  const result = await client.operate(key, ops)
+  await client.operate(key, ops)
+
+  const result = await client.get(key)
 
   console.log(result.bins) // { floatList: [ 8.88, 17.76, 26.64 ] }
 
   await client.close()
 }
 
-exports.command = 'pathExpressions'
+exports.command = 'pathExpressions <key> <multiplier>'
 exports.describe = 'Path Expressions'
 exports.handler = shared.run(pathExpressions)
 exports.builder = {}

@@ -17777,11 +17777,7 @@ export namespace exp {
      * 
      * })();
      * 
-     * @param bin - bin name.
-     * @param valueType - expression value type.
-     * @param flags - path select flags.
-     * @param ctx - CDT Context.
-     * @return path select expression.
+     * @return result remove expression.
      */
     export const resultRemove: () => AerospikeExp;
 

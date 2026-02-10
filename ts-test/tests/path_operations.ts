@@ -319,7 +319,6 @@ describe('Path Operations', async function () {
 
               it('use loopVarStr Expression with loopVarPart.KEY', async function () {
                 const loopVar = exp.loopVarStr(exp.loopVarPart.KEY)
-                console.log(loopVar)
 
                 expect(loopVar[2].intVal).to.eql(0)
 
