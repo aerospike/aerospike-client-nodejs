@@ -18,30 +18,30 @@ jobs:
       master-get-jfrog-version,
     ]
 
-  #publish-to-npm:
-  #  name: Publish to npm
-  #  needs: [
-  #    master-get-jfrog-version,
-  #    bump-master-number,
-  #  ]
-  #  uses: ./.github/workflows/master-upload-jfrog-build-to-npm.yml
-  #  with:
-  #    old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
-  #    new_version: 6.5.3
-  #  secrets:
-  #    NPMRC_RELEASE: ${{ secrets.NPMRC_RELEASE }}
-  #    AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
+  publish-to-npm:
+    name: Publish to npm
+    needs: [
+      master-get-jfrog-version,
+      bump-master-number,
+    ]
+    uses: ./.github/workflows/master-upload-jfrog-build-to-npm.yml
+    with:
+      old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+    secrets:
+      NPMRC_RELEASE: ${{ secrets.NPMRC_RELEASE }}
+      AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
 
   verify-npm-install-scripts:
     name: verify npm clean install works correctly
     needs: [
       master-get-jfrog-version,
       bump-master-number,
-      #publish-to-npm
+      publish-to-npm
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
-      new_version: 6.5.3
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
       scenario: 'omitscripts'
 
   verify-npm-install-prod:
@@ -49,12 +49,12 @@ jobs:
     needs: [
       master-get-jfrog-version,
       bump-master-number,
-      #publish-to-npm,
+      publish-to-npm,
       verify-npm-install-scripts
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
-      new_version: 6.5.3
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
       scenario: 'omitdev'
 
   verify-npm-install:
@@ -62,48 +62,48 @@ jobs:
     needs: [
       master-get-jfrog-version,
       bump-master-number,
-      #publish-to-npm,
+      publish-to-npm,
       verify-npm-install-scripts,
       verify-npm-install-prod
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
-      new_version: 6.5.3
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
       scenario: 'omitnone'
 
-#  reupload-master-to-jfrog:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#      master-get-jfrog-version,
-#      bump-master-number,
-#      publish-to-npm,
-#      verify-npm-install-scripts,
-#      verify-npm-install-prod,
-#      verify-npm-install
-#    ]
-#    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
-#    with:
-#      old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
-#      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
-#      pipeline-stage: 'master'
-#
-#  reupload-master-to-jfrog-npm-repo:
-#    name: Upload artifacts to JFrog
-#    needs: [
-#      master-get-jfrog-version,
-#      bump-master-number,
-#      publish-to-npm,
-#      verify-npm-install-scripts,
-#      verify-npm-install-prod,
-#      verify-npm-install,
-#      reupload-master-to-jfrog
-#    ]
-#    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
-#    with:
-#      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
-#      pipeline-stage: 'master'
-#    secrets:
-#      room_lane: ${{ secrets.room_lane }}
+  reupload-master-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      master-get-jfrog-version,
+      bump-master-number,
+      publish-to-npm,
+      verify-npm-install-scripts,
+      verify-npm-install-prod,
+      verify-npm-install
+    ]
+    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
+    with:
+      old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+      pipeline-stage: 'master'
+
+  reupload-master-to-jfrog-npm-repo:
+    name: Upload artifacts to JFrog
+    needs: [
+      master-get-jfrog-version,
+      bump-master-number,
+      publish-to-npm,
+      verify-npm-install-scripts,
+      verify-npm-install-prod,
+      verify-npm-install,
+      reupload-master-to-jfrog
+    ]
+    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
+    with:
+      new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
+      pipeline-stage: 'master'
+    secrets:
+      room_lane: ${{ secrets.room_lane }}
 
 #
 #  ff-master-to-stage:
