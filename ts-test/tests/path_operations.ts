@@ -187,7 +187,6 @@ describe('Path Operations', async function () {
           it('modifies with standard expression', async function () {
 
             const modExpression = exp.float(14.0)
-
             
             await verifyModifyByPath('c_example', addAllChildren, modExpression, pathModifyFlags.DEFAULT, {book: 14})
   
@@ -271,11 +270,13 @@ describe('Path Operations', async function () {
 
             })
 
-            it('loopVarNil has correct exp ops code', async function () {
-              const loopVar = exp.loopVarNil(exp.loopVarPart.VALUE)
+            it('use loopVarNil Expression', async function () {
+              const expression = exp.eq(exp.loopVarNil(exp.loopVarPart.VALUE), exp.nil())
 
-              expect(loopVar[1].intVal).to.eql(exp.type.NIL)
+              const ctx: cdt.Context = new Context().addAllChildrenWithFilter(expression)
+              expect(expression[2].intVal).to.eql(exp.type.NIL)
 
+              await verifySelectByPath('nilList', ctx, pathSelectFlags.MAP_VALUE, [ null, null, null ]  )
             })
 
             it('use loopVarGeo Expression', async function () {
@@ -306,29 +307,41 @@ describe('Path Operations', async function () {
 
 
             })
+            it('loopVarPart', async function () {
 
-            it('use loopVarStr Expression with loopVarPart.KEY', async function () {
-              const loopVar = exp.loopVarStr(exp.loopVarPart.KEY)
-              console.log(loopVar)
+              it('use loopVarStr Expression with loopVarPart.VALUE', async function () {
+                const modExpression = exp.cond(exp.eq(exp.loopVarStr(exp.loopVarPart.VALUE), exp.str("bob")), exp.str("pass"), exp.str("fail"))
 
-              expect(loopVar[2].intVal).to.eql(0)
+                
+                await verifyModifyByPath('strList', addAllChildren, modExpression, pathModifyFlags.DEFAULT, [ "pass", "fail", "fail" ]  )
 
-              const modExpression = exp.cond(exp.eq(loopVar, exp.str('a')), exp.str('pass'), exp.str('fail'))
+              })
 
-              
-              await verifyModifyByPath('floatMap', addAllChildren, modExpression, pathModifyFlags.DEFAULT, { a: 'pass', b: 'fail', c: 'fail' }  )
+              it('use loopVarStr Expression with loopVarPart.KEY', async function () {
+                const loopVar = exp.loopVarStr(exp.loopVarPart.KEY)
+                console.log(loopVar)
+
+                expect(loopVar[2].intVal).to.eql(0)
+
+                const modExpression = exp.cond(exp.eq(loopVar, exp.str('a')), exp.str('pass'), exp.str('fail'))
+
+                
+                await verifyModifyByPath('floatMap', addAllChildren, modExpression, pathModifyFlags.DEFAULT, { a: 'pass', b: 'fail', c: 'fail' }  )
 
 
+              })
+
+              it('use loopVarInt Expression with loopVarPart.INDEX', async function () {
+                const loopVar = exp.loopVarInt(exp.loopVarPart.INDEX)
+
+                const modExpression = exp.cond(exp.eq(loopVar, exp.int(1)), exp.bool(true), exp.bool(false))
+                expect(loopVar[2].intVal).to.eql(2)
+
+                await verifyModifyByPath('floatMap', addAllChildren, modExpression, pathModifyFlags.DEFAULT,  [ false, true, false ]  )
+
+
+              })
             })
-
-            it('loop var uses correct value for loopVarPart.Index', async function () {
-              const loopVar = exp.loopVarStr(exp.loopVarPart.INDEX)
-
-              expect(loopVar[2].intVal).to.eql(2)
-
-
-            })
-
           })
 
 

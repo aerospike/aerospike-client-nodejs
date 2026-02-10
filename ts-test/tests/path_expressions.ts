@@ -106,7 +106,8 @@ describe('Aerospike.exp.selectByPath', async function () {
     nilList: [null, null, null],
     geoList: [new GeoJSON.Point(50.913, 50.308), new GeoJSON.Point(0.913, 0.308), new GeoJSON.Point(0.913, 0.308)],
     mapList: [{a: 1}, {b: 2}, {c: 3}],
-    listList: [[1], [2], [3]]
+    listList: [[1], [2], [3]],
+    listListList: [[[1], [2], [3]]]
     //boolList: [2.4, 4.8, 7.2],
     //nNilList: [[2.4, 4.8, 7.2]],
     //dnNilList: [[[2.4, 4.8, 7.2]]],
@@ -388,28 +389,45 @@ describe('Aerospike.exp.selectByPath', async function () {
 
             })
 
-            it('use loopVarStr Expression with loopVarPart.KEY', async function () {
-              const loopVar = exp.loopVarStr(exp.loopVarPart.KEY)
+            context('loopVarPart', async function () {
 
-              expect(loopVar[2].intVal).to.eql(0)
+              it('use loopVarBool Expression with loopVarPart.VALUE', async function () {
+                const modExpression = exp.cond(exp.eq(exp.loopVarBool(exp.loopVarPart.VALUE), exp.bool(true)), exp.bool(false), exp.bool(true))
+  
+                const modifyByPath = exp.modifyByPath(exp.binList('boolList'), exp.type.LIST, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
+                
+                await verifyModifyByPath('boolList', modifyByPath, [ true, false, true ]  )
+  
+              })
 
-              const modExpression = exp.cond(exp.eq(loopVar, exp.str('a')), exp.str('pass'), exp.str('fail'))
+              it('use loopVarStr Expression with loopVarPart.KEY', async function () {
+                const loopVar = exp.loopVarStr(exp.loopVarPart.KEY)
 
-              const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), exp.type.MAP, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
-              
-              await verifyModifyByPath('floatMap', modifyByPath, { a: 'pass', b: 'fail', c: 'fail' }  )
+                expect(loopVar[2].intVal).to.eql(0)
+
+                const modExpression = exp.cond(exp.eq(loopVar, exp.str('a')), exp.str('pass'), exp.str('fail'))
+
+                const modifyByPath = exp.modifyByPath(exp.binMap('floatMap'), exp.type.MAP, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
+                
+                await verifyModifyByPath('floatMap', modifyByPath, { a: 'pass', b: 'fail', c: 'fail' }  )
 
 
+              })
+
+              it('use loopVarInt Expression with loopVarPart.VALUE', async function () {
+                const loopVar = exp.loopVarInt(exp.loopVarPart.INDEX)
+
+                const modExpression = exp.cond(exp.eq(loopVar, exp.int(1)), exp.bool(true), exp.bool(false))
+                expect(loopVar[2].intVal).to.eql(2)
+
+
+                const modifyByPath = exp.modifyByPath(exp.binList('listList'), exp.type.LIST, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
+                
+                await verifyModifyByPath('listList', modifyByPath, [ false, true, false ]  )
+
+
+              })
             })
-
-            it('loop var uses correct value for loopVarPart.Index', async function () {
-              const loopVar = exp.loopVarStr(exp.loopVarPart.INDEX)
-
-              expect(loopVar[2].intVal).to.eql(2)
-
-
-            })
-
           })
 
 
