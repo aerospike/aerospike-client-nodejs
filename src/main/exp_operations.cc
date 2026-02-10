@@ -23,6 +23,7 @@
 
 extern "C" {
 #include <aerospike/as_exp_operations.h>
+#include <aerospike/as_exp.h>
 }
 
 using namespace v8;
@@ -54,6 +55,7 @@ int add_exp_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 			   LogInfo *log)
 {
 	as_exp *exp = NULL;
+
 	int flags = 0;
 
 	opcode = opcode ^ EXPOP_OPS_OFFSET;
@@ -86,10 +88,11 @@ int add_exp_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 	}
 
 	as_v8_debug(
-		log, "Adding exp operation %s (opcode %i) on bin %s to operations list",
-		entry->op_name, opcode, bin);
+		log, "Adding exp operation %s (opcode %i) on bin %s to operations list %s and flags=%d",
+		entry->op_name, opcode, bin, exp ? "with expression" : "without expression", flags);
 
 	bool success = (entry->op_function)(ops, bin, exp, flags, log);
+	
 	free(bin);
 	as_exp_destroy(exp);
 	

@@ -5,6 +5,7 @@ on:
     branches:
       - 'dev'
 
+
 jobs:
   stage-get-jfrog-version:
     uses: ./.github/workflows/stage-get-jfrog-version.yml
@@ -26,7 +27,7 @@ jobs:
     uses: ./.github/workflows/stage-bump-version.yml
     needs: [
       stage-get-jfrog-version,
-      #comprehensive-tests,
+      comprehensive-tests,
     ]
     with:
       old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}

@@ -19,6 +19,7 @@
 #include "conversions.h"
 #include "log.h"
 #include "operations.h"
+#include "expressions.h"
 
 extern "C" {
 #include <aerospike/as_cdt_ctx.h>
@@ -29,6 +30,9 @@ using namespace v8;
 NAN_METHOD(AerospikeClient::ContextToBase64)
 {
 	TYPE_CHECK_REQ(info[0], IsObject, "Context must be an object");
+
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
 	as_cdt_ctx context;
 	bool has_context = false;
@@ -46,7 +50,8 @@ NAN_METHOD(AerospikeClient::ContextToBase64)
 		delete [] serializedContext;
 	}
 	else{
-		Nan::ThrowError("Context is invalid, cannot serialize");
+		as_v8_error(client->log, "Context is invalid, cannot serialize");
+		return Nan::ThrowError("Context is invalid, cannot serialize");
 	}
 
 }
@@ -55,11 +60,14 @@ NAN_METHOD(AerospikeClient::ContextFromBase64)
 {
 	TYPE_CHECK_REQ(info[0], IsObject, "Serialized context must be an object");
 
+	AerospikeClient *client =
+		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
 	char* serializedContext = NULL;
 	if (info[0]->IsObject()) {
 		if(get_string_property(&serializedContext, info[0].As<Object>(), "context", NULL) != AS_NODE_PARAM_OK){
-			Nan::ThrowError("Serialized context is invalid");
-			return;
+			as_v8_error(client->log, "Type error: Serialized context is invalid");
+			return Nan::ThrowError("Type error: Serialized context is invalid");
 		}
 	}
 
@@ -209,14 +217,35 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
+		case (AS_CDT_CTX_EXP):
+			if (v8value->IsArray()) {
+				Local<Array> exp_ary = Local<Array>::Cast(v8value);	
+				as_exp *exp = NULL;
+				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+					as_v8_error(log, "Expressions could not be compiled");
+					return AS_NODE_PARAM_ERR;
+				}
+				as_cdt_ctx_add_all_children_with_filter(context, exp);
+				as_v8_detail(log, "Adding All Children With Filter context");
+			}
+			else if (v8value->IsUndefined() || v8value->IsNull()) {
+				as_cdt_ctx_add_all_children(context);
+				as_v8_detail(log, "Adding All Children context");
+			}
+			else {
+				as_v8_error(log, "error: value should be an expression, null, or undefined");
+				return AS_NODE_PARAM_ERR;
+			}
+			break;
 		}
+
 	}
 
 	return AS_NODE_PARAM_OK;
 
 }
 
-as_cdt_ctx* get_optional_cdt_context_heap(int* rc,
+as_cdt_ctx* get_cdt_context_heap(int* rc,
 							 Local<Object> obj, const char *prop,
 							 const LogInfo *log)
 {
@@ -318,6 +347,28 @@ as_cdt_ctx* get_optional_cdt_context_heap(int* rc,
 			asval_from_jsvalue(&asValue, v8value, log);
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
+			break;
+		case (AS_CDT_CTX_EXP):
+			if (v8value->IsArray()) {
+				Local<Array> exp_ary = Local<Array>::Cast(v8value);	
+				as_exp *exp = NULL;
+				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+					as_v8_error(log, "Expressions could not be compiled");
+					*rc = AS_NODE_PARAM_OK;
+					return context;
+				}
+				as_cdt_ctx_add_all_children_with_filter(context, exp);
+				as_v8_detail(log, "Adding All Children context With Filter context");
+			}
+			else if (v8value->IsUndefined() || v8value->IsNull()) {
+				as_cdt_ctx_add_all_children(context);
+				as_v8_detail(log, "Adding All Children");
+			}
+			else {
+				as_v8_error(log, "error: value should be an expression, null, or undefined");
+				*rc = AS_NODE_PARAM_OK;
+				return context;
+			}
 			break;
 		}
 	}

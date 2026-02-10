@@ -18,6 +18,7 @@
 #include <nan.h>
 
 extern "C" {
+#include <aerospike/as_status.h>
 #include <aerospike/as_map_operations.h>
 }
 
