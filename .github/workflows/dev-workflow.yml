@@ -39,7 +39,7 @@ jobs:
     name: Upload artifacts to JFrog
     needs: [
       bump-dev-number,
-      build-node-cpp-addons
+      #build-node-cpp-addons
     ]
     uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
     with:
@@ -49,12 +49,12 @@ jobs:
     name: upload package to JFrog NPM
     needs: [
       bump-dev-number,
-      build-node-cpp-addons,
+      #build-node-cpp-addons,
       upload-addons-to-jfrog,
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      new_version: 6.5.1-dev.3
       pipeline-stage: 'dev'
     secrets:
       plane_grass: ${{ secrets.plane_grass }}
