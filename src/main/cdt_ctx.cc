@@ -51,7 +51,6 @@ NAN_METHOD(AerospikeClient::ContextToBase64)
 	}
 	else{
 		as_v8_error(client->log, "Context is invalid, cannot serialize");
-
 		return Nan::ThrowError("Context is invalid, cannot serialize");
 	}
 
@@ -234,7 +233,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 				as_v8_detail(log, "Adding All Children context");
 			}
 			else {
-				as_v8_error(log, "Type error: value should be an Object");
+				as_v8_error(log, "error: value should be an expression, null, or undefined");
 				return AS_NODE_PARAM_ERR;
 			}
 			break;

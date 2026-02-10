@@ -54,7 +54,7 @@ jobs:
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: 6.5.1-dev.3
+      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
       pipeline-stage: 'dev'
     secrets:
       plane_grass: ${{ secrets.plane_grass }}
