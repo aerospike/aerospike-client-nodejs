@@ -44,3 +44,18 @@ updates:
       interval: "weekly"
     target-branch: "dev"
     open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directory: /.github/workflows
+    schedule:
+      interval: daily
+
+  - package-ecosystem: docker
+    directory: /.github/workflows/docker-build-context
+    schedule:
+      interval: daily
+
+  - package-ecosystem: pip
+    directory: /.github/workflows
+    schedule:
+      interval: daily
