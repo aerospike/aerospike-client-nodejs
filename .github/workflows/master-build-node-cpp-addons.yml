@@ -30,22 +30,6 @@ on:
       song_loss:
         required: true
 
-      nodejs-tags:
-        type: string
-        required: false
-        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
-      platform-tag:
-        type: string
-        required: true
-      run_tests:
-        type: boolean
-        required: false
-        default: false
-      test-file:
-        required: false
-        type: string
-        default: ''
-
 jobs:
   build-node-cpp-bindings:
     strategy:
