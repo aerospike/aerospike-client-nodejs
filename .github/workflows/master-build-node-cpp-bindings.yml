@@ -134,21 +134,6 @@ jobs:
         Get-Content "props\nodejs.props"
       working-directory: aerospike-client-c/vs
 
-    - name: Change version in package.json
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        $v = "${{ env.NEW_VERSION }}"
-        Get-Content package.json | jq --arg v $v '.version = $v' | Set-Content package.json
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: change verison
-      if: ${{ inputs.platform-tag != 'win_amd64' }}
-      run: |
-       npm version ${{ env.NEW_VERSION }} --no-git-tag-version
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-
     - name: Build Binding
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
       run: |
@@ -169,13 +154,6 @@ jobs:
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
-    - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
