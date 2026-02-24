@@ -152,11 +152,17 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests }}
       run: |
+        docker ps;
+        docker logs aerospike;
+        ls .;
+        cp ../../../package-lock.json package-lock.json;
+        npm ci --ignore-scripts;
         cd ts-test;
+        npm ci .. --ignore-scripts;
         npx tsc;
         cd ..;
         npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+        npm run test dist/ -- --h localhost --port 3000;
 
 
     - name: Set final commit status

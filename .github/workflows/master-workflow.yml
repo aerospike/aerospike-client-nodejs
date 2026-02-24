@@ -9,21 +9,21 @@ on:
       - 'stage'
 
 jobs:
-  master-get-jfrog-version:
-    uses: ./.github/workflows/master-get-jfrog-version.yml
-
-  bump-master-number:
-    uses: ./.github/workflows/master-bump-version.yml
-    needs: [
-      master-get-jfrog-version,
-    ]
+#  master-get-jfrog-version:
+#    uses: ./.github/workflows/master-get-jfrog-version.yml
+#
+#  bump-master-number:
+#    uses: ./.github/workflows/master-bump-version.yml
+#    needs: [
+#      master-get-jfrog-version,
+#    ]
 
   build-node-cpp-addons:
     uses: ./.github/workflows/master-build-node-cpp-addons.yml
-    needs: [
-      master-get-jfrog-version,
-      bump-master-number
-    ]
+#    needs: [
+#      master-get-jfrog-version,
+#      bump-master-number
+#    ]
     with:
       run_tests: true
     secrets:
