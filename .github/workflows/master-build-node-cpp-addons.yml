@@ -1,0 +1,71 @@
+name: Build Node C++ Addons
+run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+
+# Builds manylinux wheels and source distribution
+# Optionally run tests on manylinux wheels
+# Then upload artifacts to Github
+
+
+on:
+  workflow_call:
+    inputs:
+      # The "dev" tests test the artifacts against a server
+      # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
+      run_tests:
+        required: false
+        type: boolean
+        default: false
+      version:
+        type: string
+        required: true
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
+    secrets:
+      soup_hat:
+        required: true
+      cell_girl:
+        required: true
+      song_loss:
+        required: true
+
+      nodejs-tags:
+        type: string
+        required: false
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
+      platform-tag:
+        type: string
+        required: true
+      run_tests:
+        type: boolean
+        required: false
+        default: false
+      test-file:
+        required: false
+        type: string
+        default: ''
+
+jobs:
+  build-node-cpp-bindings:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64",
+          "macosx_x86_64_2",
+          "macosx_arm64",
+          "macosx_arm64_2",
+          "win_amd64"
+        ]
+      fail-fast: false
+    uses: ./.github/workflows/master-build-node-cpp-bindings.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      run_tests: false
+      server-tag: ${{ inputs.server-tag }}
+    secrets:
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}

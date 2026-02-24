@@ -1,0 +1,19 @@
+name: Master workflow
+permissions:
+  id-token: write
+  contents: write
+
+on:
+  push:
+    branches:
+      - 'master'
+
+jobs:
+  build-node-cpp-addons:
+    uses: ./.github/workflows/master-build-node-cpp-addons.yml
+    with:
+      run_tests: true
+    secrets:
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}

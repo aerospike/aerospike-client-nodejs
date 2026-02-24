@@ -18,11 +18,24 @@ jobs:
       master-get-jfrog-version,
     ]
 
+  build-node-cpp-addons:
+    uses: ./.github/workflows/master-build-node-cpp-addons.yml
+    needs: [
+      bump-dev-number
+    ]
+    with:
+      run_tests: false
+    secrets:
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}
+
   #publish-to-npm:
   #  name: Publish to npm
   #  needs: [
   #    master-get-jfrog-version,
   #    bump-master-number,
+  #    build-node-cpp-addons
   #  ]
   #  uses: ./.github/workflows/master-upload-jfrog-build-to-npm.yml
   #  with:
@@ -37,7 +50,8 @@ jobs:
     needs: [
       master-get-jfrog-version,
       bump-master-number,
-      #publish-to-npm
+      build-node-cpp-addons,
+      #publish-to-npm,
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
@@ -49,6 +63,7 @@ jobs:
     needs: [
       master-get-jfrog-version,
       bump-master-number,
+      build-node-cpp-addons,
       #publish-to-npm,
       verify-npm-install-scripts
     ]
@@ -62,6 +77,7 @@ jobs:
     needs: [
       master-get-jfrog-version,
       bump-master-number,
+      build-node-cpp-addons,
       #publish-to-npm,
       verify-npm-install-scripts,
       verify-npm-install-prod
@@ -92,6 +108,7 @@ jobs:
     needs: [
       master-get-jfrog-version,
       bump-master-number,
+      build-node-cpp-addons,
       #publish-to-npm,
       verify-npm-install-scripts,
       verify-npm-install-prod,
