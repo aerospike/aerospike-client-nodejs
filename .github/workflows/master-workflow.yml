@@ -21,7 +21,8 @@ jobs:
   build-node-cpp-addons:
     uses: ./.github/workflows/master-build-node-cpp-addons.yml
     needs: [
-      bump-dev-number
+      master-get-jfrog-version,
+      bump-master-number
     ]
     with:
       run_tests: false
