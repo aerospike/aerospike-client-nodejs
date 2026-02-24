@@ -44,7 +44,7 @@ jobs:
     uses: ./.github/workflows/master-build-node-cpp-bindings.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      run_tests: false
+      run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
