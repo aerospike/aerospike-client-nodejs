@@ -26,6 +26,10 @@ on:
         required: false
         type: string
         default: ''
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
     secrets:
       # Just make all the secrets required to make things simpler...
       soup_hat:
