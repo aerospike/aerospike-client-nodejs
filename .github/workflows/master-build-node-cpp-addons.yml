@@ -15,9 +15,6 @@ on:
         required: false
         type: boolean
         default: false
-      version:
-        type: string
-        required: true
       server-tag:
         type: string
         required: false
