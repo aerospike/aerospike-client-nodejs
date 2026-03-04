@@ -7,6 +7,7 @@ default: build
 
 .PHONY: build
 build:
+	node-gyp configure
 	node-gyp build
 
 .PHONY: test
