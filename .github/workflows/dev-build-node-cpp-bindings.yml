@@ -186,7 +186,7 @@ jobs:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Run tests
-      if: ${{ !(inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
+      if: ${{ inputs.run_tests && !(startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
       run: |
         cd ts-test;
         npx tsc;
@@ -257,7 +257,7 @@ jobs:
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
-        path: "./*.tar.gz"
+        path: "build/stage/aerospike/*/*.tar.gz"
         name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
         if-no-files-found: error
 
@@ -302,7 +302,7 @@ jobs:
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
-      - run: npm install *.tar.gz
+      - run: npm install build/stage/aerospike/*/*.tar.gz"
 
       - name: Run tests
         run: |
