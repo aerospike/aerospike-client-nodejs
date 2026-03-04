@@ -95,15 +95,15 @@ jobs:
       with:
         egress-policy: audit
 
-    - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-      shell: bash
+    # - name: Create status check message
+    #   run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+    #   shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - name: Delete workspace
       if: ${{ inputs.platform-tag != 'win_amd64' }}
@@ -260,12 +260,12 @@ jobs:
         name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
         if-no-files-found: error
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-self-hosted:
     needs: cibuildbinding
