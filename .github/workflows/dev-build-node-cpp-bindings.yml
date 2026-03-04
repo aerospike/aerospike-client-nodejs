@@ -125,12 +125,7 @@ jobs:
       working-directory: aerospike-client-c/vs
 
     - name: 'Install libyaml'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
-      run: |
-        brew install libyaml
-
-    - name: 'Install libyaml'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64_2' }}
+      if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
       run: |
         brew install libyaml
 
