@@ -28,7 +28,7 @@ jobs:
     ]
     with:
       version: ${{ needs.bump-dev-number.outputs.dev_version }}
-      run_tests: false
+      run_tests: ${{ inputs.run_server_release_tests }}
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
       cell_girl: ${{ secrets.cell_girl }}
