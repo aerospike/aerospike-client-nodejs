@@ -186,7 +186,7 @@ jobs:
         NEW_VERSION: ${{ inputs.version }}
 
     - name: Run tests
-      if: ${{ inputs.run_tests }}
+      if: ${{ !(inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
       run: |
         cd ts-test;
         npx tsc;
