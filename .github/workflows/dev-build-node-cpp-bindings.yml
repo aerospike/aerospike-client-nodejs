@@ -129,6 +129,17 @@ jobs:
       run: |
         brew install libyaml
 
+    - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      name: Ensure that linker can find brew packages
+      # On mac m1, packages installed via brew are not in the linker's default library path
+      run: |
+        libraries=('libyaml' 'openssl')
+        for library in "${libraries[@]}"; do
+          LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix $library)/lib"
+        done
+        echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
+      shell: bash
+
     - name: Replace AdditionalLibraryDirectories line in props file
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: |
