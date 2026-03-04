@@ -180,6 +180,7 @@ jobs:
         npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts;
         npm run build;
         ls lib/binding;
+        node-pre-gyp package
       env:
         NEW_VERSION: ${{ inputs.version }}
 
@@ -232,24 +233,6 @@ jobs:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: lib/binding
 
-
-    - name: Upload binding binaries to JFrog darwin aarch64
-      if: ${{ ( matrix.nodejs-tag[1] != '25' && inputs.platform-tag == 'macosx_arm64' ) }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-
-    - name: Upload binding binaries to JFrog darwin aarch64
-      if: ${{ ( matrix.nodejs-tag[1] == '25' && inputs.platform-tag == 'macosx_arm64_2' ) }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
     - name: Cleanup Artifacts
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       shell: pwsh
@@ -269,9 +252,68 @@ jobs:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: build/Release/
 
+    - name: Upload wheels to GitHub
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      with:
+        path: "./*.tar.gz"
+        name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
+        if-no-files-found: error
+
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
+
+  test-self-hosted:
+    needs: cibuildbinding
+    strategy:
+      fail-fast: false
+      matrix:
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+    # There's a top-level env variable for this but we can't use it here, unfortunately
+    if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
+    runs-on: ${{ startsWith(inputs.platform-tag, 'macosx_arm64') && fromJSON('["self-hosted", "macOS", "ARM64"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@a90bcbc6539c36a85cdfeb73f7e2f433735f215b # v2.15.0
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      # Need to be able to save Docker Hub credentials to keychain
+      # Unable to do this via the ansible script for self hosted mac m1 runners
+      - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+
+      - name: Download binding
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: ${{ matrix.nodejs-tag[1] }}
+
+      - run: npm install *.tar.gz
+
+      - name: Run tests
+        run: |
+          cd ts-test;
+          npx tsc;
+          cd ..;
+          npx tsc;
+          npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+
+      - name: Upload binding binaries to JFrog darwin aarch64
+        run: |
+          jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+        env:
+          NEW_VERSION: ${{ inputs.version }}
+        working-directory: lib/binding
