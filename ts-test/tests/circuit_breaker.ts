@@ -330,5 +330,4 @@ describe('Circuit breaker functionality', function () {
     })   
   })
 
-})
 
