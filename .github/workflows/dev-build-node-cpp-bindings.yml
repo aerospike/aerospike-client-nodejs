@@ -180,8 +180,6 @@ jobs:
         npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts -g;
         npm run build;
         ls lib/binding;
-
-        node-pre-gyp package
       env:
         NEW_VERSION: ${{ inputs.version }}
 
