@@ -246,9 +246,6 @@ describe('Circuit breaker functionality', function () {
 
     })
 
-
-  })
-
   context('Negative Tests', function () { 
     context('maxErrorRate', function () {
       it('uses defaults when maxErrorRate is not a number', async function () {
@@ -329,5 +326,4 @@ describe('Circuit breaker functionality', function () {
 
     })   
   })
-
-
+})
