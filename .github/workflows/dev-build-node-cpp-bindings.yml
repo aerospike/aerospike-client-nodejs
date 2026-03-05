@@ -95,15 +95,15 @@ jobs:
       with:
         egress-policy: audit
 
-    # - name: Create status check message
-    #   run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-    #   shell: bash
+    - name: Create status check message
+      run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+      shell: bash
 
-    # - name: Show job status for commit
-    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-    #   with:
-    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - name: Delete workspace
       if: ${{ inputs.platform-tag != 'win_amd64' }}
@@ -230,6 +230,24 @@ jobs:
       if: ${{ ( matrix.nodejs-tag[1] == '25' && inputs.platform-tag == 'macosx_x86_64_2' ) }}
       run: |
         jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
+
+
+    - name: Upload binding binaries to JFrog darwin aarch64
+      if: ${{ ( matrix.nodejs-tag[1] != '25' && inputs.platform-tag == 'macosx_arm64' ) }}
+      run: |
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      env:
+        NEW_VERSION: ${{ inputs.version }}
+      working-directory: lib/binding
+
+
+    - name: Upload binding binaries to JFrog darwin aarch64
+      if: ${{ ( matrix.nodejs-tag[1] == '25' && inputs.platform-tag == 'macosx_arm64_2' ) }}
+      run: |
+        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: lib/binding
