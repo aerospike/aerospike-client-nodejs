@@ -271,17 +271,9 @@ jobs:
         NEW_VERSION: ${{ inputs.version }}
       working-directory: build/Release/
 
-    - name: Upload wheels to GitHub
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        path: "build/stage/aerospike/*/*.tar.gz"
-        name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
-        if-no-files-found: error
-
-    # - name: Set final commit status
-    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-    #   with:
-    #     status: ${{ job.status }}
-    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
+        status: ${{ job.status }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
