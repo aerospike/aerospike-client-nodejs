@@ -117,6 +117,9 @@ jobs:
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
 
+    - if: ${{ always() }}
+      run: docker logs aerospike
+
     - name: Remove aerospike docker image
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
