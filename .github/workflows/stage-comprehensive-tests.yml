@@ -117,9 +117,6 @@ jobs:
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
 
-    - if: ${{ always() }}
-      run: docker logs aerospike
-
     - name: Remove aerospike docker image
       if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
       run: |
@@ -139,6 +136,8 @@ jobs:
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
 
+    - if: ${{ always() }}
+      run: docker logs aerospike
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
