@@ -922,6 +922,7 @@ jobs:
       run: |
         docker ps;
         npx tsc;
+        npm ls aerospike
         npm run valgrind -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
