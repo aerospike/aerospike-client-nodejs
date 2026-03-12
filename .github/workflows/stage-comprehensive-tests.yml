@@ -873,13 +873,9 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    # - name: Download Artifacts from Jfrog
-    #   run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-    #   env:
-    #     NEW_VERSION: ${{ inputs.version }}
-    #     PACKAGE_MANAGER: npm
-
-    - run: jf npm install aerospike --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
+    - run: |
+        jf npm-config --repo-resolve=clients-npm-dev-local
+        jf npm install aerospike --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-dev-local/
 
     # - name: list Artifacts
     #   run: |
