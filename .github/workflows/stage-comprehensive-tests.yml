@@ -874,8 +874,8 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - run: |
-        jf npm-config --repo-resolve=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-virtual/
-        jf npm install aerospike --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-virtual/
+        npm-config --repo-resolve=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-virtual
+        npm install aerospike --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-virtual
 
     # - name: list Artifacts
     #   run: |
