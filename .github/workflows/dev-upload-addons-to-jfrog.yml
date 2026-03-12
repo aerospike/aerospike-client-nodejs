@@ -36,8 +36,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download from JFrog
       run: jf rt download "database-npm-dev-local/aerospike/${{ env.VERSION }}/*"
