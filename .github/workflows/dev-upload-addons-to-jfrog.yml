@@ -67,12 +67,12 @@ jobs:
         npm pack;
 
     - name: Upload tarball to JFrog Nodejs repo
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --project database --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Publish build info to JFrog Nodejs repo
-      run: jf rt build-publish --project clients nodejs-client ${{ inputs.new_version }}
+      run: jf rt build-publish --project database nodejs-client ${{ inputs.new_version }}
 
     - name: install moreutils
       run: sudo apt install -y moreutils
@@ -88,9 +88,9 @@ jobs:
       # But that name doesn't specify the language,
       # and there can be multiple languages that implement the proxy client in the future that need to be uploaded to JFrog
       # Signing key only signs release bundle and not the artifacts associated with it
-      run: jf release-bundle-create --project clients --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
+      run: jf release-bundle-create --project database --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
       working-directory: .github/workflows
 
     - name: Promote release bundle to DEV stage
-      run: jf release-bundle-promote --project clients --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
+      run: jf release-bundle-promote --project database --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
       working-directory: .github/workflows
