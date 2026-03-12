@@ -40,7 +40,7 @@ jobs:
         oidc-audience: aerospike/clients
 
     - name: Download from JFrog
-      run: jf rt download "clients-npm-dev-local/aerospike/${{ env.VERSION }}/*"
+      run: jf rt download "database-npm-dev-local/aerospike/${{ env.VERSION }}/*"
       env:
         VERSION:  ${{ inputs.new_version }}
 
@@ -67,7 +67,7 @@ jobs:
         npm pack;
 
     - name: Upload tarball to JFrog Nodejs repo
-      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" clients-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
+      run: jf rt upload --project clients --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
       env:
         NEW_VERSION: ${{ inputs.new_version }}
 

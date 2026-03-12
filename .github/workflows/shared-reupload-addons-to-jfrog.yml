@@ -46,7 +46,7 @@ jobs:
 
     - name: Download Artifacts from Jfrog
       if: ${{ inputs.pipeline-stage == 'stage' }}
-      run: jf rt dl "clients-npm-dev-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
+      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
       env:
         OLD_VERSION: ${{ inputs.old_version }}
         PACKAGE_MANAGER: npm
