@@ -165,12 +165,12 @@ jobs:
       env:
         NEW_VERSION: ${{ inputs.version }}
 
-    - name: change verison
-      if: ${{ inputs.platform-tag != 'win_amd64' }}
-      run: |
-       npm version ${{ env.NEW_VERSION }} --no-git-tag-version
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
+    # - name: change verison
+    #   if: ${{ inputs.platform-tag != 'win_amd64' }}
+    #   run: |
+    #    npm version ${{ env.NEW_VERSION }} --no-git-tag-version
+    #   env:
+    #     NEW_VERSION: ${{ inputs.new_version }}
 
     - name: Build Binding
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}

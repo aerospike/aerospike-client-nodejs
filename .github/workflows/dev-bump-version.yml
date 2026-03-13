@@ -37,20 +37,12 @@
           oidc-provider-name: gh-aerospike-clients
           oidc-audience: aerospike/clients
 
-      - name: Get version from JFROG repository
-        id: get-jfrog-version
-        run: |
-          echo "jfrog_version=$(jfrog rt s "database-npm-virtual/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'rc' | tail -n1)" >> $GITHUB_OUTPUT
-
-      - name: Get version from github repository
+      - name: Get the last version tag
         id: get-github-version
-        run: |
-          echo "github_version=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
+        run: echo "github_version=$(npm pkg get version)" >> $GITHUB_OUTPUT
 
       - name: Print versions
-        run: |
-          echo "jfrog version is ${{ steps.get-jfrog-version.outputs.jfrog_version }}"
-          echo "github version is ${{ steps.get-github-version.outputs.github_version }}"
+        run: echo "github version is ${{ steps.get-github-version.outputs.github_version }}"
 
       - name: Install library that parses nodejs versions
         run: npm install semver@7.7.2 --ignore-scripts
@@ -60,7 +52,7 @@
         id: get-new-version
         run: |
           set -e;
-          dev_version=$(node dev-bump-version.js ${{ steps.get-github-version.outputs.github_version }} ${{ steps.get-jfrog-version.outputs.jfrog_version }});
+          dev_version=$(node dev-bump-version.js ${{ steps.get-jfrog-version.outputs.jfrog_version }});
           echo "dev_version=$dev_version" >> $GITHUB_OUTPUT;
         working-directory: .github/workflows
 

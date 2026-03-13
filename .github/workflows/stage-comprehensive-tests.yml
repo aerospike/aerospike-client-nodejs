@@ -824,6 +824,10 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+
     - name: 'Windows: Install C client deps'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore

@@ -16739,11 +16739,14 @@ export namespace exp {
          * Null value data type.
          */
         NIL,
-        // BOOL - no boolean type in src/main/enums/exp_enum.cc#L127
+        /**
+         * Bool data type.
+         */
+        BOOL,
         /**
          * Integer data type.
          */
-        INT = 2,
+        INT,
         /**
          * String data type.
          */
