@@ -35,6 +35,11 @@ jobs:
       bump-dev-number-and-tag,
       build-node-cpp-addons
     ]
-    uses: ./.github/workflows/create-release-bundle.yml
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@8f53b63b33d86e63aeb37d951283dd974574885b
     with:
-      new_version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      jf-project: database
+      jf-build-names: "nodejs-client"
+      jf-bundle-name: "aerospike-nodejs-client"
+      version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      gh-workflows-ref: 8f53b63b33d86e63aeb37d951283dd974574885b
+      dry-run: false
