@@ -6,6 +6,7 @@ run-name: 'Build node cpp bindings (nodejs-tags=${{ inputs.nodejs-tags }}, platf
 permissions:
   # This is required for requesting the OIDC token
   id-token: write
+  statuses: write
 
 on:
 
