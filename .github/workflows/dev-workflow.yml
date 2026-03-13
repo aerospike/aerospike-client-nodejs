@@ -6,23 +6,22 @@ name: Dev workflow
 
 on:
   workflow_dispatch:
-    inputs:
-      run_server_release_tests:
-        description: 'DEBUG: Run server release tests in build-wheels workflow?'
-        type: boolean
-        default: false
+    # inputs:
+    #   run_server_release_tests:
+    #     description: 'DEBUG: Run server release tests in build-wheels workflow?'
+    #     type: boolean
+    #     default: false
 
 jobs:
-  bump-dev-number:
+  bump-dev-number-and-tag:
     uses: ./.github/workflows/dev-bump-version.yml
 
   build-node-cpp-addons:
     uses: ./.github/workflows/dev-build-node-cpp-addons.yml
     needs: [
-      bump-dev-number
+      bump-dev-number-and-tag
     ]
     with:
-      version: ${{ needs.bump-dev-number.outputs.dev_version }}
       run_tests: false
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
@@ -32,23 +31,23 @@ jobs:
   upload-addons-to-jfrog:
     name: Upload artifacts to JFrog
     needs: [
-      bump-dev-number,
+      bump-dev-number-and-tag,
       build-node-cpp-addons
     ]
     uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      new_version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
 
   upload-npm-package-to-jfrog:
     name: upload package to JFrog NPM
     needs: [
-      bump-dev-number,
+      bump-dev-number-and-tag,
       build-node-cpp-addons,
       upload-addons-to-jfrog,
     ]
     uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
-      pipeline-stage: 'dev'
+      new_version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      pipeline-stage: 'test'
     secrets:
       plane_grass: ${{ secrets.plane_grass }}

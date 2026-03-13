@@ -20,9 +20,6 @@ on:
         type: string
         required: false
         default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
-      version:
-        type: string
-        required: true
       platform-tag:
         type: string
         required: true
@@ -157,21 +154,6 @@ jobs:
         Get-Content "props\nodejs.props"
       working-directory: aerospike-client-c/vs
 
-    - name: Change version in package.json
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        $v = "${{ env.NEW_VERSION }}"
-        Get-Content package.json | jq --arg v $v '.version = $v' | Set-Content package.json
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    # - name: change verison
-    #   if: ${{ inputs.platform-tag != 'win_amd64' }}
-    #   run: |
-    #    npm version ${{ env.NEW_VERSION }} --no-git-tag-version
-    #   env:
-    #     NEW_VERSION: ${{ inputs.new_version }}
-
     - name: Build Binding
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
       run: |
@@ -180,8 +162,6 @@ jobs:
         npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts;
         npm run build;
         ls lib/binding;
-      env:
-        NEW_VERSION: ${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && !(startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
@@ -191,83 +171,6 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
-
-    - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
-
-    - name: Upload binding binaries to JFrog Linux x86
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-x64/aerospike.node" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-    - name: Upload binding binaries to JFrog Linux aarch64
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-linux-arm64/aerospike.node" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-    - name: Upload binding binaries to JFrog darwin x86
-      if: ${{ ( matrix.nodejs-tag[1] != '25' && inputs.platform-tag == 'macosx_x86_64' ) }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-    - name: Upload binding binaries to JFrog darwin x86
-      if: ${{ ( matrix.nodejs-tag[1] == '25' && inputs.platform-tag == 'macosx_x86_64_2' ) }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-x64/aerospike.node" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-
-    - name: Upload binding binaries to JFrog darwin aarch64
-      if: ${{ ( matrix.nodejs-tag[1] != '25' && inputs.platform-tag == 'macosx_arm64' ) }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-
-    - name: Upload binding binaries to JFrog darwin aarch64
-      if: ${{ ( matrix.nodejs-tag[1] == '25' && inputs.platform-tag == 'macosx_arm64_2' ) }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./node-${{ matrix.nodejs-tag[0] }}-darwin-arm64/aerospike.node" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: lib/binding
-
-    - name: Cleanup Artifacts
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      shell: pwsh
-      run: |
-        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libssl.lib" -Destination "build\Release\libssl.lib" -Force
-        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libcrypto.lib" -Destination "build\Release\libcrypto.lib" -Force
-        Remove-Item -Recurse -Force .\build\release\obj
-        Remove-Item -Force .\build\release\aerospike.pdb
-        Remove-Item -Force .\build\release\aerospike.ipdb
-        Remove-Item -Force .\build\release\aerospike.iobj
-
-    - name: Upload binding binaries to JFrog windows x86
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        jf rt upload --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "./*" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/node-${{ matrix.nodejs-tag[0] }}-win32-x64/
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: build/Release/
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1

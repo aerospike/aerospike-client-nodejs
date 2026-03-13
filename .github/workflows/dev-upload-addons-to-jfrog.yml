@@ -22,12 +22,11 @@ jobs:
       JFROG_RELEASE_BUNDLE_NAME: aerospike-nodejs-client
     runs-on: ubuntu-22.04
     steps:
-
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
       with:
         egress-policy: audit
-        
+
     - name: Checkout repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 

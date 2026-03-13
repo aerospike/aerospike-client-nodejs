@@ -1,12 +1,9 @@
 const semver = require('semver')
 
-const currentVersionString = process.argv[2]
-const currentJfrogVersion = process.argv[3]
-
-const version = semver.parse(currentVersionString)
+const currentJfrogVersion = process.argv[2]
 const jfrogVersion = semver.parse(currentJfrogVersion)
 
-if (!version || !jfrogVersion) {
+if (!jfrogVersion) {
   console.error('Invalid version string')
   process.exit(1)
 }

@@ -37,25 +37,20 @@
           oidc-provider-name: gh-aerospike-clients
           oidc-audience: aerospike/clients
 
-      - name: Get the last version tag
-        id: get-github-version
-        run: echo "github_version=$(npm pkg get version)" >> $GITHUB_OUTPUT
-
-      - name: Print versions
-        run: echo "github version is ${{ steps.get-github-version.outputs.github_version }}"
-
       - name: Install library that parses nodejs versions
         run: npm install semver@7.7.2 --ignore-scripts
         working-directory: .github/workflows
 
-      - name: Get new version
+      - name: Tag new version
         id: get-new-version
         run: |
           set -e;
-          dev_version=$(node dev-bump-version.js ${{ steps.get-jfrog-version.outputs.jfrog_version }});
-          echo "dev_version=$dev_version" >> $GITHUB_OUTPUT;
-        working-directory: .github/workflows
+          last_tag=$(git describe --tags --abbrev=0)
+          echo "Last version tag is $last_tag"
 
-      - name: Print new version
-        run: |
-          echo "${{ steps.get-new-version.outputs.dev_version }}"
+          new_tag=$(node dev-bump-version.js "$last_tag");
+          git tag $new_tag
+          git push origin tag $new_tag
+
+          echo "dev_version=$new_tag" >> $GITHUB_OUTPUT;
+        working-directory: .github/workflows
