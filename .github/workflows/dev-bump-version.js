@@ -1,6 +1,6 @@
 const semver = require('semver')
 
-const currentVersion = process.argv[2]
+let currentVersion = process.argv[2]
 currentVersion = semver.parse(currentVersion)
 
 if (!currentVersion) {
