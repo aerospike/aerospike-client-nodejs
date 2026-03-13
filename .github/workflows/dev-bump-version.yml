@@ -63,8 +63,6 @@
           next_release_version=$(node strip_prerelease_part.js $new_tag)
           if [[ "$current_release_version" != "$next_release_version" ]]; then
             npm version patch --no-git-tag-version
-            git add -u
-            git commit -m "Bump version to $next_release_version"
             git push
           fi
         working-directory: .github/workflows
