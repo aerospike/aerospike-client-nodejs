@@ -1,15 +1,15 @@
 const semver = require('semver')
 
-const currentJfrogVersion = process.argv[2]
-const jfrogVersion = semver.parse(currentJfrogVersion)
+const currentVersion = process.argv[2]
+currentVersion = semver.parse(currentVersion)
 
-if (!jfrogVersion) {
+if (!currentVersion) {
   console.error('Invalid version string')
   process.exit(1)
 }
 
-if (jfrogVersion.prerelease === false) {
-      jfrogVersion.inc('prepatch')
+if (currentVersion.prerelease === false) {
+      currentVersion.inc('prepatch')
 }
-jfrogVersion.inc('prerelease', 'dev')
-console.log(jfrogVersion.format())
+currentVersion.inc('prerelease', 'dev')
+console.log(currentVersion.format())

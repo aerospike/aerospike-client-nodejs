@@ -46,6 +46,8 @@
 
       - name: Tag new version
         id: get-new-version
+        # Can't use "npm version" to bump the dev number. It changes the version in package.json
+        # which should only have the current release or expected future release version.
         run: |
           set -e;
           last_tag=$(git describe --tags --abbrev=0)
@@ -54,6 +56,15 @@
           new_tag=$(node dev-bump-version.js "$last_tag");
           git tag $new_tag
           git push origin tag $new_tag
-
           echo "dev_version=$new_tag" >> $GITHUB_OUTPUT;
+
+          # Update package.json if last tag was a release tag
+          current_release_version=$(npm pkg get version)
+          next_release_version=$(npm version $new_tag)
+          if [[ "$current_release_version" != "$next_release_version" ]]; then
+            npm version patch
+            git add -u
+            git commit -m "Bump version to $next_release_version"
+            git push
+          fi
         working-directory: .github/workflows
