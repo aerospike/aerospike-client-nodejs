@@ -192,7 +192,7 @@ jobs:
         jf npm publish --build-name $BUILD_NAME --build-number ${{ inputs.version }} --detailed-summary
         jf rt build-publish $BUILD_NAME ${{ inputs.version }}
       env:
-        REPO_URL: https://aerospike.jfrog.io/artifactory/database-npm-dev-local/
+        REPO_URL: https://aerospike.jfrog.io/artifactory/api/npm/database-npm-dev-local/
         BUILD_NAME: nodejs-client
 
     - name: Set final commit status
