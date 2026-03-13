@@ -22,6 +22,7 @@ jobs:
       bump-dev-number-and-tag
     ]
     with:
+      version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       run_tests: false
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
