@@ -60,7 +60,7 @@
 
           # Update package.json if last tag was a release tag
           current_release_version=$(npm pkg get version)
-          next_release_version=$(npm version $new_tag)
+          next_release_version=$(node strip_prerelease_part.js $new_tag)
           if [[ "$current_release_version" != "$next_release_version" ]]; then
             npm version patch
             git add -u
