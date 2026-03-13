@@ -62,6 +62,7 @@
           current_release_version=$(npm pkg get version)
           next_release_version=$(node strip_prerelease_part.js $new_tag)
           if [[ "$current_release_version" != "$next_release_version" ]]; then
+            git status
             npm version patch --no-git-tag-version
             git push
           fi
