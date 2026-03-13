@@ -24,6 +24,9 @@ on:
       platform-tag:
         type: string
         required: true
+      version:
+        type: string
+        required: true
       run_tests:
         type: boolean
         required: false
@@ -173,6 +176,24 @@ jobs:
         cd ..;
         npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+
+    - name: Set up JFrog credentials
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      env:
+        JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
+      with:
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
+
+    - name: Upload binding binaries to JFrog Linux x86
+      run: |
+        jf npm-config --repo-deploy=$REPO_URL
+        jf npm publish --registry $REPO_URL --build-name $BUILD_NAME --build-number ${{ inputs.version }} --detailed-summary
+        jf rt build-publish $BUILD_NAME ${{ inputs.version }}
+      env:
+        REPO_URL: https://aerospike.jfrog.io/artifactory/api/npm/database-npm-dev-local/
+        BUILD_NAME: nodejs-client
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1

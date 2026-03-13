@@ -28,26 +28,12 @@ jobs:
       cell_girl: ${{ secrets.cell_girl }}
       song_loss: ${{ secrets.song_loss }}
 
-  upload-addons-to-jfrog:
-    name: Upload artifacts to JFrog
+  create-release-bundle:
+    name: Create release bundle from JFrog build
     needs: [
       bump-dev-number-and-tag,
       build-node-cpp-addons
     ]
-    uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
+    uses: ./.github/workflows/create-release-bundle.yml
     with:
       new_version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
-
-  upload-npm-package-to-jfrog:
-    name: upload package to JFrog NPM
-    needs: [
-      bump-dev-number-and-tag,
-      build-node-cpp-addons,
-      upload-addons-to-jfrog,
-    ]
-    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
-    with:
-      new_version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
-      pipeline-stage: 'test'
-    secrets:
-      plane_grass: ${{ secrets.plane_grass }}

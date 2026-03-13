@@ -16,8 +16,8 @@ on:
         default: ${{ vars.JFROG_REPO_NAME }}
 
 jobs:
-  upload-to-jfrog:
-    name: Upload artifacts to JFrog
+  create-release-bundle:
+    name: Create release bundle
     env:
       JFROG_RELEASE_BUNDLE_NAME: aerospike-nodejs-client
     runs-on: ubuntu-22.04
@@ -34,46 +34,13 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
+        # TODO: needs to be in a variable
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download from JFrog
-      run: jf rt download "database-npm-dev-local/aerospike/${{ env.VERSION }}/*"
-      env:
-        VERSION:  ${{ inputs.new_version }}
-
-    - name: Move bindings to lib/binding
-      run: |
-        mkdir lib/binding;
-        cp -r aerospike/${{ env.VERSION }}/* lib/binding;
-        rm -rf aerospike;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: Update version in package.json
-      run: 
-        jq --arg v "${{ env.VERSION }}" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
-      env:
-        VERSION: ${{ inputs.new_version }} 
-
-    - name: Install dependencies and test install
-      run:
-        npm ci --ignore-scripts;
-
-    - name: Create package tarball
-      run: 
-        npm pack;
-
-    - name: Upload tarball to JFrog Nodejs repo
-      run: jf rt upload --project database --build-name nodejs-client --build-number ${{ env.NEW_VERSION }} "aerospike-${{ env.NEW_VERSION }}.tgz" database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/
-      env:
-        NEW_VERSION: ${{ inputs.new_version }}
-
-    - name: Publish build info to JFrog Nodejs repo
-      run: jf rt build-publish --project database nodejs-client ${{ inputs.new_version }}
-
-    - name: install moreutils
+    - name: Install sponge
       run: sudo apt install -y moreutils
 
     # .files.project is not documented in JFrog but it's used to specify the JFrog project to upload this release bundle to
@@ -87,9 +54,9 @@ jobs:
       # But that name doesn't specify the language,
       # and there can be multiple languages that implement the proxy client in the future that need to be uploaded to JFrog
       # Signing key only signs release bundle and not the artifacts associated with it
-      run: jf release-bundle-create --project database --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
+      run: jf release-bundle-create --signing-key=aerospike --sync --spec=./releasebundle-filespec.json ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }}
       working-directory: .github/workflows
 
     - name: Promote release bundle to DEV stage
-      run: jf release-bundle-promote --project database --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
+      run: jf release-bundle-promote --signing-key=aerospike --sync ${{ env.JFROG_RELEASE_BUNDLE_NAME }} ${{ inputs.new_version }} DEV
       working-directory: .github/workflows
