@@ -8,5 +8,5 @@ if (!prereleaseVersion) {
 
 prereleaseVersion = semver.parse(prereleaseVersion)
 
-currentVersion.inc('release')
-console.log(currentVersion.format())
+prereleaseVersion.inc('release')
+console.log(prereleaseVersion.format())
