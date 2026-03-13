@@ -5,7 +5,8 @@
   permissions:
     # This is required for requesting the OIDC token
     id-token: write
-    contents: read
+    # We need to publish a tag
+    contents: write
 
   on:
     workflow_call:
