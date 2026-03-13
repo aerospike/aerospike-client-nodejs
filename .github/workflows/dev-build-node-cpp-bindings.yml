@@ -187,6 +187,7 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - name: Upload binding binaries to JFrog Linux x86
+      if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
       run: |
         jf npm-config --repo-deploy=$REPO_NAME
         jf npm publish --build-name $BUILD_NAME --build-number ${{ inputs.version }} --detailed-summary
