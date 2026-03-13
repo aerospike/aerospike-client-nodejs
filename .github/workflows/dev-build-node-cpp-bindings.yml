@@ -101,6 +101,7 @@ jobs:
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         context: ${{ env.STATUS_CHECK_MESSAGE }}
+        sha: ${{ github.sha }}
 
     - name: Delete workspace
       if: ${{ inputs.platform-tag != 'win_amd64' }}
@@ -178,3 +179,4 @@ jobs:
       with:
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
+        sha: ${{ github.sha }}
