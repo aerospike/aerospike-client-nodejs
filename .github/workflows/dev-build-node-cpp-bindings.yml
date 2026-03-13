@@ -188,11 +188,11 @@ jobs:
 
     - name: Upload binding binaries to JFrog Linux x86
       run: |
-        jf npm-config --repo-deploy=$REPO_URL
+        jf npm-config --repo-deploy=$REPO_NAME
         jf npm publish --build-name $BUILD_NAME --build-number ${{ inputs.version }} --detailed-summary
         jf rt build-publish $BUILD_NAME ${{ inputs.version }}
       env:
-        REPO_URL: https://aerospike.jfrog.io/artifactory/api/npm/database-npm-dev-local/
+        REPO_NAME: database-npm-dev-local
         BUILD_NAME: nodejs-client
 
     - name: Set final commit status
