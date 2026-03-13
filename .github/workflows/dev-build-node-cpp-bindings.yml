@@ -189,7 +189,7 @@ jobs:
     - name: Upload binding binaries to JFrog Linux x86
       run: |
         jf npm-config --repo-deploy=$REPO_URL
-        jf npm publish --registry $REPO_URL --build-name $BUILD_NAME --build-number ${{ inputs.version }} --detailed-summary
+        jf npm publish --build-name $BUILD_NAME --build-number ${{ inputs.version }} --detailed-summary
         jf rt build-publish $BUILD_NAME ${{ inputs.version }}
       env:
         REPO_URL: https://aerospike.jfrog.io/artifactory/database-npm-dev-local/
