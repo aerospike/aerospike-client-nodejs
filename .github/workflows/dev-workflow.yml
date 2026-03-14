@@ -36,6 +36,8 @@ jobs:
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@8f53b63b33d86e63aeb37d951283dd974574885b
     with:
+      oidc-provider-name: database-gh-aerospike
+      oidc-audience: database-gh-aerospike
       jf-project: database
       jf-build-name: "nodejs-client"
       jf-build-id: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
@@ -58,3 +60,5 @@ jobs:
       version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       gh-workflows-ref: 8f53b63b33d86e63aeb37d951283dd974574885b
       dry-run: false
+      oidc-provider-name: database-gh-aerospike
+      oidc-audience: database-gh-aerospike
