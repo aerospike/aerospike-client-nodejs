@@ -29,11 +29,26 @@ jobs:
       cell_girl: ${{ secrets.cell_girl }}
       song_loss: ${{ secrets.song_loss }}
 
+  upload-artifacts-as-jfrog-build:
+    needs: [
+      bump-dev-number-and-tag,
+      build-node-cpp-addons
+    ]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@8f53b63b33d86e63aeb37d951283dd974574885b
+    with:
+      jf-project: database
+      jf-build-name: "nodejs-client"
+      jf-build-id: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      jf-metadata-build-id: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}-metadata
+      version: ${{ github.ref_name }}
+      gh-workflows-ref: 8f53b63b33d86e63aeb37d951283dd974574885b
+      dry-run: false
+
   create-release-bundle:
     name: Create release bundle from JFrog build
     needs: [
       bump-dev-number-and-tag,
-      build-node-cpp-addons
+      upload-artifacts-as-jfrog-build
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@8f53b63b33d86e63aeb37d951283dd974574885b
     with:
