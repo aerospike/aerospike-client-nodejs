@@ -191,7 +191,7 @@ jobs:
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
       uses: actions/upload-artifact@v4
       with:
-        name: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+        name: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build"
         path: "*.tgz"
 
     - name: Set final commit status
