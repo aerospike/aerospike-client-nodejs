@@ -4,10 +4,6 @@ name: Dev workflow
 # 2. If all of the tests pass, allow the PR to be merged into `dev`
 # 3. Whenever a PR is merged to `dev`, bump version number in `dev`
 
-permissions:
-  # This is required for requesting the OIDC token
-  id-token: write
-
 on:
   workflow_dispatch:
     # inputs:
@@ -40,6 +36,10 @@ jobs:
       build-node-cpp-addons
     ]
     runs-on: ubuntu-22.04
+    permissions:
+      # This is required for requesting the OIDC token
+      id-token: write
+      contents: read
     steps:
     - name: Harden the runner (Audit all outbound calls)
       uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
