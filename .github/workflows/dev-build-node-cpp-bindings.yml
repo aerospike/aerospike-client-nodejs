@@ -191,7 +191,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build"
-        path: "lib/binding/**/*.node"
+        path: "lib/binding/**/*"
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1

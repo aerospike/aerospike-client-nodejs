@@ -57,7 +57,7 @@ jobs:
       with:
         pattern: "*.build"
         merge-multiple: true
-        path: "lib/binding/**/*.node"
+        path: "lib/binding/**/*"
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
@@ -69,6 +69,7 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
+        tree lib/binding
         # Install husky from package.json
         npm install husky
         jf npm-config --repo-deploy=database-npm-dev-local
