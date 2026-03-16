@@ -62,8 +62,6 @@
           current_release_version=$(npm pkg get version)
           next_release_version=$(node .github/workflows/strip_prerelease_part.js $new_tag)
           if [[ "$current_release_version" != "$next_release_version" ]]; then
-            git status
-            git diff
-            npm version patch --no-git-tag-version
+            jq --arg v "$next_release_version" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
             git push
           fi
