@@ -40,8 +40,8 @@
           oidc-provider-name: gh-aerospike-clients
           oidc-audience: aerospike/clients
 
-      - name: Install library that parses nodejs versions
-        run: npm install -g semver --ignore-scripts
+      - name: Install semver library that parses nodejs versions
+        run: npm ci --ignore-scripts
         working-directory: .github/workflows
 
       - name: Tag new version
