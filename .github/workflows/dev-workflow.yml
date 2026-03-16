@@ -4,6 +4,10 @@ name: Dev workflow
 # 2. If all of the tests pass, allow the PR to be merged into `dev`
 # 3. Whenever a PR is merged to `dev`, bump version number in `dev`
 
+permissions:
+  # This is required for requesting the OIDC token
+  id-token: write
+
 on:
   workflow_dispatch:
     # inputs:
