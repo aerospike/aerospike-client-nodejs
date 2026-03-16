@@ -57,7 +57,7 @@ jobs:
       with:
         pattern: "*.build"
         merge-multiple: true
-        path: "lib/binding/**/*"
+        path: "lib/binding"
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
