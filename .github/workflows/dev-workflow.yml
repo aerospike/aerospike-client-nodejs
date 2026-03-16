@@ -68,6 +68,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
+        # Install husky from package.json
+        npm install
         jf npm-config --repo-deploy=database-npm-dev-local
         jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
 
