@@ -41,7 +41,7 @@
           oidc-audience: aerospike/clients
 
       - name: Install library that parses nodejs versions
-        run: npm install semver@7.7.2 --ignore-scripts
+        run: npm install -g semver --ignore-scripts
         working-directory: .github/workflows
 
       - name: Tag new version
