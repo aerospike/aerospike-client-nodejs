@@ -53,7 +53,7 @@
           last_tag=$(git describe --tags --abbrev=0)
           echo "Last version tag is $last_tag"
 
-          new_tag=$(node dev-bump-version.js "$last_tag");
+          new_tag=$(node .github/workflows/dev-bump-version.js "$last_tag");
           git tag $new_tag
           git push origin tag $new_tag
           echo "dev_version=$new_tag" >> $GITHUB_OUTPUT;
