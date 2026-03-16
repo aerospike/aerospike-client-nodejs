@@ -65,7 +65,7 @@ jobs:
         path: artifacts
 
     - run: |
-        jf npm-config --repo-deploy=https://aerospike.jfrog.io/artifactory/api/npm/database-npm-dev-local/
+        jf npm-config --repo-deploy=database-npm-dev-local
         ls -l artifacts/*.tgz | xargs -n1 jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }} _
 
   create-release-bundle:
