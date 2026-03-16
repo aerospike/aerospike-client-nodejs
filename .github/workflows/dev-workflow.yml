@@ -94,7 +94,10 @@ jobs:
       oidc-audience: database-gh-aerospike
 
   promote-release-bundle:
-    needs: create-release-bundle
+    needs: [
+      create-release-bundle,
+      bump-dev-number-and-tag
+    ]
     uses: aerospike/aerospike-client-python/.github/workflows/promote-release-bundle.yml@CLIENT-3467-cicd-use-jfrog-release-bundles
     with:
       release-bundle-name: "aerospike-nodejs-client"
