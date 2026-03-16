@@ -66,7 +66,7 @@ jobs:
 
     - run: |
         jf npm-config --repo-deploy=database-npm-dev-local
-        ls -l artifacts/*.tgz | xargs -I -n1 jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }} {}
+        ls -l artifacts/*.tgz | xargs -I _ -n1 jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }} _
 
   create-release-bundle:
     name: Create release bundle from JFrog build
