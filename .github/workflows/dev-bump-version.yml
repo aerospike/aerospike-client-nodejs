@@ -64,6 +64,8 @@
           if [[ "$current_release_version" != "$next_release_version" ]]; then
             jq --arg v "$next_release_version" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
             git add -u
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config --global user.name "github-actions[bot]"
             git commit -m "Bump version to $next_release_version"
             git push
           fi
