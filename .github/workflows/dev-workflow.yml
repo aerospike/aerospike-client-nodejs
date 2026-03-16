@@ -29,50 +29,11 @@ jobs:
       cell_girl: ${{ secrets.cell_girl }}
       song_loss: ${{ secrets.song_loss }}
 
-  # TODO: for now, use our own workflow because the shared-workflow's deploy workflow doesn't support npm repos
-  upload-artifacts-as-jfrog-build:
-    needs: [
-      bump-dev-number-and-tag,
-      build-node-cpp-addons
-    ]
-    runs-on: ubuntu-22.04
-    permissions:
-      # This is required for requesting the OIDC token
-      id-token: write
-      contents: read
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit
-
-    - name: Checkout repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-    - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-      env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
-      with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
-
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-      with:
-        pattern: '*.build'
-        merge-multiple: true
-        path: artifacts
-
-    - run: |
-        jf npm-config --repo-deploy=database-npm-dev-local
-        ls -l artifacts/*.tgz | xargs -I _ -n1 jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }} _
-
   create-release-bundle:
     name: Create release bundle from JFrog build
     needs: [
       bump-dev-number-and-tag,
-      upload-artifacts-as-jfrog-build
+      build-node-cpp-addons
     ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@8f53b63b33d86e63aeb37d951283dd974574885b
     with:
@@ -82,5 +43,3 @@ jobs:
       version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       gh-workflows-ref: 8f53b63b33d86e63aeb37d951283dd974574885b
       dry-run: false
-      oidc-provider-name: database-gh-aerospike
-      oidc-audience: database-gh-aerospike

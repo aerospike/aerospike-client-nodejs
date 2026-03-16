@@ -167,7 +167,6 @@ jobs:
         npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts;
         npm run build;
         ls lib/binding;
-        npm pack
 
     - name: Run tests
       if: ${{ inputs.run_tests && !(startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
@@ -187,12 +186,15 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Upload binding binaries to Github Linux x86
+    - name: Upload binding binaries to JFrog Linux x86
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build"
-        path: "*.tgz"
+      run: |
+        jf npm-config --repo-deploy=$REPO_NAME
+        jf npm publish --build-name $BUILD_NAME --build-number ${{ inputs.version }} --detailed-summary
+        jf rt build-publish $BUILD_NAME ${{ inputs.version }}
+      env:
+        REPO_NAME: database-npm-dev-local
+        BUILD_NAME: nodejs-client
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
