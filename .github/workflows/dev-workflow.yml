@@ -92,3 +92,12 @@ jobs:
       dry-run: false
       oidc-provider-name: database-gh-aerospike
       oidc-audience: database-gh-aerospike
+
+  promote-release-bundle:
+    uses: aerospike/aerospike-client-python/.github/workflows/promote-release-bundle.yml@CLIENT-3467-cicd-use-jfrog-release-bundles
+    with:
+      release-bundle-name: "aerospike-nodejs-client"
+      release-bundle-version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      new-environment: DEV
+      jfrog-project: database
+      jfrog-repo-name: database-npm-dev-local
