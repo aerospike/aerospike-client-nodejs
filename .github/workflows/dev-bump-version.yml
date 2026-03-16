@@ -63,5 +63,7 @@
           next_release_version=$(node .github/workflows/strip_prerelease_part.js $new_tag)
           if [[ "$current_release_version" != "$next_release_version" ]]; then
             jq --arg v "$next_release_version" '.version = $v' package.json > tmp.json && mv tmp.json package.json;
+            git add -u
+            git commit -m "Bump version to $next_release_version"
             git push
           fi
