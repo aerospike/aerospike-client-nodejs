@@ -139,8 +139,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -243,11 +243,6 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: 'Windows: Install C client deps'
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: nuget restore
-      working-directory: aerospike-client-c/vs
-
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
@@ -286,8 +281,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -389,11 +384,6 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: 'Windows: Install C client deps'
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: nuget restore
-      working-directory: aerospike-client-c/vs
-
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
@@ -432,8 +422,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -544,11 +534,6 @@ jobs:
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: 'Windows: Install C client deps'
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: nuget restore
-      working-directory: aerospike-client-c/vs
-
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
@@ -587,8 +572,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -728,8 +713,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -823,11 +808,6 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - name: 'Windows: Install C client deps'
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: nuget restore
-      working-directory: aerospike-client-c/vs
-
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
@@ -863,18 +843,18 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: "clients"
+        JF_PROJECT: "database"
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - run: |
-        jf npm-config --repo-resolve=https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-virtual/
-        jf npm install aerospike --registry https://aerospike.jfrog.io/artifactory/api/npm/clients-npm-virtual/
+        jf npm-config --repo-resolve=database-npm-virtual
+        jf npm install aerospike
 
     # - name: list Artifacts
     #   run: |
@@ -972,8 +952,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -1078,8 +1058,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -1204,8 +1184,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -1313,8 +1293,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -1406,8 +1386,8 @@ jobs:
         env:
           JF_URL: https://aerospike.jfrog.io
         with:
-          oidc-provider-name: gh-aerospike-clients
-          oidc-audience: aerospike/clients
+          oidc-provider-name: database-gh-aerospike
+          oidc-audience: database-gh-aerospike
 
       - name: Download Artifacts from Jfrog
         run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
@@ -1530,8 +1510,8 @@ jobs:
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
       run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
