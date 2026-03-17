@@ -9,8 +9,6 @@ on:
     outputs:
       dev_version:
         value: ${{ jobs.stage-get-jfrog-version.outputs.dev_version }}
-      bump_sha:
-        value: ${{ jobs.update-version-in-repo.outputs.bump_sha }}
 
 jobs:
   stage-get-jfrog-version:
@@ -26,18 +24,6 @@ jobs:
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-    - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-      env:
-        JF_URL: https://aerospike.jfrog.io
-      with:
-        oidc-provider-name: gh-aerospike-clients
-        oidc-audience: aerospike/clients
-
-    - name: Get jfrog version
-      id: stage-get-jfrog-version
+    - id: stage-get-jfrog-version
       run: |
-        echo "dev_version=$(jfrog rt s "database-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'rc' | tail -n1)" >> $GITHUB_OUTPUT
-
-    - name: Print jfrog version
-      run: echo "Jfrog version is ${{ steps.stage-get-jfrog-version.outputs.dev_version }}"
+        echo dev_version=$(npm pkg get version | tr -d '"') >> $GITHUB_OUTPUT
