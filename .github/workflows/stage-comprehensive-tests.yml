@@ -856,9 +856,10 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - run: |
-        npm config set @aerospike:registry "https://aerospike.jfrog.io/artifactory/api/npm/database-npm-dev-local/"
+        # npm config set @aerospike:registry "https://aerospike.jfrog.io/artifactory/api/npm/database-npm-dev-local/"
         jf npm-config --repo-resolve=database-npm-dev-local
-        jf npm install --build-name=nodejs-client --build-number=${{ inputs.version }}
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/${{ inputs.version }}" .
+        npm install *.tgz
       shell: "bash -ex {0}"
 
     # - name: list Artifacts
