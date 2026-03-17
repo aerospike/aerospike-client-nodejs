@@ -860,7 +860,7 @@ jobs:
         jf npm-config --repo-resolve=database-npm-dev-local
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
         npm install *.tgz
-        tree lib/binding
+        tree .
       shell: "bash -ex {0}"
 
     # - name: list Artifacts
