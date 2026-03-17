@@ -889,17 +889,17 @@ jobs:
         sudo apt-get update;
         sudo apt install valgrind;
 
-    # - name: Install pre-reqs
-    #   if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-    #   run: |
-    #     # cp ../../../package-lock.json package-lock.json;
-    #     # npm ci --ignore-scripts;
-    #     cd ts-test;
-    #     npm ci .. --ignore-scripts;
-    #     npx tsc;
-    #     cp tests/udf.lua dist/udf.lua;
-    #     cd ..;
-    #   working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+    - name: Install pre-reqs
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      run: |
+        # cp ../../../package-lock.json package-lock.json;
+        # npm ci --ignore-scripts;
+        cd ts-test;
+        npm ci --ignore-scripts;
+        # npx tsc;
+        # cp tests/udf.lua dist/udf.lua;
+        # cd ..;
+      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run Valgrind
       run: |
