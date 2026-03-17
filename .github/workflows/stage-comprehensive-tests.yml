@@ -857,7 +857,7 @@ jobs:
 
     - run: |
         jf npm-config --repo-resolve=database-npm-dev-local
-        jf npm install --build-name=nodejs-client --build-number=${{ inputs.version }} aerospike
+        jf npm install --build-name=nodejs-client --build-number=${{ inputs.version }}
       shell: "bash -ex {0}"
 
     # - name: list Artifacts
