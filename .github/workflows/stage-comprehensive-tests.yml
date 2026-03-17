@@ -899,7 +899,6 @@ jobs:
         # npx tsc;
         # cp tests/udf.lua dist/udf.lua;
         # cd ..;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run Valgrind
       run: |
