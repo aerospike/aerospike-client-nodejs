@@ -58,7 +58,7 @@ jobs:
 
   ff-stage-to-dev:
     needs: comprehensive-tests
-    uses: .github/workflows/fast-forward-merge.yml
+    uses: ./.github/workflows/fast-forward-merge.yml
     with:
       ref_to_merge: origin/dev
       base_branch: stage
