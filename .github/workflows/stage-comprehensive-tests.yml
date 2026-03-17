@@ -858,7 +858,7 @@ jobs:
     - run: |
         jf npm-config --repo-resolve=database-npm-virtual
         jf npm install aerospike
-      shell: bash -ex
+      shell: "bash -ex {0}"
 
     # - name: list Artifacts
     #   run: |
