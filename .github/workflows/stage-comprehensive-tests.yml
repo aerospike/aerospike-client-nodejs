@@ -146,7 +146,7 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
+      run: jf npm install aerospike
       env:
         NEW_VERSION: ${{ inputs.version }}
         PACKAGE_MANAGER: npm
@@ -858,6 +858,7 @@ jobs:
     - run: |
         jf npm-config --repo-resolve=database-npm-virtual
         jf npm install aerospike
+      shell: bash -ex
 
     # - name: list Artifacts
     #   run: |
