@@ -26,4 +26,4 @@ jobs:
 
     - id: stage-get-jfrog-version
       run: |
-        echo dev_version=$(npm pkg get version | tr -d '"') >> $GITHUB_OUTPUT
+        echo dev_version=$(git tag -l --sort=-creatordate) >> $GITHUB_OUTPUT
