@@ -856,7 +856,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - run: |
-        jf npm-config --repo-resolve=database-npm-virtual
+        jf npm-config --repo-resolve=database-npm-dev-local
         jf npm install --build-name=nodejs-client --build-number=${{ inputs.version }} aerospike
       shell: "bash -ex {0}"
 
