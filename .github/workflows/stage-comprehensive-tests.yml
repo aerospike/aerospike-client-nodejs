@@ -862,6 +862,7 @@ jobs:
         npm install *.tgz
         tree .
       shell: "bash -ex {0}"
+      working-directory: ts-test
 
     # - name: list Artifacts
     #   run: |
