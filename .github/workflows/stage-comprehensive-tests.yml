@@ -897,7 +897,7 @@ jobs:
         # cp ../../../package-lock.json package-lock.json;
         # npm ci --ignore-scripts;
         cd ts-test;
-        npm ci .. --ignore-scripts --prefix .;
+        npm ci --ignore-scripts --prefix ..;
         tree ./node_modules
         # tree ../node_modules
         # npx tsc;
