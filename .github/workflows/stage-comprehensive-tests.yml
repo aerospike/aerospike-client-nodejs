@@ -286,9 +286,10 @@ jobs:
         pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
+        mv *.tgz pnpm
         cd pnpm
         echo '{}' > package.json
-        pnpm add ../
+        pnpm add *.tgz
         node basic_test.js
 
     - name: Run tests
@@ -396,7 +397,6 @@ jobs:
       shell: "bash -ex {0}"
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
       run: |
         npm ci --ignore-scripts;
         curl -fsSL https://bun.sh/install | bash;
@@ -404,23 +404,10 @@ jobs:
         bun --version;
         mkdir bun;
         cp ./scripts/basic_test.js bun/basic_test.js;
+        mv *.tgz bun/
         cd bun;
         echo '{}' > package.json;
-        bun add ../;
-        node basic_test.js;
-
-    - name: Run tests
-      if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
-      run: |
-        npm ci --ignore-scripts;
-        curl -fsSL https://bun.sh/install | bash;
-        export PATH="$HOME/.bun/bin:$PATH";
-        bun --version;
-        mkdir bun;
-        cp ./scripts/basic_test.js bun/basic_test.js;
-        cd bun;
-        echo '{}' > package.json;
-        bun add ../;
+        bun add *.tgz
         node basic_test.js;
 
     #- name: Debug server
@@ -528,9 +515,10 @@ jobs:
         yarn --version
         mkdir yarn
         cp ./scripts/basic_test.js yarn/basic_test.js
+        mv *.tgz yarn/
         cd yarn
         echo '{}' > package.json
-        NODE_ENV=production yarn add ../
+        yarn add *.tgz
         node basic_test.js
 
     - name: Run tests
@@ -543,7 +531,7 @@ jobs:
         cp ./scripts/basic_test.js yarn/basic_test.js
         cd yarn
         echo '{}' > package.json
-        NODE_ENV=production yarn add ../
+        yarn install *.tgz
         node basic_test.js
 
     #- name: Debug server
