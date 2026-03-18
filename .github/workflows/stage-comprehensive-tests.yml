@@ -802,13 +802,13 @@ jobs:
         npx tsc;
         npx tsc typings/index.d.ts; 
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-metrics:
     needs: get-runner-os
@@ -827,16 +827,16 @@ jobs:
         egress-policy: audit
 
     # REUSABLE PART
-    - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-      shell: bash
+    # - name: Create status check message
+    #   run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
+    #   shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -856,33 +856,18 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
 
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
@@ -982,31 +967,18 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
