@@ -57,12 +57,12 @@ jobs:
     permissions:
       id-token: write
 
-  ff-stage-to-dev:
-    needs: comprehensive-tests
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      ref_to_merge: origin/dev
-      base_branch: stage
+  # ff-stage-to-dev:
+  #   needs: comprehensive-tests
+  #   uses: ./.github/workflows/fast-forward-merge.yml
+  #   with:
+  #     ref_to_merge: origin/dev
+  #     base_branch: stage
 
 #  upload-npm-package-to-jfrog:
 #    name: Upload artifacts to JFrog
