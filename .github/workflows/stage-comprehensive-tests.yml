@@ -288,7 +288,7 @@ jobs:
         mv *.tgz pnpm
         cd pnpm
         echo '{}' > package.json
-        pnpm add *.tgz
+        pnpm add ./*.tgz
         node basic_test.js
 
     - name: Run tests
@@ -298,10 +298,11 @@ jobs:
         npm install -g pnpm@9.15.9 --ignore-scripts;
         pnpm --version
         mkdir pnpm
+        mv *.tgz pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
         cd pnpm
         echo '{}' > package.json
-        pnpm add ../
+        pnpm add ./*.tgz
         node basic_test.js
 
     # - name: Set final commit status
@@ -515,7 +516,7 @@ jobs:
         mv *.tgz yarn/
         cd yarn
         echo '{}' > package.json
-        yarn add *.tgz
+        yarn add aerospike@file:*.tgz
         node basic_test.js
 
     - name: Run tests
@@ -528,7 +529,7 @@ jobs:
         cp ./scripts/basic_test.js yarn/basic_test.js
         cd yarn
         echo '{}' > package.json
-        yarn install *.tgz
+        yarn add aerospike@file:*.tgz
         node basic_test.js
 
     #- name: Debug server
