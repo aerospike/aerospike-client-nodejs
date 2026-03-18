@@ -277,15 +277,6 @@ jobs:
         npm install *.tgz
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
-
-    - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: |
-        cd ts-test;
-        npm ci --ignore-scripts --prefix ..;
-        # tree ./node_modules
-        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
@@ -403,15 +394,6 @@ jobs:
         npm install *.tgz
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
-
-    - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: |
-        cd ts-test;
-        npm ci --ignore-scripts --prefix ..;
-        # tree ./node_modules
-        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
@@ -537,15 +519,6 @@ jobs:
         npm install *.tgz
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
-
-    - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      run: |
-        cd ts-test;
-        npm ci --ignore-scripts --prefix ..;
-        # tree ./node_modules
-        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
