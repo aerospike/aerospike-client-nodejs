@@ -733,7 +733,7 @@ jobs:
       working-directory: ts-test
 
     - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests }}
       run: |
         cd ts-test;
         npm ci --ignore-scripts --prefix ..;
