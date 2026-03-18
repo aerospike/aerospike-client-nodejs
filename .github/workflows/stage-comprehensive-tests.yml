@@ -86,12 +86,12 @@ jobs:
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -187,13 +187,13 @@ jobs:
         npx tsc;
         npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-pnpm:
     needs: get-runner-os
@@ -215,12 +215,12 @@ jobs:
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -313,13 +313,13 @@ jobs:
         pnpm add ../
         node basic_test.js
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-bun:
     needs: get-runner-os
@@ -341,12 +341,12 @@ jobs:
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -447,13 +447,13 @@ jobs:
     #    docker logs aerospike;
 
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-yarn:
     needs: get-runner-os
@@ -475,12 +475,12 @@ jobs:
       run: echo STATUS_CHECK_MESSAGE="test-ee (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -579,13 +579,13 @@ jobs:
     #    docker logs aerospike;
 
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   tests:
     needs: get-runner-os
@@ -885,13 +885,13 @@ jobs:
         npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
         npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-ce:
     needs: get-runner-os
@@ -914,12 +914,12 @@ jobs:
       run: echo STATUS_CHECK_MESSAGE="test-ce (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -974,13 +974,13 @@ jobs:
         npx tsc;
         npm run test dist/ -- --h localhost --port 3000;
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-timeout-delay:
     needs: get-runner-os
@@ -1003,12 +1003,12 @@ jobs:
       run: echo STATUS_CHECK_MESSAGE="test-ce (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -1062,13 +1062,13 @@ jobs:
         npm run test --testfile=timeout_delay.js -- --testTimeoutDelay true --h localhost --port 3000;
         sudo tc qdisc del dev lo root netem
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-tsc-compile-self-hosted:
     needs: get-runner-os
@@ -1091,12 +1091,12 @@ jobs:
         run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
         shell: bash
 
-      - name: Show job status for commit
-        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-        with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          context: ${{ env.STATUS_CHECK_MESSAGE }}
+      # - name: Show job status for commit
+      #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+      #   with:
+      #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+      #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
@@ -1158,13 +1158,13 @@ jobs:
           npx tsc;
   
 
-      - name: Show job status for commit
-        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-        with:
-          sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          status: ${{ job.status }}
-          context: ${{ env.STATUS_CHECK_MESSAGE }}
+      # - name: Show job status for commit
+      #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+      #   with:
+      #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+      #     status: ${{ job.status }}
+      #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-user-agent-ce:
     needs: get-runner-os
@@ -1187,12 +1187,12 @@ jobs:
       run: echo STATUS_CHECK_MESSAGE="test-ce (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
 
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
@@ -1320,10 +1320,10 @@ jobs:
         CONTAINER_NAME: aerospike
 
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
+    #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+    #   with:
+    #     sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+    #     status: ${{ job.status }}
+    #     context: ${{ env.STATUS_CHECK_MESSAGE }}
