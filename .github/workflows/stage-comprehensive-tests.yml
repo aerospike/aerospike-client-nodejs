@@ -856,53 +856,24 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - run: |
-        # npm config set @aerospike:registry "https://aerospike.jfrog.io/artifactory/api/npm/database-npm-dev-local/"
-        jf npm-config --repo-resolve=database-npm-dev-local
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
         npm install *.tgz
-        tree .
+        # tree .
       shell: "bash -ex {0}"
       working-directory: ts-test
-
-    # - name: list Artifacts
-    #   run: |
-    #     ls downloaded-artifacts
-    #     ls downloaded-artifacts/aerospike
-    #     ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-    #   env:
-    #     NEW_VERSION: ${{ inputs.version }}
-
-    # - name: Move artifacts
-    #   run: |
-    #     tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-    #   env:
-    #     NEW_VERSION: ${{ inputs.version }}
-    #   working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    # - name: check binding
-    #   run:
-    #     ls lib/binding;
-    #   working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-
 
     - name: install valgrind
       run: |
         sudo apt-get update;
-        sudo apt install valgrind;
+        sudo apt-get install -y valgrind;
 
     - name: Install pre-reqs
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        # cp ../../../package-lock.json package-lock.json;
-        # npm ci --ignore-scripts;
         cd ts-test;
         npm ci --ignore-scripts --prefix ..;
-        tree ./node_modules
+        # tree ./node_modules
         # tree ../node_modules
-        # npx tsc;
-        # cp tests/udf.lua dist/udf.lua;
-        # cd ..;
 
     - name: Run Valgrind
       run: |
