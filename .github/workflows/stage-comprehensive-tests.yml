@@ -516,7 +516,7 @@ jobs:
         mv *.tgz yarn/
         cd yarn
         echo '{}' > package.json
-        yarn add aerospike@file:./*.tgz
+        yarn add file:./*.tgz
         node basic_test.js
 
     - name: Run tests
@@ -529,7 +529,7 @@ jobs:
         cp ./scripts/basic_test.js yarn/basic_test.js
         cd yarn
         echo '{}' > package.json
-        yarn add aerospike@file:./*.tgz
+        yarn add file:./*.tgz
         node basic_test.js
 
     #- name: Debug server
