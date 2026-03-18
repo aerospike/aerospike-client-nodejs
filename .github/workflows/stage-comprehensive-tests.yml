@@ -145,31 +145,20 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf npm install aerospike
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
+        # tree ./node_modules
+        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
@@ -287,31 +276,20 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
+        # tree ./node_modules
+        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
@@ -428,32 +406,20 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
+        # tree ./node_modules
+        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
@@ -578,32 +544,20 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
+        # tree ./node_modules
+        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
@@ -1138,46 +1092,25 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
+        # tree ./node_modules
+        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
-        docker ps;
-        docker logs aerospike;
-        ls .;
-        cp ../../../package-lock.json package-lock.json;
-        npm ci --ignore-scripts;
-        cd ts-test;
-        npm ci .. --ignore-scripts;
-        npx tsc;
-        cd ..;
-        npx tsc;
         npm run test --testfile=timeout_delay.js -- --testTimeoutDelay true --h localhost --port 3000;
         sudo tc qdisc del dev lo root netem
 
@@ -1231,31 +1164,20 @@ jobs:
           oidc-provider-name: database-gh-aerospike
           oidc-audience: database-gh-aerospike
 
-      - name: Download Artifacts from Jfrog
-        run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-        env:
-          NEW_VERSION: ${{ inputs.version }}
-          PACKAGE_MANAGER: npm
+      - run: |
+          jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+          npm install *.tgz
+          # tree .
+        shell: "bash -ex {0}"
+        working-directory: ts-test
 
-      - name: list Artifacts
+      - name: Install test dependencies
+        if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
         run: |
-          ls downloaded-artifacts
-          ls downloaded-artifacts/aerospike
-          ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-        env:
-          NEW_VERSION: ${{ inputs.version }}
-
-      - name: Move artifacts
-        run: |
-          tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-        env:
-          NEW_VERSION: ${{ inputs.version }}
-        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-      - name: check binding
-        run:
-          ls lib/binding;
-        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+          cd ts-test;
+          npm ci --ignore-scripts --prefix ..;
+          # tree ./node_modules
+          # tree ../node_modules
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
@@ -1355,31 +1277,20 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Download Artifacts from Jfrog
-      run: jf rt dl "database-npm-dev-local/aerospike/${{ env.NEW_VERSION }}/" "downloaded-artifacts/"
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-        PACKAGE_MANAGER: npm
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        npm install *.tgz
+        # tree .
+      shell: "bash -ex {0}"
+      working-directory: ts-test
 
-    - name: list Artifacts
+    - name: Install test dependencies
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
       run: |
-        ls downloaded-artifacts
-        ls downloaded-artifacts/aerospike
-        ls downloaded-artifacts/aerospike/${{ env.NEW_VERSION }}
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-
-    - name: Move artifacts
-      run: |
-        tar --strip-components=1 -xvf aerospike-${{ env.NEW_VERSION }}.tgz
-      env:
-        NEW_VERSION: ${{ inputs.version }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
-    - name: check binding
-      run:
-        ls lib/binding;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
+        cd ts-test;
+        npm ci --ignore-scripts --prefix ..;
+        # tree ./node_modules
+        # tree ../node_modules
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
