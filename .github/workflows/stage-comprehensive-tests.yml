@@ -274,7 +274,6 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
         # tree .
       shell: "bash -ex {0}"
 
@@ -392,7 +391,6 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
         # tree .
       shell: "bash -ex {0}"
 
@@ -503,7 +501,6 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
         # tree .
       shell: "bash -ex {0}"
 
