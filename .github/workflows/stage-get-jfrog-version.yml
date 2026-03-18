@@ -9,6 +9,8 @@ on:
     outputs:
       dev_version:
         value: ${{ jobs.stage-get-jfrog-version.outputs.dev_version }}
+      tag_version:
+        value: ${{ jobs.stage-get-jfrog-version.outputs.tag_version }}
 
 jobs:
   stage-get-jfrog-version:
@@ -29,3 +31,4 @@ jobs:
     - id: stage-get-jfrog-version
       run: |
         echo dev_version=$(npm pkg get version | tr -d '"') >> $GITHUB_OUTPUT
+        echo tag_version=$(git tag -l --sort=-creatordate | head -n 1) >> $GITHUB_OUTPUT
