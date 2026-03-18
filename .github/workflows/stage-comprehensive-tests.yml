@@ -174,7 +174,6 @@ jobs:
         rm -rf ts-test/dist;
         npx tsc;
         npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
@@ -189,7 +188,6 @@ jobs:
         cd ..;
         npx tsc;
         npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -304,7 +302,6 @@ jobs:
         echo '{}' > package.json
         pnpm add ../
         node basic_test.js
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
@@ -319,7 +316,6 @@ jobs:
         echo '{}' > package.json
         pnpm add ../
         node basic_test.js
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -435,7 +431,6 @@ jobs:
         echo '{}' > package.json;
         bun add ../;
         node basic_test.js;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
@@ -451,7 +446,6 @@ jobs:
         echo '{}' > package.json;
         bun add ../;
         node basic_test.js;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     #- name: Debug server
     #  run: |
@@ -572,7 +566,6 @@ jobs:
         echo '{}' > package.json
         NODE_ENV=production yarn add ../
         node basic_test.js
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Run tests
       if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' ) }}
@@ -587,7 +580,6 @@ jobs:
         echo '{}' > package.json
         NODE_ENV=production yarn add ../
         node basic_test.js
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     #- name: Debug server
     #  run: |
@@ -875,7 +867,6 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         cp ../../../package-lock.json package-lock.json;
@@ -891,7 +882,6 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64'}}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         cp ../../../package-lock.json package-lock.json;
@@ -982,7 +972,6 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         docker ps;
         docker logs aerospike;
@@ -1080,7 +1069,6 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
       run: |
         npm run test --testfile=timeout_delay.js -- --testTimeoutDelay true --h localhost --port 3000;
         sudo tc qdisc del dev lo root netem
@@ -1152,8 +1140,7 @@ jobs:
 
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
-        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
+  
       - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
@@ -1171,8 +1158,7 @@ jobs:
           cd ts-test;
           npm ci .. --ignore-scripts;
           npx tsc;
-        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
+  
       - name: Run tests
         if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: |
@@ -1183,8 +1169,7 @@ jobs:
           cd ts-test;
           npm ci .. --ignore-scripts;
           npx tsc;
-        working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
-
+  
 
       - name: Show job status for commit
         if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
@@ -1276,7 +1261,6 @@ jobs:
         npx tsc;
         cd ..;
         npx tsc;
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
 
 
@@ -1312,7 +1296,6 @@ jobs:
         nohup node run-client-in-bg.js &
         # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
         # When background processes fail, this step won't fail.
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
     - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
@@ -1349,7 +1332,6 @@ jobs:
       shell: bash
       env:
         CONTAINER_NAME: aerospike
-      working-directory: downloaded-artifacts/aerospike/${{ inputs.version }}
 
 
     - name: Set final commit status
