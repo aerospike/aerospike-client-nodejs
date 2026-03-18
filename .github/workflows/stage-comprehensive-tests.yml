@@ -898,6 +898,7 @@ jobs:
         # npm ci --ignore-scripts;
         cd ts-test;
         npm ci --ignore-scripts;
+        tree .
         # npx tsc;
         # cp tests/udf.lua dist/udf.lua;
         # cd ..;
