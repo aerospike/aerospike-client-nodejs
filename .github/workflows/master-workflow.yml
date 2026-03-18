@@ -10,12 +10,18 @@ on:
 
 jobs:
   master-get-jfrog-version:
-    uses: ./.github/workflows/master-get-jfrog-version.yml
+     uses: ./.github/workflows/master-get-jfrog-version.yml
+#
+#  bump-master-number:
+#    uses: ./.github/workflows/master-bump-version.yml
+#    needs: [
+#      master-get-jfrog-version,
+#    ]
 
   bump-master-number:
     uses: ./.github/workflows/master-bump-version.yml
     needs: [
-      master-get-jfrog-version,
+      master-get-jfrog-version
     ]
 
   #publish-to-npm:
@@ -57,7 +63,7 @@ jobs:
       new_version: ${{ needs.bump-master-number.outputs.new_master_version }}
       scenario: 'omitdev'
 
-  verify-npm-install-scripts:
+  verify-npm-install:
     name: verify npm clean install works correctly
     needs: [
       master-get-jfrog-version,

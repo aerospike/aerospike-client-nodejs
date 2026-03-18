@@ -85,11 +85,7 @@ jobs:
     - run: |
         cp ../../../package-lock.json package-lock.json;
         npm ci --ignore-scripts;
-<<<<<<< HEAD
-        npm publish;
-=======
         npm publish  --provenance;
->>>>>>> origin/master
       env:
         NODE_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
       working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
