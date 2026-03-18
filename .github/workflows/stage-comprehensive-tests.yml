@@ -1282,6 +1282,7 @@ jobs:
         nohup node run-client-in-bg.js &
         # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
         # When background processes fail, this step won't fail.
+      shell: ts-test
 
     - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
