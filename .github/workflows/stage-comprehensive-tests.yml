@@ -98,7 +98,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -227,7 +227,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -345,7 +345,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -455,7 +455,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with: 
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -584,7 +584,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -628,7 +628,7 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -712,7 +712,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -787,7 +787,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -886,7 +886,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -975,7 +975,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
@@ -1089,7 +1089,7 @@ jobs:
       - name: Change install command for release
         run: node ./scripts/change-install-command.js
   
-      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
         #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
@@ -1159,7 +1159,7 @@ jobs:
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
