@@ -138,7 +138,7 @@ jobs:
       run: docker logs aerospike
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -265,7 +265,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -383,7 +383,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -493,7 +493,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -620,7 +620,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
         JF_PROJECT: "database"
@@ -718,7 +718,7 @@ jobs:
 
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -792,7 +792,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -899,7 +899,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -993,7 +993,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
@@ -1064,7 +1064,7 @@ jobs:
         run: security unlock-keychain -p ${{ secrets.song_loss }}
 
       - name: Set up JFrog credentials
-        uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+        uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
         env:
           JF_URL: https://aerospike.jfrog.io
         with:
@@ -1172,7 +1172,7 @@ jobs:
         container-name: aerospike
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:

@@ -51,7 +51,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      uses: step-security/setup-jfrog-cli@893a92f96c7727242adf0e603c77b1f2a22390e1 # v4.9.1
       env:
         JF_URL: https://aerospike.jfrog.io
       with:
