@@ -21,10 +21,10 @@ on:
         type: string
         required: false
         default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
-      platform-tag:
+      version:
         type: string
         required: true
-      version:
+      platform-tag:
         type: string
         required: true
       run_tests:
