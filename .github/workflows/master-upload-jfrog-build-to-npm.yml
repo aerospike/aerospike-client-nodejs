@@ -47,6 +47,15 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.new_version }}.tgz" .
+        tar xvf aerospike-${{ inputs.new_version }}.tgz
+        cd package/
+        node ./scripts/change-install-command.js;
+        cd ..
+        tar czf aerospike-${{ inputs.new_version }}.tgz package/
+        tar tvf aerospike-${{ inputs.new_version }}.tgz
+    #   env:
+    #     OLD_VERSION: ${{ inputs.old_version }}
+      # working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     # - name: Download Artifacts from Jfrog
     #   run: jf rt dl "clients-npm-stage-local/aerospike/${{ env.OLD_VERSION }}/" "downloaded-artifacts/"
@@ -73,12 +82,6 @@ jobs:
     #     NEW_VERSION: ${{ inputs.new_version }}
     #   working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    # - name: prepare install
-    #   run: |
-    #     node ./scripts/change-install-command.js;
-    #   env:
-    #     OLD_VERSION: ${{ inputs.old_version }}
-      # working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: npm rc
       run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
