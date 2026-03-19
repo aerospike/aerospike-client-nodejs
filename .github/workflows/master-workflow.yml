@@ -7,6 +7,8 @@ on:
   push:
     branches:
       - 'stage'
+  workflow_dispatch:
+
 
 jobs:
   # TODO: eventually we shouldn't need this job
