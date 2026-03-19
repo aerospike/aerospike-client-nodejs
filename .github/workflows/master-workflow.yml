@@ -9,31 +9,17 @@ on:
       - 'stage'
 
 jobs:
-  # master-get-jfrog-version:
-  #    uses: ./.github/workflows/master-get-jfrog-version.yml
-#
   # TODO: eventually we shouldn't need this job
   get-release-version:
     uses: ./.github/workflows/master-bump-version.yml
-#    needs: [
-#      master-get-jfrog-version,
-#    ]
-
-  # get-release-version:
-  #   uses: ./.github/workflows/master-bump-version.yml
-    # needs: [
-    #   master-get-jfrog-version
-    # ]
 
   publish-to-npm:
    name: Publish to npm
    needs: [
-    #  master-get-jfrog-version,
      get-release-version,
    ]
    uses: ./.github/workflows/master-upload-jfrog-build-to-npm.yml
    with:
-    #  old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
      new_version: ${{ needs.get-release-version.outputs.new_master_version }}
    secrets:
      NPMRC_RELEASE: ${{ secrets.NPMRC_RELEASE }}
@@ -42,9 +28,7 @@ jobs:
   verify-npm-install-scripts:
     name: verify npm clean install works correctly
     needs: [
-    #   master-get-jfrog-version,
       get-release-version
-      #publish-to-npm
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
@@ -54,9 +38,7 @@ jobs:
   verify-npm-install-prod:
     name: verify npm clean install works correctly
     needs: [
-      # master-get-jfrog-version,
       get-release-version,
-      #publish-to-npm,
       verify-npm-install-scripts
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
@@ -67,10 +49,7 @@ jobs:
   verify-npm-install:
     name: verify npm clean install works correctly
     needs: [
-      # master-get-jfrog-version,
       get-release-version,
-      #publish-to-npm,
-      # verify-npm-install-scripts,
       verify-npm-install-prod
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
