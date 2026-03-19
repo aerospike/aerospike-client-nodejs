@@ -51,7 +51,7 @@ jobs:
     with:
       release-bundle-name: "aerospike-nodejs-client"
       release-bundle-version: ${{ needs.stage-get-jfrog-version.outputs.tag_version }}
-      new-environment: STAGE
+      new-environment: TEST
       jfrog-project: database
       jfrog-repo-name: database-npm-stage-local
     permissions:
