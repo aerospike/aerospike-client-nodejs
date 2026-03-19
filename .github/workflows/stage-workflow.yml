@@ -53,7 +53,7 @@ jobs:
       release-bundle-version: ${{ needs.stage-get-jfrog-version.outputs.tag_version }}
       new-environment: TEST
       jfrog-project: database
-      jfrog-repo-name: database-npm-stage-local
+      jfrog-repo-name: database-npm-test-local
     permissions:
       id-token: write
 
