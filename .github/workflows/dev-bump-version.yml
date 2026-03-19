@@ -41,6 +41,7 @@
           oidc-audience: aerospike/clients
 
       - name: Install semver library that parses nodejs versions
+        # --no-save: prevent package.json or lock file from being changed
         run: npm install --no-save semver
         working-directory: .github/workflows
 
@@ -62,6 +63,7 @@
           current_release_version=$(npm pkg get version | tr -d '"')
           next_release_version=$(node .github/workflows/strip_prerelease_part.js $new_tag)
           if [[ "$current_release_version" != "$next_release_version" ]]; then
+            # "npm version" can only commit and tag, or neither at all. But we can't disable one or the other
             npm version patch --no-git-tag-version
             git add -u
             git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
