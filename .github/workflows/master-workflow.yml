@@ -27,7 +27,7 @@ jobs:
   verify-npm-install-scripts:
     name: verify npm clean install works correctly
     needs: [
-      get-release-version
+      publish-to-npm
     ]
     uses: ./.github/workflows/master-verify-npm-install.yml
     with:
