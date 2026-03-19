@@ -88,6 +88,10 @@ jobs:
       env:
         NPMRC: ${{ secrets.NPMRC_RELEASE }}
 
+    - name: Setup tmate session
+      if: ${{ !cancelled() }}
+      uses: mxschmitt/action-tmate@v3
+
     - run: |
         # cp ../../../package-lock.json package-lock.json;
         npm publish *.tgz --provenance;
