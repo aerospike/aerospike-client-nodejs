@@ -186,7 +186,18 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Upload binding binaries to Github Linux x86
+    - name: Cleanup Artifacts
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      shell: pwsh
+      run: |
+        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libssl.lib" -Destination "build\Release\libssl.lib" -Force
+        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libcrypto.lib" -Destination "build\Release\libcrypto.lib" -Force
+        Remove-Item -Recurse -Force .\build\release\obj
+        Remove-Item -Force .\build\release\aerospike.pdb
+        Remove-Item -Force .\build\release\aerospike.ipdb
+        Remove-Item -Force .\build\release\aerospike.iobj
+
+    - name: Upload binding binaries to Github
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
       uses: actions/upload-artifact@v4
       with:
