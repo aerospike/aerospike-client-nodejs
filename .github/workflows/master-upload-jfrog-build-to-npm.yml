@@ -73,11 +73,11 @@ jobs:
     #     NEW_VERSION: ${{ inputs.new_version }}
     #   working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
-    - name: prepare install
-      run: |
-        node ./scripts/change-install-command.js;
-      env:
-        OLD_VERSION: ${{ inputs.old_version }}
+    # - name: prepare install
+    #   run: |
+    #     node ./scripts/change-install-command.js;
+    #   env:
+    #     OLD_VERSION: ${{ inputs.old_version }}
       # working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
     - name: npm rc
@@ -87,7 +87,6 @@ jobs:
 
     - run: |
         # cp ../../../package-lock.json package-lock.json;
-        # npm ci --ignore-scripts;
         npm publish *.tgz --provenance;
       env:
         NODE_AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
