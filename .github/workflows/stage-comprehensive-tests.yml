@@ -5,6 +5,7 @@ permissions:
   # This is required for requesting the OIDC token
   id-token: write
   statuses: write
+  contents: read
 
 on:
 
