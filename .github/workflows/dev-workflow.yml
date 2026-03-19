@@ -57,6 +57,7 @@ jobs:
       with:
         pattern: "*.build"
         merge-multiple: true
+        # Maintain the same folder structure that was used to build the bindings so we can pack it later
         path: "lib/binding"
 
     - name: Set up JFrog credentials
@@ -70,7 +71,7 @@ jobs:
 
     - run: |
         tree lib/binding
-        # Install husky from package.json
+        # Install husky from package.json. "npm pack" depends on this
         npm install husky
         jf npm-config --repo-deploy=database-npm-dev-local
         jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
@@ -86,7 +87,7 @@ jobs:
     with:
       jf-project: database
       jf-build-names: "nodejs-client:${{ needs.bump-dev-number-and-tag.outputs.dev_version }}"
-      jf-bundle-name: "aerospike-nodejs-client"
+      jf-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
       version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       gh-workflows-ref: 8f53b63b33d86e63aeb37d951283dd974574885b
       dry-run: false
@@ -100,7 +101,7 @@ jobs:
     ]
     uses: aerospike/aerospike-client-python/.github/workflows/promote-release-bundle.yml@CLIENT-3467-cicd-use-jfrog-release-bundles
     with:
-      release-bundle-name: "aerospike-nodejs-client"
+      release-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       new-environment: DEV
       jfrog-project: database
