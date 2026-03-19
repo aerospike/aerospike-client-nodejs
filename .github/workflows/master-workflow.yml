@@ -4,9 +4,6 @@ permissions:
   contents: write
 
 on:
-  push:
-    branches:
-      - 'stage'
   workflow_dispatch:
 
 
