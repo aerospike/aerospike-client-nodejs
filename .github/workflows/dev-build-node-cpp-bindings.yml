@@ -160,6 +160,7 @@ jobs:
       working-directory: aerospike-client-c/vs
 
     - name: Build Binding
+      # Node.js 25 has compatibility issues with macOS 14
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
       run: |
         ./scripts/build-c-client.sh;
@@ -198,6 +199,7 @@ jobs:
         Remove-Item -Force .\build\release\aerospike.iobj
 
     - name: Upload binding binaries to Github
+      # I just copy and pasted the same condition for building the bindings
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
       uses: actions/upload-artifact@v4
       with:
