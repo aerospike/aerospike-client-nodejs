@@ -83,14 +83,14 @@ jobs:
     #   working-directory: downloaded-artifacts/aerospike/${{ inputs.old_version }}
 
 
-    - name: npm rc
-      run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
-      env:
-        NPMRC: ${{ secrets.NPMRC_RELEASE }}
+    # - name: npm rc
+    #   run: echo "$NPMRC" | base64 --decode > ~/.npmrc  
+    #   env:
+    #     NPMRC: ${{ secrets.NPMRC_RELEASE }}
 
-    - name: Setup tmate session
-      if: ${{ !cancelled() }}
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   if: ${{ !cancelled() }}
+    #   uses: mxschmitt/action-tmate@v3
 
     - run: |
         # cp ../../../package-lock.json package-lock.json;
