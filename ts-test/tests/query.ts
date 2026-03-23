@@ -805,6 +805,7 @@ describe('Queries', function () {
   })
 
   describe('query.operate()', function () {
+    // TODO: add bin projection tests here
 
     it('should perform a background query that executes the operations #slow', async function () {
       const query: Query = client.query(helper.namespace, testSet)
