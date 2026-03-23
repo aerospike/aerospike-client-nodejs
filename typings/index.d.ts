@@ -17762,7 +17762,7 @@ export namespace exp {
      * 
      *    const addAllChildren = new Context().addAllChildren()
      * 
-     *    const modExpression = exp.resultRemove()
+     *    const modExpression = exp.removeResult()
      *
      *    const modifyByPath = exp.modifyByPath(exp.binMap('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
      *     * 
@@ -17782,7 +17782,7 @@ export namespace exp {
      * 
      * @return result remove expression.
      */
-    export const resultRemove: () => AerospikeExp;
+    export const removeResult: () => AerospikeExp;
 
 }
 /**

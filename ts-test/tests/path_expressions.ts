@@ -214,7 +214,7 @@ describe('Aerospike.exp.selectByPath', async function () {
 
           it('modifies with result remove expression', async function () {
 
-            const modExpression = exp.resultRemove()
+            const modExpression = exp.removeResult()
 
             const modifyByPath = exp.modifyByPath(exp.binMap('c_example'), exp.type.MAP, modExpression, pathModifyFlags.DEFAULT, addAllChildren)
             
