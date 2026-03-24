@@ -191,6 +191,7 @@ jobs:
       run: |
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
+        # TODO: think this is redundant. node-pre-gyp is already in package.json
         npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts;
         npm run build;
         ls lib/binding;
