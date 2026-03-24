@@ -7,6 +7,19 @@ run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, use-server-r
 
 
 on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        required: false
+        type: boolean
+        default: false
+      version:
+        type: string
+        required: false
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
   workflow_call:
     inputs:
       # The "dev" tests test the artifacts against a server
