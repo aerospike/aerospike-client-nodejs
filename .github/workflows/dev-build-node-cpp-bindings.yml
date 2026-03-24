@@ -172,10 +172,6 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && !(startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
       run: |
-        cd ts-test;
-        npx tsc;
-        cd ..;
-        npx tsc;
         npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
 
     - name: Set up JFrog credentials
