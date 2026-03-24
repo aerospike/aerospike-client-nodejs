@@ -1,5 +1,5 @@
 name: Build Node C++ Addons
-run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, server-tag=${{ inputs.server-tag }})
 
 # Builds manylinux wheels and source distribution
 # Optionally run tests on manylinux wheels
@@ -37,10 +37,10 @@ on:
         default: true
         required: false
       # This input is only used in workflow_call events
-      use-server-rc:
-        required: false
-        default: false
-        type: boolean
+      # use-server-rc:
+      #   required: false
+      #   default: false
+      #   type: boolean
       server-tag:
         type: string
         required: false
@@ -72,7 +72,7 @@ jobs:
       platform-tag: ${{ matrix.platform-tag }}
       # Can't use env context here, so just copy from build-sdist env var
       run_tests: ${{ inputs.run_tests }}
-      use-server-rc: ${{ inputs.use-server-rc }}
+      use-server-rc: false
       server-tag: ${{ inputs.server-tag }}
       version: ${{ inputs.version }}
     secrets:
