@@ -1115,7 +1115,7 @@ export class Query {
      */
     public maxRecords?: number;
     /**
-     * Specifies operations to be executed when {@link operate} is called.
+     * Specifies read operations to be executed in a foreground query.
      */
     public ops?: operations.Operation[];
     /**
@@ -1553,6 +1553,8 @@ export class Query {
      * records nor the results of the operations are returned to the client.
      * Instead a {@link Job} instance will be returned, which can be used to query
      * the query status.
+     *
+     * If a read operation is passed, an error will be raised.
      *
      * This method requires server >= 3.7.0.
      *
@@ -11452,6 +11454,11 @@ export interface QueryOptions {
      * Note that the TTL value will be employed ONLY on background query writes.
      */
     ttl?: number;
+
+    /**
+     * Read operations to be executed in a foreground query.
+     */
+    ops?: operations.Operation[];
 }
 
 /**
