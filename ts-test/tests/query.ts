@@ -258,6 +258,21 @@ describe('Queries', function () {
     })
   })
 
+  describe('bin projection', function () {
+    const args: QueryOptions = {
+      ops: [op.read('backgroundOps')]
+    }
+    const query: Query = client.query(helper.namespace, helper.set, args)
+    it('works with query.foreach()', function (){
+      const stream = query.foreach()
+      stream.on('data', (record: AerospikeRecord) => {
+        expect(record.bins).to.have.property('name', "backgroundOps")
+      })
+      // stream.on('end', () => {
+      // })
+    })
+  })
+
   describe('query.foreach() #slow', function () {
     it('Should run a regular primary index query', function (done) {
       const query: Query = client.query(helper.namespace, testSet)
@@ -805,8 +820,6 @@ describe('Queries', function () {
   })
 
   describe('query.operate()', function () {
-    // TODO: add bin projection tests here
-
     it('should perform a background query that executes the operations #slow', async function () {
       const query: Query = client.query(helper.namespace, testSet)
       const ops = [op.write('backgroundOps', 4)]
