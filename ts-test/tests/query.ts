@@ -260,13 +260,13 @@ describe('Queries', function () {
 
   describe('bin projection', function () {
     const args: QueryOptions = {
-      ops: [op.read('backgroundOps')]
+      ops: [op.read('a')]
     }
     const query: Query = client.query(helper.namespace, helper.set, args)
     it('works with query.foreach()', function (){
       const stream = query.foreach()
       stream.on('data', (record: AerospikeRecord) => {
-        expect(record.bins).to.have.property('name', "backgroundOps")
+        expect(record.bins).to.have.property('a', 9)
       })
       // stream.on('end', () => {
       // })
