@@ -9,7 +9,33 @@ permissions:
   statuses: write
 
 on:
-
+  workflow_dispatch:
+    inputs:
+      nodejs-tags:
+        type: string
+        required: false
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
+      platform-tag:
+        type: string
+        required: true
+      run_tests:
+        type: boolean
+        required: false
+        default: false
+      use-server-rc:
+        required: false
+        type: boolean
+        default: false
+        description: 'Test against server release candidate?'
+      server-tag:
+        required: false
+        type: string
+        default: 'latest'
+        description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
   workflow_call:
     inputs:
       # See workflow call hack in update-version.yml
