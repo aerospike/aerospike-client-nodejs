@@ -93,6 +93,8 @@ jobs:
       dry-run: false
       oidc-provider-name: database-gh-aerospike
       oidc-audience: database-gh-aerospike
+    permissions:
+      id-token: write
 
   promote-release-bundle:
     needs: [
