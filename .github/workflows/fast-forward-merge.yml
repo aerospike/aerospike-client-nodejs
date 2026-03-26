@@ -36,6 +36,7 @@ jobs:
         with:
           # Fetch the whole history to prevent unrelated history errors
           fetch-depth: '0'
+          ref: ${{ inputs.base_branch }}
 
       - name: Fast forward
         run: git merge --ff-only ${{ inputs.ref_to_merge }}

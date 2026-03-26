@@ -5,7 +5,8 @@
   permissions:
     # This is required for requesting the OIDC token
     id-token: write
-    contents: read
+    # We need to publish a tag
+    contents: write
 
   on:
     workflow_call:
@@ -28,6 +29,8 @@
           egress-policy: audit
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       - name: Set up JFrog credentials
         uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
@@ -37,33 +40,34 @@
           oidc-provider-name: gh-aerospike-clients
           oidc-audience: aerospike/clients
 
-      - name: Get version from JFROG repository
-        id: get-jfrog-version
-        run: |
-          echo "jfrog_version=$(jfrog rt s "clients-npm-dev-local/aerospike/*" | jq -r '.[]?.path | capture("aerospike/(?<version>[^/]+)") | .version' | grep -v '^-$' | grep -v '^lib$' | sort -V | grep -v 'rc' | tail -n1)" >> $GITHUB_OUTPUT
-
-      - name: Get version from github repository
-        id: get-github-version
-        run: |
-          echo "github_version=$(node -p 'require("./package.json").version')" >> $GITHUB_OUTPUT
-
-      - name: Print versions
-        run: |
-          echo "jfrog version is ${{ steps.get-jfrog-version.outputs.jfrog_version }}"
-          echo "github version is ${{ steps.get-github-version.outputs.github_version }}"
-
-      - name: Install library that parses nodejs versions
-        run: npm install semver@7.7.2 --ignore-scripts
+      - name: Install semver library that parses nodejs versions
+        # --no-save: prevent package.json or lock file from being changed
+        run: npm install --no-save semver
         working-directory: .github/workflows
 
-      - name: Get new version
+      - name: Tag new version
         id: get-new-version
+        # Can't use "npm version" to bump the dev number. It changes the version in package.json
+        # which should only have the current release or expected future release version.
         run: |
           set -e;
-          dev_version=$(node dev-bump-version.js ${{ steps.get-github-version.outputs.github_version }} ${{ steps.get-jfrog-version.outputs.jfrog_version }});
-          echo "dev_version=$dev_version" >> $GITHUB_OUTPUT;
-        working-directory: .github/workflows
+          last_tag=$(git describe --tags --abbrev=0)
+          echo "Last version tag is $last_tag"
 
-      - name: Print new version
-        run: |
-          echo "${{ steps.get-new-version.outputs.dev_version }}"
+          new_tag=$(node .github/workflows/bump-dev-number-in-version.js "$last_tag");
+          git tag $new_tag
+          git push origin tag $new_tag
+          echo "dev_version=$new_tag" >> $GITHUB_OUTPUT;
+
+          # Update package.json if last tag was a release tag
+          current_release_version=$(npm pkg get version | tr -d '"')
+          next_release_version=$(node .github/workflows/strip_prerelease_part.js $new_tag)
+          if [[ "$current_release_version" != "$next_release_version" ]]; then
+            # "npm version" can only commit and tag, or neither at all. But we can't disable one or the other
+            npm version patch --no-git-tag-version
+            git add -u
+            git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git config --global user.name "github-actions[bot]"
+            git commit -m "Bump version to $next_release_version"
+            git push
+          fi

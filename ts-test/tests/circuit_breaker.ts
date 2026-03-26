@@ -84,37 +84,9 @@ describe('Circuit breaker functionality', function () {
   });
 
 
-  context('Positive Tests', function () {
-    context('maxErrorRate', function () {
-      it('sets maxErrorRate to the specified value', async function () {
-        let dummyClient: any = null
-        try{
-          let config = base_config
-          config.maxErrorRate = 4
-          config.tenderInterval = 6000
 
-          dummyClient = await Aerospike.connect(config)
-
-          const query: Query = dummyClient.query(helper.namespace, helper.set)
-
-          await abort_until_circuit_breaker_flips(query, 4)
-
-        }
-        finally{
-          if(dummyClient){
-            await new Promise(resolve => setTimeout(resolve, 3000))
-            await dummyClient.close()
-          }
-        }
-
-      })
-    })
-
-
-
-
-    context('errorRateWindow', function () {
-      it('sets errorRateWindow to specified value', async function () {
+    context('errorRateWindow and maxErrorRate', function () {
+      it('sets errorRateWindow and maxErrorRate to specified value', async function () {
         let dummyClient: any = null
         try{
           let config = base_config
@@ -128,7 +100,7 @@ describe('Circuit breaker functionality', function () {
 
           await abort_until_circuit_breaker_flips(query, 40)
 
-          await new Promise(resolve => setTimeout(resolve, 3000))
+          await new Promise(resolve => setTimeout(resolve, 6000))
           try{
             await dummyClient.put(key, {'fakeRecord': 'shouldFail'})
           }
@@ -274,9 +246,6 @@ describe('Circuit breaker functionality', function () {
 
     })
 
-
-  })
-
   context('Negative Tests', function () { 
     context('maxErrorRate', function () {
       it('uses defaults when maxErrorRate is not a number', async function () {
@@ -357,6 +326,4 @@ describe('Circuit breaker functionality', function () {
 
     })   
   })
-
 })
-

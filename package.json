@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "6.6.0",
+  "version": "6.6.1",
   "description": "Aerospike Client Library",
   "keywords": [
     "aerospike",
@@ -51,7 +51,7 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand typings/index.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
-    "valgrind": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; valgrind node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
+    "valgrind": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; valgrind ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
     "gdb": "cd ts-test;  npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"

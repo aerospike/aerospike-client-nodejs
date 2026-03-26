@@ -5,55 +5,108 @@ name: Dev workflow
 # 3. Whenever a PR is merged to `dev`, bump version number in `dev`
 
 on:
-  push:
-    branches:
-      - 'CLIENT*'
-
-  # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
-    inputs:
-      run_server_release_tests:
-        description: 'DEBUG: Run server release tests in build-wheels workflow?'
-        type: boolean
-        default: false
+    # inputs:
+    #   run_server_release_tests:
+    #     description: 'DEBUG: Run server release tests in build-wheels workflow?'
+    #     type: boolean
+    #     default: false
 
 jobs:
-  bump-dev-number:
+  bump-dev-number-and-tag:
     uses: ./.github/workflows/dev-bump-version.yml
 
   build-node-cpp-addons:
     uses: ./.github/workflows/dev-build-node-cpp-addons.yml
     needs: [
-      bump-dev-number
+      bump-dev-number-and-tag
     ]
     with:
-      version: ${{ needs.bump-dev-number.outputs.dev_version }}
+      version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       run_tests: false
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
       cell_girl: ${{ secrets.cell_girl }}
       song_loss: ${{ secrets.song_loss }}
 
-  upload-addons-to-jfrog:
-    name: Upload artifacts to JFrog
+  # TODO: for now, use our own workflow because the shared-workflow's deploy workflow doesn't support npm repos
+  upload-artifacts-as-jfrog-build:
     needs: [
-      bump-dev-number,
+      bump-dev-number-and-tag,
       build-node-cpp-addons
     ]
-    uses: ./.github/workflows/dev-upload-addons-to-jfrog.yml
-    with:
-      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
+    runs-on: ubuntu-22.04
+    permissions:
+      # This is required for requesting the OIDC token
+      id-token: write
+      contents: read
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
 
-  upload-npm-package-to-jfrog:
-    name: upload package to JFrog NPM
+    - name: Checkout repository
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        ref: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+        submodules: recursive
+        fetch-depth: 0
+
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      with:
+        pattern: "*.build"
+        merge-multiple: true
+        # Maintain the same folder structure that was used to build the bindings so we can pack it later
+        path: "lib/binding"
+
+    - name: Set up JFrog credentials
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      env:
+        JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
+      with:
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
+
+    - run: |
+        tree lib/binding
+        # Install husky from package.json. "npm pack" depends on this
+        npm install husky
+        jf npm-config --repo-deploy=database-npm-dev-local
+        jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+        jf rt bp nodejs-client ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+
+  create-release-bundle:
+    name: Create release bundle from JFrog build
     needs: [
-      bump-dev-number,
-      build-node-cpp-addons,
-      upload-addons-to-jfrog,
+      bump-dev-number-and-tag,
+      upload-artifacts-as-jfrog-build
     ]
-    uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@8f53b63b33d86e63aeb37d951283dd974574885b
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.dev_version }}
-      pipeline-stage: 'dev'
-    secrets:
-      plane_grass: ${{ secrets.plane_grass }}
+      jf-project: database
+      jf-build-names: "nodejs-client:${{ needs.bump-dev-number-and-tag.outputs.dev_version }}"
+      jf-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
+      version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      gh-workflows-ref: 8f53b63b33d86e63aeb37d951283dd974574885b
+      dry-run: false
+      oidc-provider-name: database-gh-aerospike
+      oidc-audience: database-gh-aerospike
+    permissions:
+      id-token: write
+
+  promote-release-bundle:
+    needs: [
+      create-release-bundle,
+      bump-dev-number-and-tag
+    ]
+    uses: aerospike/aerospike-client-python/.github/workflows/promote-release-bundle.yml@CLIENT-3467-cicd-use-jfrog-release-bundles
+    with:
+      release-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
+      release-bundle-version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      new-environment: DEV
+      jfrog-project: database
+      jfrog-repo-name: database-npm-dev-local
+    permissions:
+      id-token: write
