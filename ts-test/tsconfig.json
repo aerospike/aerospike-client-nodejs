@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "resolveJsonModule": true,
     "target": "esnext",
     "module": "commonjs",
     "outDir": "./dist",
@@ -7,13 +8,17 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "typeRoots": ["../typings"],
+    "typeRoots": [
+      "../typings",
+      "../node_modules/@types"
+    ],
     // TODO: test this later
     "baseUrl": "./",
     "paths": {
-      "aerospike": ["../lib/aerospike.js"]
+      "aerospike": ["../lib/aerospike"]
       // You can add more mappings here
     }
   },
-  "include": ["tests/**/*.ts", "tests/*.ts", "tests/util/*.ts"]
+  "include": ["tests/**/*.ts", "tests/*.ts", "tests/util/*.ts"],
+  // "files": ["../typings/index.d.ts"]
 }

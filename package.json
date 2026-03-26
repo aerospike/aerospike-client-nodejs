@@ -10,7 +10,7 @@
   "homepage": "https://github.com/aerospike/aerospike-client-nodejs",
   "license": "Apache-2.0",
   "main": "lib/aerospike",
-  "types": "typings/index.d.ts",
+  "types": "typings/aerospike.d.ts",
   "engines": {
     "node": ">=4"
   },
@@ -40,7 +40,7 @@
   "scripts": {
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "test": "cd ts-test && tsc && tsc-alias && cp tests/udf.lua dist/udf.lua && cp tests/dyn_config*.yml dist/ && mocha dist/${npm_config_testfile:-} ",
+    "test": "cd ts-test && tsc -p ./tsconfig.json && tsc-alias -p ./tsconfig.json && cp tests/udf.lua dist/udf.lua && cp tests/dyn_config*.yml dist/ && mocha dist/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore ts-test/dist --ignore scripts",
@@ -49,7 +49,7 @@
     "codecov": "codecov",
     "prepush": "npm run test dist",
     "apidocs": "jsdoc -c jsdoc.json",
-    "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand typings/index.d.ts",
+    "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand typings/aerospike.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
     "valgrind": "cd ts-test; npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; valgrind ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
     "gdb": "cd ts-test;  npx tsc ; cp tests/udf.lua dist/udf.lua ; cp tests/dyn_config*.yml dist/; gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i dist/${npm_config_testfile:-}",
