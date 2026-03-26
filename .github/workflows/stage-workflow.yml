@@ -1,9 +1,7 @@
 name: Stage workflow
 
 on:
-  push:
-    branches:
-      - 'dev'
+  workflow_dispatch:
 
 
 jobs:
@@ -23,27 +21,48 @@ jobs:
       cell_girl: ${{ secrets.cell_girl }}
       song_loss: ${{ secrets.song_loss }}
 
-  bump-stage-number:
-    uses: ./.github/workflows/stage-bump-version.yml
-    needs: [
-      stage-get-jfrog-version,
-      comprehensive-tests,
-    ]
-    with:
-      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+  # bump-stage-number:
+  #   uses: ./.github/workflows/stage-bump-version.yml
+  #   needs: [
+  #     stage-get-jfrog-version,
+  #     comprehensive-tests,
+  #   ]
+  #   with:
+  #     old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
 
-  stage-reupload-addons-to-jfrog:
-    name: Upload artifacts to JFrog
+  # stage-reupload-addons-to-jfrog:
+  #   name: Upload artifacts to JFrog
+  #   needs: [
+  #     stage-get-jfrog-version,
+  #     comprehensive-tests,
+  #   ]
+  #   uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
+  #   with:
+  #     old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+  #     new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
+  #     pipeline-stage: 'stage'
+
+  promote-release-bundle-to-stage:
     needs: [
-      stage-get-jfrog-version,
       comprehensive-tests,
-      bump-stage-number
+      stage-get-jfrog-version
     ]
-    uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
+    uses: aerospike/aerospike-client-python/.github/workflows/promote-release-bundle.yml@CLIENT-3467-cicd-use-jfrog-release-bundles
     with:
-      old_version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-      new_version: ${{ needs.bump-stage-number.outputs.new_stage_version }}
-      pipeline-stage: 'stage'
+      release-bundle-name: "aerospike-nodejs-client"
+      release-bundle-version: ${{ needs.stage-get-jfrog-version.outputs.tag_version }}
+      new-environment: TEST
+      jfrog-project: database
+      jfrog-repo-name: database-npm-test-local
+    permissions:
+      id-token: write
+
+  # ff-stage-to-dev:
+  #   needs: comprehensive-tests
+  #   uses: ./.github/workflows/fast-forward-merge.yml
+  #   with:
+  #     ref_to_merge: origin/dev
+  #     base_branch: stage
 
 #  upload-npm-package-to-jfrog:
 #    name: Upload artifacts to JFrog

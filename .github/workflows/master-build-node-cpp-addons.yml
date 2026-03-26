@@ -15,19 +15,6 @@ on:
         required: false
         type: boolean
         default: false
-      version:
-        type: string
-        required: true
-      # workflow_call hack
-      is_workflow_call:
-        type: boolean
-        default: true
-        required: false
-      # This input is only used in workflow_call events
-      use-server-rc:
-        required: false
-        default: false
-        type: boolean
       server-tag:
         type: string
         required: false
@@ -54,14 +41,11 @@ jobs:
           "win_amd64"
         ]
       fail-fast: false
-    uses: ./.github/workflows/dev-build-node-cpp-bindings.yml
+    uses: ./.github/workflows/master-build-node-cpp-bindings.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      # Can't use env context here, so just copy from build-sdist env var
       run_tests: ${{ inputs.run_tests }}
-      use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
-      version: ${{ inputs.version }}
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
       cell_girl: ${{ secrets.cell_girl }}
