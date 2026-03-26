@@ -1,0 +1,49 @@
+on:
+  pull_request:
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [
+          20,
+          22,
+          24,
+          25
+        ]
+      fail-fast: false
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build client
+      run: |
+        # Install dependencies
+        npm ci --ignore-scripts
+        # Build C client dependency (TODO: this should belong in the build script)
+        ./scripts/build-c-client.sh
+        # Then build client itself
+        npm run build
+
+    - name: Run Aerospike server
+      run: |
+        docker run --ulimit nofile=15000:15000 \
+          -d --name aerospike \
+          -e DEFAULT_TTL=2592000 \
+          -p 3000-3002:3000-3002 \
+          aerospike/aerospike-server
+
+    - name: Run tests
+      run: npm run test
