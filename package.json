@@ -31,7 +31,9 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs/issues"
   },
   "binary": {
-    "module_name": "aerospike"
+    "module_name": "aerospike",
+    "module_path": "./lib/binding/",
+    "host": "https://node-js-client-native-node-bindings.s3-us-east-1.amazonaws.com"
   },
   "scripts": {
     "install": "npm run build",
