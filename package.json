@@ -57,6 +57,7 @@
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1018.0",
     "@mapbox/node-pre-gyp": "^2.0.3",
     "bindings": "^1.5.0",
     "husky": "^9.0.11",
