@@ -198,13 +198,19 @@ jobs:
         Remove-Item -Force .\build\release\aerospike.ipdb
         Remove-Item -Force .\build\release\aerospike.iobj
 
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v6.0.0
+      with:
+        aws-region: us-east-1
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
     - name: Upload binding binaries to Github
       # I just copy and pasted the same condition for building the bindings
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build"
-        path: "lib/binding"
+      run: |
+        export PATH="$(pwd)/node_modules/.bin/:$PATH"
+        node-pre-gyp package publish
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
