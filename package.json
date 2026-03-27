@@ -56,6 +56,7 @@
   },
   "dependencies": {
     "@mapbox/node-pre-gyp": "^2.0.3",
+    "aws-sdk": "^2.1693.0",
     "husky": "^9.0.11",
     "minimatch": "^10.1.1",
     "nan": "^2.22.0",
