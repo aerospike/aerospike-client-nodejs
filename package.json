@@ -31,11 +31,7 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs/issues"
   },
   "binary": {
-    "module_name": "aerospike",
-    "module_path": "./lib/binding/{node_abi}-{platform}-{arch}/",
-    "remote_path": "./{module_name}/v{version}/",
-    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
-    "host": "https://www.npmjs.com/package/aerospike"
+    "module_name": "aerospike"
   },
   "scripts": {
     "install": "npm run build",
