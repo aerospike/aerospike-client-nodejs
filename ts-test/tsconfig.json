@@ -3,7 +3,7 @@
     "resolveJsonModule": true,
     "target": "esnext",
     "module": "commonjs",
-    "outDir": "./dist",
+    // "outDir": "./test",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
