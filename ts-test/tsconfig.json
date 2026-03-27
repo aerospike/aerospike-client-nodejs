@@ -19,6 +19,6 @@
       // You can add more mappings here
     }
   },
-  "include": ["tests/**/*.ts", "tests/*.ts", "tests/util/*.ts"],
+  "include": ["tests/**/*.ts"],
   // "files": ["../typings/index.d.ts"]
 }
