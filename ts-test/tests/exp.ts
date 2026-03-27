@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { AerospikeError, Client as Cli, exp as expr, operations, maps as Maps, GeoJSON as GJ, Key, AerospikeBins, cdt, AerospikeRecord, RecordMetadata, AerospikeExp, ReadPolicy, BatchApplyPolicy, Key as K, UDF, BatchPolicy, BatchWriteRecord, batchType, BatchReadPolicy, Query, IndexOptions, BatchWritePolicy, BatchRemovePolicy} from 'aerospike';
+import Aerospike, { AerospikeError, Client as Cli, exp as expr, operations, maps as Maps, GeoJSON as GJ, Key, AerospikeBins, cdt, AerospikeRecord, RecordMetadata, AerospikeExp, ReadPolicy, BatchApplyPolicy, Key as K, UDF, BatchPolicy, BatchWriteRecord, batchType, BatchReadPolicy, Query, IndexOptions, BatchWritePolicy, BatchRemovePolicy} from '../../lib/aerospike';
 
 import { expect, assert } from 'chai'; 
 

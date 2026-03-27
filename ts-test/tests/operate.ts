@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { GeoJSON as GeoJSONType, Client as Cli, KeyOptions, AerospikeBins, AerospikeRecord, AerospikeError as ASError, Double as Doub, GeoJSON as GJ, status as statusModule, operations, RecordMetadata, WritePolicy, OperatePolicy, Key} from 'aerospike';
+import Aerospike, { GeoJSON as GeoJSONType, Client as Cli, KeyOptions, AerospikeBins, AerospikeRecord, AerospikeError as ASError, Double as Doub, GeoJSON as GJ, status as statusModule, operations, RecordMetadata, WritePolicy, OperatePolicy, Key} from '../../lib/aerospike';
 
 import { expect, assert} from 'chai'; 
 import * as helper from './test_helper';

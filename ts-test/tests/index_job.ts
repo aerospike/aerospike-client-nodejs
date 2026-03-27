@@ -20,7 +20,7 @@
 /* eslint-disable no-unused-expressions */
 
 
-import Aerospike, { AerospikeError as ASError, IndexJob as IJ } from 'aerospike';
+import Aerospike, { AerospikeError as ASError, IndexJob as IJ } from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

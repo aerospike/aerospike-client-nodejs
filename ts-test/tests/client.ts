@@ -19,7 +19,7 @@
 /* global context, expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client as Cli, ConfigOptions, cdt, AerospikeError, AerospikeRecord, Node, KeyOptions } from 'aerospike';
+import Aerospike, { Client as Cli, ConfigOptions, cdt, AerospikeError, AerospikeRecord, Node, KeyOptions } from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

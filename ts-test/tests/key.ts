@@ -19,7 +19,7 @@
 /* global expect, describe, context, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Key as K, status as statusModule, Client as Cli, KeyOptions} from 'aerospike';
+import Aerospike, { Key as K, status as statusModule, Client as Cli, KeyOptions} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

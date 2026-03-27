@@ -20,7 +20,7 @@
 // HELPERS
 // ****************************************************************************
 //
-import Aerospike from 'aerospike';
+import Aerospike from '../../../lib/aerospike';
 const Double = Aerospike.Double
 
 

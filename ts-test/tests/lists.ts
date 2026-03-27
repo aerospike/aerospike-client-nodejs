@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { AerospikeError as ASError, lists as listsModule, operations, cdt, status as statusModule, ListPolicy } from 'aerospike';
+import Aerospike, { AerospikeError as ASError, lists as listsModule, operations, cdt, status as statusModule, ListPolicy } from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

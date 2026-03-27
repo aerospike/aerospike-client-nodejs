@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { WritePolicy } from 'aerospike';
+import Aerospike, { WritePolicy } from '../../lib/aerospike';
 
 import { expect, assert} from 'chai'; 
 import * as helper from './test_helper';

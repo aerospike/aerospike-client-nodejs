@@ -20,7 +20,7 @@
 /* global expect */
 
 
-import Aerospike, { Job as J, IndexJob as IJ, Client as Cli, AerospikeError } from 'aerospike';
+import Aerospike, { Job as J, IndexJob as IJ, Client as Cli, AerospikeError } from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

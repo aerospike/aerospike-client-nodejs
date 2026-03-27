@@ -26,7 +26,7 @@
  * Add delays to negative testing
  * 
  */
-import Aerospike, { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners, WritePolicy, Query, RecordStream} from 'aerospike';
+import Aerospike, { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners, WritePolicy, Query, RecordStream} from '../../lib/aerospike';
 
 const { exec } = require('child_process');
 const util = require('util');

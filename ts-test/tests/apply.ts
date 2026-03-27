@@ -18,7 +18,7 @@
 
 /* global expect, describe, it, before, after */
 
-import Aerospike, { AerospikeRecord, AerospikeError as ASError, Client as Cli, Key, UDF, ApplyPolicyOptions, status} from 'aerospike';
+import Aerospike, { AerospikeRecord, AerospikeError as ASError, Client as Cli, Key, UDF, ApplyPolicyOptions, status} from '../../lib/aerospike';
 import * as helper from './test_helper';
 import { expect, assert } from 'chai'; 
 

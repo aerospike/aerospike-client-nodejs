@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { BasePolicy as BP, AdminPolicy, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from 'aerospike';
+import Aerospike, { BasePolicy as BP, AdminPolicy, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

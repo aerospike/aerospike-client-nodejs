@@ -18,7 +18,7 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { status as statusModule, Client as Cli, Key, RecordMetadata, AerospikeBins, AerospikeError, AerospikeRecord, ReadPolicy} from 'aerospike';
+import Aerospike, { status as statusModule, Client as Cli, Key, RecordMetadata, AerospikeBins, AerospikeError, AerospikeRecord, ReadPolicy} from '../../lib/aerospike';
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';

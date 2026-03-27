@@ -19,7 +19,7 @@
 /* global expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { BatchResult, AerospikeRecord, Client, Key} from 'aerospike';
+import Aerospike, { BatchResult, AerospikeRecord, Client, Key} from '../../lib/aerospike';
 import * as helper from './test_helper';
 import { expect } from 'chai';
 

@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Key as K, RecordMetadata, status as statusModule, AerospikeRecord, Client as Cli, WritePolicyOptions, AerospikeError, Transaction, _transactionPool, ConfigProvider} from 'aerospike';
+import Aerospike, { Key as K, RecordMetadata, status as statusModule, AerospikeRecord, Client as Cli, WritePolicyOptions, AerospikeError, Transaction, _transactionPool, ConfigProvider} from '../../lib/aerospike';
 
 const fs = require('fs');
 

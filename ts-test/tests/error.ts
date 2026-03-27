@@ -19,7 +19,7 @@
 /* global expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { AerospikeError, status as statusModule } from 'aerospike';
+import Aerospike, { AerospikeError, status as statusModule } from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

@@ -18,7 +18,7 @@
 
 /* global expect, describe, it, context */
 
-import Aerospike, { Client, AdminPolicy, admin, ConfigOptions } from 'aerospike';
+import Aerospike, { Client, AdminPolicy, admin, ConfigOptions } from '../../lib/aerospike';
 import * as helper from './test_helper';
 import { expect, assert } from 'chai'; 
 

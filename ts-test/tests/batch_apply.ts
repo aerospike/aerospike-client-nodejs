@@ -20,7 +20,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, AerospikeRecord, BatchResult, Key as K, UDF, BatchPolicyOptions, BatchApplyPolicyOptions, WritePolicyOptions, ConfigOptions, AerospikeError, status} from 'aerospike';
+import Aerospike, { Client, AerospikeRecord, BatchResult, Key as K, UDF, BatchPolicyOptions, BatchApplyPolicyOptions, WritePolicyOptions, ConfigOptions, AerospikeError, status} from '../../lib/aerospike';
 import * as helper from './test_helper';
 import { expect, assert} from 'chai'; 
 

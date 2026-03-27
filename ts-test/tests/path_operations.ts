@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { maps as Maps, AerospikeBins, RecordMetadata, Key, AerospikeRecord, AerospikeExp, operations, exp as expModule, cdt, GeoJSON} from 'aerospike';
+import Aerospike, { maps as Maps, AerospikeBins, RecordMetadata, Key, AerospikeRecord, AerospikeExp, operations, exp as expModule, cdt, GeoJSON} from '../../lib/aerospike';
 
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 

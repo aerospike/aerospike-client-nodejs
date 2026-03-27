@@ -18,7 +18,7 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { cdt, status as statusModule, lists as listsModule, maps as Maps} from 'aerospike';
+import Aerospike, { cdt, status as statusModule, lists as listsModule, maps as Maps} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

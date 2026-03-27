@@ -20,7 +20,7 @@
 
 const path = require('path')
 
-import Aerospike, { AerospikeError, Job } from 'aerospike';
+import Aerospike, { AerospikeError, Job } from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

@@ -18,7 +18,7 @@
 
 /* global expect, it, context */
 /* eslint-disable no-unused-expressions */
-import Aerospike, { Client as Cli, WritePolicyOptions, RemovePolicyOptions, AerospikeRecord, AerospikeBins, Key, Query, exp, Job, operations} from 'aerospike';
+import Aerospike, { Client as Cli, WritePolicyOptions, RemovePolicyOptions, AerospikeRecord, AerospikeBins, Key, Query, exp, Job, operations} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

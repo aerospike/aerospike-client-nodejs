@@ -19,7 +19,7 @@
 /* global beforeEach, afterEach, expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { ConfigOptions, Config as Conf, ConfigPolicies} from 'aerospike';
+import Aerospike, { ConfigOptions, Config as Conf, ConfigPolicies} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

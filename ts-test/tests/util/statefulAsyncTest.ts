@@ -17,7 +17,7 @@
 'use strict'
 
 /* global expect */
-import Aerospike from 'aerospike';
+import Aerospike from '../../../lib/aerospike';
 
 const AerospikeError = Aerospike.AerospikeError
 import * as helper from '../test_helper';

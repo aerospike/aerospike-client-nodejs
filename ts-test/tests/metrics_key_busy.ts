@@ -18,7 +18,7 @@
 
 /* global expect, describe, it, context */
 
-import Aerospike, { status as statusModule, AerospikeError as ASError, MetricsPolicy, Cluster, Double as Doub, GeoJSON as GJ, Client as Cli, NamespaceMetrics, MetricsListeners} from 'aerospike';
+import Aerospike, { status as statusModule, AerospikeError as ASError, MetricsPolicy, Cluster, Double as Doub, GeoJSON as GJ, Client as Cli, NamespaceMetrics, MetricsListeners} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

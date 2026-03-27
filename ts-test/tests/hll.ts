@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 
 
-import Aerospike, { hll as hllModule, status as statusModule, HLLPolicy, HyperLogLog} from 'aerospike';
+import Aerospike, { hll as hllModule, status as statusModule, HLLPolicy, HyperLogLog} from '../../lib/aerospike';
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper';

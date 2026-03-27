@@ -19,7 +19,7 @@
 /* global expect, describe, it, before, after, context */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Scan as ScanType, Job as J, Key as K, operations, AerospikeRecord } from 'aerospike';
+import Aerospike, { Scan as ScanType, Job as J, Key as K, operations, AerospikeRecord } from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

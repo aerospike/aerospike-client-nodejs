@@ -21,7 +21,7 @@
 
 
 
-import Aerospike, { exp as expModule, maps as Maps, operations, Client as Cli, AerospikeBins, RecordMetadata, Key, AerospikeExp, cdt, RemovePolicy, MapPolicy, AerospikeRecord} from 'aerospike';
+import Aerospike, { exp as expModule, maps as Maps, operations, Client as Cli, AerospikeBins, RecordMetadata, Key, AerospikeExp, cdt, RemovePolicy, MapPolicy, AerospikeRecord} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 

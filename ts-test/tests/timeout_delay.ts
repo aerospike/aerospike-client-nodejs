@@ -18,7 +18,7 @@
 
 /* global expect, describe, it, context */
 
-import Aerospike, { Client, ConfigOptions, UDF, operations, Query, Scan, AerospikeRecord, ReadPolicy, WritePolicy, ApplyPolicy, OperatePolicy, RemovePolicy, BatchPolicy, QueryPolicy, ScanPolicy, InfoPolicy, Config} from 'aerospike';
+import Aerospike, { Client, ConfigOptions, UDF, operations, Query, Scan, AerospikeRecord, ReadPolicy, WritePolicy, ApplyPolicy, OperatePolicy, RemovePolicy, BatchPolicy, QueryPolicy, ScanPolicy, InfoPolicy, Config} from '../../lib/aerospike';
 import * as helper from './test_helper';
 import { expect, assert } from 'chai'; 
 

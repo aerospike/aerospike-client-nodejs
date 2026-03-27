@@ -18,7 +18,7 @@
 
 /* eslint-env mocha */
 
-import Aerospike, { maps as Maps, operations, cdt, status as statusModule, AerospikeBins} from 'aerospike';
+import Aerospike, { maps as Maps, operations, cdt, status as statusModule, AerospikeBins} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';

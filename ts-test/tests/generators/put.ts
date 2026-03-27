@@ -19,7 +19,7 @@
 import pThrottle from 'p-throttle';
 
 
-import Aerospike, {ConfigOptions, Host, AerospikeRecord} from 'aerospike';
+import Aerospike, {ConfigOptions, Host, AerospikeRecord} from '../../../lib/aerospike';
 
 
 const Record = Aerospike.Record

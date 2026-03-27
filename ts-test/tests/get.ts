@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { status as statusModule, Client as Cli, Key as K, RecordMetadata, AerospikeRecord, AerospikeError, ReadPolicy, AerospikeBins} from 'aerospike';
+import Aerospike, { status as statusModule, Client as Cli, Key as K, RecordMetadata, AerospikeRecord, AerospikeError, ReadPolicy, AerospikeBins} from '../../lib/aerospike';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper';
