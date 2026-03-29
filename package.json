@@ -66,7 +66,6 @@
     "npm-run-all": "^4.1.5"
   },
   "devDependencies": {
-    "aerospike": "file:..",
     "dockerode": "^4.0.9",
     "p-throttle": "^8.1.0",
     "tmp": "^0.2.4",
