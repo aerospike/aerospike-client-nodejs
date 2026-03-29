@@ -44,6 +44,7 @@ exports.config = config
 Aerospike.setDefaultLogging(config.log)
 
 const client = Aerospike.client(config)
+console.log("this is running")
 exports.client = client
 
 function UDFHelper (client) {
