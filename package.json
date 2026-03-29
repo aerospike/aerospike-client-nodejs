@@ -63,12 +63,13 @@
     "minimatch": "^10.1.1",
     "nan": "^2.22.0",
     "node-gyp": "^12.1.0",
-    "npm-run-all": "^4.1.5",
-    "p-throttle": "^8.1.0",
-    "tmp": "^0.2.5",
-    "tsc-alias": "^1.8.16"
+    "npm-run-all": "^4.1.5"
   },
   "devDependencies": {
+    "aerospike": "file:..",
+    "dockerode": "^4.0.9",
+    "p-throttle": "^8.1.0",
+    "tmp": "^0.2.4",
     "@types/chai": "^5.2.3",
     "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
@@ -86,7 +87,8 @@
     "typedoc": "^0.28.15",
     "typedoc-plugin-rename-defaults": "^0.7.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "~8.50.0"
+    "typescript-eslint": "~8.50.0",
+    "ts-node": "^10.9.2"
   },
   "standard": {
     "ignore": [
