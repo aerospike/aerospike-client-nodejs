@@ -20,9 +20,9 @@
 /* eslint-disable no-unused-expressions */
 
 const Aerospike = require('../lib/aerospike')
-const info = require('../../lib/info')
+const info = require('../lib/info')
 const helper = require('./test_helper')
-const utils = require('../../lib/utils')
+const utils = require('../lib/utils')
 
 const AerospikeError = Aerospike.AerospikeError
 

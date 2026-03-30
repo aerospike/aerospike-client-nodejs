@@ -52,7 +52,7 @@ export function integer (namespace: any, set: any, options?: any) {
 export function range (keygen: any, end: number, start?: number) {
   start = start || 0
   end = end || start + 1
-  const a = []
+  const a: Array<Aerospike.Key> = []
   for (let i = 0; i < end; i++) {
     a.push(keygen())
   }
