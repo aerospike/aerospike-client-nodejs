@@ -44,5 +44,10 @@ jobs:
           -p 3000-3002:3000-3002 \
           aerospike/aerospike-server
 
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
+        is-strong-consistency-enabled: false
+
     - name: Run tests
       run: npm run test
