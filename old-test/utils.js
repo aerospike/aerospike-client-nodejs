@@ -19,7 +19,7 @@
 /* global expect, describe, it */
 
 require('./test_helper')
-const utils = require('../../lib/utils')
+const utils = require('../lib/utils')
 
 describe('utils.parseHostString() #noserver', function () {
   it('parses a domain name', function () {

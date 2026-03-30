@@ -18,31 +18,35 @@
 
 /* global expect, describe, it, before */
 
-const Aerospike = require('../../../lib/aerospike')
+const Aerospike = require('../../lib/aerospike')
 const helper = require('../test_helper')
 const perfdata = require('./perfdata')
 
 const fs = require('fs')
 
-describe('client.query()', function () {
+const mega = 1024 * 1024 // bytes in a MB
+
+describe('client.scan()', function () {
   this.enableTimeouts(false)
   const client = helper.client
-  let testSet = 'test/queryperf'
-  const idxKey = new Aerospike.Key(helper.namespace, helper.set, 'queryPerfData')
+  let testSet = 'test/scanperf'
+  const idxKey = new Aerospike.Key(helper.namespace, helper.set, 'scanPerfData')
   const recordSize = [8, 128] // 8 x 128 bytes ≈ 1 kb / record
   let numberOfRecords = 1e6 // 1 Mio. records at 1 kb ≈ 1 GB total data size
+  const webWorkerThreads = 10 // number of WebWorker threads to use
+  const reportingInterval = 10000 // report progress every 10 seconds
 
-  // Execute query using given onData handler to process each scanned record
-  function executeQuery (onData, done) {
-    const query = client.query(helper.namespace, testSet)
-    query.where(Aerospike.filter.range('id', 0, numberOfRecords))
-    const stream = query.foreach()
+  // Execute scan using given onData handler to process each scanned record
+  function executeScan (onData, done) {
+    const scan = client.scan(helper.namespace, testSet)
+    scan.concurrent = true
+    const stream = scan.foreach()
 
     let received = 0
-    const timer = perfdata.interval(10000, function (ms) {
+    const timer = perfdata.interval(reportingInterval, function (ms) {
       const throughput = Math.round(1000 * received / ms)
       console.log('%d ms: %d records received (%d rps; %s)',
-        ms, received, throughput, perfdata.memoryUsage())
+        ms, received, throughput, perfdata.memUsage())
     })
 
     stream.on('error', function (err) { throw err })
@@ -68,29 +72,12 @@ describe('client.query()', function () {
         perfdata.generate(helper.namespace, testSet, numberOfRecords, recordSize, function (recordsGenerated) {
           console.timeEnd('generating performance test data')
           numberOfRecords = recordsGenerated // might be slightly less due to duplciate keys
-          const index = {
-            ns: helper.namespace,
-            set: testSet,
-            bin: 'id',
-            index: 'queryPerfIndex',
-            datatype: Aerospike.indexDataType.NUMERIC
-          }
-          console.info('generating secondary index (SI) on performance data')
-          console.time('creating SI')
-          client.createIndex(index, function (err, job) {
-            if (err) throw err
-            setTimeout(function () {
-              job.waitUntilDone(function () {
-                console.timeEnd('creating SI')
-                client.put(idxKey, { norec: numberOfRecords, set: testSet }, done)
-              })
-            }, 5000)
-          })
+          client.put(idxKey, { norec: numberOfRecords, set: testSet }, done)
         })
       } else {
         // perf test data already exists
-        numberOfRecords = record.bins.norec
-        testSet = record.bins.set
+        numberOfRecords = record.norec
+        testSet = record.set
         console.info('using performance test data from set %s (%d records)', testSet, numberOfRecords)
         done()
       }
@@ -98,27 +85,66 @@ describe('client.query()', function () {
   })
 
   // Test definitions
-  it('queries ' + numberOfRecords + ' records with noop', function (done) {
+  it('scans ' + numberOfRecords + ' records with noop', function (done) {
     const noop = function () {}
-    executeQuery(noop, done)
+    executeScan(noop, done)
   })
 
-  it('queries ' + numberOfRecords + ' records with busy loop', function (done) {
+  it('scans ' + numberOfRecords + ' records with busy loop', function (done) {
     const busy = function () {
       // busy loop
       for (let x = 0; x < 1e5; x++) {} // eslint-disable-line
     }
-    executeQuery(busy, done)
+    executeScan(busy, done)
   })
 
-  it('queries ' + numberOfRecords + ' records with file IO', function (done) {
-    const file = 'query-stress-test.log'
+  it('scans ' + numberOfRecords + ' records with busy loop in WebWorker', function (done) {
+    let Worker
+    try {
+      Worker = require('webworker-threads')
+    } catch (err) {
+      console.error('gem install webworker-threads to run this test!')
+      this.skip('gem install webworker-threads to run this test!')
+      return
+    }
+    function doWork () {
+      // busy loop
+      for (let x = 0; x < 1e5; x++) {} // eslint-disable-line
+    }
+    const threadPool = Worker.createPool(webWorkerThreads).all.eval(doWork)
+    console.log('created WebWorker pool with %s threads', webWorkerThreads)
+    let processed = 0
+    const timer = perfdata.interval(reportingInterval, function (ms) {
+      const throughput = Math.round(1000 * processed / ms)
+      const memUsage = process.memoryUsage()
+      const rss = Math.round(memUsage.rss / mega)
+      const heapUsed = Math.round(memUsage.heapUsed / mega)
+      const heapTotal = Math.round(memUsage.heapTotal / mega)
+      console.log('%d ms: %d records processed (%d rps; mem: %d MB, heap: %d / %d MB)',
+        ms, processed, throughput, rss, heapUsed, heapTotal)
+    })
+    const worker = function (record, meta, key) {
+      threadPool.any.eval('doWork()', function (err) {
+        if (err) throw err
+        if (++processed === numberOfRecords) {
+          timer.call()
+          timer.clear()
+          threadPool.destroy()
+          done()
+        }
+      })
+    }
+    executeScan(worker, function () {})
+  })
+
+  it('scans ' + numberOfRecords + ' records with file IO', function (done) {
+    const file = 'scan-stress-test.log'
     const stream = fs.createWriteStream(file)
     stream.on('error', function (err) { throw err })
     const fileAppend = function (record) {
       stream.write(JSON.stringify(record) + '\n')
     }
-    executeQuery(fileAppend, function () {
+    executeScan(fileAppend, function () {
       stream.end()
       fs.unlink(file, done)
     })

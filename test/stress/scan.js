@@ -18,7 +18,7 @@
 
 /* global expect, describe, it, before */
 
-const Aerospike = require('../../lib/aerospike')
+const Aerospike = require('../../../lib/aerospike')
 const helper = require('../test_helper')
 const perfdata = require('./perfdata')
 

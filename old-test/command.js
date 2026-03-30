@@ -20,7 +20,7 @@
 /* global expect */
 
 require('./test_helper')
-const Command = require('../../lib/commands/command')
+const Command = require('../lib/commands/command')
 
 describe('Command', function () {
   context('Extend Command', function () {

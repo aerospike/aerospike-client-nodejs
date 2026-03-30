@@ -13,7 +13,7 @@ end
 function createRecord(rec, binName, binValue)
   rec[binName] = binValue
   if (aerospike:exists(rec)) then
-    status = aerospike:udpate(rec)
+    status = aerospike:update(rec)
   else
     status = aerospike:create(rec)
   end
@@ -58,9 +58,4 @@ function even(stream, bin)
     return rec.value
   end
   return stream : filter(filt) : map(mapper)
-end
-
-function deleteRecord(rec)
-  aerospike:remove(rec)
-  return 0
 end
