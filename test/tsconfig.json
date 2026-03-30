@@ -1,23 +1,23 @@
 {
   "compilerOptions": {
-    "target": "esnext",
-    "module": "commonjs",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     // "outDir": "./test",
     "strict": true,
-    "esModuleInterop": true,
+    // "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+    // "forceConsistentCasingInFileNames": true,
     "typeRoots": [
-      "../typings",
+      "../lib",
       "../node_modules/@types"
     ],
     // TODO: test this later
     "baseUrl": "./",
-    "paths": {
-      "aerospike": ["../lib/aerospike"]
-      // You can add more mappings here
-    }
+    // "paths": {
+    //   "aerospike": ["../lib/aerospike"]
+    //   // You can add more mappings here
+    // }
   },
-  "include": ["tests/**/*.ts"],
+  "include": ["**/*.ts"],
   // "files": ["../typings/index.d.ts"]
 }

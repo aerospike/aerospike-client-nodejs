@@ -19,29 +19,36 @@
 /* eslint-env mocha */
 /* global expect */
 
-const helper = require('./test_helper')
+import * as helper from './test_helper'
+import { expect } from 'chai';
+import * as Aerospike from '../lib/aerospike';
 
 describe('Command Queue #slow', function () {
   it('queues commands it cannot process immediately', async function () {
-    const test = async function (Aerospike, config) {
+    const test = async function (config: Aerospike.Config) {
       Object.assign(config, { log: { level: Aerospike.log.OFF } })
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 5 })
+      // console.log(-2)
+      // console.log(config)
       const client = await Aerospike.connect(config)
+      // console.log(-1)
       const cmds = Array.from({ length: 10 }, (_, i) =>
         client.put(new Aerospike.Key(helper.namespace, helper.set, i), { i })
       )
+      // console.log(0)
       const results = await Promise.all(cmds)
+      // console.log(1)
       client.close()
       return results.length
     }
 
-    const result = await helper.runInNewProcess(test, helper.config)
-      .then(() => expect(result).to.equal(10))
-      .catch(error => console.error('Error:', error))
+    console.log(helper.config)
+    const result = await helper.runInNewProcess(test, helper.config).catch((error) => console.error('Error:', error))
+    expect(result).to.equal(10)
   })
 
   it('rejects commands it cannot queue', async function () {
-    const test = async function (Aerospike, config) {
+    const test = async function (config: Aerospike.Config) {
       Object.assign(config, { log: { level: Aerospike.log.OFF } }) // disable logging for this test to suppress C client error messages
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 1 })
       const client = await Aerospike.connect(config)
@@ -54,17 +61,16 @@ describe('Command Queue #slow', function () {
         return 'All commands processed successfully'
       } catch (error) {
         client.close()
-        return error.message
+        return error
       }
     }
 
-    const result = await helper.runInNewProcess(test, helper.config)
-      .then(() => expect(result).to.match(/Async delay queue full/))
-      .catch(error => console.error('Error:', error))
+    const result = await helper.runInNewProcess(test, helper.config).catch(error => console.error('Error:', error))
+    expect(result).to.match(/Async delay queue full/)
   })
 
   it('throws an error when trying to configure command queue after client connect', async function () {
-    const test = async function (Aerospike, config) {
+    const test = async function (config: Aerospike.Config) {
       Object.assign(config, { log: { level: Aerospike.log.OFF } })
       const client = await Aerospike.connect(config)
       try {
@@ -73,7 +79,7 @@ describe('Command Queue #slow', function () {
         return 'Successfully setup command queue'
       } catch (error) {
         client.close()
-        return error.message
+        return error
       }
     }
 
@@ -81,7 +87,7 @@ describe('Command Queue #slow', function () {
     expect(result).to.match(/Command queue has already been initialized!/)
   })
   it('does not deadlock on extra query with failOnClusterChange info commands #389', async function () {
-    const test = async function (Aerospike, config) {
+    const test = async function (config: Aerospike.Config) {
       Object.assign(config, {
         log: { level: Aerospike.log.OFF },
         policies: {
@@ -102,7 +108,7 @@ describe('Command Queue #slow', function () {
         await job.wait(10)
       } catch (error) {
         // index already exists
-        if (error.code !== Aerospike.status.ERR_INDEX_FOUND) throw error
+        if (error instanceof Aerospike.AerospikeError && error.code !== Aerospike.status.ERR_INDEX_FOUND) throw error
       }
 
       const puts = Array.from({ length: 5 }, (_, i) =>
@@ -116,11 +122,12 @@ describe('Command Queue #slow', function () {
           query.where(Aerospike.filter.equal('i', i))
           return query.results()
         })
-        results = await Promise.all(results)
-        return results.reduce((sum, records) => sum + records.length, 0)
+        let promise_results = await Promise.all(results)
+        return promise_results.reduce((sum, records) => sum + records.length, 0)
       } catch (error) {
         // throws "Delay queue timeout" error on deadlock
-        return error.message
+        if (error instanceof Aerospike.AerospikeError) return error.message
+        throw error
       }
     }
 

@@ -57,6 +57,7 @@ export function runInNewProcessFn<T>(fn: Function, env: NodeJS.ProcessEnv, data:
   return new Promise((resolve, reject) => {
     const child: ChildProcess = forkAndRun(fn, env, data)
     child.on('message', (message: { error?: string, result?: T }) => {
+      console.log("Current process received message from child process", message)
       child.disconnect()
       if (message.error) {
         reject(new Error(message.error))

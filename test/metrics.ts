@@ -38,7 +38,7 @@ import * as helper from './test_helper';
 
 import * as fs from 'fs';
 
-const aerospikeClientVersion = require('../../package.json').version
+const aerospikeClientVersion = require('../package.json').version
 
 const releaseVersion = aerospikeClientVersion.split('-')[0];
 
