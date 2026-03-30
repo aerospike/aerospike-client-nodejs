@@ -46,6 +46,7 @@ const config: Config = testConfigs.config
 const helper_client_exists = testConfigs.omitHelperClient
 let client: any;
 client = Aerospike.client(config)
+console.log("This is running")
 
 
 export {client, config}
