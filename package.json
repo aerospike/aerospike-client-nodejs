@@ -40,7 +40,7 @@
   "scripts": {
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "test": "cd ts-test && tsc && mocha tests/${npm_config_testfile:-} ",
+    "test": "cd ts-test && mocha --require ts-node/register/transpile-only tests/${npm_config_testfile:-} ",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore ts-test/dist --ignore scripts",
