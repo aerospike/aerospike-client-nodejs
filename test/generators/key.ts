@@ -15,7 +15,7 @@
 // *****************************************************************************
 
 'use strict'
-import Aerospike from '../../../lib/aerospike'; 
+import Aerospike from '../../lib/aerospike'; 
 const Key = Aerospike.Key
 import * as valgen from './value';
 

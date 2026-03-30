@@ -16,9 +16,9 @@
 
 'use strict'
 
-import * as Aerospike from '../../../lib/aerospike';
+import * as Aerospike from '../../lib/aerospike';
 
-import { ConfigOptions, Host, TLSInfo, BasePolicyOptions } from '../../../lib/aerospike';
+import { ConfigOptions, Host, TLSInfo, BasePolicyOptions } from '../../lib/aerospike';
 
 import yargs, {Argv} from 'yargs';
 import { hideBin } from 'yargs/helpers';

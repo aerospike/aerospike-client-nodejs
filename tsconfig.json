@@ -5,9 +5,9 @@
     "strict": true,
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "es2022",
     "lib": [
-      "es5",
+      "es2022",
       "dom"
     ],
     "allowJs": true,
