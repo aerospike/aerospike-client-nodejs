@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-    "resolveJsonModule": true,
     "target": "esnext",
     "module": "commonjs",
     // "outDir": "./test",
