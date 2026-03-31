@@ -20,8 +20,8 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { AerospikeError, Client, Key as K, BatchResult} from '../lib/aerospike';
-import * as helper from './test_helper';
+import Aerospike, { AerospikeError, Client, Key as K, BatchResult} from '../lib/aerospike.js';
+import * as helper from './test_helper.js';
 import { expect, assert} from 'chai';
 // const util = require('util')
 

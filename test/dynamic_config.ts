@@ -19,14 +19,14 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Key as K, RecordMetadata, status as statusModule, AerospikeRecord, Client as Cli, WritePolicyOptions, AerospikeError, Transaction, _transactionPool, ConfigProvider} from '../lib/aerospike';
+import Aerospike, { Key as K, RecordMetadata, status as statusModule, AerospikeRecord, Client as Cli, WritePolicyOptions, AerospikeError, Transaction, _transactionPool, ConfigProvider} from '../lib/aerospike.js';
 
 const fs = require('fs');
 
 import { expect, assert } from 'chai';
 
 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const keygen: any = helper.keygen
 const metagen: any = helper.metagen

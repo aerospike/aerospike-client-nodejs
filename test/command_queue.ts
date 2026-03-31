@@ -19,9 +19,9 @@
 /* eslint-env mocha */
 /* global expect */
 
-import * as helper from './test_helper'
+import * as helper from './test_helper.js'
 import { expect } from 'chai';
-import * as Aerospike from '../lib/aerospike';
+import * as Aerospike from '../lib/aerospike.js';
 
 describe('Command Queue #slow', function () {
   it('queues commands it cannot process immediately', async function () {

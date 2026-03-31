@@ -18,10 +18,10 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { Client } from '../lib/aerospike';
+import Aerospike, { Client } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 let client: Client
 describe('Aerospike', function () {
   describe('Aerospike.client() #noserver', function () {

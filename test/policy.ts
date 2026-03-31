@@ -20,13 +20,13 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { BasePolicy as BP, AdminPolicy, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from '../lib/aerospike';
+import Aerospike, { BasePolicy as BP, AdminPolicy, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const BasePolicy: typeof BP = Aerospike.BasePolicy
-require('./test_helper')
+require('./test_helper.js')
 
 context('Client Policies #noserver', function () {
   describe('BasePolicy', function () {

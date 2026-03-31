@@ -19,10 +19,10 @@
 /* global context, expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client as Cli, ConfigOptions, cdt, AerospikeError, AerospikeRecord, Node, KeyOptions } from '../lib/aerospike';
+import Aerospike, { Client as Cli, ConfigOptions, cdt, AerospikeError, AerospikeRecord, Node, KeyOptions } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const keygen: any = helper.keygen
 

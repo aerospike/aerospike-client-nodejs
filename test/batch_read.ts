@@ -20,8 +20,8 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, BatchReadRecord, BatchResult, AerospikeRecord, BatchReadPolicyOptions, BatchPolicyOptions, AerospikeError, AerospikeBins } from '../lib/aerospike';
-import * as helper from './test_helper';
+import Aerospike, { Client, BatchReadRecord, BatchResult, AerospikeRecord, BatchReadPolicyOptions, BatchPolicyOptions, AerospikeError, AerospikeBins } from '../lib/aerospike.js';
+import * as helper from './test_helper.js';
 import { expect } from 'chai';
 
 const keygen = helper.keygen

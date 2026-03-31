@@ -19,10 +19,10 @@
 /* global expect, describe, it, before, after, context */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Scan as ScanType, Job as J, Key as K, operations, AerospikeRecord } from '../lib/aerospike';
+import Aerospike, { Scan as ScanType, Job as J, Key as K, operations, AerospikeRecord } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const Scan: typeof ScanType = Aerospike.Scan
 const Job: typeof J = Aerospike.Job

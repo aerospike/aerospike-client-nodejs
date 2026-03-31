@@ -20,10 +20,10 @@
 /* global expect */
 
 
-import Aerospike, { Job as J, IndexJob as IJ, Client as Cli, AerospikeError } from '../lib/aerospike';
+import Aerospike, { Job as J, IndexJob as IJ, Client as Cli, AerospikeError } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const Job: typeof J = Aerospike.Job
 const IndexJob: typeof IJ = Aerospike.IndexJob

@@ -20,7 +20,7 @@
 /* global expect */
 
 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 import { expect } from 'chai'; 
 

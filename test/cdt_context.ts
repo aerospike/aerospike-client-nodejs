@@ -18,10 +18,10 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { cdt, status as statusModule, lists as listsModule, maps as Maps} from '../lib/aerospike';
+import Aerospike, { cdt, status as statusModule, lists as listsModule, maps as Maps} from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const status: typeof statusModule = Aerospike.status
 const lists: typeof listsModule = Aerospike.lists

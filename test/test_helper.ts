@@ -16,7 +16,7 @@
 
 'use strict'
 
-import Aerospike, {Client, Config, Job, IndexJob, indexDataType, indexType, cdt, InfoAllResponse, AerospikeExp} from '../lib/aerospike'; 
+import Aerospike, {Client, Config, Job, IndexJob, indexDataType, indexType, cdt, InfoAllResponse, AerospikeExp} from '../lib/aerospike.js'; 
 
 import options from './util/options';
 import * as semver from 'semver';

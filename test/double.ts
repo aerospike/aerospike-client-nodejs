@@ -18,7 +18,7 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { Double as Doub } from '../lib/aerospike';
+import Aerospike, { Double as Doub } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
 

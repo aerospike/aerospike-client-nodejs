@@ -19,12 +19,12 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { maps as Maps, AerospikeBins, RecordMetadata, Key, AerospikeRecord, AerospikeExp, operations, exp as expModule, cdt, GeoJSON} from '../lib/aerospike';
+import Aerospike, { maps as Maps, AerospikeBins, RecordMetadata, Key, AerospikeRecord, AerospikeExp, operations, exp as expModule, cdt, GeoJSON} from '../lib/aerospike.js';
 
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 
 import { expect, assert } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const exp: typeof expModule = Aerospike.exp
 const op: typeof operations = Aerospike.operations

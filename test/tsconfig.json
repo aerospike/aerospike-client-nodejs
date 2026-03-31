@@ -1,14 +1,14 @@
 {
   "compilerOptions": {
-    "module": "preserve",
-    "moduleResolution": "bundler",
+    // "target": "esnext",
+    "module": "Node16",
+    "moduleResolution": "node16",
     // "outDir": "./test",
     "strict": true,
     // "esModuleInterop": true,
-    "skipLibCheck": true,
+    // "skipLibCheck": true,
     // "forceConsistentCasingInFileNames": true,
     "typeRoots": [
-      "../lib",
       "../node_modules/@types"
     ],
     // TODO: test this later
@@ -19,5 +19,5 @@
     // }
   },
   "include": ["**/*.ts"],
-  // "files": ["../typings/index.d.ts"]
+  "files": ["../lib/aerospike.d.ts"]
 }

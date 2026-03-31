@@ -20,10 +20,10 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, ConfigOptions, AerospikeBins, AerospikeRecord, BatchWriteRecord, BatchResult, AerospikeError, KeyOptions, BatchWritePolicy, BatchPolicy, BatchPolicyOptions, Key as K} from '../lib/aerospike';
+import Aerospike, { Client, ConfigOptions, AerospikeBins, AerospikeRecord, BatchWriteRecord, BatchResult, AerospikeError, KeyOptions, BatchWritePolicy, BatchPolicy, BatchPolicyOptions, Key as K} from '../lib/aerospike.js';
 
 import { expect, assert} from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 // const util = require('util')
 const batchType = Aerospike.batchType

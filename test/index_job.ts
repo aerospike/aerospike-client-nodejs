@@ -20,10 +20,10 @@
 /* eslint-disable no-unused-expressions */
 
 
-import Aerospike, { AerospikeError as ASError, IndexJob as IJ } from '../lib/aerospike';
+import Aerospike, { AerospikeError as ASError, IndexJob as IJ } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const AerospikeError: typeof ASError = Aerospike.AerospikeError
 const IndexJob: typeof IJ = Aerospike.IndexJob

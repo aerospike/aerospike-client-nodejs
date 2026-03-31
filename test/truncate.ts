@@ -17,9 +17,9 @@
 'use strict'
 
 /* eslint-env mocha */
-import Aerospike, { Client, BatchResult, AerospikeRecord, Key } from '../lib/aerospike';
+import Aerospike, { Client, BatchResult, AerospikeRecord, Key } from '../lib/aerospike.js';
 
-import * as helper from './test_helper'
+import * as helper from './test_helper.js'
 
 const { sleep } = helper.util
 

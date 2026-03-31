@@ -19,10 +19,10 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Client } from '../lib/aerospike';
+import Aerospike, { Client } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const status_codes = Aerospike.status
 

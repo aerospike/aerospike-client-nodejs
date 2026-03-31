@@ -15,7 +15,7 @@
 // *****************************************************************************
 
 'use strict'
-import Aerospike, {ConfigOptions, Host, AerospikeBins} from '../../lib/aerospike';
+import Aerospike, {ConfigOptions, Host, AerospikeBins} from '../../lib/aerospike.js';
 
 //
 // Returns a static record.

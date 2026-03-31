@@ -18,8 +18,8 @@
 
 /* global expect, describe, it, context */
 
-import * as Aerospike from '../lib/aerospike';
-import { Client, AdminPolicy, admin, ConfigOptions } from '../lib/aerospike';
+import * as Aerospike from '../lib/aerospike.js';
+import { Client, AdminPolicy, admin, ConfigOptions } from '../lib/aerospike.js';
 import * as helper from './test_helper';
 import { expect, assert } from 'chai'; 
 

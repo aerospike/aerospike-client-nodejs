@@ -18,8 +18,8 @@
 
 /* global expect, describe, it, before, after */
 
-import Aerospike, { AerospikeRecord, AerospikeError as ASError, Client as Cli, Key, UDF, ApplyPolicyOptions, status} from '../lib/aerospike';
-import * as helper from './test_helper';
+import Aerospike, { AerospikeRecord, AerospikeError as ASError, Client as Cli, Key, UDF, ApplyPolicyOptions, status} from '../lib/aerospike.js';
+import * as helper from './test_helper.js';
 import { expect, assert } from 'chai'; 
 
 const AerospikeError: typeof ASError = Aerospike.AerospikeError

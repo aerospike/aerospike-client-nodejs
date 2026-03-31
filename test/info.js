@@ -21,7 +21,7 @@
 
 const Aerospike = require('../lib/aerospike')
 const info = require('../lib/info')
-const helper = require('./test_helper')
+const helper = require('./test_helper.js')
 const utils = require('../lib/utils')
 
 const AerospikeError = Aerospike.AerospikeError

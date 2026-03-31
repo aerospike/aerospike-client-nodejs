@@ -19,10 +19,10 @@
 /* global expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { AerospikeError, status as statusModule } from '../lib/aerospike';
+import Aerospike, { AerospikeError, status as statusModule } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const ASError: typeof AerospikeError = Aerospike.AerospikeError
 const status: typeof statusModule = Aerospike.status

@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-require('./test_helper')
+require('./test_helper.js')
 const Command = require('../lib/commands/command')
 
 describe('Command', function () {

@@ -18,9 +18,9 @@
 
 /* global context, expect, describe, it */
 /* eslint-disable no-unused-expressions */
-import Aerospike, { Key, AerospikeError, AerospikeRecord} from '../lib/aerospike';
+import Aerospike, { Key, AerospikeError, AerospikeRecord} from '../lib/aerospike.js';
 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 import { expect } from 'chai'; 
 

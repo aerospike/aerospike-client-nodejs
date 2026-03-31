@@ -19,10 +19,10 @@
 /* global expect, describe, context, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Key as K, status as statusModule, Client as Cli, KeyOptions} from '../lib/aerospike';
+import Aerospike, { Key as K, status as statusModule, Client as Cli, KeyOptions} from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper';
+import * as helper from './test_helper.js';
 
 const Key: typeof K = Aerospike.Key
 const status: typeof statusModule = Aerospike.status
