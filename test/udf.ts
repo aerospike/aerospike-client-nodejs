@@ -21,6 +21,7 @@
 const path = require('path')
 
 import { AerospikeError, Job } from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';

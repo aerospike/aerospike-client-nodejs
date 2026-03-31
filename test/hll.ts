@@ -19,15 +19,16 @@
 /* eslint-env mocha */
 
 
-import { hll as hllModule, status as statusModule, HLLPolicy, HyperLogLog} from '../lib/aerospike.js';
+import type { hll as hllModule, status as statusModule, HLLPolicy, HyperLogLog} from '../lib/aerospike.js';
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const hll: typeof hllModule = Aerospike.hll
 const status: typeof statusModule = Aerospike.status
 
-const {
+import {
   assertError,
   assertRecordEql,
   assertResultEql,
@@ -37,7 +38,7 @@ const {
   expectError,
   initState,
   operate
-} = require('./util/statefulAsyncTest')
+} from './util/statefulAsyncTest.ts';
 
 const isDouble = (number: string) => typeof number === 'number' && parseInt(number, 10) !== number
 

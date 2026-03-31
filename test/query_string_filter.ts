@@ -24,6 +24,7 @@ import type { Client, Query, Job as J, exp as expModule, cdt, AerospikeError as 
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const query: typeof Query = Aerospike.Query
 const Job: typeof J = Aerospike.Job

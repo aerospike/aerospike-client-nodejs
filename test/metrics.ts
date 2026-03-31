@@ -26,10 +26,12 @@
  * Add delays to negative testing
  * 
  */
-import type { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners, WritePolicy, Query, RecordStream} from '../lib/aerospike.js';
+import type { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsListeners, WritePolicy, Query, RecordStream} from '../lib/aerospike.js';
+import {MetricsPolicy} from '../lib/aerospike.js'
+import * as Aerospike from '../lib/aerospike.js'; 
 
-const { exec } = require('child_process');
-const util = require('util');
+import { exec } from 'child_process';
+import * as util from 'util';
 const execAsync = util.promisify(exec);
 
 import { expect, assert } from 'chai';
@@ -38,7 +40,11 @@ import * as helper from './test_helper.ts';
 
 import * as fs from 'fs';
 
-const aerospikeClientVersion = require('../package.json').version
+const aerospikeClientVersion = process.env.npm_package_version
+if (aerospikeClientVersion === undefined) {
+  console.log("Could not get client version")
+  process.exit(0)
+}
 
 const releaseVersion = aerospikeClientVersion.split('-')[0];
 

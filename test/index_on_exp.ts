@@ -24,6 +24,7 @@ import { Job as J, IndexJob as IJ, Client as Cli, AerospikeError } from '../lib/
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const Job: typeof J = Aerospike.Job
 const IndexJob: typeof IJ = Aerospike.IndexJob

@@ -24,6 +24,7 @@ import { AerospikeError as ASError, lists as listsModule, operations, cdt, statu
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const AerospikeError: typeof ASError = Aerospike.AerospikeError
 const lists: typeof listsModule = Aerospike.lists
@@ -31,7 +32,7 @@ const ops: typeof operations = Aerospike.operations
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 const status: typeof statusModule = Aerospike.status
 
-const {
+import {
   assertError,
   assertRecordEql,
   assertResultEql,
@@ -41,7 +42,7 @@ const {
   expectError,
   initState,
   operate
-} = require('./util/statefulAsyncTest')
+} from './util/statefulAsyncTest.ts';
 
 const orderList: Function = (binName: string, ctx?: cdt.Context) => {
   const setListOrder: listsModule.ListOperation = lists.setOrder(binName, lists.order.ORDERED)

@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import type { Client as Cli, exp, lists} from '../lib/aerospike.js';
+import { Client as Cli, exp, lists} from '../lib/aerospike.js';
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper.ts';

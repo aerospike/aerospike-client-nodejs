@@ -20,6 +20,7 @@
 import type { Client, BatchResult, AerospikeRecord, Key } from '../lib/aerospike.js';
 
 import * as helper from './test_helper.ts'
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const { sleep } = helper.util
 

@@ -21,12 +21,12 @@
 /* eslint-disable no-unused-expressions */
 
 import { BasePolicy as BP, AdminPolicy, ApplyPolicy, WritePolicy, ReadPolicy, BatchPolicy, InfoPolicy, RemovePolicy, OperatePolicy, ScanPolicy, QueryPolicy, BatchWritePolicy, BatchApplyPolicy, exp} from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
 
 const BasePolicy: typeof BP = Aerospike.BasePolicy
-require('./test_helper.ts')
 
 context('Client Policies #noserver', function () {
   describe('BasePolicy', function () {

@@ -23,6 +23,7 @@ import { Key as K, RecordMetadata, status as statusModule, AerospikeRecord, Clie
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const keygen: any = helper.keygen
 const metagen: any = helper.metagen

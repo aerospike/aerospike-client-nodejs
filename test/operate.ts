@@ -24,6 +24,7 @@ import { GeoJSON as GeoJSONType, Client as Cli, KeyOptions, AerospikeBins, Aeros
 
 import { expect, assert} from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const Double: typeof Doub = Aerospike.Double
 const GeoJSON: typeof GJ = Aerospike.GeoJSON

@@ -23,6 +23,7 @@ import { Scan as ScanType, Job as J, Key as K, operations, AerospikeRecord } fro
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const Scan: typeof ScanType = Aerospike.Scan
 const Job: typeof J = Aerospike.Job

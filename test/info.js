@@ -19,10 +19,10 @@
 /* global expect, describe, it, context, before */
 /* eslint-disable no-unused-expressions */
 
-const Aerospike = require('../lib/aerospike')
-const info = require('../lib/info')
-const helper = require('./test_helper.ts')
-const utils = require('../lib/utils')
+import * as Aerospike from '../lib/aerospike.js'; 
+import * as info from '../lib/info.js'
+import * as helper from './test_helper.ts'
+import * as utils from '../lib/utils.js'
 
 const AerospikeError = Aerospike.AerospikeError
 

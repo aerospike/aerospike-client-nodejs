@@ -21,6 +21,7 @@ import { AerospikeError as ASError, status as statusModule, Client as Cli, Key }
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const keygen = helper.keygen
 

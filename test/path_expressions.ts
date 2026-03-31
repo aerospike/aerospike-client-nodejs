@@ -20,11 +20,12 @@
 /* global expect */
 
 import { maps as Maps, AerospikeBins, RecordMetadata, Key, AerospikeRecord, AerospikeExp, operations, exp as expModule, cdt, GeoJSON, hll} from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 
 import { expect, assert } from 'chai'; 
-import * as helper from './test_helper.ts';
+import * as helper from './test_helper.js';
 
 const exp: typeof expModule = Aerospike.exp
 const op: typeof operations = Aerospike.operations

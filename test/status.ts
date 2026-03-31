@@ -21,6 +21,7 @@
 import { status as stat } from '../lib/aerospike.js'
 
 import { expect } from 'chai' 
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const status: typeof stat = Aerospike.status
 

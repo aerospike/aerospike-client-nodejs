@@ -22,13 +22,14 @@ import { maps as Maps, operations, cdt, status as statusModule, AerospikeBins} f
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const maps: typeof Maps = Aerospike.maps
 const op: typeof operations = Aerospike.operations
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 const status: typeof statusModule = Aerospike.status
 
-const {
+import {
   assertError,
   assertRecordEql,
   assertResultEql,
@@ -38,7 +39,7 @@ const {
   expectError,
   initState,
   operate
-} = require('./util/statefulAsyncTest')
+} from './util/statefulAsyncTest.ts'
 
 const orderMap = (binName: string, order?: Maps.order, ctx?: cdt.Context) => {
   const policy = new Aerospike.MapPolicy({ order })

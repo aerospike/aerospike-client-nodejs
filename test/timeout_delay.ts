@@ -21,6 +21,7 @@
 import type { Client, ConfigOptions, UDF, operations, Query, Scan, AerospikeRecord, ReadPolicy, WritePolicy, ApplyPolicy, OperatePolicy, RemovePolicy, BatchPolicy, QueryPolicy, ScanPolicy, InfoPolicy, Config} from '../lib/aerospike.js';
 import * as helper from './test_helper.ts';
 import { expect, assert } from 'chai'; 
+import * as Aerospike from '../lib/aerospike.js'; 
 
 function wait (ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))

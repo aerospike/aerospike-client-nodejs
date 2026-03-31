@@ -22,6 +22,7 @@ import { status as statusModule, Client as Cli, Key, RecordMetadata, AerospikeBi
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const keygen: any = helper.keygen
 const recgen: any = helper.recgen

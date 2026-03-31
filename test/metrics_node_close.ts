@@ -19,9 +19,11 @@
 /* eslint-env mocha */
 /* global expect */
 
-import type { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsPolicy, MetricsListeners} from '../lib/aerospike.js';
+import type { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, MetricsListeners} from '../lib/aerospike.js';
+import { MetricsPolicy} from '../lib/aerospike.js';
 
 import { expect, assert} from 'chai'; 
+import * as Aerospike from '../lib/aerospike.js'; 
 
 const Docker = require('dockerode');
 const docker = new Docker();

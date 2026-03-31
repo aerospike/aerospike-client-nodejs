@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2022",
     "module": "es2022",
-    // "moduleResolution": "node16",
+    // "moduleResolution": "nodenext",
     // "outDir": "./test",
     "strict": true,
     // "esModuleInterop": true,

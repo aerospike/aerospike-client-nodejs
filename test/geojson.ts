@@ -19,7 +19,8 @@
 /* eslint-env mocha */
 /* global expect */
 
-import { GeoJSON as GJ, Key as K, Client as Cli, RecordMetadata,  WritePolicy, AerospikeBins, AerospikeRecord, AerospikeError } from '../lib/aerospike.js';
+import type { GeoJSON as GJ, Key as K, Client as Cli, RecordMetadata,  WritePolicy, AerospikeBins, AerospikeRecord, AerospikeError } from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js'; 
 
 import { expect, assert } from 'chai'; 
 import * as helper from './test_helper.ts';
