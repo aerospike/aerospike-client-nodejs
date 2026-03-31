@@ -24,7 +24,7 @@ import type { Client as Cli, Node, NamespaceMetrics, ConnectionStats, Cluster, M
 
 import { expect, assert} from 'chai'; 
 
-import * as Docker from 'dockerode';
+import Docker from 'dockerode';
 const docker = new Docker();
 import * as Aerospike from '../lib/aerospike.js'; 
 

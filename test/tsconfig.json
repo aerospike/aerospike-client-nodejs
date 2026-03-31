@@ -11,6 +11,7 @@
     "typeRoots": [
       "../node_modules/@types"
     ],
+    "allowSyntheticDefaultImports": true,
     // TODO: test this later
     "baseUrl": "./",
     // "paths": {

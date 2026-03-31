@@ -25,7 +25,7 @@ import { MetricsPolicy} from '../lib/aerospike.js';
 import { expect, assert} from 'chai'; 
 import * as Aerospike from '../lib/aerospike.js'; 
 
-const Docker = require('dockerode');
+import Docker from 'dockerode';
 const docker = new Docker();
 
 import * as helper from './test_helper.ts';

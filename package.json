@@ -69,6 +69,7 @@
     "dockerode": "^4.0.9",
     "p-throttle": "^8.1.0",
     "tmp": "^0.2.4",
+    "@types/dockerode": "^4.0.1",
     "@types/chai": "^5.2.3",
     "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
