@@ -19,10 +19,11 @@
 /* global beforeEach, afterEach, expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { ConfigOptions, Config as Conf, ConfigPolicies} from '../lib/aerospike.js';
+import type { ConfigOptions, Config as Conf, ConfigPolicies} from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const Config = Aerospike.Config
 

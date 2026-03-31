@@ -19,8 +19,8 @@
 /* global expect, describe, it, context */
 
 import * as Aerospike from '../lib/aerospike.js';
-import { Client, AdminPolicy, admin, ConfigOptions } from '../lib/aerospike.js';
-import * as helper from './test_helper.js';
+import type { Client, AdminPolicy, admin, ConfigOptions } from '../lib/aerospike.js';
+import * as helper from './test_helper.ts';
 import { expect, assert } from 'chai'; 
 
 function getRandomInt (max: number) {

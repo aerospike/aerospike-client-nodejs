@@ -27,15 +27,16 @@
  * Add delays to negative testing
  * 
  */
-import Aerospike, { Client as Cli, policy, Key, Query, AerospikeRecord, AerospikeError as ASError, Config, ConfigOptions} from '../lib/aerospike.js';
+import type { Client as Cli, policy, Key, Query, AerospikeRecord, AerospikeError as ASError, Config, ConfigOptions} from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js';
 
-const { exec } = require('child_process');
-const util = require('util');
+import {exec} from 'child_process'
+import * as util from 'util';
 const execAsync = util.promisify(exec);
 
 import { expect, assert } from 'chai';
 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 import * as fs from 'fs';
 

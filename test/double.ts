@@ -18,9 +18,10 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { Double as Doub } from '../lib/aerospike.js';
+import { Double as Doub } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
+import * as Aerospike from '../lib/aerospike.js';
 
 const Double = Aerospike.Double
 

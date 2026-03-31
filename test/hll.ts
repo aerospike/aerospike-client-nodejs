@@ -19,10 +19,10 @@
 /* eslint-env mocha */
 
 
-import Aerospike, { hll as hllModule, status as statusModule, HLLPolicy, HyperLogLog} from '../lib/aerospike.js';
+import { hll as hllModule, status as statusModule, HLLPolicy, HyperLogLog} from '../lib/aerospike.js';
 
 import { expect, assert } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const hll: typeof hllModule = Aerospike.hll
 const status: typeof statusModule = Aerospike.status

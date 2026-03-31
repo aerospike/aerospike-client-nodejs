@@ -18,17 +18,18 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { cdt, status as statusModule, lists as listsModule, maps as Maps} from '../lib/aerospike.js';
+import { cdt, status as statusModule, lists as listsModule, maps as Maps} from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js';
 
 const status: typeof statusModule = Aerospike.status
 const lists: typeof listsModule = Aerospike.lists
 const maps: typeof Maps = Aerospike.maps
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 
-const {
+import  {
   assertResultEql,
   cleanup,
   createRecord,
@@ -36,7 +37,7 @@ const {
   operate,
   expectError,
   assertError
-} = require('./util/statefulAsyncTest')
+} from './util/statefulAsyncTest.ts'
 
 describe('Aerospike.cdt.Context', function () {
   helper.skipUnlessVersion('>= 4.6.0', this)

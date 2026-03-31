@@ -19,10 +19,11 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { AerospikeBins, RecordMetadata, Key, AerospikeExp, AerospikeRecord, operations, exp as expModule} from '../lib/aerospike.js';
+import { AerospikeBins, RecordMetadata, Key, AerospikeExp, AerospikeRecord, operations, exp as expModule} from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js';
 
 const exp: typeof expModule = Aerospike.exp
 const op: typeof operations = Aerospike.operations

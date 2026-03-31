@@ -18,10 +18,10 @@
 
 /* eslint-env mocha */
 
-import Aerospike, { maps as Maps, operations, cdt, status as statusModule, AerospikeBins} from '../lib/aerospike.js';
+import { maps as Maps, operations, cdt, status as statusModule, AerospikeBins} from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const maps: typeof Maps = Aerospike.maps
 const op: typeof operations = Aerospike.operations

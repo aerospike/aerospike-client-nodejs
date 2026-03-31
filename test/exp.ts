@@ -19,7 +19,8 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { AerospikeError, Client as Cli, exp as expr, operations, maps as Maps, GeoJSON as GJ, Key, AerospikeBins, cdt, AerospikeRecord, RecordMetadata, AerospikeExp, ReadPolicy, BatchApplyPolicy, Key as K, UDF, BatchPolicy, BatchWriteRecord, batchType, BatchReadPolicy, Query, IndexOptions, BatchWritePolicy, BatchRemovePolicy} from '../lib/aerospike.js';
+import { AerospikeError, Client as Cli, exp as expr, operations, maps as Maps, GeoJSON as GJ, Key, AerospikeBins, cdt, AerospikeRecord, RecordMetadata, AerospikeExp, ReadPolicy, BatchApplyPolicy, Key as K, UDF, BatchPolicy, BatchWriteRecord, batchType, BatchReadPolicy, Query, IndexOptions, BatchWritePolicy, BatchRemovePolicy} from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js';
 
 import { expect, assert } from 'chai'; 
 
@@ -31,7 +32,7 @@ const GeoJSON: typeof GJ = Aerospike.GeoJSON
 
 const FILTERED_OUT: number = Aerospike.status.FILTERED_OUT
 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const keygen = helper.keygen
 const tempBin = 'ExpVar'

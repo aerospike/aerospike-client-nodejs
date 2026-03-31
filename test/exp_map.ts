@@ -21,7 +21,8 @@
 
 
 
-import Aerospike, { exp as expModule, maps as Maps, operations, Client as Cli, AerospikeBins, RecordMetadata, Key, AerospikeExp, cdt, RemovePolicy, MapPolicy, AerospikeRecord} from '../lib/aerospike.js';
+import { exp as expModule, maps as Maps, operations, Client as Cli, AerospikeBins, RecordMetadata, Key, AerospikeExp, cdt, RemovePolicy, MapPolicy, AerospikeRecord} from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
 
@@ -30,7 +31,7 @@ const maps: typeof Maps = Aerospike.maps
 const op: typeof operations = Aerospike.operations
 const Context: typeof cdt.Context = Aerospike.cdt.Context
 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 
 const keygen: any = helper.keygen

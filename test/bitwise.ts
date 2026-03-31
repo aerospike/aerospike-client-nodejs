@@ -19,16 +19,17 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Client } from '../lib/aerospike.js';
+import type { Client } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js';
 
 const status_codes = Aerospike.status
 
 const bits = Aerospike.bitwise
 
-const {
+import {
   assertError,
   assertRecordEql,
   assertResultEql,
@@ -37,7 +38,7 @@ const {
   expectError,
   initState,
   operate
-} = require('./util/statefulAsyncTest')
+}  from './util/statefulAsyncTest.ts'
 
 describe('client.operate() - Bitwise operations', function () {
   helper.skipUnlessSupportsFeature(Aerospike.features.BLOB_BITS, this)

@@ -19,8 +19,9 @@
 /* global expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { AerospikeRecord, KeyOptions, BatchResult, Client, Key } from '../lib/aerospike.js';
-import * as helper from './test_helper.js';
+import type { AerospikeRecord, KeyOptions, BatchResult, Client, Key } from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js';
+import * as helper from './test_helper.ts';
 import { expect } from 'chai';
 
 const keygen = helper.keygen

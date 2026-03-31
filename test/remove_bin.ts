@@ -17,10 +17,10 @@
 'use strict'
 /* global describe, context, it */
 
-import Aerospike, { AerospikeError as ASError, status as statusModule, Client as Cli, Key } from '../lib/aerospike.js';
+import { AerospikeError as ASError, status as statusModule, Client as Cli, Key } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const keygen = helper.keygen
 

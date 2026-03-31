@@ -18,7 +18,7 @@
 
 /* global expect, describe, it */
 
-import Aerospike, { status as stat } from '../lib/aerospike.js'
+import { status as stat } from '../lib/aerospike.js'
 
 import { expect } from 'chai' 
 

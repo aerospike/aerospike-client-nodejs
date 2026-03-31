@@ -20,10 +20,10 @@
 
 const path = require('path')
 
-import Aerospike, { AerospikeError, Job } from '../lib/aerospike.js';
+import { AerospikeError, Job } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 context('registering/unregistering UDF modules', function () {
   const client = helper.client

@@ -18,7 +18,7 @@
 
 /* global expect, describe, it */
 
-require('./test_helper.js')
+require('./test_helper.ts')
 const utils = require('../lib/utils')
 
 describe('utils.parseHostString() #noserver', function () {

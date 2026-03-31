@@ -18,19 +18,21 @@
 
 import * as Aerospike from '../../lib/aerospike.js';
 
-import { ConfigOptions, Host, TLSInfo, BasePolicyOptions } from '../../lib/aerospike.js';
+import type { ConfigOptions, Host, TLSInfo, BasePolicyOptions } from '../../lib/aerospike.js';
 
-import yargs, {Argv} from 'yargs';
+import type {Argv} from 'yargs';
+import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
 import * as fs from 'fs'; // semver is likely the default export, but it may have named exports as well
 import * as path from 'path'; // semver is likely the default export, but it may have named exports as well
+import { hostname } from 'os';
 
 // *****************************************************************************
 //  Options parsing
 // *****************************************************************************
 
-const parser: yargs.Argv = yargs(hideBin(process.argv))
+const parser: Argv = yargs(hideBin(process.argv))
   .usage('$0 [options]')
   .options({
     help: {
@@ -167,8 +169,9 @@ if (options.help === true) {
 // enable debug stacktraces
 process.env.AEROSPIKE_DEBUG_STACKTRACES = process.env.AEROSPIKE_DEBUG_STACKTRACES || 'true'
 
+import * as url from "node:url"
 function testDir (): string {
-  return path.resolve( __dirname , '..');
+  return path.resolve( path.dirname(url.fileURLToPath(import.meta.url)) , '..');
 }
 
 options.getConfig = function (): any {
@@ -181,7 +184,7 @@ options.getConfig = function (): any {
     totalTimeout: options.totalTimeout,
     maxRetries: 6
   }
-  const config = {
+  const config: ConfigOptions = {
     log: {
       level: options.log,
       file: options.log_file
@@ -199,7 +202,11 @@ options.getConfig = function (): any {
     },
     modlua: {
       userPath: testDir()
-    }
+    },
+    hosts: [{
+      addr: "127.0.0.1",
+      port: 3000,
+    }]
   } as any;
 
   if (options.host !== null) {

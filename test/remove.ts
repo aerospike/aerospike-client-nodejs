@@ -18,10 +18,10 @@
 
 /* global expect, describe, context, it */
 
-import Aerospike, { status as statusModule, AerospikeError as ASError, Key, Client as Cli, RemovePolicy } from '../lib/aerospike.js';
+import { status as statusModule, AerospikeError as ASError, Key, Client as Cli, RemovePolicy } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const keygen = helper.keygen
 

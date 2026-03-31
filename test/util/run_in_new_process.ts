@@ -18,8 +18,8 @@
 
 import * as childProcess from 'child_process';
 import { ChildProcess } from 'child_process';
-import tmp from 'tmp';
-import fs from 'fs';
+import * as tmp from 'tmp';
+import * as fs from 'fs';
 
 function generateTestSource (fn: Function, data: any) {
   return `

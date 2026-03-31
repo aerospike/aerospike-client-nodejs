@@ -16,13 +16,14 @@
 
 'use strict'
 
-import Aerospike, {Client, Config, Job, IndexJob, indexDataType, indexType, cdt, InfoAllResponse, AerospikeExp} from '../lib/aerospike.js'; 
+import type {Client, Config, Job, IndexJob, indexDataType, indexType, cdt, InfoAllResponse, AerospikeExp} from '../lib/aerospike.js'; 
+import * as Aerospike from '../lib/aerospike.js'; 
 
-import options from './util/options';
+import options from './util/options.ts';
 import * as semver from 'semver';
 import { SemVer } from 'semver';
 import * as path from 'path';
-import { runInNewProcessFn } from './util/run_in_new_process';
+import { runInNewProcessFn } from './util/run_in_new_process.ts';
 import { Suite } from 'mocha';
 
 import * as chai from 'chai';
@@ -33,16 +34,19 @@ export {options}
 export const namespace = options.namespace
 export const set = options.set
 
-import * as keygen from './generators/key';
-import * as metagen from './generators/metadata';
-import * as recgen from './generators/record';
-import * as valgen from './generators/value';
-import * as putgen from './generators/put';
-import * as util from './util';
+import * as keygen from './generators/key.ts';
+import * as metagen from './generators/metadata.ts';
+import * as recgen from './generators/record.ts';
+import * as valgen from './generators/value.ts';
+import * as putgen from './generators/put.ts';
+import * as util from './util/index.ts';
 
 export { keygen, metagen, recgen, valgen, putgen, util };
+console.log("options", options)
 let testConfigs = options.getConfig()
+console.log("testConfigs", testConfigs)
 const config: Config = testConfigs.config
+console.log("config", config)
 const helper_client_exists = testConfigs.omitHelperClient
 let client: any;
 client = Aerospike.client(config)
@@ -130,7 +134,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
             return;
           }
           if (attempt === retries - 1) {
-            throw new Error(`IndexHelper.createIndex function failed with the following error: ${error}`, { cause: error });
+            throw new Error(`IndexHelper.createIndex function failed with the following error: ${error}`);
           }
         }
       }
@@ -148,7 +152,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
         if (error.code === Aerospike.status.ERR_INDEX_NOT_FOUND) {
           // ignore - index does not exist
         } else {
-          throw new Error('IndexHelper.remove function failed with the following error: ', { cause: error });
+          throw new Error('IndexHelper.remove function failed with the following error: ${error}');
         }
       }
     }

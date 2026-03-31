@@ -20,10 +20,12 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, ConfigOptions, AerospikeBins, AerospikeRecord, BatchWriteRecord, BatchResult, AerospikeError, KeyOptions, BatchWritePolicy, BatchPolicy, BatchPolicyOptions, Key as K} from '../lib/aerospike.js';
+import type { Client, ConfigOptions, AerospikeBins, AerospikeRecord, BatchWriteRecord, BatchResult, AerospikeError, KeyOptions, BatchWritePolicy, BatchPolicy, BatchPolicyOptions, Key as K} from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js';
+
 
 import { expect, assert} from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 // const util = require('util')
 const batchType = Aerospike.batchType
@@ -39,10 +41,6 @@ const putgen = helper.putgen
 const valgen = helper.valgen
 
 const Key = Aerospike.Key
-
-const {
-  assertResultSatisfy,
-} = require('./util/statefulAsyncTest')
 
 describe('client.batchWrite()', function () {
   const client = helper.client

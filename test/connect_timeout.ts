@@ -20,12 +20,12 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { WritePolicy } from '../lib/aerospike.js';
+import { WritePolicy } from '../lib/aerospike.js';
 
 import { expect, assert} from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js';
 
-require('./test_helper.js')
 const client = helper.client
 
 context('connectTimeout', function () {

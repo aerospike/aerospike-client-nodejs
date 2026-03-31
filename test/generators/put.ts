@@ -19,11 +19,12 @@
 import pThrottle from 'p-throttle';
 
 
-import Aerospike, {ConfigOptions, Host, AerospikeRecord} from '../../lib/aerospike.js';
+import {type ConfigOptions, type Host, type AerospikeRecord} from '../../lib/aerospike.js';
 
+import * as Aerospike from '../../lib/aerospike.js';
 
 const Record = Aerospike.Record
-import * as helper from '../test_helper';
+import * as helper from '../test_helper.ts';
 
 function createRecords (putCall: any, generator: any, recordsToCreate: any, maxConcurrent: any, callback: any) {
   let currentRecordNo = 0

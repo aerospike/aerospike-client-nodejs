@@ -15,9 +15,9 @@
 // *****************************************************************************
 
 'use strict'
-import Aerospike from '../../lib/aerospike.js'; 
+import * as Aerospike from '../../lib/aerospike.js'; 
 const Key = Aerospike.Key
-import * as valgen from './value';
+import * as valgen from './value.ts';
 
 //
 // Returns a generator for bytes keys.

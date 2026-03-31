@@ -19,10 +19,10 @@
 /* eslint-env mocha */
 /* global expect */
 
-import Aerospike, { Client as Cli, exp, lists} from '../lib/aerospike.js';
+import type { Client as Cli, exp, lists} from '../lib/aerospike.js';
 
 import { expect, assert } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const keygen: any = helper.keygen
 const metagen: any = helper.metagen

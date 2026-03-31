@@ -18,10 +18,10 @@
 
 /* global expect, describe, it, context */
 
-import Aerospike, { status as statusModule, AerospikeError as ASError, Double as Doub, GeoJSON as GJ, Client as Cli, ConfigOptions, RecordMetadata, AerospikeBins, AerospikeRecord, Key, WritePolicy, Bin} from '../lib/aerospike.js';
+import { status as statusModule, AerospikeError as ASError, Double as Doub, GeoJSON as GJ, Client as Cli, ConfigOptions, RecordMetadata, AerospikeBins, AerospikeRecord, Key, WritePolicy, Bin} from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const keygen: any = helper.keygen
 const metagen: any = helper.metagen

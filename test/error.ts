@@ -19,15 +19,14 @@
 /* global expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { AerospikeError, status as statusModule } from '../lib/aerospike.js';
+import { AerospikeError, status as statusModule } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
+import * as Aerospike from '../lib/aerospike.js';
 
 const ASError: typeof AerospikeError = Aerospike.AerospikeError
 const status: typeof statusModule = Aerospike.status
-
-require('./test_helper.js')
 
 describe('AerospikeError #noserver', function () {
   describe('constructor', function () {

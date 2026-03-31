@@ -22,7 +22,7 @@
 
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const client = helper.client
 

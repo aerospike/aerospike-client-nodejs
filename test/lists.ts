@@ -20,10 +20,10 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { AerospikeError as ASError, lists as listsModule, operations, cdt, status as statusModule, ListPolicy } from '../lib/aerospike.js';
+import { AerospikeError as ASError, lists as listsModule, operations, cdt, status as statusModule, ListPolicy } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const AerospikeError: typeof ASError = Aerospike.AerospikeError
 const lists: typeof listsModule = Aerospike.lists

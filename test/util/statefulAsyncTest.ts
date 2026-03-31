@@ -17,10 +17,10 @@
 'use strict'
 
 /* global expect */
-import Aerospike from '../../lib/aerospike.js';
+import * as Aerospike from '../../lib/aerospike.js';
 
 const AerospikeError = Aerospike.AerospikeError
-import * as helper from '../test_helper';
+import * as helper from '../test_helper.ts';
 import { expect } from 'chai'; 
 
 class State {

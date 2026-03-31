@@ -40,7 +40,7 @@
   "scripts": {
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "test": "TS_NODE_PROJECT=test/tsconfig.json mocha --require ts-node/register --extension ts --extension js 'test/**/*'",
+    "test": "TS_NODE_PROJECT=test/tsconfig.json mocha --require ts-node/register --extension ts --extension js",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore ts-test/dist --ignore scripts",

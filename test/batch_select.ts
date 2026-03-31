@@ -19,10 +19,11 @@
 /* global expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import Aerospike, { Client, BatchResult, AerospikeRecord, BatchSelectRecord, Key } from '../lib/aerospike.js';
+import type { Client, BatchResult, AerospikeRecord, BatchSelectRecord, Key } from '../lib/aerospike.js';
+import * as Aerospike from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
-import * as helper from './test_helper.js';
+import * as helper from './test_helper.ts';
 
 const keygen = helper.keygen
 const metagen = helper.metagen
