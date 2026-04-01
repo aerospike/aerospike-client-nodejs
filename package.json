@@ -40,7 +40,7 @@
   "scripts": {
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "test": "TS_NODE_PROJECT=test/tsconfig.json mocha --require ts-node/register --extension ts --extension js",
+    "test": "  NODE_OPTIONS='--import=tsx' mocha test/*.{ts,js}",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore ts-test/dist --ignore scripts",
@@ -66,11 +66,8 @@
     "npm-run-all": "^4.1.5"
   },
   "devDependencies": {
-    "dockerode": "^4.0.9",
-    "p-throttle": "^8.1.0",
-    "tmp": "^0.2.4",
-    "@types/dockerode": "^4.0.1",
     "@types/chai": "^5.2.3",
+    "@types/dockerode": "^4.0.1",
     "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.0.3",
@@ -79,16 +76,19 @@
     "@types/yargs": "^17.0.35",
     "chai": "^6.2.0",
     "choma": "^1.2.1",
+    "dockerode": "^4.0.9",
     "eslint": "^9.39.2",
     "globals": "^17.3.0",
     "mocha": "^11.7.5",
     "mocha-clean": "^1.0.0",
+    "p-throttle": "^8.1.0",
     "standard": "^17.1.0",
+    "tmp": "^0.2.4",
+    "tsx": "^4.21.0",
     "typedoc": "^0.28.15",
     "typedoc-plugin-rename-defaults": "^0.7.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "~8.50.0",
-    "ts-node": "^10.9.2"
+    "typescript-eslint": "~8.50.0"
   },
   "standard": {
     "ignore": [
