@@ -56,6 +56,7 @@ console.log("This is running")
 export {client, config}
 
 Aerospike.setDefaultLogging(config.log ?? {})
+import * as url from "node:url"
 
 
 
@@ -67,7 +68,7 @@ Aerospike.setDefaultLogging(config.log ?? {})
     }
 
     register(filename: string) {
-      const script = path.join(__dirname, filename);
+      const script = path.join(path.dirname(url.fileURLToPath(import.meta.url)), filename);
       return this.client.udfRegister(script)
         .then((job: Job) => job.wait(50));
     }

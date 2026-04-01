@@ -18,18 +18,19 @@
 
 /* global context, it, expect */
 
-const path = require('path')
+import * as path from 'path'
 
 import { AerospikeError, Job } from '../lib/aerospike.js';
 import * as Aerospike from '../lib/aerospike.js'; 
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
+import * as url from "node:url"
 
 context('registering/unregistering UDF modules', function () {
   const client = helper.client
   const module = 'udf.lua'
-  const filename = path.join(__dirname, module)
+  const filename = path.join(path.dirname(url.fileURLToPath(import.meta.url)), module)
 
   it('should register and then remove a module', function (done) {
     client.udfRegister(filename, function (err?: AerospikeError, registerJob?: Job) {
