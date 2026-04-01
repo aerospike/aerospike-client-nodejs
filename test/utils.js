@@ -19,7 +19,7 @@
 /* global expect, describe, it */
 
 // require('./test_helper.ts')
-import * as utils from "../lib/utils.js"
+import * as utils from '../lib/utils.js'
 // const utils = require('../lib/utils')
 
 describe('utils.parseHostString() #noserver', function () {

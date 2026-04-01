@@ -19,7 +19,7 @@
 /* global expect, describe, it, context, before */
 /* eslint-disable no-unused-expressions */
 
-import * as Aerospike from '../lib/aerospike.js'; 
+import * as Aerospike from '../lib/aerospike.js'
 import * as info from '../lib/info.js'
 import * as helper from './test_helper.ts'
 import * as utils from '../lib/utils.js'
