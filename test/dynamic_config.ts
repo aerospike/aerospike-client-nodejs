@@ -45,15 +45,15 @@ describe('Dynamic Config tests', async function () {
 
   const client: Cli = helper.client
 
-  const dyn_config_path = "./dist/dyn_config.yml"
+  const dyn_config_path = "./dyn_config.yml"
 
-  const dyn_config_path_edit = "./dist/dyn_config_edit.yml"
+  const dyn_config_path_edit = "./dyn_config_edit.yml"
 
-  const dyn_config_path_permissions = "./dist/dyn_config_permissions.yml"
+  const dyn_config_path_permissions = "./dyn_config_permissions.yml"
 
-  const dyn_config_path_send_key_true = "./dist/dyn_config_send_key_true.yml"
+  const dyn_config_path_send_key_true = "./dyn_config_send_key_true.yml"
 
-  const dyn_config_path_metrics_disabled = "./dist/dyn_config_path_metrics_disabled.yml"
+  const dyn_config_path_metrics_disabled = "./dyn_config_path_metrics_disabled.yml"
 
 
 
