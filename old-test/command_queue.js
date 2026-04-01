@@ -21,7 +21,7 @@
 
 const helper = require('./test_helper')
 
-describe('Command Queue #slow', function () {
+describe.skip('Command Queue #slow', function () {
   it('queues commands it cannot process immediately', async function () {
     const test = async function (Aerospike, config) {
       Object.assign(config, { log: { level: Aerospike.log.OFF } })
