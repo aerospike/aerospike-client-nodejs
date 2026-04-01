@@ -1,3 +1,5 @@
+run-name: Smoke tests (server-tag=${{ inputs.server-tag }})
+
 on:
   pull_request:
   workflow_dispatch:
