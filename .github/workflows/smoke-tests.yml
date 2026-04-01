@@ -48,7 +48,7 @@ jobs:
           -d --name aerospike \
           -e DEFAULT_TTL=2592000 \
           -p 3000-3002:3000-3002 \
-          aerospike/aerospike-server:${{ inputs.server-tag }}
+          aerospike/aerospike-server:${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
