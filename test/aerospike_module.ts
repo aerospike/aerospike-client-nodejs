@@ -23,6 +23,8 @@ import type { Client } from '../lib/aerospike.js';
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
 let client: Client
+import * as Aerospike from '../lib/aerospike.js'; 
+
 describe('Aerospike', function () {
   describe('Aerospike.client() #noserver', function () {
     it('instantiates a new client instance', function (done) {

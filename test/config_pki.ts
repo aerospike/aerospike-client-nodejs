@@ -21,6 +21,7 @@
 import type { Client, AdminPolicy, admin, ConfigOptions } from '../lib/aerospike.js';
 import * as helper from './test_helper.ts';
 import { expect, assert } from 'chai'; 
+import * as Aerospike from '../lib/aerospike.js';
 
 function getRandomInt (max: number) {
   return Math.floor(Math.random() * max)
