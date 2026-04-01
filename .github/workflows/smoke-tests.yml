@@ -1,5 +1,11 @@
 on:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      server-tag:
+        default: latest
+        type: string
+        required: false
 
 jobs:
   smoke-tests:
@@ -42,7 +48,7 @@ jobs:
           -d --name aerospike \
           -e DEFAULT_TTL=2592000 \
           -p 3000-3002:3000-3002 \
-          aerospike/aerospike-server
+          aerospike/aerospike-server:${{ inputs.server-tag }}
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
