@@ -11,6 +11,8 @@ on:
 
 jobs:
   smoke-tests:
+    env:
+      CONTAINER_NAME: aerospike
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -47,15 +49,18 @@ jobs:
     - name: Run Aerospike server
       run: |
         docker run --ulimit nofile=15000:15000 \
-          -d --name aerospike \
+          -d --name $CONTAINER_NAME \
           -e DEFAULT_TTL=2592000 \
           -p 3000-3002:3000-3002 \
           aerospike/aerospike-server:${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
-        container-name: aerospike
+        container-name: ${{ env.CONTAINER_NAME }}
         is-strong-consistency-enabled: false
 
     - name: Run tests
       run: npm run test
+
+    - if: ${{ !cancelled() }}
+      run: docker logs $CONTAINER_NAME
