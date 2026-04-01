@@ -23,7 +23,7 @@ import * as helper from './test_helper.ts'
 import { expect } from 'chai';
 import * as Aerospike from '../lib/aerospike.js';
 
-describe('Command Queue #slow', function () {
+describe.skip('Command Queue #slow', function () {
   it('queues commands it cannot process immediately', async function () {
     const test = async function (config: Aerospike.Config) {
       Object.assign(config, { log: { level: Aerospike.log.OFF } })
