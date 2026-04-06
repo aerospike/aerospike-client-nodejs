@@ -117,7 +117,7 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "MAX", as_exp_ops::_AS_EXP_CODE_MAX);
 
 
-	set(exp_ops, "RESULT_REMOVE", as_exp_ops::_AS_EXP_CODE_RESULT_REMOVE);
+	set(exp_ops, "REMOVE_RESULT", as_exp_ops::_AS_EXP_CODE_RESULT_REMOVE);
 	set(exp_ops, "LOOPVAR", as_exp_ops::_AS_EXP_CODE_LOOPVAR);
 	set(exp_ops, "COND", as_exp_ops::_AS_EXP_CODE_COND);
 	set(exp_ops, "LET", as_exp_ops::_AS_EXP_CODE_LET);
