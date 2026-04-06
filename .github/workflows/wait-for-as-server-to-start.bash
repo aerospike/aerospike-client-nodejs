@@ -53,3 +53,5 @@ while true; do
 
     echo "Server did not return a cluster key. Polling again..."
 done
+
+docker exec "$container_name" asd --version
