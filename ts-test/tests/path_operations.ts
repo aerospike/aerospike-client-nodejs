@@ -194,7 +194,7 @@ describe('Path Operations', async function () {
 
           it('modifies with result remove expression', async function () {
 
-            const modExpression = exp.resultRemove()
+            const modExpression = exp.removeResult()
             
             await verifyModifyByPath('c_example', addAllChildren, modExpression, pathModifyFlags.DEFAULT, {})
   
