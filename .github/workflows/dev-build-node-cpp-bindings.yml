@@ -233,9 +233,7 @@ jobs:
     - name: Upload binding binaries to Github
       # I just copy and pasted the same condition for building the bindings
       if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
-      run: |
-        export PATH="$(pwd)/node_modules/.bin/:$PATH"
-        node-pre-gyp package publish
+      run: npx node-pre-gyp package publish
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
