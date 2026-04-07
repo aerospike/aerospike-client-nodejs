@@ -38,5 +38,6 @@ Local<Object> ctxType()
 	set(obj, "MAP_RANK", as_cdt_ctx_type::AS_CDT_CTX_MAP_RANK);
 	set(obj, "MAP_KEY", as_cdt_ctx_type::AS_CDT_CTX_MAP_KEY);
 	set(obj, "MAP_VALUE", as_cdt_ctx_type::AS_CDT_CTX_MAP_VALUE);
+	set(obj, "MAP_KEYS_IN", as_cdt_ctx_type::AS_CDT_CTX_MAP_KEYS_IN);
 	return scope.Escape(obj);
 }

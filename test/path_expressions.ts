@@ -455,6 +455,19 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('context', function () {
+          it('Adds mapKeysIn', async function () {
+			console.log('-------- 0');
+            const ctx = new Context().addMapKeysIn(['book']).addMapKeysIn(['title'])
+
+			console.log('-------- 1');
+            const selectByPath = exp.selectByPath(exp.binMap('c_example'), exp.type.MAP, pathSelectFlags.MAP_VALUE, ctx)
+
+			console.log('-------- 2');
+            await verifySelectByPath('c_example', exp, 'abc') // <-- crashes here
+
+			console.log('-------- 3');
+          })
+
           it('Adds addAllChildren', async function () {
             const selectByPath = exp.selectByPath(exp.binList('floatList'), exp.type.LIST, pathSelectFlags.VALUE, addAllChildren)
   
