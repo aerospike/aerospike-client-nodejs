@@ -463,7 +463,7 @@ describe('Aerospike.exp.selectByPath', async function () {
             const selectByPath = exp.selectByPath(exp.binMap('c_example'), exp.type.MAP, pathSelectFlags.MAP_VALUE, ctx)
 
 			console.log('-------- 2');
-            await verifySelectByPath('c_example', exp, 'abc') // <-- crashes here
+            await verifySelectByPath('c_example', selectByPath, 'abc')
 
 			console.log('-------- 3');
           })
