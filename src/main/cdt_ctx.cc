@@ -217,9 +217,14 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
+		case (AS_CDT_CTX_MAP_KEYS_IN):
+			asval_from_jsvalue(&asValue, v8value, log);
+			as_cdt_ctx_add_map_keys_in(context, (as_list*)asValue);
+			as_v8_detail(log, "Adding Map Keys In context");
+			break;
 		case (AS_CDT_CTX_EXP):
 			if (v8value->IsArray()) {
-				Local<Array> exp_ary = Local<Array>::Cast(v8value);	
+				Local<Array> exp_ary = Local<Array>::Cast(v8value);
 				as_exp *exp = NULL;
 				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
 					as_v8_error(log, "Expressions could not be compiled");
@@ -348,9 +353,14 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
+		case (AS_CDT_CTX_MAP_KEYS_IN):
+			asval_from_jsvalue(&asValue, v8value, log);
+			as_cdt_ctx_add_map_keys_in(context, (as_list*)asValue);
+			as_v8_detail(log, "Adding Map Keys In context");
+			break;
 		case (AS_CDT_CTX_EXP):
 			if (v8value->IsArray()) {
-				Local<Array> exp_ary = Local<Array>::Cast(v8value);	
+				Local<Array> exp_ary = Local<Array>::Cast(v8value);
 				as_exp *exp = NULL;
 				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
 					as_v8_error(log, "Expressions could not be compiled");
