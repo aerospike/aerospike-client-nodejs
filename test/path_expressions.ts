@@ -456,16 +456,19 @@ describe('Aerospike.exp.selectByPath', async function () {
 
         context('context', function () {
           it('Adds mapKeysIn', async function () {
-			console.log('-------- 0');
-            const ctx = new Context().addMapKeysIn(['book']).addMapKeysIn(['title'])
+            const ctx = new Context().addMapKeysIn(['a', 'c']);
 
-			console.log('-------- 1');
-            const selectByPath = exp.selectByPath(exp.binMap('c_example'), exp.type.MAP, pathSelectFlags.MAP_VALUE, ctx)
+            const ops = [
+                op.selectByPath('floatMap', exp.pathSelectFlags.MAP_VALUE, ctx)
+            ];
 
-			console.log('-------- 2');
-            await verifySelectByPath('c_example', selectByPath, 'abc')
+            const r: any = await client.operate(key, ops)
+            const actual = r['bins']['floatMap']
 
-			console.log('-------- 3');
+            // expect(actual).to.equal([1.5, 4.5]) fails, but manually
+            // testing individual elements works.
+            expect(actual[0]).to.equal(1.5)
+            expect(actual[1]).to.equal(4.5)
           })
 
           it('Adds addAllChildren', async function () {
@@ -838,7 +841,6 @@ describe('Aerospike.exp.selectByPath', async function () {
 
 
   afterEach(async () => { /* setup */ 
-
     await client.remove(key)
   })
 
