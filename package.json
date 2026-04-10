@@ -36,6 +36,7 @@
     "region": "us-east-1",
     "bucket": "node-js-client-native-node-bindings",
     "staging_host": "https://d2zczen0j87ds1.cloudfront.net",
+    "s3ForcePathStyle": "false",
     "production_host": "https://d2zczen0j87ds1.cloudfront.net",
     "acl": "bucket-owner-full-control"
   },
