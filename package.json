@@ -34,7 +34,7 @@
     "module_name": "aerospike",
     "module_path": "./lib/binding/",
     "bucket": "node-js-client-native-node-bindings",
-    "host": "https://d2zczen0j87ds1.cloudfront.net",
+    "staging_host": "https://d2zczen0j87ds1.cloudfront.net",
     "acl": "bucket-owner-full-control"
   },
   "scripts": {
