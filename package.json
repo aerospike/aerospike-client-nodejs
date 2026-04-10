@@ -33,6 +33,7 @@
   "binary": {
     "module_name": "aerospike",
     "module_path": "./lib/binding/",
+    "region": "us-east-1",
     "bucket": "node-js-client-native-node-bindings",
     "staging_host": "https://d2zczen0j87ds1.cloudfront.net",
     "production_host": "https://d2zczen0j87ds1.cloudfront.net",
