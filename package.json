@@ -35,6 +35,7 @@
     "module_path": "./lib/binding/",
     "bucket": "node-js-client-native-node-bindings",
     "staging_host": "https://d2zczen0j87ds1.cloudfront.net",
+    "production_host": "https://d2zczen0j87ds1.cloudfront.net",
     "acl": "bucket-owner-full-control"
   },
   "scripts": {
