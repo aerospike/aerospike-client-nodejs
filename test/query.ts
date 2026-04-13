@@ -286,6 +286,29 @@ describe('Queries', function () {
       })
     })
 
+    describe('bin projection can read nested-level elements', function () {
+      const args: QueryOptions = {
+        ops: [Aerospike.maps.getByKey('nested', 'value', Aerospike.maps.returnType.VALUE)]
+      }
+
+      it('works with query.foreach()', function (){
+        const query: Query = client.query(helper.namespace, helper.set, args)
+        const stream = query.foreach()
+        stream.on('data', (record: AerospikeRecord) => {
+          console.log(record)
+          expect(record.bins).to.have.property('nested').within(10, 30)
+        })
+      })
+
+      it('works with query.results()', async function (){
+        const query: Query = client.query(helper.namespace, helper.set, args)
+        let results = await query.results()
+        for (const record of results) {
+          expect(record.bins).to.have.property('nested').within(10, 30)
+        }
+      })
+    })
+
     // describe('bin projection can read nested elements')
     // describe('foreground query should reject write operations')
     // describe('selected bins and ops are mutually exclusive')
