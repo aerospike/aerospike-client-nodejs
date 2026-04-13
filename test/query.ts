@@ -316,8 +316,7 @@ describe('Queries', function () {
       const query: Query = client.query(helper.namespace, helper.set, args)
       expect(async () => await query.results()).to.throw(AerospikeError)
     })
-    // TODO: maybe move to diff file
-    // describe('background query should reject read operations')
+
     // describe('selected bins and ops are mutually exclusive')
   })
 
@@ -902,6 +901,12 @@ describe('Queries', function () {
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       expect(record.ttl).to.be.within(7198, 7200)
+    })
+
+    it('should reject read operations', function (){
+      const ops = [Aerospike.operations.read('a')]
+      const query: Query = client.query(helper.namespace, helper.set)
+      expect(async () => await query.operate(ops)).to.throw(AerospikeError)
     })
   })
 
