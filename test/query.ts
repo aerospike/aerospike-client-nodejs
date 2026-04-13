@@ -281,6 +281,7 @@ describe('Queries', function () {
         for (const record of results) {
           expect(record.bins).to.have.property('a', 9)
         }
+      })
     })
   })
 
