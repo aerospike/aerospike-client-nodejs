@@ -272,6 +272,7 @@ describe('Queries', function () {
         const query: Query = client.query(helper.namespace, helper.set, args)
         const stream = query.foreach()
         stream.on('data', (record: AerospikeRecord) => {
+          console.log(record)
           expect(record.bins).to.have.property('a', 9)
         })
       })
