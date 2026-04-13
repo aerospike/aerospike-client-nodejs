@@ -263,17 +263,24 @@ describe('Queries', function () {
   describe('bin projection', function () {
     helper.skipUnlessVersion('>= 8.1.2', this)
 
-    const args: QueryOptions = {
-      ops: [op.read('a')]
-    }
-    const query: Query = client.query(helper.namespace, helper.set, args)
-    it('works with query.foreach()', function (){
-      const stream = query.foreach()
-      stream.on('data', (record: AerospikeRecord) => {
-        expect(record.bins).to.have.property('a', 9)
+    describe('bin projection can read root-level elements', function () {
+      const args: QueryOptions = {
+        ops: [op.read('a')]
+      }
+      const query: Query = client.query(helper.namespace, helper.set, args)
+
+      it('works with query.foreach()', function (){
+        const stream = query.foreach()
+        stream.on('data', (record: AerospikeRecord) => {
+          expect(record.bins).to.have.property('a', 9)
+        })
       })
-      // stream.on('end', () => {
-      // })
+
+      it('works with query.results()', async function (){
+        let results = await query.results()
+        for (const record of results) {
+          expect(record.bins).to.have.property('a', 9)
+        }
     })
   })
 
