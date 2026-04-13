@@ -52,7 +52,7 @@ jobs:
           -d --name $CONTAINER_NAME \
           -e DEFAULT_TTL=2592000 \
           -p 3000-3002:3000-3002 \
-          aerospike/aerospike-server:${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
+          ${{ vars.JFROG_SERVER_PROD_REPO }}/aerospike-server:${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
