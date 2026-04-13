@@ -267,9 +267,9 @@ describe('Queries', function () {
       const args: QueryOptions = {
         ops: [op.read('a')]
       }
-      const query: Query = client.query(helper.namespace, helper.set, args)
 
       it('works with query.foreach()', function (){
+        const query: Query = client.query(helper.namespace, helper.set, args)
         const stream = query.foreach()
         stream.on('data', (record: AerospikeRecord) => {
           expect(record.bins).to.have.property('a', 9)
@@ -277,6 +277,7 @@ describe('Queries', function () {
       })
 
       it('works with query.results()', async function (){
+        const query: Query = client.query(helper.namespace, helper.set, args)
         let results = await query.results()
         for (const record of results) {
           expect(record.bins).to.have.property('a', 9)
