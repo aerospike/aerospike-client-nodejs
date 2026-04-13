@@ -261,6 +261,8 @@ describe('Queries', function () {
   })
 
   describe('bin projection', function () {
+    helper.skipUnlessVersion('>= 8.1.2', this)
+
     const args: QueryOptions = {
       ops: [op.read('a')]
     }
