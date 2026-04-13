@@ -1,5 +1,9 @@
 run-name: Smoke tests (server-tag=${{ inputs.server-tag }})
 
+permissions:
+  contents: read
+  id-token: write
+
 on:
   pull_request:
   workflow_dispatch:
