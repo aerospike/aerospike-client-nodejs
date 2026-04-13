@@ -5,9 +5,8 @@ on:
   workflow_dispatch:
     inputs:
       server-tag:
-        default: latest
         type: string
-        required: false
+        required: true
 
 jobs:
   smoke-tests:
@@ -52,7 +51,7 @@ jobs:
           -d --name $CONTAINER_NAME \
           -e DEFAULT_TTL=2592000 \
           -p 3000-3002:3000-3002 \
-          ${{ vars.JFROG_SERVER_PROD_REPO }}/aerospike-server:${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
+          ${{ vars.JFROG_SERVER_PROD_REPO }}/aerospike-server:${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1' }}
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
