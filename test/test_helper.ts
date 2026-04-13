@@ -340,7 +340,9 @@ import * as url from "node:url"
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
     before(() => {
+      console.log("a")
       if(helper_client_exists){
+        console.log("b")
         client.connect()
         .catch((error: any) => {
           console.error('ERROR:', error)
