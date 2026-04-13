@@ -309,8 +309,15 @@ describe('Queries', function () {
       })
     })
 
-    // describe('bin projection can read nested elements')
-    // describe('foreground query should reject write operations')
+    it('foreground query should reject write operations', function (){
+      const args: QueryOptions = {
+        ops: [Aerospike.operations.write('name', 'filter1')]
+      }
+      const query: Query = client.query(helper.namespace, helper.set, args)
+      expect(async () => await query.results()).to.throw(AerospikeError)
+    })
+    // TODO: maybe move to diff file
+    // describe('background query should reject read operations')
     // describe('selected bins and ops are mutually exclusive')
   })
 
