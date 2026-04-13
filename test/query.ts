@@ -283,6 +283,10 @@ describe('Queries', function () {
         }
       })
     })
+
+    // describe('bin projection can read nested elements')
+    // describe('foreground query should reject write operations')
+    // describe('selected bins and ops are mutually exclusive')
   })
 
   describe('query.foreach() #slow', function () {
