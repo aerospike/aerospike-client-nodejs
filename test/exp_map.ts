@@ -118,6 +118,62 @@ describe('Aerospike.exp_operations', function () {
       })
     })
 
+    describe('map_keys and map_values', function () {
+      it('returns map keys from bin m (exp_map_keys_values case 1)', async function () {
+        const key: Key = await createRecord({ m: { a: 1, b: 2 } })
+        await orderByKey('m', key)
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.map_keys(exp.binMap('m')),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        const list = result.bins![tempBin] as string[]
+        expect(list).to.have.length(2)
+        expect(list).to.have.members(['a', 'b'])
+      })
+
+      it('returns map values from bin m (exp_map_keys_values case 2)', async function () {
+        const key: Key = await createRecord({ m: { a: 1, b: 2 } })
+        await orderByKey('m', key)
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.map_values(exp.binMap('m')),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        const list = result.bins![tempBin] as number[]
+        expect(list).to.have.length(2)
+        expect(list).to.have.members([1, 2])
+      })
+
+      it('returns map keys from a literal map (exp_map_keys_values case 3a)', async function () {
+        const key: Key = await createRecord({ m: { a: 1, b: 2 } })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.map_keys(exp.map({ a: 1, b: 2 })),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        const list = result.bins![tempBin] as string[]
+        expect(list).to.have.length(2)
+        expect(list).to.have.members(['a', 'b'])
+      })
+
+      it('returns map values from a literal map (exp_map_keys_values case 3b)', async function () {
+        const key: Key = await createRecord({ m: { a: 1, b: 2 } })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.map_values(exp.map({ a: 1, b: 2 })),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        const list = result.bins![tempBin] as number[]
+        expect(list).to.have.length(2)
+        expect(list).to.have.members([1, 2])
+      })
+    })
+
     describe('removeByKey', function () {
       it('removes map item by key', async function () {
         const key: Key = await createRecord({ tags: { a: 'blue', b: 'green', c: 'yellow' } })

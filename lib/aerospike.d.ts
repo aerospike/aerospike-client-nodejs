@@ -17209,6 +17209,20 @@ export namespace exp {
      */
     export const inList: _cmpExp;
     /**
+     * Return a list of keys from a map-valued subexpression.
+     *
+     * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
+     * @return {@link AerospikeExp} - list value when used in an expression read context.
+     */
+    export const map_keys: (map: AerospikeExp) => AerospikeExp;
+    /**
+     * Return a list of values from a map-valued subexpression.
+     *
+     * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
+     * @return {@link AerospikeExp} - list value when used in an expression read context.
+     */
+    export const map_values: (map: AerospikeExp) => AerospikeExp;
+    /**
      * Create expression that performs a regex match on a string bin or value
      * expression.
      *
