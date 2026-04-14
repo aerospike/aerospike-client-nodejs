@@ -4974,6 +4974,10 @@ export class Client extends EventEmitter {
      * @param callback - The function to call when the command completes.
      */
     public createGeo2DSphereIndex(options: IndexOptions, policy: policy.InfoPolicy, callback: TypedCallback<IndexJob>): void;
+
+    // TODO: , callback: TypedCallback<IndexJob> should be param?
+    public createSetIndex(namespace: string, set: string, indexName: string, policy: policy.InfoPolicy | null): void;
+
     /**
      *
      * Applies a User Defined Function (UDF) on a record in the database.
