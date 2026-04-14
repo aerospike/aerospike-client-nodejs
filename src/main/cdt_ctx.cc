@@ -242,7 +242,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 				return AS_NODE_PARAM_ERR;
 			}
 			break;
-		case (AS_CDT_CTX_AND_EXP):
+		case (AS_CDT_CTX_EXP | AS_CDT_CTX_AND):
 			if (v8value->IsArray()) {
 				Local<Array> exp_ary = Local<Array>::Cast(v8value);
 				as_exp *exp = NULL;
@@ -394,7 +394,7 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 				return context;
 			}
 			break;
-		case (AS_CDT_CTX_AND_EXP):
+		case (AS_CDT_CTX_EXP | AS_CDT_CTX_AND):
 			if (v8value->IsArray()) {
 				Local<Array> exp_ary = Local<Array>::Cast(v8value);
 				as_exp *exp = NULL;
