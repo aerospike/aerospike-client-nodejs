@@ -455,6 +455,19 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('context', function () {
+          it('Adds mapKeysIn with andFilter', async function () {
+            const ctx = new Context()
+              .addMapKeysIn(['a', 'c'])
+              .addAndFilter(exp.gt(exp.loopVarFloat(exp.loopVarPart.VALUE), exp.float(3.0)))
+
+            const ops = [
+              op.selectByPath('floatMap', exp.pathSelectFlags.MATCHING_TREE, ctx)
+            ]
+
+            const r: any = await client.operate(key, ops)
+            expect(r.bins.floatMap).to.deep.equal({ c: 4.5 })
+          })
+
           it('Adds mapKeysIn', async function () {
             const ctx = new Context().addMapKeysIn(['a', 'c']);
 
