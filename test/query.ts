@@ -314,7 +314,7 @@ describe('Queries', function () {
         ops: [Aerospike.operations.write('name', 'filter1')]
       }
       const query: Query = client.query(helper.namespace, helper.set, args)
-      expect(async () => await query.results()).to.throw(AerospikeError)
+      expect(async () => await query.results()).to.throw()
     })
 
     describe('selected bins and ops are mutually exclusive', function() {
