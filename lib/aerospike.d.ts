@@ -17214,14 +17214,14 @@ export namespace exp {
      * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
      * @return {@link AerospikeExp} - list value when used in an expression read context.
      */
-    export const map_keys: (map: AerospikeExp) => AerospikeExp;
+    export const mapKeys: (map: AerospikeExp) => AerospikeExp;
     /**
      * Return a list of values from a map-valued subexpression.
      *
      * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
      * @return {@link AerospikeExp} - list value when used in an expression read context.
      */
-    export const map_values: (map: AerospikeExp) => AerospikeExp;
+    export const mapValues: (map: AerospikeExp) => AerospikeExp;
     /**
      * Create expression that performs a regex match on a string bin or value
      * expression.

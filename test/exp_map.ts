@@ -124,7 +124,7 @@ describe('Aerospike.exp_operations', function () {
         await orderByKey('m', key)
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
-            exp.map_keys(exp.binMap('m')),
+            exp.mapKeys(exp.binMap('m')),
             0)
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
@@ -138,7 +138,7 @@ describe('Aerospike.exp_operations', function () {
         await orderByKey('m', key)
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
-            exp.map_values(exp.binMap('m')),
+            exp.mapValues(exp.binMap('m')),
             0)
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
@@ -151,7 +151,7 @@ describe('Aerospike.exp_operations', function () {
         const key: Key = await createRecord({ m: { a: 1, b: 2 } })
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
-            exp.map_keys(exp.map({ a: 1, b: 2 })),
+            exp.mapKeys(exp.map({ a: 1, b: 2 })),
             0)
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
@@ -164,7 +164,7 @@ describe('Aerospike.exp_operations', function () {
         const key: Key = await createRecord({ m: { a: 1, b: 2 } })
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
-            exp.map_values(exp.map({ a: 1, b: 2 })),
+            exp.mapValues(exp.map({ a: 1, b: 2 })),
             0)
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
