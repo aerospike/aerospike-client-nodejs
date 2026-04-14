@@ -317,7 +317,37 @@ describe('Queries', function () {
       expect(async () => await query.results()).to.throw(AerospikeError)
     })
 
-    // describe('selected bins and ops are mutually exclusive')
+    describe('selected bins and ops are mutually exclusive', function() {
+      it('', async function () {
+        let warnings = [];
+        const warningHandler = (warning: any) => {
+          warnings.push(warning);
+        };
+
+        beforeEach(() => {
+          // Listen for warnings
+          process.on('warning', warningHandler);
+        });
+
+        afterEach(() => {
+          process.removeListener('warning', warningHandler);
+        });
+
+        const args: QueryOptions = {
+          ops: [op.read('a')],
+          select: ["nonexistent_bin"]
+        }
+        const query: Query = client.query(helper.namespace, helper.set, args)
+        expect(warnings.length).to.equal(1)
+
+        // Bin named "a" should still be returned by ops
+        // i.e it is not filtered out
+        let results = await query.results()
+        for (const record of results) {
+          expect(record.bins).to.have.property('a', 9)
+        }
+      })
+    })
   })
 
   describe('query.foreach() #slow', function () {
