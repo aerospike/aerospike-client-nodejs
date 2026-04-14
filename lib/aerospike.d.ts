@@ -17199,6 +17199,16 @@ export namespace exp {
 
     export const le: _cmpExp;
     /**
+     * True if the value of the left expression is contained in the list given by the right
+     * expression (by value). The right argument must evaluate to a list (for example
+     * {@link exp.list}).
+     *
+     * @param left - Value expression to test for membership.
+     * @param right - Expression that evaluates to a list of values to search.
+     * @return {@link AerospikeExp} - boolean value
+     */
+    export const inList: _cmpExp;
+    /**
      * Create expression that performs a regex match on a string bin or value
      * expression.
      *

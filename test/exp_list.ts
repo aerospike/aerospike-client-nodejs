@@ -88,6 +88,41 @@ describe('Aerospike.exp_operations', function () {
       })
     })
 
+    describe('inList', function () {
+      it('is true when bin string is contained in a literal list (exp.inList case 1)', async function () {
+        const key: Key = await createRecord({ color: 'blue', qty: 5 })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.inList(exp.binStr('color'), exp.list(['red', 'blue', 'green'])),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins![tempBin]).to.equal(true)
+      })
+
+      it('is false when a string literal is not in the list (exp.inList case 2)', async function () {
+        const key: Key = await createRecord({ color: 'blue', qty: 5 })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.inList(exp.str('yellow'), exp.list(['red', 'blue', 'green'])),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins![tempBin]).to.equal(false)
+      })
+
+      it('is true when bin int is contained in a literal list (exp.inList case 3)', async function () {
+        const key: Key = await createRecord({ color: 'blue', qty: 5 })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.inList(exp.binInt('qty'), exp.list([1, 5, 10])),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins![tempBin]).to.equal(true)
+      })
+    })
+
     describe('clear', function () {
       it('removes all items in a map', async function () {
         const key: Key = await createRecord({ tags: ['blue', 'green', 'yellow'] })
