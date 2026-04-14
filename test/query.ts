@@ -318,7 +318,6 @@ describe('Queries', function () {
     })
 
     describe('selected bins and ops are mutually exclusive', function() {
-      it('', async function () {
         let warnings = [];
         const warningHandler = (warning: any) => {
           warnings.push(warning);
@@ -333,6 +332,7 @@ describe('Queries', function () {
           process.removeListener('warning', warningHandler);
         });
 
+      it('ditto', async function () {
         const args: QueryOptions = {
           ops: [op.read('a')],
           select: ["nonexistent_bin"]
