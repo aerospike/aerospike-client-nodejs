@@ -156,6 +156,32 @@ context('secondary indexes', function () {
             }
           }))
     })
+
+    it('XXXX should support creating set indexes', function () {
+      const options = {
+        ns: helper.namespace,
+        set: helper.set,
+        index: testIndex.name,
+		bin: "unused",
+		type: Aerospike.indexType.SET,
+		dtype: Aerospike.indexDataType.DEFAULT
+      }
+
+console.log("XXXX: options = " + JSON.stringify(options))
+
+      return client.createIndex(options)
+        .then((job: IJ) => job.wait(10))
+        .then(() => client.createIndex(options)
+          .catch((error: any) => {
+            if (error.code === Aerospike.status.ERR_INDEX_FOUND ||
+              error.code === Aerospike.status.AEROSPIKE_OK) {
+              // All good!
+              verifyIndexExists(helper.namespace, testIndex.name)
+            } else {
+              return Promise.reject(error)
+            }
+          }))
+    })
   })
 
   describe('Client#createIntegerIndex()', function () {
