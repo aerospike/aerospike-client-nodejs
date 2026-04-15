@@ -125,7 +125,7 @@ describe('Aerospike.exp.selectByPath', async function () {
         context('bin', function () {
 
           it('accepts exp.mapBin', async function () {
-            if (helper.cluster.isVersionInRange('== 8.1.1.2')) {
+            if (helper.cluster.isVersionInRange('== 8.1.1')) {
               // This server version has a bug that returns invalid request
               this.skip()
             }
@@ -141,7 +141,7 @@ describe('Aerospike.exp.selectByPath', async function () {
 
         context('valueTypes', function () {
           it('accepts exp.type.MAP', async function () {
-            if (helper.cluster.isVersionInRange('== 8.1.1.2')) {
+            if (helper.cluster.isVersionInRange('== 8.1.1')) {
               // This server version has a bug that returns invalid request
               this.skip()
             }
@@ -155,7 +155,7 @@ describe('Aerospike.exp.selectByPath', async function () {
           })
 
           it('accepts exp.type.LIST', async function () {
-            if (helper.cluster.isVersionInRange('== 8.1.1.2')) {
+            if (helper.cluster.isVersionInRange('== 8.1.1')) {
               // This server version has a bug that returns invalid request
               this.skip()
             }
@@ -186,7 +186,7 @@ describe('Aerospike.exp.selectByPath', async function () {
               })
 
               it('returns the correct value when used with operate', async function () {
-                if (helper.cluster.isVersionInRange('== 8.1.1.2')) {
+                if (helper.cluster.isVersionInRange('== 8.1.1')) {
                   // This server version has a bug that returns invalid request
                   this.skip()
                 }
@@ -199,7 +199,7 @@ describe('Aerospike.exp.selectByPath', async function () {
               })
 
               it('returns the correct value when used with operate and NO_FAIL', async function () {
-                if (helper.cluster.isVersionInRange('== 8.1.1.2')) {
+                if (helper.cluster.isVersionInRange('== 8.1.1')) {
                   // This server version has a bug that returns invalid request
                   this.skip()
                 }
@@ -226,7 +226,7 @@ describe('Aerospike.exp.selectByPath', async function () {
 
 
           it('modifies with standard expression', async function () {
-            if (helper.cluster.isVersionInRange('== 8.1.1.2')) {
+            if (helper.cluster.isVersionInRange('== 8.1.1')) {
               // This server version has a bug that returns invalid request
               this.skip()
             }
