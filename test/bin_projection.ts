@@ -4,6 +4,7 @@
 /* global expect */
 /* eslint-disable no-unused-expressions */
 
+import { setTimeout as sleep } from 'timers/promises';
 import {Query} from '../lib/aerospike.js'; 
 import type { Client, Key, QueryOptions, AerospikeRecord} from '../lib/aerospike.js';
 import {AerospikeError} from '../lib/aerospike.js';
@@ -53,7 +54,6 @@ describe('bin projection', function () {
       const query: Query = client.query(helper.namespace, helper.set, args)
       const stream = query.foreach()
       stream.on('data', (record: AerospikeRecord) => {
-        console.log(record)
         expect(record.bins).to.have.property('a', 1)
       })
     })
@@ -76,7 +76,6 @@ describe('bin projection', function () {
       const query: Query = client.query(helper.namespace, helper.set, args)
       const stream = query.foreach()
       stream.on('data', (record: AerospikeRecord) => {
-          console.log(record)
           expect(record.bins).to.have.property('nested', 10)
       })
     })
@@ -113,6 +112,8 @@ describe('bin projection', function () {
         select: ["nonexistent_bin"]
       }
       const query: Query = client.query(helper.namespace, helper.set, args)
+      await sleep(1000)
+
       expect(warnings.length).to.equal(1)
 
       // Bin named "a" should still be returned by ops
