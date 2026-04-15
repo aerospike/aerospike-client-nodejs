@@ -187,6 +187,8 @@ import * as url from "node:url"
     isVersionInRange(versionRange: string) {
       const version: string = process.env.AEROSPIKE_VERSION_OVERRIDE || this.build;
       const semverVersion: SemVer | null = semver.coerce(version); // truncate a build number like "4.3.0.2-28-gdd9f506" to just "4.3.0"
+      console.log("version", version)
+      console.log("semverVersion", semverVersion)
       return semver.satisfies(semverVersion!, versionRange);
     }
 
