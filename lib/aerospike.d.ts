@@ -1773,6 +1773,33 @@ export namespace cdt {
          */
         public addMapValue(value: AerospikeBinValue): CdtContext;
         /**
+         * Look up one or more keys in a map expression.
+         *
+         * @param keys - List of keys to query in the map context.
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addMapKeysIn(keys: AerospikeBinValue[]): CdtContext;
+        /**
+         * Add a boolean expression filter AND-combined with the current context.
+         *
+         * @remarks
+         * Restrictions:
+         * - Only one and-filter is allowed per context level. Multiple and-filters
+         *   cannot be chained. To combine multiple conditions, use
+         *   {@link exp.and} with a single call to `addAndFilter()`.
+         * - The preceding context entry must not be an expression type;
+         *   i.e., `addAndFilter()` cannot follow {@link addAllChildren} or
+         *   {@link addAllChildrenWithFilter}.
+         * - The and-filter cannot be the first entry in the context chain.
+         *
+         * Evaluation runs after prior context steps (e.g. map key-list selection);
+         * entries must satisfy both.
+         *
+         * @param filterExpression - {@link AerospikeExp} that must resolve to a boolean.
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addAndFilter(filterExpression: AerospikeExp): CdtContext;
+        /**
          * Retrieve expression type list/map from ctx or from type.
          *
          * @param ctx - ctx value object.

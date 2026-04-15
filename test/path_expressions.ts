@@ -454,7 +454,9 @@ describe('Aerospike.exp.selectByPath', async function () {
           })
         })
 
-        context('context', function () {
+        context('context (v8.1.2)', function () {
+		  skipUnlessVersion('>= 8.1.2', this)
+
           it('Adds mapKeysIn with andFilter', async function () {
             const ctx = new Context()
               .addMapKeysIn(['a', 'c'])
@@ -483,7 +485,9 @@ describe('Aerospike.exp.selectByPath', async function () {
             expect(actual[0]).to.equal(1.5)
             expect(actual[1]).to.equal(4.5)
           })
+        })
 
+		context('context', function() {
           it('Adds addAllChildren', async function () {
             const selectByPath = exp.selectByPath(exp.binList('floatList'), exp.type.LIST, pathSelectFlags.VALUE, addAllChildren)
   
