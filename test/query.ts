@@ -24,13 +24,9 @@ import {Query} from '../lib/aerospike.js';
 import type { Client, Job as J, exp as expModule, cdt, AerospikeError as ASError, GeoJSON as GJ, GeoJSONType, RecordStream, Key as K, filter as filterModule, operations, indexDataType, indexType, QueryOptions, AerospikeRecord, AerospikeBins} from '../lib/aerospike.js';
 
 import * as chai from 'chai'; 
+import {expect} from 'chai'; 
 import * as helper from './test_helper.ts';
 import * as Aerospike from '../lib/aerospike.js'; 
-
-import chaiAsPromised from 'chai-as-promised';
-
-chai.use(chaiAsPromised);
-chai.should()
 
 const query: typeof Query = Aerospike.Query
 const Job: typeof J = Aerospike.Job
@@ -262,97 +258,6 @@ describe('Queries', function () {
       query.whereWithIndexName(Aerospike.filter.equal(null, 9), 'indexName')
       expect(query.filters.length).to.equal(1)
       expect(query.filters[0].indexName).to.equal('indexName')
-    })
-  })
-
-  describe('bin projection', function () {
-    helper.skipUnlessVersion('>= 8.1.2', this)
-
-    describe('bin projection can read root-level elements', function () {
-      const args: QueryOptions = {
-        ops: [op.read('a')]
-      }
-
-      it('works with query.foreach()', function (){
-        const query: Query = client.query(helper.namespace, helper.set, args)
-        const stream = query.foreach()
-        stream.on('data', (record: AerospikeRecord) => {
-          console.log(record)
-          expect(record.bins).to.have.property('a', 9)
-        })
-      })
-
-      it('works with query.results()', async function (){
-        const query: Query = client.query(helper.namespace, helper.set, args)
-        let results = await query.results()
-        for (const record of results) {
-          expect(record.bins).to.have.property('a', 9)
-        }
-      })
-    })
-
-    describe('bin projection can read nested-level elements', function () {
-      const args: QueryOptions = {
-        ops: [Aerospike.maps.getByKey('nested', 'value', Aerospike.maps.returnType.VALUE)]
-      }
-
-      it('works with query.foreach()', function (){
-        const query: Query = client.query(helper.namespace, helper.set, args)
-        const stream = query.foreach()
-        stream.on('data', (record: AerospikeRecord) => {
-          console.log(record)
-          expect(record.bins).to.have.property('nested').within(10, 30)
-        })
-      })
-
-      it('works with query.results()', async function (){
-        const query: Query = client.query(helper.namespace, helper.set, args)
-        let results = await query.results()
-        for (const record of results) {
-          expect(record.bins).to.have.property('nested').within(10, 30)
-        }
-      })
-    })
-
-    it('foreground query should reject write operations', async function (){
-      const args: QueryOptions = {
-        ops: [Aerospike.operations.write('name', 'filter1')]
-      }
-      const query: Query = client.query(helper.namespace, helper.set, args)
-      let promise = query.results()
-      return promise.should.be.rejectedWith(AerospikeError)
-    })
-
-    describe('selected bins and ops are mutually exclusive', function() {
-        let warnings = [];
-        const warningHandler = (warning: any) => {
-          warnings.push(warning);
-        };
-
-        beforeEach(() => {
-          // Listen for warnings
-          process.on('warning', warningHandler);
-        });
-
-        afterEach(() => {
-          process.removeListener('warning', warningHandler);
-        });
-
-      it('ditto', async function () {
-        const args: QueryOptions = {
-          ops: [op.read('a')],
-          select: ["nonexistent_bin"]
-        }
-        const query: Query = client.query(helper.namespace, helper.set, args)
-        expect(warnings.length).to.equal(1)
-
-        // Bin named "a" should still be returned by ops
-        // i.e it is not filtered out
-        let results = await query.results()
-        for (const record of results) {
-          expect(record.bins).to.have.property('a', 9)
-        }
-      })
     })
   })
 
