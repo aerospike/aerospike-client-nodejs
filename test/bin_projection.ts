@@ -197,7 +197,7 @@ describe('bin projection', function () {
     const args: ScanOptions = {
       ops: [Aerospike.operations.write('name', 'filter1')]
     }
-    const scan: Query = client.scan(helper.namespace, helper.set, args)
+    const scan: Scan = client.scan(helper.namespace, helper.set, args)
     let promise = scan.results()
     return promise.should.be.rejectedWith(AerospikeError)
   })
