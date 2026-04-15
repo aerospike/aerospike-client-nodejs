@@ -23,9 +23,13 @@
 import {Query} from '../lib/aerospike.js'; 
 import type { Client, Job as J, exp as expModule, cdt, AerospikeError as ASError, GeoJSON as GJ, GeoJSONType, RecordStream, Key as K, filter as filterModule, operations, indexDataType, indexType, QueryOptions, AerospikeRecord, AerospikeBins} from '../lib/aerospike.js';
 
-import { expect } from 'chai'; 
+import { expect, use } from 'chai'; 
 import * as helper from './test_helper.ts';
 import * as Aerospike from '../lib/aerospike.js'; 
+
+import chaiAsPromised from 'chai-as-promised';
+
+use(chaiAsPromised);
 
 const query: typeof Query = Aerospike.Query
 const Job: typeof J = Aerospike.Job
@@ -309,12 +313,12 @@ describe('Queries', function () {
       })
     })
 
-    it('foreground query should reject write operations', function (){
+    it('foreground query should reject write operations', async function (){
       const args: QueryOptions = {
         ops: [Aerospike.operations.write('name', 'filter1')]
       }
       const query: Query = client.query(helper.namespace, helper.set, args)
-      expect(async () => await query.results()).to.throw()
+      await expect(query.results()).to.eventually.throw(AerospikeError)
     })
 
     describe('selected bins and ops are mutually exclusive', function() {
