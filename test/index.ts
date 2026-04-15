@@ -164,7 +164,7 @@ context('secondary indexes', function () {
         index: testIndex.name,
 		bin: "unused",
 		type: Aerospike.indexType.SET,
-		dtype: Aerospike.indexDataType.DEFAULT
+		datatype: Aerospike.indexDataType.DEFAULT
       }
 
 console.log("XXXX: options = " + JSON.stringify(options))
