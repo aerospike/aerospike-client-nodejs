@@ -89,7 +89,7 @@ describe('Aerospike.exp_operations', function () {
     })
 
     describe('inList', function () {
-	  helper.skipUnlessVersion('>= 8.1.2', this)
+      helper.skipUnlessVersion('>= 8.1.2', this)
 
       it('is true when bin string is contained in a literal list (exp.inList case 1)', async function () {
         const key: Key = await createRecord({ color: 'blue', qty: 5 })

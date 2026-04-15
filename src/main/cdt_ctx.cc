@@ -251,7 +251,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 					return AS_NODE_PARAM_ERR;
 				}
 				as_cdt_ctx_add_and_filter(context, exp);
-				as_v8_detail(log, "Adding All Children With Filter context");
+				as_v8_detail(log, "Adding AND Filter context With Filter context");
 			}
 			else {
 				as_v8_error(log, "error: value should be an expression, null, or undefined");

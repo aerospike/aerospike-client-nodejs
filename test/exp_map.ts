@@ -119,7 +119,7 @@ describe('Aerospike.exp_operations', function () {
     })
 
     describe('map_keys and map_values', function () {
-	  helper.skipUnlessVersion('>= 8.1.2', this)
+      helper.skipUnlessVersion('>= 8.1.2', this)
 
       it('returns map keys from bin m (exp_map_keys_values case 1)', async function () {
         const key: Key = await createRecord({ m: { a: 1, b: 2 } })
