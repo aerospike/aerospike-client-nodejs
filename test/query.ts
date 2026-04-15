@@ -28,6 +28,11 @@ import {expect} from 'chai';
 import * as helper from './test_helper.ts';
 import * as Aerospike from '../lib/aerospike.js'; 
 
+import chaiAsPromised from 'chai-as-promised';
+
+chai.use(chaiAsPromised);
+chai.should()
+
 const query: typeof Query = Aerospike.Query
 const Job: typeof J = Aerospike.Job
 
@@ -847,7 +852,8 @@ describe('Queries', function () {
     it('should reject read operations', function (){
       const ops = [Aerospike.operations.read('a')]
       const query: Query = client.query(helper.namespace, helper.set)
-      expect(async () => await query.operate(ops)).to.throw(AerospikeError)
+      let promise = query.operate(ops)
+      return promise.should.be.rejectedWith(AerospikeError)
     })
   })
 
