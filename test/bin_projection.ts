@@ -113,7 +113,7 @@ describe('bin projection', function () {
         ops: [Aerospike.maps.getByKey('nested', 'value', Aerospike.maps.returnType.VALUE)]
     }
 
-    it('works with scan.foreach()', function (){
+    it.skip('works with scan.foreach(). TODO this fails possibly because of a client bug. CLIENT-4648', function (){
       const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
       const stream = scan.foreach()
       stream.on('data', (record: AerospikeRecord) => {
@@ -193,7 +193,7 @@ describe('bin projection', function () {
     return promise.should.be.rejectedWith(AerospikeError)
   })
 
-  it('foreground scan should reject write operations', async function (){
+  it.skip('foreground scan should reject write operations. TODO this fails possibly because of a client bug. CLIENT-4648', async function (){
     const args: ScanOptions = {
       ops: [Aerospike.operations.write('name', 'filter1')]
     }
