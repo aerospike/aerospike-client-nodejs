@@ -35,7 +35,7 @@ describe('bin projection', function () {
   const client: Client = helper.client
   const gen_key = keygen.string(helper.namespace, helper.set)
   const key: Key = gen_key()
-  const record: AerospikeRecord = recgen.record(() => { return { 'a': 1, 'nested': {'value': 10}}})()
+  const record: AerospikeRecord = recgen.record({ 'a': () => 1, 'nested': () => { return {'value': 10}}})()
 
   before(async () => {
     await client.truncate(helper.namespace, helper.set, 0)
@@ -121,7 +121,7 @@ describe('bin projection', function () {
       // i.e it is not filtered out
       let results = await query.results()
       for (const record of results) {
-        expect(record.bins).to.have.property('a', 9)
+        expect(record.bins).to.have.property('a', 1)
       }
     })
   })
