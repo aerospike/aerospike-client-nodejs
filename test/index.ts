@@ -157,7 +157,7 @@ context('secondary indexes', function () {
           }))
     })
 
-    it('XXXX should support creating set indexes', function () {
+    it('should support creating set indexes', function () {
       const options = {
         ns: helper.namespace,
         set: helper.set,
@@ -166,8 +166,6 @@ context('secondary indexes', function () {
 		type: Aerospike.indexType.SET,
 		datatype: Aerospike.indexDataType.DEFAULT
       }
-
-console.log("XXXX: options = " + JSON.stringify(options))
 
       return client.createIndex(options)
         .then((job: IJ) => job.wait(10))
