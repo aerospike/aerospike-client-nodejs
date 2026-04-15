@@ -6,7 +6,7 @@
 
 import { setTimeout as sleep } from 'timers/promises';
 import {Query} from '../lib/aerospike.js'; 
-import type { Client, Key, QueryOptions, AerospikeRecord} from '../lib/aerospike.js';
+import type { Scan, Client, Key, ScanOptions, QueryOptions, AerospikeRecord} from '../lib/aerospike.js';
 import {AerospikeError} from '../lib/aerospike.js';
 
 import {expect} from 'chai'; 
@@ -66,6 +66,26 @@ describe('bin projection', function () {
         expect(record.bins).to.have.property('a', 1)
       }
     })
+
+    const scan_args: ScanOptions = {
+      ops: [Aerospike.operations.read('a')]
+    }
+
+    it('works with scan.foreach()', function (){
+      const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
+      const stream = scan.foreach()
+      stream.on('data', (record: AerospikeRecord) => {
+        expect(record.bins).to.have.property('a', 1)
+      })
+    })
+
+    it('works with scan.results()', async function (){
+      const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
+      let results = await scan.results()
+      for (const record of results) {
+        expect(record.bins).to.have.property('a', 1)
+      }
+    })
   })
 
   describe('bin projection can read nested-level elements', function () {
@@ -84,6 +104,26 @@ describe('bin projection', function () {
     it('works with query.results()', async function (){
       const query: Query = client.query(helper.namespace, helper.set, args)
       let results = await query.results()
+      for (const record of results) {
+          expect(record.bins).to.have.property('nested', 10)
+      }
+    })
+
+    const scan_args: ScanOptions = {
+        ops: [Aerospike.maps.getByKey('nested', 'value', Aerospike.maps.returnType.VALUE)]
+    }
+
+    it('works with scan.foreach()', function (){
+      const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
+      const stream = scan.foreach()
+      stream.on('data', (record: AerospikeRecord) => {
+          expect(record.bins).to.have.property('nested', 10)
+      })
+    })
+
+    it('works with scan.results()', async function (){
+      const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
+      let results = await scan.results()
       for (const record of results) {
           expect(record.bins).to.have.property('nested', 10)
       }
@@ -107,7 +147,7 @@ describe('bin projection', function () {
         process.removeListener('warning', warningHandler);
       });
 
-    it('ditto', async function () {
+    it('raises a warning for queries', async function () {
       const args: QueryOptions = {
         ops: [Aerospike.operations.read('a')],
         select: ["nonexistent_bin"]
@@ -124,6 +164,24 @@ describe('bin projection', function () {
         expect(record.bins).to.have.property('a', 1)
       }
     })
+
+    it('raises a warning for scans', async function () {
+      const args: ScanOptions = {
+        ops: [Aerospike.operations.read('a')],
+        select: ["nonexistent_bin"]
+      }
+      const scan: Scan = client.scan(helper.namespace, helper.set, args)
+      await sleep(1000)
+
+      expect(warnings.length).to.equal(1)
+
+      // Bin named "a" should still be returned by ops
+      // i.e it is not filtered out
+      let results = await scan.results()
+      for (const record of results) {
+        expect(record.bins).to.have.property('a', 1)
+      }
+    })
   })
 
   it('foreground query should reject write operations', async function (){
@@ -132,6 +190,15 @@ describe('bin projection', function () {
     }
     const query: Query = client.query(helper.namespace, helper.set, args)
     let promise = query.results()
+    return promise.should.be.rejectedWith(AerospikeError)
+  })
+
+  it('foreground scan should reject write operations', async function (){
+    const args: ScanOptions = {
+      ops: [Aerospike.operations.write('name', 'filter1')]
+    }
+    const scan: Query = client.scan(helper.namespace, helper.set, args)
+    let promise = scan.results()
     return promise.should.be.rejectedWith(AerospikeError)
   })
 })

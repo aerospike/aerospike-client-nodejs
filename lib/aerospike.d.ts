@@ -8747,6 +8747,10 @@ export interface ScanOptions {
        */
     scanState?: number[];
 
+    /**
+     * Read operations to be executed in a foreground scan.
+     */
+    ops?: operations.Operation[];
 }
 /**
  *
