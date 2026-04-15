@@ -14,8 +14,6 @@ on:
 
 jobs:
   smoke-tests:
-    env:
-      CONTAINER_NAME: aerospike
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -62,4 +60,4 @@ jobs:
       run: npm run test
 
     - if: ${{ !cancelled() }}
-      run: docker logs $CONTAINER_NAME
+      run: docker logs ${{ steps.setup-as-server.outputs.container-names }}
