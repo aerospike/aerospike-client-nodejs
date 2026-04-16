@@ -123,6 +123,17 @@ describe('Aerospike.exp_operations', function () {
         const result: AerospikeRecord = await client.operate(key, ops, {})
         expect(result.bins![tempBin]).to.equal(true)
       })
+
+      it('is true when bin int is contained in a integer bin list (exp.inList case 4)', async function () {
+        const key: Key = await createRecord({ color: 'blue', qty: 5, rgb: [1, 5, 255] })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.inList(exp.binInt('qty'), exp.binList('rgb')),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins![tempBin]).to.equal(true)
+      })
     })
 
     describe('clear', function () {
