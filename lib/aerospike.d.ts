@@ -8751,6 +8751,8 @@ export interface ScanOptions {
 
     /**
      * Read operations to be executed in a foreground scan.
+     *
+     * If {@link Scan#operate} is called, it will set this property to the operations argument it received.
      */
     ops?: operations.Operation[];
 }
