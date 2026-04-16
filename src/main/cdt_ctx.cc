@@ -223,7 +223,7 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 				return err;
 			}
 
-			if (as_val_type(&asValue) != AS_LIST {
+			if (as_val_type(&asValue) != AS_LIST) {
 				as_v8_detail(log, "Argument must be a list of map keys.");
 				return AS_NODE_PARAM_ERR;
 			}
@@ -386,12 +386,14 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 		case (AS_CDT_CTX_MAP_KEYS_IN): {
 			int err = asval_from_jsvalue(&asValue, v8value, log);
 			if (err != AS_NODE_PARAM_OK) {
-				return err;
+				*rc = err;
+				return context;
 			}
 
 			if (as_val_type(&asValue) != AS_LIST) {
 				as_v8_detail(log, "Argument must be a list of map keys.");
-				return AS_NODE_PARAM_ERR;
+				*rc = AS_NODE_PARAM_ERR;
+				return context;
 			}
 
 			as_cdt_ctx_add_map_keys_in(context, (as_list*)asValue);
