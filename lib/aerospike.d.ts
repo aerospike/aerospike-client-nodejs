@@ -40,6 +40,11 @@ export enum ScalarOperations {
 /* TYPES */
 
 /**
+ * Represents any type that can be a valid map key.
+ */
+export type AerospikeMapKey = number | string | Buffer;
+
+/**
  * Represents a basic value in an Aerospike bin.
  */
 export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
@@ -1775,10 +1780,10 @@ export namespace cdt {
         /**
          * Look up one or more keys in a map expression.
          *
-         * @param keys - List of keys to query in the map context.
+         * @param {AerospikeMapKey} keys List of keys to query in the map context.
          * @return {CdtContext} Updated CDT context, so calls can be chained.
          */
-        public addMapKeysIn(keys: AerospikeBinValue[]): CdtContext;
+        public addMapKeysIn(keys: AerospikeMapKey[]): CdtContext;
         /**
          * Add a boolean expression filter AND-combined with the current context.
          *
@@ -1792,10 +1797,9 @@ export namespace cdt {
          *   {@link addAllChildrenWithFilter}.
          * - The and-filter cannot be the first entry in the context chain.
          *
-         * Evaluation runs after prior context steps (e.g. map key-list selection);
-         * entries must satisfy both.
+         * Evaluation runs after prior context steps (e.g. {@link addMapKeysIn}).
          *
-         * @param filterExpression - {@link AerospikeExp} that must resolve to a boolean.
+         * @param {AerospikeExp} filterExpression {@link AerospikeExp} that must resolve to a boolean.
          * @return {CdtContext} Updated CDT context, so calls can be chained.
          */
         public addAndFilter(filterExpression: AerospikeExp): CdtContext;
