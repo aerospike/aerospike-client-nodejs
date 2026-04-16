@@ -42,7 +42,6 @@ describe.skip('Command Queue #slow', function () {
       return results.length
     }
 
-    console.log(helper.config)
     const result = await helper.runInNewProcess(test, helper.config).catch((error) => console.error('Error:', error))
     expect(result).to.equal(10)
   })

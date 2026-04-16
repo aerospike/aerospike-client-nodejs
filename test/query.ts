@@ -23,9 +23,15 @@
 import {Query} from '../lib/aerospike.js'; 
 import type { Client, Job as J, exp as expModule, cdt, AerospikeError as ASError, GeoJSON as GJ, GeoJSONType, RecordStream, Key as K, filter as filterModule, operations, indexDataType, indexType, QueryOptions, AerospikeRecord, AerospikeBins} from '../lib/aerospike.js';
 
-import { expect } from 'chai'; 
+import * as chai from 'chai'; 
+import {expect} from 'chai'; 
 import * as helper from './test_helper.ts';
 import * as Aerospike from '../lib/aerospike.js'; 
+
+import chaiAsPromised from 'chai-as-promised';
+
+chai.use(chaiAsPromised);
+chai.should()
 
 const query: typeof Query = Aerospike.Query
 const Job: typeof J = Aerospike.Job
@@ -856,6 +862,13 @@ describe('Queries', function () {
       const key = keys[Math.floor(Math.random() * keys.length)]
       const record = await client.get(key)
       expect(record.ttl).to.be.within(7198, 7200)
+    })
+
+    it('should reject read operations', function (){
+      const ops = [Aerospike.operations.read('a')]
+      const query: Query = client.query(helper.namespace, helper.set)
+      let promise = query.operate(ops)
+      return promise.should.be.rejectedWith(AerospikeError)
     })
   })
 
