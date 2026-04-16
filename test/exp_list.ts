@@ -93,11 +93,11 @@ describe('Aerospike.exp_operations', function () {
       helper.skipUnlessVersion('>= 8.1.2', this)
 
       beforeEach(async () => {
-        createRecord({ color: 'blue', qty: 5, rgb: [1, 5, 255] })
+        await createRecord({ color: 'blue', qty: 5, rgb: [1, 5, 255] })
       })
 
       afterEach(async () => {
-		  await client.remove(key)
+        await client.remove(key)
       })
 
       it('is true when bin string is contained in a literal list (exp.inList case 1)', async function () {
