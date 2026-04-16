@@ -2,7 +2,7 @@ on:
   pull_request:
 
 jobs:
-  smoke-tests:
+  build-api-docs:
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
