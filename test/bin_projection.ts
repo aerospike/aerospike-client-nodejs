@@ -35,7 +35,6 @@ describe('bin projection', function () {
   const client: Client = helper.client
   const gen_key = keygen.string(helper.namespace, helper.set)
   const key: Key = gen_key()
-  // const record: AerospikeRecord = recgen.record({ 'a': () => 1, 'nested': () => { return {'value': 10}}})()
   const bins: AerospikeBins = {'a': 1, 'nested': {'value': 10}};
 
   before(async () => {
