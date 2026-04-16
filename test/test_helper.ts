@@ -42,15 +42,11 @@ import * as putgen from './generators/put.ts';
 import * as util from './util/index.ts';
 
 export { keygen, metagen, recgen, valgen, putgen, util };
-console.log("options", options)
 let testConfigs = options.getConfig()
-console.log("testConfigs", testConfigs)
 const config: Config = testConfigs.config
-console.log("config", config)
 const helper_client_exists = testConfigs.omitHelperClient
 let client: any;
 client = Aerospike.client(config)
-console.log("This is running")
 
 
 export {client, config}
