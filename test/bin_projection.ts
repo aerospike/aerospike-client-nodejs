@@ -37,13 +37,13 @@ describe('bin projection', function () {
   const key: Key = gen_key()
   const bins: AerospikeBins = {'a': 1, 'nested': {'value': 10}};
 
-  before(async () => {
-    await client.truncate(helper.namespace, helper.set, 0)
-    await client.put(key, bins)
+  before(function () {
+    client.truncate(helper.namespace, helper.set, 0)
+    client.put(key, bins)
   })
 
-  after(async () => {
-    await client.remove(key)
+  after(function () {
+    client.remove(key)
   })
 
   describe('bin projection can read root-level elements', function () {
