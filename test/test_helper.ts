@@ -42,15 +42,11 @@ import * as putgen from './generators/put.ts';
 import * as util from './util/index.ts';
 
 export { keygen, metagen, recgen, valgen, putgen, util };
-console.log("options", options)
 let testConfigs = options.getConfig()
-console.log("testConfigs", testConfigs)
 const config: Config = testConfigs.config
-console.log("config", config)
 const helper_client_exists = testConfigs.omitHelperClient
 let client: any;
 client = Aerospike.client(config)
-console.log("This is running")
 
 
 export {client, config}
@@ -187,8 +183,6 @@ import * as url from "node:url"
     isVersionInRange(versionRange: string) {
       const version: string = process.env.AEROSPIKE_VERSION_OVERRIDE || this.build;
       const semverVersion: SemVer | null = semver.coerce(version); // truncate a build number like "4.3.0.2-28-gdd9f506" to just "4.3.0"
-      console.log("version", version)
-      console.log("semverVersion", semverVersion)
       return semver.satisfies(semverVersion!, versionRange);
     }
 
