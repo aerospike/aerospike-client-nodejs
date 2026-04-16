@@ -24,7 +24,7 @@ chai.use(chaiAsPromised);
 chai.should()
 
 
-// Bin projection is in its own test file because some records will return null
+// Bin projection is in its own test file because in test/query.ts, some records will return null
 // if bin projection tries to read a nested element in a bin that doesn't exist
 // in those records.
 // Also because we need to test both query and scan, and query.ts is only focused towards
