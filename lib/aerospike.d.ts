@@ -1116,6 +1116,8 @@ export class Query {
     public maxRecords?: number;
     /**
      * Specifies read operations to be executed in a foreground query.
+     * 
+     * If {@link Query#operate} is called, it will set this property to the operations argument it received.
      */
     public ops?: operations.Operation[];
     /**
