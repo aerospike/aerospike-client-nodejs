@@ -28,16 +28,11 @@ describe.skip('Command Queue #slow', function () {
     const test = async function (config: Aerospike.Config) {
       Object.assign(config, { log: { level: Aerospike.log.OFF } })
       Aerospike.setupGlobalCommandQueue({ maxCommandsInProcess: 5, maxCommandsInQueue: 5 })
-      // console.log(-2)
-      // console.log(config)
       const client = await Aerospike.connect(config)
-      // console.log(-1)
       const cmds = Array.from({ length: 10 }, (_, i) =>
         client.put(new Aerospike.Key(helper.namespace, helper.set, i), { i })
       )
-      // console.log(0)
       const results = await Promise.all(cmds)
-      // console.log(1)
       client.close()
       return results.length
     }
