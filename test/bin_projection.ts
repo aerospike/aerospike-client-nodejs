@@ -71,7 +71,9 @@ describe('bin projection', function () {
       ops: [Aerospike.operations.read('a')]
     }
 
-    it.skip('works with scan.foreach(). TODO this fails possibly because of a client bug. CLIENT-4648', function (){
+    it('works with scan.foreach()', function (){
+      // TODO this fails possibly because of a client bug. CLIENT-4648
+      this.skip()
       const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
       const stream = scan.foreach()
       stream.on('data', (record: AerospikeRecord) => {
@@ -115,7 +117,9 @@ describe('bin projection', function () {
         ops: [Aerospike.maps.getByKey('nested', 'value', Aerospike.maps.returnType.VALUE)]
     }
 
-    it.skip('works with scan.foreach(). TODO this fails possibly because of a client bug. CLIENT-4648', function (){
+    it('works with scan.foreach()', function (){
+      // TODO this fails possibly because of a client bug. CLIENT-4648
+      this.skip()
       const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
       const stream = scan.foreach()
       stream.on('data', (record: AerospikeRecord) => {
@@ -123,7 +127,9 @@ describe('bin projection', function () {
       })
     })
 
-    it.skip('works.with scan.results(). TODO this fails possibly because of a client bug. CLIENT-4648', async function (){
+    it('works.with scan.results()', async function (){
+      // TODO this fails possibly because of a client bug. CLIENT-4648
+      this.skip()
       const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
       let results = await scan.results()
       for (const record of results) {
@@ -198,7 +204,9 @@ describe('bin projection', function () {
     return promise.should.be.rejectedWith(AerospikeError)
   })
 
-  it.skip('foreground scan should reject write operations. TODO this fails possibly because of a client bug. CLIENT-4648', async function (){
+  it('foreground scan should reject write operations.', async function (){
+    // TODO this fails possibly because of a client bug. CLIENT-4648
+    this.skip()
     const args: ScanOptions = {
       ops: [Aerospike.operations.write('name', 'filter1')]
     }
