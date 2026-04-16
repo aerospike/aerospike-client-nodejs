@@ -1,13 +1,13 @@
 {
-  "include": ["typings/index.d.ts"],
+  "include": ["lib/aerospike.d.ts"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
-    "strict": true,
+    // "strict": true,
     "module": "commonjs",
     "moduleResolution": "node",
-    "target": "es5",
+    "target": "es2022",
     "lib": [
-      "es5",
+      "es2022",
       "dom"
     ],
     "allowJs": true,
@@ -26,9 +26,6 @@
     "resolveJsonModule": true,
     "isolatedModules": false,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    "paths": {
-      "*": ["typings/*"]
-    }
+    "baseUrl": "."
   }
 }
