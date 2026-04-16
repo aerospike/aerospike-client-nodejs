@@ -40,8 +40,9 @@ describe('Aerospike.exp_operations', function () {
 
   const client: Cli = helper.client
 
+  const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exp' })()
+
   async function createRecord (bins: any, meta = null) {
-    const key: Key = keygen.string(helper.namespace, helper.set, { prefix: 'test/exp' })()
     await client.put(key, bins, meta)
     return key
   }
@@ -91,8 +92,15 @@ describe('Aerospike.exp_operations', function () {
     describe('inList', function () {
       helper.skipUnlessVersion('>= 8.1.2', this)
 
+      beforeEach(async () => {
+        createRecord({ color: 'blue', qty: 5, rgb: [1, 5, 255] })
+      })
+
+      afterEach(async () => {
+		  await client.remove(key)
+      })
+
       it('is true when bin string is contained in a literal list (exp.inList case 1)', async function () {
-        const key: Key = await createRecord({ color: 'blue', qty: 5 })
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
             exp.inList(exp.binStr('color'), exp.list(['red', 'blue', 'green'])),
@@ -103,7 +111,6 @@ describe('Aerospike.exp_operations', function () {
       })
 
       it('is false when a string literal is not in the list (exp.inList case 2)', async function () {
-        const key: Key = await createRecord({ color: 'blue', qty: 5 })
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
             exp.inList(exp.str('yellow'), exp.list(['red', 'blue', 'green'])),
@@ -114,7 +121,6 @@ describe('Aerospike.exp_operations', function () {
       })
 
       it('is true when bin int is contained in a literal list (exp.inList case 3)', async function () {
-        const key: Key = await createRecord({ color: 'blue', qty: 5 })
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
             exp.inList(exp.binInt('qty'), exp.list([1, 5, 10])),
@@ -125,7 +131,6 @@ describe('Aerospike.exp_operations', function () {
       })
 
       it('is true when bin int is contained in a integer bin list (exp.inList case 4)', async function () {
-        const key: Key = await createRecord({ color: 'blue', qty: 5, rgb: [1, 5, 255] })
         const ops: operations.Operation[] = [
           exp.operations.read(tempBin,
             exp.inList(exp.binInt('qty'), exp.binList('rgb')),
