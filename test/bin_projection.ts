@@ -162,6 +162,7 @@ describe('bin projection', function () {
         select: ["nonexistent_bin"]
       }
       const query: Query = client.query(helper.namespace, helper.set, args)
+      // Make sure the warning goes through
       await sleep(1000)
 
       expect(warnings.length).to.equal(1)
@@ -182,6 +183,7 @@ describe('bin projection', function () {
         select: ["nonexistent_bin"]
       }
       const scan: Scan = client.scan(helper.namespace, helper.set, args)
+      // Make sure the warning goes through
       await sleep(1000)
 
       expect(warnings.length).to.equal(1)
