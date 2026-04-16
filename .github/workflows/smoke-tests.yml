@@ -1,0 +1,63 @@
+run-name: Smoke tests (server-tag=${{ inputs.server-tag }})
+
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      server-tag:
+        type: string
+        required: true
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        node-version: [
+          20,
+          22,
+          24,
+          25
+        ]
+      fail-fast: false
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build client
+      run: |
+        # Install dependencies
+        npm ci --ignore-scripts
+        # Build C client dependency (TODO: this should belong in the build script)
+        ./scripts/build-c-client.sh
+        # Then build client itself
+        npm run build
+
+    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@48edf9ff59ab4da5f15915b22d8895f19ce7fd55
+      id: setup-as-server
+      with:
+        num-nodes: 1
+        oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
+        oidc-audience: ${{ vars.OIDC_AUDIENCE }}
+        server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.1.2' }}
+        env-vars: DEFAULT_TTL=2592000;
+
+    - name: Run tests
+      run: npm run test
+
+    - if: ${{ !cancelled() }}
+      run: docker logs ${{ steps.setup-as-server.outputs.container-names }}

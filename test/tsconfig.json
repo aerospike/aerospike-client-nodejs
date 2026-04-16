@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "es2022",
+    // "moduleResolution": "nodenext",
+    // "outDir": "./test",
+    "strict": true,
+    // "esModuleInterop": true,
+    // "skipLibCheck": true,
+    // "forceConsistentCasingInFileNames": true,
+    "typeRoots": [
+      "../node_modules/@types"
+    ],
+    "allowSyntheticDefaultImports": true,
+    // TODO: test this later
+    "baseUrl": "./",
+    // "paths": {
+    //   "aerospike": ["../lib/aerospike"]
+    //   // You can add more mappings here
+    // }
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  },
+  "include": ["**/*.ts"],
+  "files": ["../lib/aerospike.d.ts"],
+}
