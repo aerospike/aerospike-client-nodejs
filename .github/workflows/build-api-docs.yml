@@ -18,4 +18,5 @@ jobs:
       with:
         node-version: 24
 
+    - run: npm ci --ignore-scripts
     - run: npm run build-docs
