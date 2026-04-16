@@ -40,7 +40,7 @@
   "scripts": {
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "test": "NODE_OPTIONS='--import=tsx' mocha test/*.{ts,js}",
+    "test": "NODE_OPTIONS='--import=tsx' mocha test/${npm_config_testfile:-*.{ts,js}}",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore scripts",
@@ -51,8 +51,8 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand lib/aerospike.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
-    "valgrind": "NODE_OPTIONS='--import=tsx' valgrind ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i test/${npm_config_testfile:-}",
-    "gdb": "NODE_OPTIONS='--import=tsx' gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i test/${npm_config_testfile:-}",
+    "valgrind": "NODE_OPTIONS='--import=tsx' valgrind ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i test/${npm_config_testfile:-*.{ts,js}}",
+    "gdb": "NODE_OPTIONS='--import=tsx' gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i test/${npm_config_testfile:-*.{ts,js}}",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
   },
