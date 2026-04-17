@@ -47,7 +47,7 @@ jobs:
         # Then build client itself
         npm run build
 
-    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@8cb141235cc491a18461e14159ab9714ce1abb2b
+    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@e2929540bdb55549c31bed0624a09f1cd4f5405e
       id: setup-as-server
       with:
         num-nodes: 1
