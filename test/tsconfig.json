@@ -10,9 +10,6 @@
     // TODO but we still want to do type checking on our type definition file
     "skipLibCheck": true,
     // "forceConsistentCasingInFileNames": true,
-    "typeRoots": [
-      "../node_modules/@types"
-    ],
     "allowSyntheticDefaultImports": true,
     // TODO: test this later
     "baseUrl": "./",
