@@ -21,7 +21,6 @@ import * as recgen from './generators/record.ts'
 import chaiAsPromised from 'chai-as-promised';
 
 chai.use(chaiAsPromised);
-chai.should()
 
 
 // Bin projection is in its own test file because in test/query.ts, some records will return null
@@ -203,17 +202,17 @@ describe('bin projection', function () {
     }
     const query: Query = client.query(helper.namespace, helper.set, args)
     let promise = query.results()
-    return promise.should.be.rejectedWith(AerospikeError)
+    return expect(promise).to.be.rejectedWith(AerospikeError)
   })
 
   it('foreground scan should reject write operations.', async function (){
     // TODO this fails possibly because of a client bug. CLIENT-4648
     this.skip()
-    const args: ScanOptions = {
-      ops: [Aerospike.operations.write('name', 'filter1')]
-    }
-    const scan: Scan = client.scan(helper.namespace, helper.set, args)
-    let promise = scan.results()
-    return promise.should.be.rejectedWith(AerospikeError)
+    // const args: ScanOptions = {
+    //   ops: [Aerospike.operations.write('name', 'filter1')]
+    // }
+    // const scan: Scan = client.scan(helper.namespace, helper.set, args)
+    // let promise = scan.results()
+    // return promise.should.be.rejectedWith(AerospikeError)
   })
 })

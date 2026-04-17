@@ -31,7 +31,6 @@ import * as Aerospike from '../lib/aerospike.js';
 import chaiAsPromised from 'chai-as-promised';
 
 chai.use(chaiAsPromised);
-chai.should()
 
 const query: typeof Query = Aerospike.Query
 const Job: typeof J = Aerospike.Job
@@ -853,7 +852,7 @@ describe('Queries', function () {
       const ops = [Aerospike.operations.read('a')]
       const query: Query = client.query(helper.namespace, helper.set)
       let promise = query.operate(ops)
-      return promise.should.be.rejectedWith(AerospikeError)
+      return expect(promise).to.be.rejectedWith(AerospikeError)
     })
   })
 
