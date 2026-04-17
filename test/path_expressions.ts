@@ -480,7 +480,7 @@ describe('Aerospike.exp.selectByPath', async function () {
         })
 
         context('context (v8.1.2)', function () {
-          skipUnlessVersion('>= 8.1.2', this)
+          helper.skipUnlessVersion('>= 8.1.2', this)
 
           it('Adds mapKeysIn with andFilter', async function () {
             const ctx = new Context()
