@@ -8,6 +8,10 @@ on:
         default: latest
         type: string
         required: false
+      test_cases_to_run:
+        default: '*'
+        type: string
+        required: false
 
 jobs:
   smoke-tests:
@@ -61,6 +65,8 @@ jobs:
 
     - name: Run tests
       run: npm run test
+      env:
+        MOCHA_OPTIONS: '--grep "${{ inputs.test_cases_to_run }}"'
 
     - if: ${{ !cancelled() }}
       run: docker logs $CONTAINER_NAME
