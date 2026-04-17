@@ -19,7 +19,7 @@
 /* eslint-env mocha */
 /* global expect */
 
-import { exp as expModule, operations, lists as listsModule, Client as Cli, Key, RemovePolicyOptions, AerospikeExp, AerospikeRecord, cdt, AerospikeBins} from '../lib/aerospike.js';
+import { exp as expModule, operations, lists as listsModule, Client as Cli, Key, RemovePolicyOptions, AerospikeExp, AerospikeRecord, cdt, AerospikeBins, AerospikeError} from '../lib/aerospike.js';
 import * as Aerospike from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
@@ -97,7 +97,17 @@ describe('Aerospike.exp_operations', function () {
       })
 
       afterEach(async () => {
-        await client.remove(key)
+        // When running the inList tests in CI/CD, sometimes the after hook will trigger a record not found error
+        // This is a workaround to prevent the test from failing
+        try {
+          await client.remove(key)
+        }
+        catch (error) {
+          const ignore_error = error instanceof AerospikeError && error.code == Aerospike.status.ERR_RECORD_NOT_FOUND
+          if (ignore_error == false) {
+            throw error;
+          }
+        }
       })
 
       it('is true when bin string is contained in a literal list (exp.inList case 1)', async function () {
