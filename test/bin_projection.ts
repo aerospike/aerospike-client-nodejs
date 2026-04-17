@@ -130,11 +130,11 @@ describe('bin projection', function () {
     it('works.with scan.results()', async function (){
       // TODO this fails possibly because of a client bug. CLIENT-4648
       this.skip()
-      const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
-      let results = await scan.results()
-      for (const record of results) {
-          expect(record.bins).to.have.property('nested', 10)
-      }
+      // const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
+      // let results = await scan.results()
+      // for (const record of results) {
+      //     expect(record.bins).to.have.property('nested', 10)
+      // }
     })
   })
 
@@ -178,22 +178,22 @@ describe('bin projection', function () {
     it('raises a warning for scans', async function () {
       // TODO this fails possibly because of a client bug. CLIENT-4648
       this.skip()
-      const args: ScanOptions = {
-        ops: [Aerospike.operations.read('a')],
-        select: ["nonexistent_bin"]
-      }
-      const scan: Scan = client.scan(helper.namespace, helper.set, args)
-      // Make sure the warning goes through
-      await sleep(1000)
+      // const args: ScanOptions = {
+      //   ops: [Aerospike.operations.read('a')],
+      //   select: ["nonexistent_bin"]
+      // }
+      // const scan: Scan = client.scan(helper.namespace, helper.set, args)
+      // // Make sure the warning goes through
+      // await sleep(1000)
 
-      expect(warnings.length).to.equal(1)
+      // expect(warnings.length).to.equal(1)
 
-      // Bin named "a" should still be returned by ops
-      // i.e it is not filtered out
-      let results = await scan.results()
-      for (const record of results) {
-        expect(record.bins).to.have.property('a', 1)
-      }
+      // // Bin named "a" should still be returned by ops
+      // // i.e it is not filtered out
+      // let results = await scan.results()
+      // for (const record of results) {
+      //   expect(record.bins).to.have.property('a', 1)
+      // }
     })
   })
 
