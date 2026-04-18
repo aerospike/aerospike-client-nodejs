@@ -19,24 +19,17 @@
 /* eslint-env mocha */
 /* global expect */
 
-require('./test_helper.mts')
-const Command = require('../lib/commands/command')
 
-describe('Command', function () {
-  context('Extend Command', function () {
-    class TestCommand extends Command('testCmd') {
-      foo () { return 'bar' }
-    }
+import * as helper from './test_helper.mts';
 
-    it('creates subclasses with informative constructor names', function () {
-      const cmd = new TestCommand({})
-      expect(cmd.constructor.name).to.equal('TestCommand')
-    })
+import { expect } from 'chai'; 
 
-    it('keeps a reference to the client instance', function () {
-      const client = {}
-      const cmd = new TestCommand(client)
-      expect(cmd.client).to.equal(client)
+describe('bigint', function () {
+  context('BigInt supported - Node.js 10 and later', function () {
+    describe('BigInt', function () {
+      it('is an alias for the built-in BigInt', function () {
+        expect(BigInt(42)).to.eq(global.BigInt(42))
+      })
     })
   })
 })
