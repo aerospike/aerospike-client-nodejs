@@ -60,8 +60,8 @@ jobs:
       run: npx tsc
       working-directory: test
 
-    - name: Perform type checking on the tests
-      run: npx tsc lib/aerospike.d.ts;
+    - name: Perform type checking on the type definitions
+      run: npx tsc --noEmit lib/aerospike.d.ts;
 
     # Note - this does not type check the tests. So the above step is necessary.
     - name: Run tests
