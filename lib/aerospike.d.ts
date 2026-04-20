@@ -40,6 +40,11 @@ export enum ScalarOperations {
 /* TYPES */
 
 /**
+ * Represents any type that can be a valid map key.
+ */
+export type AerospikeMapKey = number | string | Buffer;
+
+/**
  * Represents a basic value in an Aerospike bin.
  */
 export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
@@ -1116,6 +1121,8 @@ export class Query {
     public maxRecords?: number;
     /**
      * Specifies read operations to be executed in a foreground query.
+     * 
+     * If {@link Query#operate} is called, it will set this property to the operations argument it received.
      */
     public ops?: operations.Operation[];
     /**
@@ -1775,10 +1782,10 @@ export namespace cdt {
         /**
          * Look up one or more keys in a map expression.
          *
-         * @param keys - List of keys to query in the map context.
+         * @param {AerospikeMapKey} keys List of keys to query in the map context.
          * @return {CdtContext} Updated CDT context, so calls can be chained.
          */
-        public addMapKeysIn(keys: AerospikeBinValue[]): CdtContext;
+        public addMapKeysIn(keys: AerospikeMapKey[]): CdtContext;
         /**
          * Add a boolean expression filter AND-combined with the current context.
          *
@@ -1792,10 +1799,9 @@ export namespace cdt {
          *   {@link addAllChildrenWithFilter}.
          * - The and-filter cannot be the first entry in the context chain.
          *
-         * Evaluation runs after prior context steps (e.g. map key-list selection);
-         * entries must satisfy both.
+         * Evaluation runs after prior context steps (e.g. {@link addMapKeysIn}).
          *
-         * @param filterExpression - {@link AerospikeExp} that must resolve to a boolean.
+         * @param {AerospikeExp} filterExpression {@link AerospikeExp} that must resolve to a boolean.
          * @return {CdtContext} Updated CDT context, so calls can be chained.
          */
         public addAndFilter(filterExpression: AerospikeExp): CdtContext;
@@ -8774,6 +8780,12 @@ export interface ScanOptions {
        */
     scanState?: number[];
 
+    /**
+     * Read operations to be executed in a foreground scan.
+     *
+     * If {@link Scan#operate} is called, it will set this property to the operations argument it received.
+     */
+    ops?: operations.Operation[];
 }
 /**
  *
@@ -17786,11 +17798,11 @@ export namespace exp {
      */
     export const modifyByPath: (bin: AerospikeExp, valueType: exp.type, modExp: AerospikeExp, flags: exp.pathModifyFlags, ctx: cdt.Context) => AerospikeExp;
     /**
-     * Result remove expression.
+     * Remove result expression.
      * Used primarily to remove the result of a path expression.
      *
      * 
-     * @example <caption>Simple result remove expression.</caption>
+     * @example <caption>Simple remove result expression.</caption>
      *
      *
      * const Aerospike = require('aerospike')
@@ -17820,7 +17832,8 @@ export namespace exp {
      * 
      *    const addAllChildren = new Context().addAllChildren()
      * 
-     *    const modExpression = exp.resultRemove()
+     *    const modExpression = exp.resultRemove() // deprecated!!
+     *    const modExpression = exp.removeResult()
      *
      *    const modifyByPath = exp.modifyByPath(exp.binMap('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
      *     * 
@@ -17840,8 +17853,8 @@ export namespace exp {
      * 
      * @return result remove expression.
      */
+    export const removeResult: () => AerospikeExp;
     export const resultRemove: () => AerospikeExp;
-
 }
 /**
  * @remarks This module provides functions to easily define operations to

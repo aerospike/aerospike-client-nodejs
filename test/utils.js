@@ -18,7 +18,7 @@
 
 /* global expect, describe, it */
 
-// require('./test_helper.ts')
+// require('./test_helper.mts')
 import * as utils from '../lib/utils.js'
 // const utils = require('../lib/utils')
 

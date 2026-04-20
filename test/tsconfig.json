@@ -1,16 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es2022",
-    "module": "es2022",
-    // "moduleResolution": "nodenext",
+    "target": "es6",
+    "module": "node16",
+    "moduleResolution": "node16",
     // "outDir": "./test",
     "strict": true,
     // "esModuleInterop": true,
-    // "skipLibCheck": true,
+    // This is to prevent tsc from type checking external libraries
+    // There is a root-level tsconfig.json to check our type definitions
+    "skipLibCheck": true,
     // "forceConsistentCasingInFileNames": true,
-    "typeRoots": [
-      "../node_modules/@types"
-    ],
     "allowSyntheticDefaultImports": true,
     // TODO: test this later
     "baseUrl": "./",

@@ -2,6 +2,20 @@ name: Stage Tests
 run-name: Stage tests (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
 
 on:
+  workflow_dispatch:
+    inputs:
+      run_tests:
+        required: false
+        type: boolean
+        default: false
+      version:
+        type: string
+        description: Build version
+        required: true
+      server-tag:
+        type: string
+        required: false
+        default: '8.1.1.0'
   workflow_call:
     inputs:
       run_tests:

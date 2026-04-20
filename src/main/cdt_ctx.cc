@@ -217,48 +217,64 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
-		case (AS_CDT_CTX_MAP_KEYS_IN):
-			asval_from_jsvalue(&asValue, v8value, log);
+		case (AS_CDT_CTX_MAP_KEYS_IN): {
+			int err = asval_from_jsvalue(&asValue, v8value, log);
+			if (err != AS_NODE_PARAM_OK) {
+				return err;
+			}
+
+			if (as_val_type(&asValue) != AS_LIST) {
+				as_v8_detail(log, "Argument must be a list of map keys.");
+				return AS_NODE_PARAM_ERR;
+			}
+
 			as_cdt_ctx_add_map_keys_in(context, (as_list*)asValue);
 			as_v8_detail(log, "Adding Map Keys In context");
 			break;
-		case (AS_CDT_CTX_EXP):
-			if (v8value->IsArray()) {
-				Local<Array> exp_ary = Local<Array>::Cast(v8value);
-				as_exp *exp = NULL;
-				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
-					as_v8_error(log, "Expressions could not be compiled");
-					return AS_NODE_PARAM_ERR;
-				}
-				as_cdt_ctx_add_all_children_with_filter(context, exp);
-				as_v8_detail(log, "Adding All Children With Filter context");
-			}
-			else if (v8value->IsUndefined() || v8value->IsNull()) {
+		}
+		case (AS_CDT_CTX_EXP): {
+			if (v8value->IsUndefined() || v8value->IsNull()) {
 				as_cdt_ctx_add_all_children(context);
 				as_v8_detail(log, "Adding All Children context");
+				break;
 			}
-			else {
+
+			if (! v8value->IsArray()) {
 				as_v8_error(log, "error: value should be an expression, null, or undefined");
 				return AS_NODE_PARAM_ERR;
 			}
-			break;
-		case (AS_CDT_CTX_EXP | AS_CDT_CTX_AND):
-			if (v8value->IsArray()) {
-				Local<Array> exp_ary = Local<Array>::Cast(v8value);
-				as_exp *exp = NULL;
-				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
-					as_v8_error(log, "Expressions could not be compiled");
-					return AS_NODE_PARAM_ERR;
-				}
-				as_cdt_ctx_add_and_filter(context, exp);
-				as_v8_detail(log, "Adding AND Filter context With Filter context");
-			}
-			else {
-				as_v8_error(log, "error: value should be an expression, null, or undefined");
+
+			Local<Array> exp_ary = Local<Array>::Cast(v8value);
+			as_exp *exp = NULL;
+
+			if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Expressions could not be compiled");
 				return AS_NODE_PARAM_ERR;
 			}
+
+			as_cdt_ctx_add_all_children_with_filter(context, exp);
+			as_v8_detail(log, "Adding All Children With Filter context");
 			break;
 		}
+		case (AS_CDT_CTX_EXP | AS_CDT_CTX_AND): {
+			if (! v8value->IsArray()) {
+				as_v8_error(log, "error: value must be an expression");
+				return AS_NODE_PARAM_ERR;
+			}
+
+			Local<Array> exp_ary = Local<Array>::Cast(v8value);
+			as_exp *exp = NULL;
+
+			if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Expressions could not be compiled");
+				return AS_NODE_PARAM_ERR;
+			}
+
+			as_cdt_ctx_add_and_filter(context, exp);
+			as_v8_detail(log, "Adding AND Filter context With Filter context");
+			break;
+		}
+		} // switch (type)
 	}
 
 	return AS_NODE_PARAM_OK;
@@ -367,52 +383,70 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 			as_cdt_ctx_add_map_key_create(context, asValue, (as_map_order) 3);
 			as_v8_detail(log, "Adding Map Value context");
 			break;
-		case (AS_CDT_CTX_MAP_KEYS_IN):
-			asval_from_jsvalue(&asValue, v8value, log);
+		case (AS_CDT_CTX_MAP_KEYS_IN): {
+			int err = asval_from_jsvalue(&asValue, v8value, log);
+			if (err != AS_NODE_PARAM_OK) {
+				*rc = err;
+				return context;
+			}
+
+			if (as_val_type(&asValue) != AS_LIST) {
+				as_v8_detail(log, "Argument must be a list of map keys.");
+				*rc = AS_NODE_PARAM_ERR;
+				return context;
+			}
+
 			as_cdt_ctx_add_map_keys_in(context, (as_list*)asValue);
 			as_v8_detail(log, "Adding Map Keys In context");
 			break;
-		case (AS_CDT_CTX_EXP):
-			if (v8value->IsArray()) {
-				Local<Array> exp_ary = Local<Array>::Cast(v8value);
-				as_exp *exp = NULL;
-				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
-					as_v8_error(log, "Expressions could not be compiled");
-					*rc = AS_NODE_PARAM_OK;
-					return context;
-				}
-				as_cdt_ctx_add_all_children_with_filter(context, exp);
-				as_v8_detail(log, "Adding All Children context With Filter context");
-			}
-			else if (v8value->IsUndefined() || v8value->IsNull()) {
+		}
+		case (AS_CDT_CTX_EXP): {
+			if (v8value->IsUndefined() || v8value->IsNull()) {
 				as_cdt_ctx_add_all_children(context);
 				as_v8_detail(log, "Adding All Children");
+				break;
 			}
-			else {
+
+			if (! v8value->IsArray()) {
 				as_v8_error(log, "error: value should be an expression, null, or undefined");
 				*rc = AS_NODE_PARAM_OK;
 				return context;
 			}
-			break;
-		case (AS_CDT_CTX_EXP | AS_CDT_CTX_AND):
-			if (v8value->IsArray()) {
-				Local<Array> exp_ary = Local<Array>::Cast(v8value);
-				as_exp *exp = NULL;
-				if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
-					as_v8_error(log, "Expressions could not be compiled");
-					*rc = AS_NODE_PARAM_OK;
-					return context;
-				}
-				as_cdt_ctx_add_and_filter(context, exp);
-				as_v8_detail(log, "Adding AND Filter context With Filter context");
-			}
-			else {
-				as_v8_error(log, "error: value should be an expression, null, or undefined");
+
+			Local<Array> exp_ary = Local<Array>::Cast(v8value);
+			as_exp *exp = NULL;
+
+			if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Expressions could not be compiled");
 				*rc = AS_NODE_PARAM_OK;
 				return context;
 			}
+
+			as_cdt_ctx_add_all_children_with_filter(context, exp);
+			as_v8_detail(log, "Adding All Children context With Filter context");
 			break;
 		}
+		case (AS_CDT_CTX_EXP | AS_CDT_CTX_AND): {
+			if (! v8value->IsArray()) {
+				as_v8_error(log, "error: value should be an expression, null, or undefined");
+				*rc = AS_NODE_PARAM_OK;
+				return context;
+			}
+
+			Local<Array> exp_ary = Local<Array>::Cast(v8value);
+			as_exp *exp = NULL;
+
+			if (compile_expression(exp_ary, &exp, log) != AS_NODE_PARAM_OK) {
+				as_v8_error(log, "Expressions could not be compiled");
+				*rc = AS_NODE_PARAM_OK;
+				return context;
+			}
+
+			as_cdt_ctx_add_and_filter(context, exp);
+			as_v8_detail(log, "Adding AND Filter context With Filter context");
+			break;
+		}
+		} // switch (type)
 	}
 	*rc = AS_NODE_PARAM_OK;
 	return context;

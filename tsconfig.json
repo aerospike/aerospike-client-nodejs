@@ -26,9 +26,6 @@
     "resolveJsonModule": true,
     "isolatedModules": false,
     "skipLibCheck": true,
-    "baseUrl": ".",
-    // "paths": {
-    //   "*": ["typings/*"]
-    // }
+    "baseUrl": "."
   }
 }
