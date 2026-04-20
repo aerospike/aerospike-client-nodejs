@@ -67,4 +67,4 @@ jobs:
     - if: ${{ !cancelled() }}
       run: |
         docker logs ${{ steps.setup-as-server.outputs.container-names }}
-        cat test/test.log || cat test.log
+        cat test.log
