@@ -17798,11 +17798,11 @@ export namespace exp {
      */
     export const modifyByPath: (bin: AerospikeExp, valueType: exp.type, modExp: AerospikeExp, flags: exp.pathModifyFlags, ctx: cdt.Context) => AerospikeExp;
     /**
-     * Result remove expression.
+     * Remove result expression.
      * Used primarily to remove the result of a path expression.
      *
      * 
-     * @example <caption>Simple result remove expression.</caption>
+     * @example <caption>Simple remove result expression.</caption>
      *
      *
      * const Aerospike = require('aerospike')
@@ -17832,7 +17832,8 @@ export namespace exp {
      * 
      *    const addAllChildren = new Context().addAllChildren()
      * 
-     *    const modExpression = exp.resultRemove()
+     *    const modExpression = exp.resultRemove() // deprecated!!
+     *    const modExpression = exp.removeResult()
      *
      *    const modifyByPath = exp.modifyByPath(exp.binMap('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
      *     * 
@@ -17852,8 +17853,8 @@ export namespace exp {
      * 
      * @return result remove expression.
      */
+    export const removeResult: () => AerospikeExp;
     export const resultRemove: () => AerospikeExp;
-
 }
 /**
  * @remarks This module provides functions to easily define operations to
