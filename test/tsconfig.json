@@ -7,7 +7,7 @@
     "strict": true,
     // "esModuleInterop": true,
     // This is to prevent tsc from type checking external libraries
-    // TODO but we still want to do type checking on our type definition file
+    // There is a root-level tsconfig.json to check our type definitions
     "skipLibCheck": true,
     // "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
