@@ -13,6 +13,27 @@ on:
         required: true
 
 jobs:
+  check-type-definitions:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: 20
+
+    - name: Perform type checking on the type definitions
+      run: |
+        npm ci --ignore-scripts
+        npx tsc;
+
   smoke-tests:
     runs-on: ubuntu-22.04
     strategy:
@@ -47,7 +68,7 @@ jobs:
         # Then build client itself
         npm run build
 
-    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@48edf9ff59ab4da5f15915b22d8895f19ce7fd55
+    - uses: aerospike/shared-workflows/.github/actions/setup-aerospike-server@42aa60fdc5dc4d7fb103c8d55b62b5e4641b7bac
       id: setup-as-server
       with:
         num-nodes: 1
@@ -56,8 +77,16 @@ jobs:
         server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.1.2' }}
         env-vars: DEFAULT_TTL=2592000;
 
+    - name: Perform type checking on the tests
+      run: npx tsc
+      working-directory: test
+
+    # Note - this does not type check the tests. So the above step is necessary.
+    # If we don't type check the tests, weird test failures can happen.
     - name: Run tests
       run: npm run test
 
     - if: ${{ !cancelled() }}
-      run: docker logs ${{ steps.setup-as-server.outputs.container-names }}
+      run: |
+        docker logs ${{ steps.setup-as-server.outputs.container-names }}
+        cat test.log

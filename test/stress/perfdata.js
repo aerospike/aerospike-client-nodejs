@@ -18,7 +18,7 @@
 
 const { format } = require('util')
 
-const helper = require('../test_helper.ts')
+const helper = require('../test_helper.mts')
 
 const keygen = helper.keygen
 const metagen = helper.metagen

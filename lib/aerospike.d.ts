@@ -40,6 +40,11 @@ export enum ScalarOperations {
 /* TYPES */
 
 /**
+ * Represents any type that can be a valid map key.
+ */
+export type AerospikeMapKey = number | string | Buffer;
+
+/**
  * Represents a basic value in an Aerospike bin.
  */
 export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
@@ -1774,6 +1779,32 @@ export namespace cdt {
          * @return {CdtContext} Updated CDT context, so calls can be chained.
          */
         public addMapValue(value: AerospikeBinValue): CdtContext;
+        /**
+         * Look up one or more keys in a map expression.
+         *
+         * @param {AerospikeMapKey} keys List of keys to query in the map context.
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addMapKeysIn(keys: AerospikeMapKey[]): CdtContext;
+        /**
+         * Add a boolean expression filter AND-combined with the current context.
+         *
+         * @remarks
+         * Restrictions:
+         * - Only one and-filter is allowed per context level. Multiple and-filters
+         *   cannot be chained. To combine multiple conditions, use
+         *   {@link exp.and} with a single call to `addAndFilter()`.
+         * - The preceding context entry must not be an expression type;
+         *   i.e., `addAndFilter()` cannot follow {@link addAllChildren} or
+         *   {@link addAllChildrenWithFilter}.
+         * - The and-filter cannot be the first entry in the context chain.
+         *
+         * Evaluation runs after prior context steps (e.g. {@link addMapKeysIn}).
+         *
+         * @param {AerospikeExp} filterExpression {@link AerospikeExp} that must resolve to a boolean.
+         * @return {CdtContext} Updated CDT context, so calls can be chained.
+         */
+        public addAndFilter(filterExpression: AerospikeExp): CdtContext;
         /**
          * Retrieve expression type list/map from ctx or from type.
          *
@@ -17207,6 +17238,30 @@ export namespace exp {
 
     export const le: _cmpExp;
     /**
+     * True if the value of the left expression is contained in the list given by the right
+     * expression (by value). The right argument must evaluate to a list (for example
+     * {@link exp.list}).
+     *
+     * @param left - Value expression to test for membership.
+     * @param right - Expression that evaluates to a list of values to search.
+     * @return {@link AerospikeExp} - boolean value
+     */
+    export const inList: _cmpExp;
+    /**
+     * Return a list of keys from a map-valued subexpression.
+     *
+     * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
+     * @return {@link AerospikeExp} - list value when used in an expression read context.
+     */
+    export const mapKeys: (map: AerospikeExp) => AerospikeExp;
+    /**
+     * Return a list of values from a map-valued subexpression.
+     *
+     * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
+     * @return {@link AerospikeExp} - list value when used in an expression read context.
+     */
+    export const mapValues: (map: AerospikeExp) => AerospikeExp;
+    /**
      * Create expression that performs a regex match on a string bin or value
      * expression.
      *
@@ -17743,11 +17798,11 @@ export namespace exp {
      */
     export const modifyByPath: (bin: AerospikeExp, valueType: exp.type, modExp: AerospikeExp, flags: exp.pathModifyFlags, ctx: cdt.Context) => AerospikeExp;
     /**
-     * Result remove expression.
+     * Remove result expression.
      * Used primarily to remove the result of a path expression.
      *
      * 
-     * @example <caption>Simple result remove expression.</caption>
+     * @example <caption>Simple remove result expression.</caption>
      *
      *
      * const Aerospike = require('aerospike')
@@ -17777,7 +17832,8 @@ export namespace exp {
      * 
      *    const addAllChildren = new Context().addAllChildren()
      * 
-     *    const modExpression = exp.resultRemove()
+     *    const modExpression = exp.resultRemove() // deprecated!!
+     *    const modExpression = exp.removeResult()
      *
      *    const modifyByPath = exp.modifyByPath(exp.binMap('floatList'), exp.type.LIST, modExpression, exp.pathModifyFlags.DEFAULT, addAllChildren)
      *     * 
@@ -17797,8 +17853,8 @@ export namespace exp {
      * 
      * @return result remove expression.
      */
+    export const removeResult: () => AerospikeExp;
     export const resultRemove: () => AerospikeExp;
-
 }
 /**
  * @remarks This module provides functions to easily define operations to

@@ -6,3 +6,6 @@ metadata:
 dynamic:
   write:
     send_key: true
+
+
+    send_key: true
