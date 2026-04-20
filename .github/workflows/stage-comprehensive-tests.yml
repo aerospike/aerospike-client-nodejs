@@ -684,7 +684,7 @@ jobs:
         npm ci --ignore-scripts;
 
     - name: Run tests
-      run: npx tsc lib/aerospike.d.ts; 
+      run: npx tsc; 
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -1002,7 +1002,7 @@ jobs:
       - name: Run tests
         if: ${{ inputs.platform-tag == 'win_amd64' }}
         run: |
-          npx tsc lib/aerospike.d.ts;
+          npx tsc;
 
       # - name: Show job status for commit
       #   if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
