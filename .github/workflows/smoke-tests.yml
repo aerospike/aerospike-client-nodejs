@@ -13,6 +13,25 @@ on:
         required: true
 
 jobs:
+  check-type-definitions:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: 20
+
+    - name: Perform type checking on the type definitions
+      run: npx tsc;
+
   smoke-tests:
     runs-on: ubuntu-22.04
     strategy:
@@ -60,10 +79,8 @@ jobs:
       run: npx tsc
       working-directory: test
 
-    - name: Perform type checking on the type definitions
-      run: npx tsc;
-
     # Note - this does not type check the tests. So the above step is necessary.
+    # If we don't type check the tests, weird test failures can happen.
     - name: Run tests
       run: npm run test
 
