@@ -148,8 +148,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
-        # tree .
+        tar xf aerospike-6.6.1.tgz --strip-components 1 'package/lib/binding'
       shell: "bash -ex {0}"
       working-directory: ts-test
 
