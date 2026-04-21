@@ -149,6 +149,7 @@ jobs:
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tree .
       shell: "bash -ex {0}"
       working-directory: ts-test
 
