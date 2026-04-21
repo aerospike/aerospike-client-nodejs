@@ -148,10 +148,10 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
-        tree .
+        npm install *.tgz --no-save
+        # tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_arm64') }}
