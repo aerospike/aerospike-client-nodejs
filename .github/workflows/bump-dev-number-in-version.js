@@ -9,8 +9,8 @@ if (!currentTag) {
   process.exit(1)
 }
 
-if (currentTag.prerelease === false) {
-      currentTag.inc(`pre${bumpType}`)
+if (currentTag.prerelease.length == 0) {
+  currentTag.inc(`pre${bumpType}`)
 }
 currentTag.inc('prerelease', 'dev')
 console.log(currentTag.format())
