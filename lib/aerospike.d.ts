@@ -12149,7 +12149,13 @@ export enum indexDataType {
     /*
      * Values contained in the SI are blobs (Buffer in Node.js).
      */
-    BLOB
+    BLOB,
+    /*
+    * When creating set indices, the specific data type doesn't matter.
+    * This definition provides a convenient way of expressing that you
+    * don't care about the data type.
+     */
+    DEFAULT
 }
 
 /**
@@ -12178,7 +12184,11 @@ export enum indexType {
      * <a href="https://aerospike.com/docs/server/guide/data-types/cdt-map" title="Aerospike Maps Data Type">&uArr;Maps</a>;
      * The index will be built over the individual values of the map entries.
      */
-    MAPVALUES
+    MAPVALUES,
+    /**
+     * Set index inside a namespace.
+     */
+    SET
 }
 
 /**

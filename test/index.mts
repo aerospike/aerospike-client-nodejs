@@ -43,6 +43,7 @@ context('secondary indexes', function () {
   })
 
   function verifyIndexExists (namespace: string, indexName: string) {
+    // TODO: this info command is deprecated in server 8.1
     const sindex = 'sindex/' + namespace + '/' + indexName
     const checkStatus = function () {
       return client.infoAll(sindex)
@@ -155,6 +156,33 @@ context('secondary indexes', function () {
               return Promise.reject(error)
             }
           }))
+    })
+
+    context('set indexes', function() {
+      helper.skipUnlessVersion('>= 8.1.2', this)
+      it('should support creating set indexes', function () {
+        const options = {
+          ns: helper.namespace,
+          set: helper.set,
+          index: testIndex.name,
+          bin: "unused",
+          type: Aerospike.indexType.SET,
+          datatype: Aerospike.indexDataType.DEFAULT
+        }
+
+        return client.createIndex(options)
+          .then((job: IJ) => job.wait(10))
+          .then(() => client.createIndex(options)
+            .catch((error: any) => {
+              if (error.code === Aerospike.status.ERR_INDEX_FOUND ||
+                error.code === Aerospike.status.AEROSPIKE_OK) {
+                // All good!
+                verifyIndexExists(helper.namespace, testIndex.name)
+              } else {
+                return Promise.reject(error)
+              }
+        }))
+      })
     })
   })
 
