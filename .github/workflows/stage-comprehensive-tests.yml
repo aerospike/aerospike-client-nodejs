@@ -159,7 +159,9 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
-      run: npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+      run: |
+        cat .mocharc.yml
+        npm run test -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
