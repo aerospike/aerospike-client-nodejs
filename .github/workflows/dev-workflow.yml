@@ -13,8 +13,8 @@ on:
           - major
           - minor
           - patch
-        default: patch
         description: From last release version
+        required: true
 
     # inputs:
     #   run_server_release_tests:
