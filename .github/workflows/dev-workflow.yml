@@ -95,6 +95,7 @@ jobs:
       oidc-audience: database-gh-aerospike
     permissions:
       id-token: write
+      contents: read
 
   promote-release-bundle:
     needs: [
