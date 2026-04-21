@@ -6,6 +6,16 @@ name: Dev workflow
 
 on:
   workflow_dispatch:
+    inputs:
+      bump-type:
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        default: patch
+        description: From last release version
+
     # inputs:
     #   run_server_release_tests:
     #     description: 'DEBUG: Run server release tests in build-wheels workflow?'
@@ -15,6 +25,8 @@ on:
 jobs:
   bump-dev-number-and-tag:
     uses: ./.github/workflows/dev-bump-version.yml
+    with:
+      bump-type: ${{ inputs.bump-type }}
 
   build-node-cpp-addons:
     uses: ./.github/workflows/dev-build-node-cpp-addons.yml
