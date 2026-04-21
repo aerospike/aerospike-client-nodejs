@@ -59,7 +59,6 @@
   "dependencies": {
     "@mapbox/node-pre-gyp": "^2.0.3",
     "bindings": "^1.5.0",
-    "chai-as-promised": "^8.0.2",
     "husky": "^9.0.11",
     "minimatch": "^10.1.1",
     "nan": "^2.22.0",
@@ -67,6 +66,7 @@
     "npm-run-all": "^4.1.5"
   },
   "devDependencies": {
+    "chai-as-promised": "^8.0.2",
     "@types/chai": "^5.2.3",
     "@types/chai-as-promised": "^8.0.2",
     "@types/dockerode": "^4.0.1",
