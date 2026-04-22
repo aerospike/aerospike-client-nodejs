@@ -1,10 +1,9 @@
 require:
   - choma
   - mocha-clean
-  - tsx/esm
 spec:
   - "test/*.js" # the positional arguments!
   - "test/*.mts" # the positional arguments!
-# node-option:
-#   - "import=tsx"
+node-option:
+  - "import=tsx"
 parallel: false
