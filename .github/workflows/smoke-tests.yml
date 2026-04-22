@@ -12,9 +12,6 @@ on:
         type: string
         required: true
 
-permissions:
-  contents: read
-
 jobs:
   check-type-definitions:
     runs-on: ubuntu-22.04
