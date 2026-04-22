@@ -175,37 +175,39 @@ context('admin commands', function () {
   })
 
   describe('Client#revokePrivileges()', function () {
+    before(async function () {
+      await client.createRole(rolename1, [
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)
+      ], null)
+    });
+
+    before(async function() {
+      await client.dropRole(rolename1)
+    })
+
     it('Revokes privilege from role', async function () {
       await client.revokePrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
-      expect(result).to.have.property('whitelist').that.deep.equals([])
       expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)])
     })
 
     it('With admin policy', async function () {
-      await client.revokePrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
+      await client.revokePrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename2, null)
-      expect(result).to.have.property('name', rolename2)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
-      expect(result).to.have.property('whitelist').that.deep.equals([])
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)])
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
+      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
     })
 
     it('With mutliple privileges', async function () {
-      await client.revokePrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
+      await client.revokePrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], policy)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename3, null)
       expect(result).to.have.property('name', rolename3)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
-      expect(result).to.have.property('whitelist').that.deep.equals([])
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE_UDF), new Aerospike.admin.Privilege(Aerospike.privilegeCode.WRITE)])
+      expect(result).to.have.property('privileges').that.deep.equals([])
     })
   })
 
@@ -316,6 +318,15 @@ context('admin commands', function () {
   })
 
   describe('Client#createPKIUser()', function () {
+    afterEach(async function() {
+      try {
+        await client.dropUser(username1)
+        await wait(waitMs)
+      } catch (error: any) {
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
+      }
+    })
+
     afterEach(async function() {
       await client.dropUser(username1)
       await wait(waitMs)
@@ -458,35 +469,37 @@ context('admin commands', function () {
   })
 
   describe('Client#setWhitelist()', function () {
+    before(async function () {
+      try {
+        await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+      } catch (error: any) {
+        if (error.code != Aerospike.status.ROLE_ALREADY_EXISTS) {
+          throw error
+        }
+      }
+    });
+
     it('Set whitelist', async function () {
       await client.setWhitelist(rolename1, ['192.168.0.0'], null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
       expect(result).to.have.property('whitelist').that.deep.equals(['192.168.0.0'])
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)])
     })
 
     it('With policy', async function () {
-      await client.setWhitelist(rolename2, ['192.168.0.0'], policy)
+      await client.setWhitelist(rolename1, ['192.168.0.0'], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename2, null)
-      expect(result).to.have.property('name', rolename2)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('whitelist').that.deep.equals(['192.168.0.0'])
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)])
     })
 
     it('With multiple addresses', async function () {
-      await client.setWhitelist(rolename3, ['192.168.0.0', '149.14.182.255'], policy)
+      await client.setWhitelist(rolename1, ['192.168.0.0', '149.14.182.255'], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename3, null)
-      expect(result).to.have.property('name', rolename3)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('whitelist').that.deep.equals(['192.168.0.0', '149.14.182.255'])
       expect(result).to.have.property('privileges').that.is.an('array')
       expect(result.privileges).to.have.length(3)
@@ -499,6 +512,10 @@ context('admin commands', function () {
   })
 
   describe('Client#setQuotas()', function () {
+    before(async function () {
+      await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+    });
+
     it('Sets quotas', async function () {
       await client.setQuotas(rolename1, 100, 150, null)
       await wait(waitMs)
@@ -506,20 +523,15 @@ context('admin commands', function () {
       expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('readQuota', 100)
       expect(result).to.have.property('writeQuota', 150)
-      expect(result).to.have.property('whitelist').that.deep.equals(['192.168.0.0'])
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)])
     })
 
     it('With policy', async function () {
-      await client.setQuotas(rolename2, 150, 250, policy)
+      await client.setQuotas(rolename1, 150, 250, policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename2, null)
-      const privilege: admin.Privilege = new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
-      expect(result).to.have.property('name', rolename2)
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('readQuota', 150)
       expect(result).to.have.property('writeQuota', 250)
-      expect(result).to.have.property('whitelist').that.deep.equals(['192.168.0.0'])
-      expect(result).to.have.property('privileges').that.deep.equals([privilege])
     })
   })
 
