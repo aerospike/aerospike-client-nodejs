@@ -135,9 +135,6 @@ jobs:
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
 
-    - if: ${{ always() }}
-      run: docker logs aerospike
-
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
@@ -162,6 +159,9 @@ jobs:
       run: |
         cat .mocharc.yml
         OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run test
+
+    - if: ${{ always() }}
+      run: docker logs aerospike
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
