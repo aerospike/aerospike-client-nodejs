@@ -6,3 +6,4 @@ spec:
   - "test/*.mts" # the positional arguments!
 node-option:
   - "import=tsx"
+parallel: false
