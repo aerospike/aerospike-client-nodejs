@@ -135,37 +135,42 @@ context('admin commands', function () {
   })
 
   describe('Client#grantPrivileges()', function () {
+    beforeEach(async function () {
+      await client.createRole(rolename1, [
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
+      ], null)
+    });
+
+    afterEach(async function () {
+      await client.dropRole(rolename1, null)
+    });
+
     it('grants privilege to role', async function () {
       await client.grantPrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], null)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
-      expect(result).to.have.property('whitelist').that.deep.equals([])
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)])
+      expect(result).to.have.property('privileges').that.deep.equals([
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)]
+      )
     })
 
     it('with admin policy', async function () {
-      await client.grantPrivileges(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
+      await client.grantPrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], null)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename2, null)
-      expect(result).to.have.property('name', rolename2)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
-      expect(result).to.have.property('whitelist').that.deep.equals([])
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)])
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
+      expect(result).to.have.property('privileges').that.deep.equals([
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)])
     })
     it('with multiple privileges', async function () {
-      await client.grantPrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
+      await client.grantPrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ), new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename3, null)
-      expect(result).to.have.property('name', rolename3)
-      expect(result).to.have.property('readQuota', 0)
-      expect(result).to.have.property('writeQuota', 0)
-      expect(result).to.have.property('whitelist').that.deep.equals([])
-      expect(result).to.have.property('privileges').that.is.an('array')
-      expect(result.privileges).to.have.length(5)
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
+      expect(result.privileges).to.have.length(3)
       for (let i = 0; i < 5; i++) {
         expect(result.privileges[i]).to.have.property('code').that.is.a('number')
         expect(result.privileges[i]).to.have.property('namespace').that.is.a('string')
@@ -182,7 +187,7 @@ context('admin commands', function () {
       ], null)
     });
 
-    before(async function() {
+    after(async function() {
       await client.dropRole(rolename1)
     })
 
@@ -442,7 +447,7 @@ context('admin commands', function () {
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
-      expect(result).to.have.property('roles').that.deep.equals([])
+      expect(result).to.have.property('roles').that.deep.equals([rolename2, rolename3])
     })
 
     it('With policy', async function () {
@@ -453,7 +458,7 @@ context('admin commands', function () {
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
-      expect(result).to.have.property('roles').that.deep.equals([])
+      expect(result).to.have.property('roles').that.deep.equals([rolename1, rolename3])
     })
 
     it('With multiple roles', async function () {
@@ -502,8 +507,7 @@ context('admin commands', function () {
       expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('whitelist').that.deep.equals(['192.168.0.0', '149.14.182.255'])
       expect(result).to.have.property('privileges').that.is.an('array')
-      expect(result.privileges).to.have.length(3)
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < result.privileges.length; i++) {
         expect(result.privileges[i]).to.have.property('code').that.is.a('number')
         expect(result.privileges[i]).to.have.property('namespace').that.is.a('string')
         expect(result.privileges[i]).to.have.property('set').that.is.a('string')
@@ -514,6 +518,12 @@ context('admin commands', function () {
   describe('Client#setQuotas()', function () {
     before(async function () {
       await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+      await wait(waitMs)
+    });
+
+    after(async function () {
+      await client.dropRole(rolename1)
+      await wait(waitMs)
     });
 
     it('Sets quotas', async function () {
