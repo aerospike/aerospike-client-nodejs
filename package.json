@@ -51,7 +51,7 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand lib/aerospike.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
-    "valgrind": "valgrind --trace-children=yes npm run test -R dot -g '#slow' -i",
+    "valgrind": "valgrind --trace-children=yes --smc-check=all-non-file npm run test -R dot -g '#slow' -i",
     "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
