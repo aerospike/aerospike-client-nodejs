@@ -583,10 +583,10 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
+      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -675,10 +675,10 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
+      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests }}
@@ -744,10 +744,10 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
+      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -829,10 +829,10 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
+      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -912,10 +912,10 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
+      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -982,10 +982,10 @@ jobs:
 
       - run: |
           jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-          npm install *.tgz
+          tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
           # tree .
         shell: "bash -ex {0}"
-        working-directory: ts-test
+        working-directory: test
 
       - name: Install test dependencies
         if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -1070,10 +1070,10 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        npm install *.tgz
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: ts-test
+      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -1113,7 +1113,7 @@ jobs:
         nohup node run-client-in-bg.js &
         # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
         # When background processes fail, this step won't fail.
-      working-directory: ts-test
+      working-directory: test
 
     - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
