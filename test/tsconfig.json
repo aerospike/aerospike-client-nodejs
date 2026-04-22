@@ -20,6 +20,6 @@
     "allowImportingTsExtensions": true,
     "noEmit": true
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.mts"],
   "files": ["../lib/aerospike.d.ts"],
 }
