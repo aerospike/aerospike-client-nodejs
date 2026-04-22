@@ -586,7 +586,6 @@ jobs:
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -678,7 +677,6 @@ jobs:
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests }}
@@ -747,7 +745,6 @@ jobs:
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -832,7 +829,6 @@ jobs:
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -915,7 +911,6 @@ jobs:
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -985,7 +980,6 @@ jobs:
           tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
           # tree .
         shell: "bash -ex {0}"
-        working-directory: test
 
       - name: Install test dependencies
         if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
@@ -1073,7 +1067,6 @@ jobs:
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
         # tree .
       shell: "bash -ex {0}"
-      working-directory: test
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
