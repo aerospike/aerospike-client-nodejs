@@ -616,7 +616,7 @@ jobs:
       run: |
         sudo apt-get update;
         sudo apt-get install -y valgrind;
-        npm run valgrind -- --t 40000 --h 127.0.0.1 --port 3000 --U superuser --P superuser;
+        OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run valgrind;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
