@@ -44,13 +44,6 @@ context('admin commands', function () {
   const randomFactor: number = 1000000
   const waitMs: number = 100
   const username1: string = 'username' + randomString(getRandomInt(randomFactor))
-  const username2: string = 'username' + randomString(getRandomInt(randomFactor))
-  const username3: string = 'username' + randomString(getRandomInt(randomFactor))
-  const username4: string = 'username' + randomString(getRandomInt(randomFactor))
-  const username5: string = 'username' + randomString(getRandomInt(randomFactor))
-  const username6: string = 'username' + randomString(getRandomInt(randomFactor))
-  const username7: string = 'username' + randomString(getRandomInt(randomFactor))
-  const username8: string = 'username' + randomString(getRandomInt(randomFactor))
 
   const rolename1: string = 'rolename' + randomString(getRandomInt(randomFactor))
   const rolename2: string = 'rolename' + randomString(getRandomInt(randomFactor))
@@ -272,6 +265,11 @@ context('admin commands', function () {
   })
 
   describe('Client#createUser()', function () {
+    afterEach(async function() {
+      await client.dropUser(username1)
+      await wait(waitMs)
+    })
+
     it('Creates user', async function () {
       await client.createUser(username1, 'password')
       await wait(waitMs)
@@ -284,10 +282,10 @@ context('admin commands', function () {
     })
 
     it('With policy', async function () {
-      await client.createUser(username2, 'password', null, policy)
+      await client.createUser(username1, 'password', null, policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username2, null)
-      expect(result).to.have.property('name', username2)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -295,10 +293,10 @@ context('admin commands', function () {
     })
 
     it('With role', async function () {
-      await client.createUser(username3, 'password', [rolename1])
+      await client.createUser(username1, 'password', [rolename1])
       await wait(waitMs)
-      const result = await client.queryUser(username3, null)
-      expect(result).to.have.property('name', username3)
+      const result = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -306,10 +304,10 @@ context('admin commands', function () {
     })
 
     it('With multiple roles', async function () {
-      await client.createUser(username4, 'password', [rolename1, rolename2, rolename3])
+      await client.createUser(username1, 'password', [rolename1, rolename2, rolename3])
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username4, null)
-      expect(result).to.have.property('name', username4)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('connsInUse', 0)
@@ -318,11 +316,16 @@ context('admin commands', function () {
   })
 
   describe('Client#createPKIUser()', function () {
-    it('Creates user', async function () {
-      await client.createPKIUser(username5)
+    afterEach(async function() {
+      await client.dropUser(username1)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username5, null)
-      expect(result).to.have.property('name', username5)
+    })
+
+    it('Creates user', async function () {
+      await client.createPKIUser(username1)
+      await wait(waitMs)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -330,10 +333,10 @@ context('admin commands', function () {
     })
 
     it('With policy', async function () {
-      await client.createPKIUser(username6, null, policy)
+      await client.createPKIUser(username1, null, policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username6, null)
-      expect(result).to.have.property('name', username6)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -341,10 +344,10 @@ context('admin commands', function () {
     })
 
     it('With role', async function () {
-      await client.createPKIUser(username7, [rolename1])
+      await client.createPKIUser(username1, [rolename1])
       await wait(waitMs)
-      const result = await client.queryUser(username7, null)
-      expect(result).to.have.property('name', username7)
+      const result = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -352,10 +355,10 @@ context('admin commands', function () {
     })
 
     it('With multiple roles', async function () {
-      await client.createPKIUser(username8, [rolename1, rolename2, rolename3])
+      await client.createPKIUser(username1, [rolename1, rolename2, rolename3])
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username8, null)
-      expect(result).to.have.property('name', username8)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('connsInUse', 0)
@@ -364,6 +367,17 @@ context('admin commands', function () {
   })
 
   describe('Client#grantRoles()', function () {
+    // TODO: cleaner way would be to use asadm to remove all roles from this user after each test case.
+    beforeEach(async function() {
+      await client.createUser(username1, "password")
+      await wait(waitMs)
+    })
+
+    afterEach(async function() {
+      await client.dropUser(username1)
+      await wait(waitMs)
+    })
+
     it('grants role to user', async function () {
       await client.grantRoles(username1, [rolename1], null)
       await wait(waitMs)
@@ -376,10 +390,10 @@ context('admin commands', function () {
     })
 
     it('With policy', async function () {
-      await client.grantRoles(username2, [rolename2], policy)
+      await client.grantRoles(username1, [rolename2], policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username2, null)
-      expect(result).to.have.property('name', username2)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -387,10 +401,10 @@ context('admin commands', function () {
     })
 
     it('With multiple roles', async function () {
-      await client.grantRoles(username3, [rolename1, rolename2, rolename3], policy)
+      await client.grantRoles(username1, [rolename1, rolename2, rolename3], policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username3, null)
-      expect(result).to.have.property('name', username3)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -399,6 +413,16 @@ context('admin commands', function () {
   })
 
   describe('Client#revokeRoles()', function () {
+    beforeEach(async function() {
+      await client.createUser(username1, "password", [rolename1, rolename2, rolename3])
+      await wait(waitMs)
+    })
+
+    afterEach(async function() {
+      await client.dropUser(username1)
+      await wait(waitMs)
+    })
+
     it('Revokes role from user', async function () {
       await client.revokeRoles(username1, [rolename1], null)
       await wait(waitMs)
@@ -411,10 +435,10 @@ context('admin commands', function () {
     })
 
     it('With policy', async function () {
-      await client.revokeRoles(username2, [rolename2], policy)
+      await client.revokeRoles(username1, [rolename2], policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username2, null)
-      expect(result).to.have.property('name', username2)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -422,10 +446,10 @@ context('admin commands', function () {
     })
 
     it('With multiple roles', async function () {
-      await client.revokeRoles(username3, [rolename1, rolename2, rolename3], policy)
+      await client.revokeRoles(username1, [rolename1, rolename2, rolename3], policy)
       await wait(waitMs)
-      const result: admin.User = await client.queryUser(username3, null)
-      expect(result).to.have.property('name', username3)
+      const result: admin.User = await client.queryUser(username1, null)
+      expect(result).to.have.property('name', username1)
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
@@ -526,6 +550,16 @@ context('admin commands', function () {
   })
 
   describe('Client#setPassword()', function () {
+    before(async function() {
+      await client.createUser(username1, "password")
+      await wait(waitMs)
+    })
+
+    after(async function() {
+      await client.dropUser(username1)
+      await wait(waitMs)
+    })
+
     it('Changes password for user', async function () {
       let password = 'pass' + randomString(getRandomInt(randomFactor))
       await client.setPassword(username1, password, null)
@@ -542,7 +576,7 @@ context('admin commands', function () {
     it('With policy', async function () {
       let password = 'pass'+ randomString(getRandomInt(randomFactor))
       try{
-        await client.setPassword(username2, password, policy)
+        await client.setPassword(username1, password, policy)
       }
       catch(error: any){
         console.log()
@@ -551,7 +585,7 @@ context('admin commands', function () {
 
       const config: ConfigOptions = {
         hosts: helper.config.hosts,
-        user: username2,
+        user: username1,
         password: password
       }
 
@@ -561,6 +595,16 @@ context('admin commands', function () {
   })
 
   describe('Client#changePassword()', function () {
+    before(async function() {
+      await client.createUser(username1, "password")
+      await wait(waitMs)
+    })
+
+    after(async function() {
+      await client.dropUser(username1)
+      await wait(waitMs)
+    })
+
     it('Changes password for user', async function () {
       let password = 'pass'+ randomString(getRandomInt(randomFactor))
       await client.setPassword(username1, password)
@@ -597,15 +641,15 @@ context('admin commands', function () {
 
     it('With policy', async function () {
       let password = 'pass'+ randomString(getRandomInt(randomFactor))
-      await client.setPassword(username2, password, null)
+      await client.setPassword(username1, password, null)
       await client.createRole(rolename5, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.USER_ADMIN)])
-      await client.grantRoles(username2, [rolename5])
+      await client.grantRoles(username1, [rolename5])
 
       await wait(waitMs)
 
       let config: ConfigOptions = {
         hosts: helper.config.hosts,
-        user: username2,
+        user: username1,
         password: password
       }
 
@@ -614,7 +658,7 @@ context('admin commands', function () {
       try{
 
         password = 'pass'+ randomString(getRandomInt(randomFactor))
-        await dummyClient.changePassword(username2, password, policy)
+        await dummyClient.changePassword(username1, password, policy)
 
       }
       finally {
@@ -623,7 +667,7 @@ context('admin commands', function () {
 
       config = {
         hosts: helper.config.hosts,
-        user: username2,
+        user: username1,
         password: password
       }
 
@@ -634,6 +678,11 @@ context('admin commands', function () {
   })
 
   describe('Client#dropUser()', function () {
+    beforeEach(async function() {
+      await client.createUser(username1, "password")
+      await wait(waitMs)
+    })
+
     it('Drops user', async function () {
       await client.dropUser(username1, null)
       await wait(waitMs)
@@ -647,10 +696,10 @@ context('admin commands', function () {
     })
 
     it('With policy', async function () {
-      await client.dropUser(username2, policy)
+      await client.dropUser(username1, policy)
       await wait(waitMs)
       try {
-        await client.queryUser(username2, policy)
+        await client.queryUser(username1, policy)
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error: any) {
