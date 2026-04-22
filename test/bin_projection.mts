@@ -83,11 +83,11 @@ describe('bin projection', function () {
     it('works with scan.results()', async function (){
       // TODO this fails possibly because of a client bug. CLIENT-4648
       this.skip()
-      const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
-      let results = await scan.results()
-      for (const record of results) {
-        expect(record.bins).to.have.property('a', 1)
-      }
+      // const scan: Scan = client.scan(helper.namespace, helper.set, scan_args)
+      // let results = await scan.results()
+      // for (const record of results) {
+      //   expect(record.bins).to.have.property('a', 1)
+      // }
     })
   })
 
