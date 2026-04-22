@@ -37,7 +37,7 @@ function wait (ms: number) {
 context('admin commands', function () {
 
   if (helper.config.user != 'superuser') {
-    helper.skip(this, "Requires RBAC to be enabled.")
+    helper.skipAll(this, "Requires RBAC to be enabled.")
   }
 
   const client: Client = helper.client

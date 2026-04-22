@@ -245,6 +245,12 @@ import * as url from "node:url"
     return runInNewProcessFn(fn, env, data)
   }
 
+  export function skipAll(this: any, ctx: Suite, message: string) {
+    ctx.beforeAll(function (this: any) {
+      this.skip(message)
+    })
+  }
+
   export function skip(this: any, ctx: Suite, message: string) {
     ctx.beforeEach(function (this: any) {
       this.skip(message)
