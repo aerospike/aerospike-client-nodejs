@@ -173,7 +173,7 @@ context('admin commands', function () {
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
       expect(result.privileges).to.have.length(3)
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < result.privileges.length; i++) {
         expect(result.privileges[i]).to.have.property('code').that.is.a('number')
         expect(result.privileges[i]).to.have.property('namespace').that.is.a('string')
         expect(result.privileges[i]).to.have.property('set').that.is.a('string')
@@ -550,6 +550,16 @@ context('admin commands', function () {
   })
 
   describe('Client#dropRole()', function () {
+    before(async function () {
+      await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+      await wait(waitMs)
+    });
+
+    after(async function () {
+      await client.dropRole(rolename1)
+      await wait(waitMs)
+    });
+
     it('Drops role', async function () {
       await client.dropRole(rolename1, null)
       await wait(waitMs)
@@ -563,10 +573,10 @@ context('admin commands', function () {
     })
 
     it('With policy', async function () {
-      await client.dropRole(rolename2, policy)
+      await client.dropRole(rolename1, policy)
       await wait(waitMs)
       try {
-        await client.queryRole(rolename2, policy)
+        await client.queryRole(rolename1, policy)
         // Should fail, assert failure if error is not returned.
         expect(1).to.equal(2)
       } catch (error: any) {
