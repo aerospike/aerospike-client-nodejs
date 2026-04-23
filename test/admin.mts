@@ -114,7 +114,7 @@ context('admin commands', function () {
     afterEach(function () {
       console.log("afterEach start")
       client.dropRole(rolename1)
-      wait(waitMs)
+      wait(waitMs * 5)
       console.log("afterEach end")
     });
 
