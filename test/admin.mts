@@ -512,6 +512,11 @@ context('admin commands', function () {
       }
     });
 
+    after(async function () {
+      await client.dropRole(rolename1)
+      await wait(waitMs)
+    });
+
     it('Set whitelist', async function () {
       await client.setWhitelist(rolename1, ['192.168.0.0'], null)
       await wait(waitMs)
