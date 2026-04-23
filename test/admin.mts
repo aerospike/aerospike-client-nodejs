@@ -100,18 +100,18 @@ context('admin commands', function () {
   })
 
   describe('Client#createRole()', function () {
-    beforeEach(async function () {
+    beforeEach(function () {
       try {
-        await client.dropRole(rolename1)
-        await wait(waitMs)
+        client.dropRole(rolename1)
+        wait(waitMs)
       } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     });
 
-    afterEach(async function () {
-      await client.dropRole(rolename1)
-      await wait(waitMs)
+    afterEach(function () {
+      client.dropRole(rolename1)
+      wait(waitMs)
     });
 
     it('Creates role', async function () {
@@ -149,16 +149,16 @@ context('admin commands', function () {
   })
 
   describe('Client#grantPrivileges()', function () {
-    beforeEach(async function () {
-      await client.createRole(rolename1, [
+    beforeEach(function () {
+      client.createRole(rolename1, [
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
       ], null)
-      await wait(waitMs)
+      wait(waitMs)
     });
 
-    afterEach(async function () {
-      await client.dropRole(rolename1, null)
-      await wait(waitMs)
+    afterEach(function () {
+      client.dropRole(rolename1, null)
+      wait(waitMs)
     });
 
     it('grants privilege to role', async function () {
@@ -316,9 +316,9 @@ context('admin commands', function () {
   })
 
   describe('Client#createUser()', function () {
-    afterEach(async function() {
-      await client.dropUser(username1)
-      await wait(waitMs)
+    afterEach(function() {
+      client.dropUser(username1)
+      wait(waitMs)
     })
 
     it('Creates user', async function () {
@@ -367,18 +367,18 @@ context('admin commands', function () {
   })
 
   describe('Client#createPKIUser()', function () {
-    beforeEach(async function() {
+    beforeEach(function() {
       try {
-        await client.dropUser(username1)
-        await wait(waitMs)
+        client.dropUser(username1)
+        wait(waitMs)
       } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_USER)
       }
     })
 
-    afterEach(async function() {
-      await client.dropUser(username1)
-      await wait(waitMs)
+    afterEach(function() {
+      client.dropUser(username1)
+      wait(waitMs)
     })
 
     it('Creates user', async function () {
@@ -428,14 +428,14 @@ context('admin commands', function () {
 
   describe('Client#grantRoles()', function () {
     // TODO: cleaner way would be to use asadm to remove all roles from this user after each test case.
-    beforeEach(async function() {
-      await client.createUser(username1, "password")
-      await wait(waitMs)
+    beforeEach(function() {
+      client.createUser(username1, "password")
+      wait(waitMs)
     })
 
-    afterEach(async function() {
-      await client.dropUser(username1)
-      await wait(waitMs)
+    afterEach(function() {
+      client.dropUser(username1)
+      wait(waitMs)
     })
 
     it('grants role to user', async function () {
@@ -473,14 +473,14 @@ context('admin commands', function () {
   })
 
   describe('Client#revokeRoles()', function () {
-    beforeEach(async function() {
-      await client.createUser(username1, "password", [rolename1, rolename2, rolename3])
-      await wait(waitMs)
+    beforeEach(function() {
+      client.createUser(username1, "password", [rolename1, rolename2, rolename3])
+      wait(waitMs)
     })
 
-    afterEach(async function() {
-      await client.dropUser(username1)
-      await wait(waitMs)
+    afterEach(function() {
+      client.dropUser(username1)
+      wait(waitMs)
     })
 
     it('Revokes role from user', async function () {
@@ -518,10 +518,10 @@ context('admin commands', function () {
   })
 
   describe('Client#setWhitelist()', function () {
-    before(async function () {
+    before(function () {
       try {
-        await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
-        await wait(waitMs)
+        client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+        wait(waitMs)
       } catch (error: any) {
         if (error.code != Aerospike.status.ROLE_ALREADY_EXISTS) {
           throw error
@@ -529,9 +529,9 @@ context('admin commands', function () {
       }
     });
 
-    after(async function () {
-      await client.dropRole(rolename1)
-      await wait(waitMs)
+    after(function () {
+      client.dropRole(rolename1)
+      wait(waitMs)
     });
 
     it('Set whitelist', async function () {
@@ -566,10 +566,10 @@ context('admin commands', function () {
   })
 
   describe('Client#setQuotas()', function () {
-    before(async function () {
+    before(function () {
         try {
-          await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
-          await wait(waitMs)
+          client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+          wait(waitMs)
         } catch (error: any) {
           if (error.code != Aerospike.status.ROLE_ALREADY_EXISTS) {
             throw error
@@ -577,9 +577,9 @@ context('admin commands', function () {
         }
       });
 
-    after(async function () {
-      await client.dropRole(rolename1)
-      await wait(waitMs)
+    after(function () {
+      client.dropRole(rolename1)
+      wait(waitMs)
     });
 
     it('Sets quotas', async function () {
@@ -602,9 +602,9 @@ context('admin commands', function () {
   })
 
   describe('Client#dropRole()', function () {
-    beforeEach(async function () {
-      await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
-      await wait(waitMs)
+    beforeEach(function () {
+      client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+      wait(waitMs)
     });
 
     it('Drops role', async function () {
@@ -633,14 +633,14 @@ context('admin commands', function () {
   })
 
   describe('Client#setPassword()', function () {
-    before(async function() {
-      await client.createUser(username1, "password")
-      await wait(waitMs)
+    before(function() {
+      client.createUser(username1, "password")
+      wait(waitMs)
     })
 
-    after(async function() {
-      await client.dropUser(username1)
-      await wait(waitMs)
+    after(function() {
+      client.dropUser(username1)
+      wait(waitMs)
     })
 
     it('Changes password for user', async function () {
@@ -678,14 +678,14 @@ context('admin commands', function () {
   })
 
   describe('Client#changePassword()', function () {
-    before(async function() {
-      await client.createUser(username1, "password")
-      await wait(waitMs)
+    before(function() {
+      client.createUser(username1, "password")
+      wait(waitMs)
     })
 
-    after(async function() {
-      await client.dropUser(username1)
-      await wait(waitMs)
+    after(function() {
+      client.dropUser(username1)
+      wait(waitMs)
     })
 
     it('Changes password for user', async function () {
@@ -761,9 +761,9 @@ context('admin commands', function () {
   })
 
   describe('Client#dropUser()', function () {
-    beforeEach(async function() {
-      await client.createUser(username1, "password")
-      await wait(waitMs)
+    beforeEach(function() {
+      client.createUser(username1, "password")
+      wait(waitMs)
     })
 
     it('Drops user', async function () {
