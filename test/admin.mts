@@ -211,7 +211,8 @@ context('admin commands', function () {
       // This assumes granting a privilege that already exists in a role is a no-op
       client.grantPrivileges(rolename1, [
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
-        new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE),
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
       ], null)
       wait(waitMs)
       console.log("beforeEach end")
@@ -225,11 +226,16 @@ context('admin commands', function () {
     })
 
     it('Revokes privilege from role', async function () {
-      await client.revokePrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
+      await client.revokePrivileges(rolename1, [
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)
+      ])
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)])
+      expect(result).to.have.property('privileges').that.contains.members([
+          new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE),
+          new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
+        ])
     })
 
     it('With admin policy', async function () {
@@ -237,7 +243,10 @@ context('admin commands', function () {
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)])
+      expect(result).to.have.property('privileges').that.contains.members([
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
+      ])
     })
 
     it('With mutliple privileges', async function () {
@@ -245,7 +254,9 @@ context('admin commands', function () {
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('privileges').that.deep.equals([])
+      expect(result).to.have.property('privileges').that.deep.equals([
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
+      ])
     })
   })
 
