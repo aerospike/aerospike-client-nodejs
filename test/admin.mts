@@ -100,7 +100,7 @@ context('admin commands', function () {
   })
 
   describe('Client#createRole()', function () {
-    before(async function () {
+    beforeEach(async function () {
       try {
         await client.dropRole(rolename1)
         await wait(waitMs)
@@ -109,7 +109,7 @@ context('admin commands', function () {
       }
     });
 
-    after(async function () {
+    afterEach(async function () {
       await client.dropRole(rolename1)
       await wait(waitMs)
     });
