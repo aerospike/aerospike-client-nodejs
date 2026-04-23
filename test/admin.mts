@@ -197,7 +197,13 @@ context('admin commands', function () {
 
   describe('Client#revokePrivileges()', function () {
     before(async function () {
-      await client.createRole(rolename1, [
+      await client.createRole(rolename1, [], null)
+      await wait(waitMs)
+    });
+
+    beforeEach(async function () {
+      // This assumes granting a privilege that already exists in a role is a no-op
+      await client.grantPrivileges(rolename1, [
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)
       ], null)
