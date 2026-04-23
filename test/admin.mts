@@ -101,17 +101,21 @@ context('admin commands', function () {
 
   describe('Client#createRole()', function () {
     beforeEach(function () {
+      console.log("beforeEach start")
       try {
         client.dropRole(rolename1)
         wait(waitMs)
+        console.log("beforeEach end")
       } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
       }
     });
 
     afterEach(function () {
+      console.log("afterEach start")
       client.dropRole(rolename1)
       wait(waitMs)
+      console.log("afterEach end")
     });
 
     it('Creates role', async function () {
@@ -126,6 +130,7 @@ context('admin commands', function () {
     })
 
     it('with admin policy', async function () {
+      console.log("with admin policy start")
       await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
@@ -134,6 +139,7 @@ context('admin commands', function () {
       expect(result).to.have.property('writeQuota', 0)
       expect(result).to.have.property('whitelist').that.deep.equals([])
       expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)])
+      console.log("with admin policy end")
     })
 
     it('With multiple privilegeCodes', async function () {
