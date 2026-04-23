@@ -7,3 +7,4 @@ spec:
 node-option:
   - "import=tsx"
 parallel: false
+inline-diffs: true
