@@ -122,10 +122,10 @@ context('admin commands', function () {
     })
 
     it('with admin policy', async function () {
-      await client.createRole(rolename2, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
+      await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename2, null)
-      expect(result).to.have.property('name', rolename2)
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
       expect(result).to.have.property('whitelist').that.deep.equals([])
@@ -133,10 +133,10 @@ context('admin commands', function () {
     })
 
     it('With multiple privilegeCodes', async function () {
-      await client.createRole(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE_UDF), new Aerospike.admin.Privilege(Aerospike.privilegeCode.WRITE)], null)
+      await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE_UDF), new Aerospike.admin.Privilege(Aerospike.privilegeCode.WRITE)], null)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename3, null)
-      expect(result).to.have.property('name', rolename3)
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('readQuota', 0)
       expect(result).to.have.property('writeQuota', 0)
       expect(result).to.have.property('whitelist').that.deep.equals([])
