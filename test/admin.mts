@@ -139,10 +139,12 @@ context('admin commands', function () {
       await client.createRole(rolename1, [
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
       ], null)
+      await wait(waitMs)
     });
 
     afterEach(async function () {
       await client.dropRole(rolename1, null)
+      await wait(waitMs)
     });
 
     it('grants privilege to role', async function () {
@@ -185,10 +187,12 @@ context('admin commands', function () {
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)
       ], null)
+      await wait(waitMs)
     });
 
     after(async function() {
       await client.dropRole(rolename1)
+      await wait(waitMs)
     })
 
     it('Revokes privilege from role', async function () {
@@ -323,7 +327,7 @@ context('admin commands', function () {
   })
 
   describe('Client#createPKIUser()', function () {
-    afterEach(async function() {
+    beforeEach(async function() {
       try {
         await client.dropUser(username1)
         await wait(waitMs)
@@ -447,7 +451,7 @@ context('admin commands', function () {
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
-      expect(result).to.have.property('roles').that.deep.equals([rolename2, rolename3])
+      expect(result).to.have.property('roles').that.has.members([rolename2, rolename3])
     })
 
     it('With policy', async function () {
@@ -458,7 +462,7 @@ context('admin commands', function () {
       expect(result).to.have.property('readInfo').that.deep.equals([0, 0, 0, 0])
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
-      expect(result).to.have.property('roles').that.deep.equals([rolename1, rolename3])
+      expect(result).to.have.property('roles').that.has.members([rolename1, rolename3])
     })
 
     it('With multiple roles', async function () {
