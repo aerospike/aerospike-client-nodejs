@@ -100,6 +100,16 @@ context('admin commands', function () {
   })
 
   describe('Client#createRole()', function () {
+    before(async function () {
+      await client.dropRole(rolename1)
+      await wait(waitMs)
+    });
+
+    after(async function () {
+      await client.dropRole(rolename1)
+      await wait(waitMs)
+    });
+
     it('Creates role', async function () {
       await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
       await wait(waitMs)
@@ -212,10 +222,10 @@ context('admin commands', function () {
     })
 
     it('With mutliple privileges', async function () {
-      await client.revokePrivileges(rolename3, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], policy)
+      await client.revokePrivileges(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)], policy)
       await wait(waitMs)
-      const result: admin.Role = await client.queryRole(rolename3, null)
-      expect(result).to.have.property('name', rolename3)
+      const result: admin.Role = await client.queryRole(rolename1, null)
+      expect(result).to.have.property('name', rolename1)
       expect(result).to.have.property('privileges').that.deep.equals([])
     })
   })
