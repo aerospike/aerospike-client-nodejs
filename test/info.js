@@ -21,7 +21,7 @@
 
 import * as Aerospike from '../lib/aerospike.js'
 import * as info from '../lib/info.js'
-import * as helper from './test_helper.mts'
+import * as helper from './test_helper.mjs'
 import * as utils from '../lib/utils.js'
 
 const AerospikeError = Aerospike.AerospikeError
