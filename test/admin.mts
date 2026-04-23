@@ -197,7 +197,10 @@ context('admin commands', function () {
 
   describe('Client#revokePrivileges()', function () {
     before(async function () {
-      await client.createRole(rolename1, [], null)
+      await client.createRole(rolename1, [
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
+        new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)
+      ], null)
       await wait(waitMs)
     });
 
@@ -542,9 +545,15 @@ context('admin commands', function () {
 
   describe('Client#setQuotas()', function () {
     before(async function () {
-      await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
-      await wait(waitMs)
-    });
+        try {
+          await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+          await wait(waitMs)
+        } catch (error: any) {
+          if (error.code != Aerospike.status.ROLE_ALREADY_EXISTS) {
+            throw error
+          }
+        }
+      });
 
     after(async function () {
       await client.dropRole(rolename1)
