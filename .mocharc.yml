@@ -8,3 +8,4 @@ node-option:
   - "import=tsx"
 parallel: false
 inline-diffs: true
+color: true
