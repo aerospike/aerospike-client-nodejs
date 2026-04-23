@@ -571,7 +571,7 @@ context('admin commands', function () {
   })
 
   describe('Client#dropRole()', function () {
-    before(async function () {
+    beforeEach(async function () {
       await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
       await wait(waitMs)
     });
