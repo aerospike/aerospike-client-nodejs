@@ -104,7 +104,7 @@ context('admin commands', function () {
       console.log("beforeEach start")
       try {
         client.dropRole(rolename1)
-        wait(waitMs)
+        wait(waitMs * 5)
         console.log("beforeEach end")
       } catch (error: any) {
         expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
