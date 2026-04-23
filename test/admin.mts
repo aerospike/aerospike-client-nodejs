@@ -101,8 +101,12 @@ context('admin commands', function () {
 
   describe('Client#createRole()', function () {
     before(async function () {
-      await client.dropRole(rolename1)
-      await wait(waitMs)
+      try {
+        await client.dropRole(rolename1)
+        await wait(waitMs)
+      } catch (error: any) {
+        expect(error).to.exist.and.have.property('code', Aerospike.status.INVALID_ROLE)
+      }
     });
 
     after(async function () {
@@ -491,6 +495,7 @@ context('admin commands', function () {
     before(async function () {
       try {
         await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
+        await wait(waitMs)
       } catch (error: any) {
         if (error.code != Aerospike.status.ROLE_ALREADY_EXISTS) {
           throw error
@@ -562,11 +567,6 @@ context('admin commands', function () {
   describe('Client#dropRole()', function () {
     before(async function () {
       await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN)], null)
-      await wait(waitMs)
-    });
-
-    after(async function () {
-      await client.dropRole(rolename1)
       await wait(waitMs)
     });
 
