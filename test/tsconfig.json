@@ -17,8 +17,9 @@
     //   "aerospike": ["../lib/aerospike"]
     //   // You can add more mappings here
     // }
-    "allowImportingTsExtensions": true,
-    "noEmit": true
+    "allowImportingTsExtensions": false,
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": false
   },
   "include": ["**/*.mts"],
   "files": ["../lib/aerospike.d.ts"],

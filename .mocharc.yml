@@ -2,10 +2,8 @@ require:
   - choma
   - mocha-clean
 spec:
+  - "test/*.mjs" # the positional arguments!
   - "test/*.js" # the positional arguments!
-  - "test/*.mts" # the positional arguments!
-node-option:
-  - "import=tsx"
 parallel: false
 inline-diffs: true
 color: true
