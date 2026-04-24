@@ -131,8 +131,8 @@ void MetricsCommand::Disable_Callback(const int argc, v8::Local<v8::Value> argv[
 	Nan::TryCatch try_catch;
 	Local<Function> cb = Nan::New(disable_callback);
 
-	cb->Call(Nan::GetCurrentContext(), Nan::GetCurrentContext()->Global(), argc, argv);
-	if (try_catch.HasCaught()) {
+	MaybeLocal<Value> retval = cb->Call(Nan::GetCurrentContext(), Nan::GetCurrentContext()->Global(), argc, argv);
+	if (retval.IsEmpty()) {
 		Nan::FatalException(try_catch);
 	}
 }
