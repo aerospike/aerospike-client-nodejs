@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "commonjs",
-    // "outDir": "./dist",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -10,6 +9,6 @@
     "rewriteRelativeImportExtensions": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["**/*.mts"],
+  "include": ["**/*.ts"],
   "files": ["../lib/aerospike.d.ts"],
 }
