@@ -40,7 +40,8 @@
   "scripts": {
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "test": "cd test && tsc && cd .. && mocha",
+    "build-test": "cd test && tsc && cd ..",
+    "test": "npm run build-test && mocha",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore scripts",
@@ -51,7 +52,7 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand lib/aerospike.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
-    "valgrind": "valgrind --smc-check=all-non-file node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
+    "valgrind": "npm run build-test && valgrind --smc-check=all-non-file node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
     "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
