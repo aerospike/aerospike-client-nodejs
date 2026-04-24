@@ -83,6 +83,7 @@ jobs:
 
     - run: |
         tree lib/binding
+        ./scripts/change-install-command.js
         # Install husky from package.json. "npm pack" depends on this
         npm install husky
         jf npm-config --repo-deploy=database-npm-dev-local
