@@ -171,7 +171,7 @@ process.env.AEROSPIKE_DEBUG_STACKTRACES = process.env.AEROSPIKE_DEBUG_STACKTRACE
 
 import * as url from "node:url"
 function testDir (): string {
-  return path.resolve( path.dirname(url.fileURLToPath(import.meta.url)) , '..');
+  return path.resolve( __dirname , '..');
 }
 
 options.getConfig = function (): any {

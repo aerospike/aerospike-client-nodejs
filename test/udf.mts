@@ -30,7 +30,7 @@ import * as url from "node:url"
 context('registering/unregistering UDF modules', function () {
   const client = helper.client
   const module = 'udf.lua'
-  const filename = path.join(path.dirname(url.fileURLToPath(import.meta.url)), module)
+  const filename = path.join(__dirname, module)
 
   it('should register and then remove a module', function (done) {
     client.udfRegister(filename, function (err?: AerospikeError, registerJob?: Job) {

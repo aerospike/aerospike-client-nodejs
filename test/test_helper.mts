@@ -64,7 +64,7 @@ import * as url from "node:url"
     }
 
     register(filename: string) {
-      const script = path.join(path.dirname(url.fileURLToPath(import.meta.url)), filename);
+      const script = path.join(__dirname, filename);
       return this.client.udfRegister(script)
         .then((job: Job) => job.wait(50));
     }
