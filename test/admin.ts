@@ -126,7 +126,6 @@ context('admin commands', function () {
     })
 
     it('with admin policy', async function () {
-      console.log("with admin policy start")
       await client.createRole(rolename1, [new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)], policy)
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
@@ -135,7 +134,6 @@ context('admin commands', function () {
       expect(result).to.have.property('writeQuota', 0)
       expect(result).to.have.property('whitelist').that.deep.equals([])
       expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ)])
-      console.log("with admin policy end")
     })
 
     it('With multiple privilegeCodes', async function () {
@@ -199,17 +197,14 @@ context('admin commands', function () {
 
   describe('Client#revokePrivileges()', function () {
     before(async function () {
-      console.log("before start")
       await client.createRole(rolename1, [
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)
       ], null)
       await wait(waitMs)
-      console.log("before end")
     });
 
     beforeEach(async function () {
-      console.log("beforeEach start")
       // This assumes granting a privilege that already exists in a role is a no-op
       await client.grantPrivileges(rolename1, [
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
@@ -217,14 +212,11 @@ context('admin commands', function () {
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
       ], null)
       await wait(waitMs)
-      console.log("beforeEach end")
     });
 
     after(async function() {
-      console.log("after start")
       await client.dropRole(rolename1)
       await wait(waitMs)
-      console.log("after end")
     })
 
     it('Revokes privilege from role', async function () {
@@ -346,7 +338,6 @@ context('admin commands', function () {
     })
 
     it('With role', async function () {
-      console.log("With role start")
       await client.createUser(username1, 'password', [rolename1])
       await wait(waitMs)
       const result = await client.queryUser(username1, null)
@@ -355,7 +346,6 @@ context('admin commands', function () {
       expect(result).to.have.property('writeInfo').that.deep.equals([0, 0, 0, 0])
       expect(result.connsInUse).to.be.a('number')
       expect(result).to.have.property('roles').that.deep.equals([rolename1])
-      console.log("With role end")
     })
 
     it('With multiple roles', async function () {
@@ -667,7 +657,6 @@ context('admin commands', function () {
         await client.setPassword(username1, password, policy)
       }
       catch(error: any){
-        console.log()
       }
       await wait(waitMs)
 
