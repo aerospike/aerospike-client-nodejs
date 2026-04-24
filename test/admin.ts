@@ -234,7 +234,7 @@ context('admin commands', function () {
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('privileges').that.contains.members([
+      expect(result).to.have.property('privileges').that.deep.contains.members([
           new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE),
           new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
         ])
@@ -245,7 +245,7 @@ context('admin commands', function () {
       await wait(waitMs)
       const result: admin.Role = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('privileges').that.contains.members([
+      expect(result).to.have.property('privileges').that.deep.contains.members([
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN),
         new Aerospike.admin.Privilege(Aerospike.privilegeCode.TRUNCATE)
       ])
