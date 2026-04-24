@@ -23,4 +23,4 @@ tsconfig.tsbuildinfo
 *.log
 **/*.log
 # Generated javascript tests from typescript tests
-test/**/*.mjs
+test/**/*.*js
