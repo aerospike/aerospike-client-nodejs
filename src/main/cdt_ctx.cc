@@ -223,7 +223,10 @@ int get_optional_cdt_context(as_cdt_ctx *context, bool *has_context,
 				return err;
 			}
 
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Waddress"
 			if (as_val_type(&asValue) != AS_LIST) {
+		#pragma GCC diagnostic pop
 				as_v8_detail(log, "Argument must be a list of map keys.");
 				return AS_NODE_PARAM_ERR;
 			}
@@ -390,7 +393,10 @@ as_cdt_ctx* get_cdt_context_heap(int* rc,
 				return context;
 			}
 
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Waddress"
 			if (as_val_type(&asValue) != AS_LIST) {
+		#pragma GCC diagnostic pop
 				as_v8_detail(log, "Argument must be a list of map keys.");
 				*rc = AS_NODE_PARAM_ERR;
 				return context;
