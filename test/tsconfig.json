@@ -1,25 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es2022",
-    "module": "node16",
-    "moduleResolution": "node16",
-    // "outDir": "./test",
+    "target": "esnext",
+    "module": "commonjs",
+    // "outDir": "./dist",
     "strict": true,
-    // "esModuleInterop": true,
-    // This is to prevent tsc from type checking external libraries
-    // There is a root-level tsconfig.json to check our type definitions
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    // "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true,
-    // TODO: test this later
-    "baseUrl": "./",
-    // "paths": {
-    //   "aerospike": ["../lib/aerospike"]
-    //   // You can add more mappings here
-    // }
     "allowImportingTsExtensions": false,
     "rewriteRelativeImportExtensions": true,
-    "noEmit": false
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["**/*.mts"],
   "files": ["../lib/aerospike.d.ts"],
