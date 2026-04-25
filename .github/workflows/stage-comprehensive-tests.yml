@@ -1111,6 +1111,7 @@ jobs:
     - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
         set -e
+        set -x
         server_version=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v build)
         major_num=$(echo $server_version | cut -d '.' -f 1)
         minor_num=$(echo $server_version | cut -d '.' -f 2)
