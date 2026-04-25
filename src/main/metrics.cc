@@ -222,13 +222,6 @@ void disable_response(uv_work_t *req, int status)
 	MetricsInvoker invoker = [](MetricsCommand* cmd) {
     Local<Value> argv[] = {prepare_disable_cluster_arg(cmd, cmd->policy)};
     cmd->Disable_Callback(1, argv);
-
-	Isolate* isolate = Isolate::GetCurrent();
-	Nan::HandleScope scope;
-
-	Local<Function> disable_callback = cmd->disable_callback.Get(isolate);
-	v8::Local<v8::Value> args[] = {};
-	disable_callback->Call(Nan::GetCurrentContext(), Nan::GetCurrentContext()->Global(), 0, args);
   };
 
   respond_generic(req, status, invoker, "Executing Metrics Disable Snapshot", true);
