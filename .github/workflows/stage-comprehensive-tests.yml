@@ -1103,10 +1103,9 @@ jobs:
         EOF
 
         # This shell will be closed once this step completes
-        nohup node run-client-in-bg.js &
+        nohup node test/run-client-in-bg.js &
         # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
         # When background processes fail, this step won't fail.
-      working-directory: test
 
     - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
