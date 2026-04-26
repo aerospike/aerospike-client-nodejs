@@ -147,7 +147,8 @@ jobs:
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
         # npm install *.tgz --no-save
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
-        tree .
+        # macOS x86 doesn't have tree by default
+        # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
