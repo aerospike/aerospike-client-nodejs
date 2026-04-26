@@ -1079,7 +1079,7 @@ jobs:
     - name: Run client in background
       run: |
         cat <<'EOF' > test/run-client-in-bg.js
-        const Aerospike = require('./lib/aerospike.js');
+        const Aerospike = require('../lib/aerospike.js');
 
         const main = async () => {
           let client;
