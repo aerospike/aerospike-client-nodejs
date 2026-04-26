@@ -1078,7 +1078,7 @@ jobs:
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
       run: |
-        cat <<'EOF' > run-client-in-bg.js
+        cat <<'EOF' > test/run-client-in-bg.js
         const Aerospike = require('aerospike');
 
         const main = async () => {
