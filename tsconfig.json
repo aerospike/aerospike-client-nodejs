@@ -2,7 +2,7 @@
   "include": ["lib/aerospike.d.ts"],
   "compilerOptions": {
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
-    // "strict": true,
+    "strict": true,
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "es2022",
