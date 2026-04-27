@@ -42,7 +42,7 @@ context('admin commands', function () {
 
   const client: Client = helper.client
   const randomFactor: number = 1000000
-  const waitMs: number = 100
+  const waitMs: number = 300
   const username1: string = 'username' + randomString(getRandomInt(randomFactor))
 
   const rolename1: string = 'rolename' + randomString(getRandomInt(randomFactor))
