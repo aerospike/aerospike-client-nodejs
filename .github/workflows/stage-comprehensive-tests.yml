@@ -100,6 +100,9 @@ jobs:
     - run: npm install --no-save *.tgz
       shell: bash
 
+    - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      run: brew install jq
+
     - run: |
         set -ex
         node_file_count=$(find lib/binding -type f | wc -l)
