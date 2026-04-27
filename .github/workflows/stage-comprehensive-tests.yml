@@ -66,6 +66,43 @@ jobs:
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
 
+  test-postinstall-script-removes-unneeded-binaries:
+    needs: get-runner-os
+    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+    strategy:
+      matrix:
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+      fail-fast: false
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - name: Set up JFrog credentials
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      env:
+        JF_URL: https://aerospike.jfrog.io
+      with:
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
+
+    - run: |
+        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+      shell: "bash -ex {0}"
+
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: ${{ matrix.nodejs-tag[1] }}
+
+    - run: npm install --no-save *.tgz
+
+    - run: |
+        node_file_count=$(find lib/binding -type f | wc -l)
+        test $node_file_count -eq 1
+      working-directory: node_modules/aerospike
 
   test-ee:
     needs: get-runner-os
