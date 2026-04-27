@@ -204,7 +204,7 @@
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],          
-          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing', '-fPIC'],
+          'cflags': [ '-Wall', '-Werror', '-g', '-Warray-bounds', '-fno-strict-aliasing', '-fPIC'],
         }],
         ['OS=="mac"',{
           'libraries': [
@@ -222,7 +222,7 @@
             'src/include',
             "<!(node -e \"require('nan')\")",
           ],          
-          'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing', '-fPIC'],
+          'cflags': [ '-Wall', '-Werror', '-g', '-Warray-bounds', '-fno-strict-aliasing', '-fPIC'],
           'xcode_settings': {
             'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
           },

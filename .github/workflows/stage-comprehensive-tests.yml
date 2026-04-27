@@ -760,8 +760,8 @@ jobs:
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
       run: |
         docker pull aerospike/aerospike-server:latest;
-        npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
-        npm run test --testfile=metrics_cluster_name.js -- --testMetrics true --h localhost --port 3000  --t 50000;
+        MOCHA_OPTIONS='-g metrics_node_close.js' npm run test -- --testMetrics true --h localhost --port 3000  --t 50000;
+        MOCHA_OPTIONS='-g metrics_cluster_name.js' npm run test -- --testMetrics true --h localhost --port 3000  --t 50000;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
