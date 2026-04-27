@@ -107,15 +107,24 @@ describe('Metrics tests', function () {
   let clusterFromSnapshotListener: any = null
 
   function snapshotSaveListener(cluster: Cluster) {
+    console.log("Started snapshotSaveListener")
     clusterFromSnapshotListener = cluster
 
+    console.log("Finished snapshotSaveListener")
     return
   }
 
   function disableSaveListener(cluster: Cluster) {
+    console.log("Started disableSaveListener")
     clusterFromDisableListener = cluster
+    console.log("Finished disableSaveListener")
     return
   }
+
+  this.beforeEach(function() {
+    clusterFromDisableListener = null
+    clusterFromSnapshotListener = null
+  })
 
   context('Positive Tests', function () { 
 
@@ -1525,10 +1534,6 @@ describe('Metrics tests', function () {
             }
           }
           expect(stringNotEmpty).to.eql(true)
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null
-
         })
       })
 
@@ -1580,11 +1585,6 @@ describe('Metrics tests', function () {
 
 
           expect(count).to.be.greaterThan(0)
-
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null
-
         })
 
       })
@@ -1632,10 +1632,6 @@ describe('Metrics tests', function () {
           }
 
           expect(count).to.be.greaterThan(0)
-
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null          
         })
 
       })
@@ -1706,10 +1702,6 @@ describe('Metrics tests', function () {
 
           expect(totalErrorCount).to.be.greaterThan(0)
 
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null  
-
         })
 
       })
@@ -1764,9 +1756,6 @@ describe('Metrics tests', function () {
 
           expect(timeout_value).to.be.a('number')
 
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null       
         })
 
       })
@@ -1840,9 +1829,6 @@ describe('Metrics tests', function () {
 
           expect(totalConnLatency).to.be.greaterThan(0)
 
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null
         })
 
       })
@@ -1905,10 +1891,6 @@ describe('Metrics tests', function () {
 
           expect(totalWriteLatency).to.be.greaterThan(0)
 
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null
-
         })
 
       })
@@ -1967,9 +1949,6 @@ describe('Metrics tests', function () {
 
           expect(totalReadLatency).to.be.greaterThan(0)
 
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null          
         })
 
       })
@@ -2042,10 +2021,6 @@ describe('Metrics tests', function () {
 
 
           expect(totalBatchLatency).to.be.greaterThan(0)
-
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null          
         })
 
       })
@@ -2108,10 +2083,6 @@ describe('Metrics tests', function () {
 
 
           expect(totalQueryLatency).to.be.greaterThan(0)
-
-          clusterFromSnapshotListener = null
-
-          clusterFromDisableListener = null          
         })
 
       })

@@ -147,7 +147,8 @@ jobs:
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
         # npm install *.tgz --no-save
         tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
-        tree .
+        # macOS x86 doesn't have tree by default
+        # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
@@ -1078,8 +1079,8 @@ jobs:
       # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
     - name: Run client in background
       run: |
-        cat <<'EOF' > run-client-in-bg.js
-        const Aerospike = require('aerospike');
+        cat <<'EOF' > test/run-client-in-bg.js
+        const Aerospike = require('../lib/aerospike.js');
 
         const main = async () => {
           let client;
@@ -1103,10 +1104,9 @@ jobs:
         EOF
 
         # This shell will be closed once this step completes
-        nohup node run-client-in-bg.js &
+        nohup node test/run-client-in-bg.js &
         # TODO: We want to check if the python script raises a syntax error or not. (should fail immediately)
         # When background processes fail, this step won't fail.
-      working-directory: test
 
     - name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
