@@ -102,7 +102,8 @@ jobs:
     - run: |
         set -ex
         node_file_count=$(find lib/binding -type f | wc -l)
-        test $node_file_count -eq 1
+        expected_file_count=$(echo "${{ inputs.nodejs-tags }}" | jq 'length')
+        test $node_file_count -eq $expected_file_count
       working-directory: node_modules/aerospike
       shell: bash
 
