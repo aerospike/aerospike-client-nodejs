@@ -137,7 +137,10 @@ context('admin commands', async function () {
       await wait(waitMs)
       const result = await client.queryRole(rolename1, null)
       expect(result).to.have.property('name', rolename1)
-      expect(result).to.have.property('privileges').that.includes(new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE))
+      expect(result).to.have.property('readQuota', 0)
+      expect(result).to.have.property('writeQuota', 0)
+      expect(result).to.have.property('whitelist').that.deep.equals([])
+      expect(result).to.have.property('privileges').that.deep.equals([new Aerospike.admin.Privilege(Aerospike.privilegeCode.SINDEX_ADMIN), new Aerospike.admin.Privilege(Aerospike.privilegeCode.READ_WRITE)])
     })
 
     it('with admin policy', async function () {
@@ -394,7 +397,8 @@ context('admin commands', async function () {
       expect(result).to.have.property('writeQuota', 0)
       expect(result).to.have.property('whitelist').that.deep.equals(['192.168.0.0', '149.14.182.255'])
       expect(result).to.have.property('privileges').that.is.an('array')
-      for (let i = 0; i < result.privileges.length; i++) {
+      expect(result.privileges).to.have.length(3)
+      for (let i = 0; i < 3; i++) {
         expect(result.privileges[i]).to.have.property('code').that.is.a('number')
         expect(result.privileges[i]).to.have.property('namespace').that.is.a('string')
         expect(result.privileges[i]).to.have.property('set').that.is.a('string')
