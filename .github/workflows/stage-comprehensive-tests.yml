@@ -158,7 +158,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -177,7 +177,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -263,7 +263,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -282,7 +282,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -367,7 +367,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -386,7 +386,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -477,7 +477,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -496,7 +496,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -593,7 +593,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -611,7 +611,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        use-server-rc: false
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
