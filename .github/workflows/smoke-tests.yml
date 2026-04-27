@@ -77,8 +77,6 @@ jobs:
         server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.1.2' }}
         env-vars: DEFAULT_TTL=2592000;
 
-    # Note - this does not type check the tests. So the above step is necessary.
-    # If we don't type check the tests, weird test failures can happen.
     - name: Run tests
       run: npm run test
 
