@@ -109,6 +109,7 @@ jobs:
         expected_file_count=$(echo "$NODEJS_TAGS" | jq 'length')
         test $node_file_count -eq $expected_file_count
       env:
+        # We pass the JSON input here so that the bash shell doesn't strip the double quotes from the strings
         NODEJS_TAGS: ${{ inputs.nodejs-tags }}
       working-directory: node_modules/aerospike
       shell: bash
