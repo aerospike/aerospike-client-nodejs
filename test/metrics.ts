@@ -107,17 +107,13 @@ describe('Metrics tests', function () {
   let clusterFromSnapshotListener: any = null
 
   function snapshotSaveListener(cluster: Cluster) {
-    console.log("Started snapshotSaveListener")
     clusterFromSnapshotListener = cluster
 
-    console.log("Finished snapshotSaveListener")
     return
   }
 
   function disableSaveListener(cluster: Cluster) {
-    console.log("Started disableSaveListener")
     clusterFromDisableListener = cluster
-    console.log("Finished disableSaveListener")
     return
   }
 
