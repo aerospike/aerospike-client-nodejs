@@ -36,11 +36,6 @@ on:
         type: boolean
         default: true
         required: false
-      # This input is only used in workflow_call events
-      # use-server-rc:
-      #   required: false
-      #   default: false
-      #   type: boolean
       server-tag:
         type: string
         required: false
