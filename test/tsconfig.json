@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": false,
+    "rewriteRelativeImportExtensions": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["**/*.ts"],
+  "files": ["../lib/aerospike.d.ts"],
+}

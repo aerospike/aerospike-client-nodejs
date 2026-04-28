@@ -9,7 +9,33 @@ permissions:
   statuses: write
 
 on:
-
+  workflow_dispatch:
+    inputs:
+      nodejs-tags:
+        type: string
+        required: false
+        default: '[["v115", "20"], ["v127", "22"], ["v137", "24"], ["v141", "25"]]'
+      platform-tag:
+        type: string
+        required: true
+      run_tests:
+        type: boolean
+        required: false
+        default: false
+      use-server-rc:
+        required: false
+        type: boolean
+        default: false
+        description: 'Test against server release candidate?'
+      server-tag:
+        required: false
+        type: string
+        default: 'latest'
+        description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
   workflow_call:
     inputs:
       # See workflow call hack in update-version.yml
@@ -165,6 +191,7 @@ jobs:
       run: |
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
+        # TODO: think this is redundant. node-pre-gyp is already in package.json
         npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts;
         npm run build;
         ls lib/binding;
@@ -172,11 +199,9 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && !(startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
       run: |
-        cd ts-test;
-        npx tsc;
-        cd ..;
-        npx tsc;
-        npm run test dist/${{ inputs.test-file }} -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+        npm run test -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
+      env:
+        npm_config_testfile: ${{ inputs.test-file }}
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1

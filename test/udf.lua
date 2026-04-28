@@ -59,3 +59,8 @@ function even(stream, bin)
   end
   return stream : filter(filt) : map(mapper)
 end
+
+function deleteRecord(rec)
+  aerospike:remove(rec)
+  return 0
+end
