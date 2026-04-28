@@ -199,8 +199,8 @@ NAN_METHOD(AerospikeClient::IndexCreate)
 	TYPE_CHECK_REQ(info[0], IsString, "Namespace must be a string");
 	TYPE_CHECK_OPT(info[1], IsString, "Set must be a string");
 	TYPE_CHECK_OPT(info[2], IsString, "Bin must be a string");
-	// Removed check because Exp can be string or array
-	// TYPE_CHECK_OPT(info[3], IsArray, "Exp must be an array");
+	// Removed check because Exp can be a base64 string or array
+	// TYPE_CHECK_OPT(info[3], IsArray, "Exp must be a base64 string or array");
 	TYPE_CHECK_REQ(info[4], IsString, "Index name must be a string");
 	TYPE_CHECK_REQ(info[5], IsNumber, "Index type must be an integer");
 	TYPE_CHECK_REQ(info[6], IsNumber, "Index datatype must be an integer");

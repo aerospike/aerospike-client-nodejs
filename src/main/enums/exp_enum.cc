@@ -42,6 +42,7 @@ Local<Object> exp_opcode_values()
 
 	set(exp_ops, "CMP_REGEX", as_exp_ops::_AS_EXP_CODE_CMP_REGEX);
 	set(exp_ops, "CMP_GEO", as_exp_ops::_AS_EXP_CODE_CMP_GEO);
+	set(exp_ops, "IN_LIST", as_exp_ops::_AS_EXP_CODE_IN_LIST);
 
 	set(exp_ops, "AND", as_exp_ops::_AS_EXP_CODE_AND);
 	set(exp_ops, "OR", as_exp_ops::_AS_EXP_CODE_OR);
@@ -63,6 +64,10 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "KEY", as_exp_ops::_AS_EXP_CODE_KEY);
 	set(exp_ops, "BIN", as_exp_ops::_AS_EXP_CODE_BIN);
 	set(exp_ops, "BIN_TYPE", as_exp_ops::_AS_EXP_CODE_BIN_TYPE);
+
+	set(exp_ops, "REMOVE_RESULT", as_exp_ops::_AS_EXP_CODE_REMOVE_RESULT);
+	set(exp_ops, "MAP_KEYS", as_exp_ops::_AS_EXP_CODE_MAP_KEYS);
+	set(exp_ops, "MAP_VALUES", as_exp_ops::_AS_EXP_CODE_MAP_VALUES);
 
 	set(exp_ops, "QUOTE", as_exp_ops::_AS_EXP_CODE_QUOTE);
 	set(exp_ops, "CALL", as_exp_ops::_AS_EXP_CODE_CALL);
@@ -117,7 +122,7 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "MAX", as_exp_ops::_AS_EXP_CODE_MAX);
 
 
-	set(exp_ops, "RESULT_REMOVE", as_exp_ops::_AS_EXP_CODE_RESULT_REMOVE);
+	set(exp_ops, "RESULT_REMOVE", as_exp_ops::_AS_EXP_CODE_REMOVE_RESULT);
 	set(exp_ops, "LOOPVAR", as_exp_ops::_AS_EXP_CODE_LOOPVAR);
 	set(exp_ops, "COND", as_exp_ops::_AS_EXP_CODE_COND);
 	set(exp_ops, "LET", as_exp_ops::_AS_EXP_CODE_LET);

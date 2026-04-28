@@ -10,6 +10,10 @@
 
   on:
     workflow_call:
+      inputs:
+        bump-type:
+          type: string
+          description: From last release version
       outputs:
         dev_version:
           value: ${{ jobs.get-new-version.outputs.dev_version }}
@@ -54,20 +58,24 @@
           last_tag=$(git describe --tags --abbrev=0)
           echo "Last version tag is $last_tag"
 
-          new_tag=$(node .github/workflows/bump-dev-number-in-version.js "$last_tag");
-          git tag $new_tag
-          git push origin tag $new_tag
-          echo "dev_version=$new_tag" >> $GITHUB_OUTPUT;
+          new_tag=$(node .github/workflows/bump-dev-number-in-version.js "$last_tag" "${BUMP_TYPE}");
 
           # Update package.json if last tag was a release tag
           current_release_version=$(npm pkg get version | tr -d '"')
           next_release_version=$(node .github/workflows/strip_prerelease_part.js $new_tag)
           if [[ "$current_release_version" != "$next_release_version" ]]; then
+            # Commit the next release version
             # "npm version" can only commit and tag, or neither at all. But we can't disable one or the other
-            npm version patch --no-git-tag-version
+            npm version "${BUMP_TYPE}" --no-git-tag-version
             git add -u
             git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git config --global user.name "github-actions[bot]"
             git commit -m "Bump version to $next_release_version"
             git push
           fi
+
+          git tag $new_tag
+          git push origin tag $new_tag
+          echo "dev_version=$new_tag" >> $GITHUB_OUTPUT;
+        env:
+          BUMP_TYPE: ${{ inputs.bump-type }}

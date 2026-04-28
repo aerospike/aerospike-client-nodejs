@@ -19,7 +19,7 @@
 /* global expect, describe, it, before */
 
 const Aerospike = require('../../lib/aerospike')
-const helper = require('../test_helper')
+const helper = require('../test_helper.ts')
 const perfdata = require('./perfdata')
 
 const fs = require('fs')

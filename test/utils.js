@@ -18,8 +18,9 @@
 
 /* global expect, describe, it */
 
-require('./test_helper')
-const utils = require('../lib/utils')
+// require('./test_helper.ts')
+import * as utils from '../lib/utils.js'
+// const utils = require('../lib/utils')
 
 describe('utils.parseHostString() #noserver', function () {
   it('parses a domain name', function () {
