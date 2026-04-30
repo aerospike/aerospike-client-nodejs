@@ -86,6 +86,7 @@
     "p-throttle": "^8.1.0",
     "standard": "^17.1.0",
     "tmp": "^0.2.4",
+    "tsx": "^4.21.0",
     "typedoc": "^0.28.15",
     "typedoc-plugin-rename-defaults": "^0.7.1",
     "typescript": "^5.9.3",
