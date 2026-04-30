@@ -51,7 +51,11 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand lib/aerospike.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
+<<<<<<< HEAD
     "valgrind": "valgrind --smc-check=all-non-file node $(which mocha) -g '#slow' -i",
+=======
+    "valgrind": "valgrind --leak-check=full --smc-check=all-non-file node $(which mocha) -g '#slow' -i",
+>>>>>>> 08de31aa (Report details of memory leaks)
     "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
