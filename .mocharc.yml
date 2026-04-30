@@ -3,7 +3,7 @@ require:
   - mocha-clean
 spec:
   - "test/*.js" # the positional arguments!
-  - "test/*.mts" # the positional arguments!
+  - "test/*.ts" # the positional arguments!
 node-option:
   - "import=tsx"
 parallel: false
