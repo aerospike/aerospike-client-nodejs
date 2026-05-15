@@ -40,14 +40,14 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - name: Install test dependencies
+    - name: Build client
       run: |
         npm ci --ignore-scripts
         ./scripts/build-c-client.sh
         # Then build client itself
         npm run build
 
-    - name: install valgrind and run tests
+    - name: Install valgrind and run tests
       run: |
         sudo apt-get update;
         sudo apt-get install -y valgrind;
