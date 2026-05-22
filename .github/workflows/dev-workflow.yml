@@ -115,7 +115,7 @@ jobs:
       create-release-bundle,
       bump-dev-number-and-tag
     ]
-    uses: aerospike/aerospike-client-python/.github/workflows/promote-release-bundle.yml@CLIENT-3467-cicd-use-jfrog-release-bundles
+    uses: aerospike/aerospike-client-python/.github/workflows/promote-and-optionally-tag-release-bundle.yml@CLIENT-3467-cicd-use-jfrog-release-bundles
     with:
       release-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
