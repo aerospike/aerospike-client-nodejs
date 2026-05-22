@@ -121,6 +121,5 @@ jobs:
       release-bundle-version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       new-environment: DEV
       jfrog-project: database
-      jfrog-repo-name: database-npm-dev-local
     permissions:
       id-token: write
