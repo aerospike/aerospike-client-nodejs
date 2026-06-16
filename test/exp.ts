@@ -381,6 +381,45 @@ describe('Aerospike.exp', function () {
 
   })
 
+  describe('string expressions', function () {
+    helper.skipUnlessVersion('>= 8.1.3', this)
+
+    it('evaluates exp_read for strlen on a string bin', async function () {
+      const key = await createRecord({ text: 'hello' })
+      const ops = [
+        exp.operations.read(tempBin,
+          exp.string.strlen(exp.binStr('text')),
+          exp.expWriteFlags.DEFAULT),
+        op.read('text')
+      ]
+      const result: AerospikeRecord = await client.operate(key, ops, {})
+      const bins: AerospikeBins = result.bins
+      expect(bins.text).to.eql('hello')
+      expect(bins.ExpVar).to.eql(5)
+    })
+
+    it('evaluates substrRange via exp_read', async function () {
+      const key = await createRecord({ text: 'abcdef' })
+      const ops = [
+        exp.operations.read(tempBin,
+          // Two-arg SUBSTR in expressions: half-open codepoint range [start, end)
+          exp.string.substrRange(1, 5, exp.binStr('text')),
+          exp.expWriteFlags.DEFAULT),
+        op.read('text')
+      ]
+      const result: AerospikeRecord = await client.operate(key, ops, {})
+      const bins: AerospikeBins = result.bins
+      expect(bins.text).to.eql('abcdef')
+      expect(bins.ExpVar).to.eql('bcde')
+    })
+
+    it('uses contains in a filter expression', async function () {
+      const key = await createRecord({ text: 'foobar' })
+      await testNoMatch(key, exp.eq(exp.string.contains('baz', exp.binStr('text')), exp.bool(true)))
+      await testMatch(key, exp.eq(exp.string.contains('foo', exp.binStr('text')), exp.bool(true)))
+    })
+  })
+
 
   describe('expressionToBase64', function () {
     const filterExpression = exp.eq(exp.int(2), exp.int(1))

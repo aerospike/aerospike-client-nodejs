@@ -12841,6 +12841,83 @@ export namespace bitwise {
      */
     export function rscan(bin: string, bitOffset: number, bitSize: number, value: boolean): BitwiseOperation;
 }
+
+/**
+ * String bin operations for {@link Client#operate} (server 8.1.3+).
+ */
+export namespace strings {
+    export interface StringPolicy {
+        writeFlags?: number;
+    }
+
+    export enum writeFlags {
+        DEFAULT = 0,
+        NO_FAIL = 4
+    }
+
+    export enum regexFlags {
+        NONE = 0,
+        CASE_INSENSITIVE = 1,
+        MULTILINE = 2,
+        DOTALL = 4,
+        UNIX_LINES = 8,
+        GLOBAL = 16
+    }
+
+    export enum StringNumericFilter {
+        ANY = 0,
+        INT = 1,
+        FLOAT = 2
+    }
+
+    export class StringOperation extends operations.Operation {
+        withContext(contextOrFunction: cdt.Context | ((ctx: cdt.Context) => void)): StringOperation;
+        withPolicy(policy: StringPolicy): StringOperation;
+    }
+
+    export function strlen(bin: string): StringOperation;
+    export function substr(bin: string, start: number): StringOperation;
+    export function substrRange(bin: string, start: number, length: number): StringOperation;
+    export function charAt(bin: string, index: number): StringOperation;
+    export function find(bin: string, needle: string): StringOperation;
+    export function findOccurrence(bin: string, needle: string, occurrence: number): StringOperation;
+    export function contains(bin: string, needle: string): StringOperation;
+    export function startsWith(bin: string, prefix: string): StringOperation;
+    export function endsWith(bin: string, suffix: string): StringOperation;
+    export function toInteger(bin: string): StringOperation;
+    export function toDouble(bin: string): StringOperation;
+    export function byteLength(bin: string): StringOperation;
+    export function isNumeric(bin: string): StringOperation;
+    export function isNumericType(bin: string, filter: StringNumericFilter): StringOperation;
+    export function isUpper(bin: string): StringOperation;
+    export function isLower(bin: string): StringOperation;
+    export function toBlob(bin: string): StringOperation;
+    export function split(bin: string): StringOperation;
+    export function splitSeparator(bin: string, separator: string): StringOperation;
+    export function b64Decode(bin: string): StringOperation;
+    export function regexCompare(bin: string, pattern: string): StringOperation;
+    export function regexCompareFlags(bin: string, pattern: string, flags: number): StringOperation;
+    export function insert(bin: string, index: number, value: string): StringOperation;
+    export function overwrite(bin: string, index: number, value: string): StringOperation;
+    export function concat(bin: string, value: string): StringOperation;
+    export function concatList(bin: string, values: any[]): StringOperation;
+    export function snip(bin: string, start: number): StringOperation;
+    export function snipRange(bin: string, start: number, end: number): StringOperation;
+    export function replace(bin: string, needle: string, replacement: string): StringOperation;
+    export function replaceAll(bin: string, needle: string, replacement: string): StringOperation;
+    export function upper(bin: string): StringOperation;
+    export function lower(bin: string): StringOperation;
+    export function caseFold(bin: string): StringOperation;
+    export function normalizeNfc(bin: string): StringOperation;
+    export function trimStart(bin: string): StringOperation;
+    export function trimEnd(bin: string): StringOperation;
+    export function trim(bin: string): StringOperation;
+    export function padStart(bin: string, targetLength: number, padString: string): StringOperation;
+    export function padEnd(bin: string, targetLength: number, padString: string): StringOperation;
+    export function repeat(bin: string, count: number): StringOperation;
+    export function regexReplace(bin: string, pattern: string, replacement: string, flags: number): StringOperation;
+    export function toString(bin: string): StringOperation;
+}
 /**
  *
  * Use the methods in the {@link hll|hll}
@@ -15834,6 +15911,55 @@ export namespace exp {
          * @return 1 bin contains all of list, 0 otherwise.
          */
         export const mayContain: (bin: AerospikeExp, list: AerospikeExp) => AerospikeExp;
+    }
+
+    /**
+     * String read/modify expressions (server 8.1.3+). See {@link strings} for operate() string ops.
+     */
+    export namespace string {
+        export const strlen: (bin: AerospikeExp) => AerospikeExp;
+        export const substr: (start: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        /** Half-open codepoint range [start, end) (matches server string SUBSTR expression). */
+        export const substrRange: (start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const charAt: (index: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const find: (needle: string, bin: AerospikeExp) => AerospikeExp;
+        export const findOccurrence: (needle: string, occurrence: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const contains: (needle: string, bin: AerospikeExp) => AerospikeExp;
+        export const startsWith: (prefix: string, bin: AerospikeExp) => AerospikeExp;
+        export const endsWith: (suffix: string, bin: AerospikeExp) => AerospikeExp;
+        export const toInteger: (bin: AerospikeExp) => AerospikeExp;
+        export const toDouble: (bin: AerospikeExp) => AerospikeExp;
+        export const byteLength: (bin: AerospikeExp) => AerospikeExp;
+        export const isNumeric: (bin: AerospikeExp) => AerospikeExp;
+        export const isNumericType: (numericType: number, bin: AerospikeExp) => AerospikeExp;
+        export const isUpper: (bin: AerospikeExp) => AerospikeExp;
+        export const isLower: (bin: AerospikeExp) => AerospikeExp;
+        export const toBlob: (bin: AerospikeExp) => AerospikeExp;
+        export const split: (bin: AerospikeExp) => AerospikeExp;
+        export const splitSeparator: (separator: string, bin: AerospikeExp) => AerospikeExp;
+        export const b64Decode: (bin: AerospikeExp) => AerospikeExp;
+        export const regexCompare: (pattern: string, bin: AerospikeExp) => AerospikeExp;
+        export const regexCompareFlags: (pattern: string, flags: number, bin: AerospikeExp) => AerospikeExp;
+        export const insert: (policy: { flags?: number } | null, index: number | AerospikeExp, value: string, bin: AerospikeExp) => AerospikeExp;
+        export const overwrite: (policy: { flags?: number } | null, index: number | AerospikeExp, value: string, bin: AerospikeExp) => AerospikeExp;
+        export const concat: (policy: { flags?: number } | null, value: string, bin: AerospikeExp) => AerospikeExp;
+        export const concatList: (policy: { flags?: number } | null, values: AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const snip: (policy: { flags?: number } | null, start: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const snipRange: (policy: { flags?: number } | null, start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const replace: (policy: { flags?: number } | null, needle: string, replacement: string, bin: AerospikeExp) => AerospikeExp;
+        export const replaceAll: (policy: { flags?: number } | null, needle: string, replacement: string, bin: AerospikeExp) => AerospikeExp;
+        export const upper: (policy: { flags?: number } | null, bin: AerospikeExp) => AerospikeExp;
+        export const lower: (policy: { flags?: number } | null, bin: AerospikeExp) => AerospikeExp;
+        export const caseFold: (policy: { flags?: number } | null, bin: AerospikeExp) => AerospikeExp;
+        export const normalizeNfc: (policy: { flags?: number } | null, bin: AerospikeExp) => AerospikeExp;
+        export const trimStart: (policy: { flags?: number } | null, bin: AerospikeExp) => AerospikeExp;
+        export const trimEnd: (policy: { flags?: number } | null, bin: AerospikeExp) => AerospikeExp;
+        export const trim: (policy: { flags?: number } | null, bin: AerospikeExp) => AerospikeExp;
+        export const padStart: (policy: { flags?: number } | null, targetLength: number | AerospikeExp, padString: string, bin: AerospikeExp) => AerospikeExp;
+        export const padEnd: (policy: { flags?: number } | null, targetLength: number | AerospikeExp, padString: string, bin: AerospikeExp) => AerospikeExp;
+        export const repeat: (policy: { flags?: number } | null, count: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const regexReplace: (pattern: string, replacement: string, flags: number, bin: AerospikeExp) => AerospikeExp;
+        export const toString: (bin: AerospikeExp) => AerospikeExp;
     }
 
     namespace listsExp {
