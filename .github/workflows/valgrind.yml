@@ -1,0 +1,54 @@
+permissions:
+  contents: read
+  id-token: write
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  valgrind:
+    runs-on: ubuntu-22.04
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: 20
+
+    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
+      uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: false
+        server-tag: latest
+        docker-hub-username: ${{ secrets.soup_hat }}
+        docker-hub-password: ${{ secrets.cell_girl }}
+
+    - name: Set up JFrog credentials
+      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+      env:
+        JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: "database"
+      with:
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
+
+    - name: Build client
+      run: |
+        npm ci --ignore-scripts
+        ./scripts/build-c-client.sh
+        # Then build client itself
+        npm run build
+
+    - name: Install valgrind and run tests
+      run: |
+        sudo apt-get update;
+        sudo apt-get install -y valgrind;
+        MOCHA_OPTIONS="--timeout 40000" OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run valgrind;
