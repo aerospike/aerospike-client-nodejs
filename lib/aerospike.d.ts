@@ -17297,6 +17297,9 @@ export namespace exp {
      * tombstone state. This expression usually evaluates quickly because record
      * meta data is cached in memory.
      *
+     * @remarks The addon maps {@link exp.ops.IS_TOMBSTONE} to Aerospike `_AS_EXP_CODE_IS_TOMBSTONE` only.
+     * Registering the same JS key to logical `NOT` would be incorrect; use {@link exp.not} for negation.
+     *
      *
      * @return {@link AerospikeExp} - value True if the record is a tombstone, false otherwise.
      */
@@ -17392,6 +17395,7 @@ export namespace exp {
      * expression (by value). The right argument must evaluate to a list (for example
      * {@link exp.list}).
      *
+     * @remarks Requires Aerospike Server 8.1.2 or later.
      * @param left - Value expression to test for membership.
      * @param right - Expression that evaluates to a list of values to search.
      * @return {@link AerospikeExp} - boolean value
@@ -17400,6 +17404,7 @@ export namespace exp {
     /**
      * Return a list of keys from a map-valued subexpression.
      *
+     * @remarks Requires Aerospike Server 8.1.2 or later.
      * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
      * @return {@link AerospikeExp} - list value when used in an expression read context.
      */
@@ -17407,6 +17412,7 @@ export namespace exp {
     /**
      * Return a list of values from a map-valued subexpression.
      *
+     * @remarks Requires Aerospike Server 8.1.2 or later.
      * @param map - Map-valued expression (e.g. {@link exp.binMap}, {@link exp.map}).
      * @return {@link AerospikeExp} - list value when used in an expression read context.
      */

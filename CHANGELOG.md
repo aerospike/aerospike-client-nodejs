@@ -14,6 +14,9 @@ All notable changes to this project will be documented in this file.
   * String package (Aerospike Server 8.1.3+): aligned `aerospike/strings` and `exp.string` with the C client `stage` string APIs — `append` / `prepend`, `snip(bin, start, end)` with half-open `[start, end)`, `substrRange(bin, start, end)` (third parameter is the exclusive end index, not a length), and expression helpers `concat` / `concatList` matching `as_exp_string_concat` / `as_exp_string_concat_list`.
   * Documented that nested string `operate()` context uses the flat string-op wire envelope (not CDT nested layout), that replace-style **expression** ops use a **QUOTED** pair on the wire, and that multi string ops on the same bin may return ordered per-op results when the server uses RESPOND_ALL_OPS (same family as MAP/BIT/HLL in the C client).
 
+* **Documentation**
+  * `exp.isTombstone()` / `exp.ops.IS_TOMBSTONE`: documented that the Node binding maps this API to Aerospike `_AS_EXP_CODE_IS_TOMBSTONE` only; a duplicate or incorrect mapping (for example to `NOT`) would break tombstone checks. See `src/main/enums/exp_enum.cc` maintainer comment.
+
 ## [6.5.2]
 * **Bug Fixes**
   * [CLIENT-3967] - Fixed issue with non-abstract types resolving to any in typescript description file.

@@ -57,6 +57,12 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "TTL", as_exp_ops::_AS_EXP_CODE_TTL);
 	set(exp_ops, "SET_NAME", as_exp_ops::_AS_EXP_CODE_SET_NAME);
 	set(exp_ops, "KEY_EXIST", as_exp_ops::_AS_EXP_CODE_KEY_EXIST);
+	/*
+	 * IS_TOMBSTONE must map only to _AS_EXP_CODE_IS_TOMBSTONE (as_exp.h). Do not
+	 * register a second "IS_TOMBSTONE" entry or map this key to _AS_EXP_CODE_NOT:
+	 * exp.isTombstone() in JS uses exp.ops.IS_TOMBSTONE; a wrong opcode breaks
+	 * tombstone filter semantics for customers.
+	 */
 	set(exp_ops, "IS_TOMBSTONE", as_exp_ops::_AS_EXP_CODE_IS_TOMBSTONE);
 	set(exp_ops, "MEMORY_SIZE", as_exp_ops::_AS_EXP_CODE_MEMORY_SIZE);
 	set(exp_ops, "RECORD_SIZE", as_exp_ops::_AS_EXP_CODE_RECORD_SIZE);
