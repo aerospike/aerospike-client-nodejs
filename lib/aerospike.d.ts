@@ -12877,7 +12877,8 @@ export namespace strings {
 
     export function strlen(bin: string): StringOperation;
     export function substr(bin: string, start: number): StringOperation;
-    export function substrRange(bin: string, start: number, length: number): StringOperation;
+    /** Half-open codepoint range `[start, end)` (exclusive `end`). */
+    export function substrRange(bin: string, start: number, end: number): StringOperation;
     export function charAt(bin: string, index: number): StringOperation;
     export function find(bin: string, needle: string): StringOperation;
     export function findOccurrence(bin: string, needle: string, occurrence: number): StringOperation;
@@ -12901,7 +12902,13 @@ export namespace strings {
     export function overwrite(bin: string, index: number, value: string): StringOperation;
     export function concat(bin: string, value: string): StringOperation;
     export function concatList(bin: string, values: any[]): StringOperation;
-    export function snip(bin: string, start: number): StringOperation;
+    /** Unicode-aware append (`AS_STRING_OP_APPEND`). */
+    export function append(bin: string, value: string): StringOperation;
+    /** Unicode-aware prepend (`AS_STRING_OP_PREPEND`). */
+    export function prepend(bin: string, value: string): StringOperation;
+    /** Removes half-open codepoint range `[start, end)`. */
+    export function snip(bin: string, start: number, end: number): StringOperation;
+    /** @deprecated Use {@link snip} (same wire). */
     export function snipRange(bin: string, start: number, end: number): StringOperation;
     export function replace(bin: string, needle: string, replacement: string): StringOperation;
     export function replaceAll(bin: string, needle: string, replacement: string): StringOperation;
@@ -15918,8 +15925,9 @@ export namespace exp {
      */
     export namespace string {
         export const strlen: (bin: AerospikeExp) => AerospikeExp;
-        export const substr: (start: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
-        /** Half-open codepoint range [start, end) (matches server string SUBSTR expression). */
+        /** From `start` to end of string, or half-open `[start, end)` when `bin` is the third argument. */
+        export const substr: ((start: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp) & ((start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp);
+        /** @deprecated Use {@link substr} with `(start, end, bin)`. */
         export const substrRange: (start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
         export const charAt: (index: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
         export const find: (needle: string, bin: AerospikeExp) => AerospikeExp;
@@ -15942,9 +15950,14 @@ export namespace exp {
         export const regexCompareFlags: (pattern: string, flags: number, bin: AerospikeExp) => AerospikeExp;
         export const insert: (policy: { flags?: number } | null, index: number | AerospikeExp, value: string, bin: AerospikeExp) => AerospikeExp;
         export const overwrite: (policy: { flags?: number } | null, index: number | AerospikeExp, value: string, bin: AerospikeExp) => AerospikeExp;
+        /** `as_exp_string_concat` (quoted single literal). */
         export const concat: (policy: { flags?: number } | null, value: string, bin: AerospikeExp) => AerospikeExp;
+        /** `as_exp_string_concat_list` (expression yields list of strings). */
         export const concatList: (policy: { flags?: number } | null, values: AerospikeExp, bin: AerospikeExp) => AerospikeExp;
-        export const snip: (policy: { flags?: number } | null, start: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        export const append: (policy: { flags?: number } | null, value: string, bin: AerospikeExp) => AerospikeExp;
+        export const prepend: (policy: { flags?: number } | null, value: string, bin: AerospikeExp) => AerospikeExp;
+        export const snip: (policy: { flags?: number } | null, start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        /** @deprecated Use {@link snip}. */
         export const snipRange: (policy: { flags?: number } | null, start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
         export const replace: (policy: { flags?: number } | null, needle: string, replacement: string, bin: AerospikeExp) => AerospikeExp;
         export const replaceAll: (policy: { flags?: number } | null, needle: string, replacement: string, bin: AerospikeExp) => AerospikeExp;
@@ -15958,7 +15971,8 @@ export namespace exp {
         export const padStart: (policy: { flags?: number } | null, targetLength: number | AerospikeExp, padString: string, bin: AerospikeExp) => AerospikeExp;
         export const padEnd: (policy: { flags?: number } | null, targetLength: number | AerospikeExp, padString: string, bin: AerospikeExp) => AerospikeExp;
         export const repeat: (policy: { flags?: number } | null, count: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
-        export const regexReplace: (pattern: string, replacement: string, flags: number, bin: AerospikeExp) => AerospikeExp;
+        /** Policy first (matches C macro); `flags` reserved — current C expansion does not pack flags on the wire. */
+        export const regexReplace: (policy: { flags?: number } | null, pattern: string, replacement: string, flags: number, bin: AerospikeExp) => AerospikeExp;
         export const toString: (bin: AerospikeExp) => AerospikeExp;
     }
 

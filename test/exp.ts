@@ -413,6 +413,144 @@ describe('Aerospike.exp', function () {
       expect(bins.ExpVar).to.eql('bcde')
     })
 
+    it('evaluates substr(start, end, bin) alias of substrRange via exp_read', async function () {
+      const key = await createRecord({ text: 'abcdef' })
+      const ops = [
+        exp.operations.read(tempBin,
+          exp.string.substr(1, 5, exp.binStr('text')),
+          exp.expWriteFlags.DEFAULT),
+        op.read('text')
+      ]
+      const result: AerospikeRecord = await client.operate(key, ops, {})
+      expect(result.bins.text).to.eql('abcdef')
+      expect(result.bins.ExpVar).to.eql('bcde')
+    })
+
+    describe('string read expressions', function () {
+      it('charAt', async function () {
+        const key = await createRecord({ text: 'abcde' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.charAt(2, exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('abcde')
+        expect(result.bins.ExpVar).to.eql('c')
+      })
+
+      it('endsWith as filter', async function () {
+        const key = await createRecord({ text: 'hello.txt' })
+        await testNoMatch(key, exp.eq(exp.string.endsWith('.pdf', exp.binStr('text')), exp.bool(true)))
+        await testMatch(key, exp.eq(exp.string.endsWith('.txt', exp.binStr('text')), exp.bool(true)))
+      })
+
+      it('toInteger', async function () {
+        const key = await createRecord({ text: '42' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.toInteger(exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('42')
+        expect(result.bins.ExpVar).to.eql(42)
+      })
+
+      it('isUpper', async function () {
+        const key = await createRecord({ text: 'ABC' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.isUpper(exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.ExpVar).to.eql(true)
+      })
+    })
+
+    describe('string modify expressions (local; stored bin unchanged)', function () {
+      it('upper leaves source bin unchanged', async function () {
+        const key = await createRecord({ text: 'ab' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.upper(null, exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('ab')
+        expect(result.bins.ExpVar).to.eql('AB')
+      })
+
+      it('snip local result', async function () {
+        const key = await createRecord({ text: 'abcde' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.snip(null, 1, 4, exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('abcde')
+        expect(result.bins.ExpVar).to.eql('ae')
+      })
+
+      it('append vs concat literal wire', async function () {
+        const key = await createRecord({ text: 'x' })
+        const opsAppend = [
+          exp.operations.read(tempBin,
+            exp.string.append(null, 'y', exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const ra: AerospikeRecord = await client.operate(key, opsAppend)
+        expect(ra.bins.text).to.eql('x')
+        expect(ra.bins.ExpVar).to.eql('xy')
+
+        const opsConcat = [
+          exp.operations.read(tempBin,
+            exp.string.concat(null, 'z', exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const rb: AerospikeRecord = await client.operate(key, opsConcat)
+        expect(rb.bins.text).to.eql('x')
+        expect(rb.bins.ExpVar).to.eql('xz')
+      })
+
+      it('concatList', async function () {
+        const key = await createRecord({ text: 'a' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.concatList(null, exp.list(['b', 'c']), exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('a')
+        expect(result.bins.ExpVar).to.eql('abc')
+      })
+    })
+
+    describe('chained string modify expressions', function () {
+      it('upper(trim(...))', async function () {
+        const key = await createRecord({ text: '  hi  ' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.upper(null, exp.string.trim(null, exp.binStr('text'))),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('  hi  ')
+        expect(result.bins.ExpVar).to.eql('HI')
+      })
+    })
+
     it('uses contains in a filter expression', async function () {
       const key = await createRecord({ text: 'foobar' })
       await testNoMatch(key, exp.eq(exp.string.contains('baz', exp.binStr('text')), exp.bool(true)))

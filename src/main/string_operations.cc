@@ -90,6 +90,8 @@ typedef enum {
 	STRING_OP_CONCAT_LIST,
 	STRING_OP_SNIP,
 	STRING_OP_SNIP_RANGE,
+	STRING_OP_APPEND,
+	STRING_OP_PREPEND,
 	STRING_OP_REPLACE,
 	STRING_OP_REPLACE_ALL,
 	STRING_OP_UPPER,
@@ -136,6 +138,8 @@ static const char *string_op_names[STRING_OP_COUNT] = {
 	"CONCAT_LIST",
 	"SNIP",
 	"SNIP_RANGE",
+	"APPEND",
+	"PREPEND",
 	"REPLACE",
 	"REPLACE_ALL",
 	"UPPER",
@@ -203,15 +207,14 @@ int add_string_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 	}
 	case STRING_OP_SUBSTR_RANGE: {
 		int64_t start;
-		uint64_t length;
+		int64_t end;
 		if (get_int64_property(&start, op, "start", log) != AS_NODE_PARAM_OK) {
 			break;
 		}
-		if (get_uint64_property(&length, op, "length", log) !=
-			AS_NODE_PARAM_OK) {
+		if (get_int64_property(&end, op, "end", log) != AS_NODE_PARAM_OK) {
 			break;
 		}
-		ok = as_operations_string_substr_range(ops, bin, ctx_ptr, start, length);
+		ok = as_operations_string_substr_range(ops, bin, ctx_ptr, start, end);
 		break;
 	}
 	case STRING_OP_CHAR_AT: {
@@ -397,24 +400,35 @@ int add_string_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 		as_list_destroy(list);
 		break;
 	}
-	case STRING_OP_SNIP: {
-		int64_t start;
-		if (get_int64_property(&start, op, "start", log) != AS_NODE_PARAM_OK) {
-			break;
-		}
-		ok = as_operations_string_snip(ops, bin, ctx_ptr, pol_ptr, start);
-		break;
-	}
+	case STRING_OP_SNIP:
 	case STRING_OP_SNIP_RANGE: {
-		int64_t start, end;
+		int64_t start;
+		int64_t end;
 		if (get_int64_property(&start, op, "start", log) != AS_NODE_PARAM_OK) {
 			break;
 		}
 		if (get_int64_property(&end, op, "end", log) != AS_NODE_PARAM_OK) {
 			break;
 		}
-		ok = as_operations_string_snip_range(ops, bin, ctx_ptr, pol_ptr, start,
-											 end);
+		ok = as_operations_string_snip(ops, bin, ctx_ptr, pol_ptr, start, end);
+		break;
+	}
+	case STRING_OP_APPEND: {
+		char *value = NULL;
+		if (get_string_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+			break;
+		}
+		ok = as_operations_string_append(ops, bin, ctx_ptr, pol_ptr, value);
+		free(value);
+		break;
+	}
+	case STRING_OP_PREPEND: {
+		char *value = NULL;
+		if (get_string_property(&value, op, "value", log) != AS_NODE_PARAM_OK) {
+			break;
+		}
+		ok = as_operations_string_prepend(ops, bin, ctx_ptr, pol_ptr, value);
+		free(value);
 		break;
 	}
 	case STRING_OP_REPLACE: {
@@ -530,8 +544,8 @@ int add_string_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 			free(replacement);
 			break;
 		}
-		ok = as_operations_string_regex_replace(ops, bin, ctx_ptr, pattern,
-												replacement,
+		ok = as_operations_string_regex_replace(ops, bin, ctx_ptr, pol_ptr,
+												pattern, replacement,
 												(as_string_regex_flags)flags);
 		free(pattern);
 		free(replacement);
