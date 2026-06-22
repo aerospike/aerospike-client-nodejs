@@ -74,7 +74,7 @@ jobs:
         num-nodes: 1
         oidc-provider: ${{ vars.OIDC_PROVIDER_NAME }}
         oidc-audience: ${{ vars.OIDC_AUDIENCE }}
-        server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.1.2' }}
+        server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.2.3' }}
         env-vars: DEFAULT_TTL=2592000;
 
     - name: Run tests
