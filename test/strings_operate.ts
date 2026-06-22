@@ -33,6 +33,10 @@ describe('strings operate()', function () {
 
   helper.skipUnlessVersion('>= 8.1.3', this)
 
+  before(async function () {
+    await helper.skipUnlessStringAppendPrepend.call(this)
+  })
+
   async function putKey (bins: AerospikeBins): Promise<KeyOptions> {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/strings_operate' })()
     await client.put(key, bins)

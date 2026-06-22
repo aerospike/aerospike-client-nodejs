@@ -12864,11 +12864,14 @@ export namespace strings {
         GLOBAL = 16
     }
 
-    export enum StringNumericFilter {
+    export enum numericType {
         ANY = 0,
         INT = 1,
         FLOAT = 2
     }
+
+    /** @deprecated Use {@link numericType} (matches runtime `Aerospike.strings.numericType`). */
+    export type StringNumericFilter = numericType;
 
     export class StringOperation extends operations.Operation {
         withContext(contextOrFunction: cdt.Context | ((ctx: cdt.Context) => void)): StringOperation;
@@ -12889,10 +12892,11 @@ export namespace strings {
     export function toDouble(bin: string): StringOperation;
     export function byteLength(bin: string): StringOperation;
     export function isNumeric(bin: string): StringOperation;
-    export function isNumericType(bin: string, filter: StringNumericFilter): StringOperation;
+    export function isNumericType(bin: string, numericType: numericType): StringOperation;
     export function isUpper(bin: string): StringOperation;
     export function isLower(bin: string): StringOperation;
     export function toBlob(bin: string): StringOperation;
+    /** Splits by Unicode codepoint (one list element per codepoint). Use {@link splitSeparator} for a delimiter. */
     export function split(bin: string): StringOperation;
     export function splitSeparator(bin: string, separator: string): StringOperation;
     export function b64Decode(bin: string): StringOperation;

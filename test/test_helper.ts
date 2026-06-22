@@ -339,6 +339,46 @@ import * as url from "node:url"
     skipUnless(ctx, () => options.testTimeoutDelay, 'timeout delay test disabled')
   }
 
+  let stringAppendPrependSupported: boolean | null = null
+
+  /**
+   * Probe whether STRING_MODIFY append/prepend wire is accepted (some 8.1.3 lab
+   * builds return ERR_OP_NOT_APPLICABLE or ERR_REQUEST_INVALID).
+   */
+  export async function supportsStringAppendPrepend (): Promise<boolean> {
+    if (stringAppendPrependSupported !== null) {
+      return stringAppendPrependSupported
+    }
+    const strings = Aerospike.strings
+    const op = Aerospike.operations
+    const key = keygen.string(namespace, set, { prefix: 'test/string-append-probe' })()
+    try {
+      await client.put(key, { s: 'x' })
+      await client.operate(key, [strings.append('s', 'y'), op.read('s')])
+      stringAppendPrependSupported = true
+    } catch (error: any) {
+      const code = error.code
+      if (code === Aerospike.status.ERR_OP_NOT_APPLICABLE ||
+          code === Aerospike.status.ERR_REQUEST_INVALID) {
+        stringAppendPrependSupported = false
+      } else {
+        throw error
+      }
+    } finally {
+      try {
+        await client.remove(key)
+      } catch (_) { /* probe key may not exist */ }
+    }
+    return stringAppendPrependSupported
+  }
+
+  /** Call at the start of an `it()` that requires strings.append / prepend. */
+  export async function skipUnlessStringAppendPrepend (this: Mocha.Context) {
+    if (!(await supportsStringAppendPrepend())) {
+      this.skip('server rejects strings.append / strings.prepend on this build')
+    }
+  }
+
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
     before(() => {

@@ -563,7 +563,7 @@ describe('Aerospike.exp', function () {
         const key = await createRecord({ text: '99' })
         const ops = [
           exp.operations.read(tempBin,
-            exp.string.isNumericType(strings.StringNumericFilter.INT, exp.binStr('text')),
+            exp.string.isNumericType(strings.numericType.INT, exp.binStr('text')),
             exp.expWriteFlags.DEFAULT),
           op.read('text')
         ]
@@ -583,7 +583,7 @@ describe('Aerospike.exp', function () {
         expect(result.bins.ExpVar).to.eql(true)
       })
 
-      it('split default', async function () {
+      it('split by codepoint (default split)', async function () {
         const key = await createRecord({ text: 'a,b,c' })
         const ops = [
           exp.operations.read(tempBin,
@@ -593,7 +593,8 @@ describe('Aerospike.exp', function () {
         ]
         const result: AerospikeRecord = await client.operate(key, ops, {})
         expect(result.bins.ExpVar).to.be.an('array')
-        expect(result.bins.ExpVar).to.eql(['a', 'b', 'c'])
+        // AS_STRING_OP_SPLIT with no separator: one list element per Unicode codepoint.
+        expect(result.bins.ExpVar).to.eql(['a', ',', 'b', ',', 'c'])
       })
 
       it('splitSeparator', async function () {
@@ -698,6 +699,7 @@ describe('Aerospike.exp', function () {
       })
 
       it('append vs concat literal wire', async function () {
+        await helper.skipUnlessStringAppendPrepend.call(this)
         const key = await createRecord({ text: 'x' })
         const opsAppend = [
           exp.operations.read(tempBin,
@@ -734,6 +736,7 @@ describe('Aerospike.exp', function () {
       })
 
       it('prepend local result', async function () {
+        await helper.skipUnlessStringAppendPrepend.call(this)
         const key = await createRecord({ text: 'end' })
         const ops = [
           exp.operations.read(tempBin,
