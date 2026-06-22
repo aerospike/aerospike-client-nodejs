@@ -41,6 +41,8 @@ int add_operation(as_operations *ops, uint32_t opcode, Local<Object> params,
 		return add_exp_op(ops, opcode, params, log);
 	case CDT_OPS_OFFSET:
 		return add_cdt_op(ops, opcode, params, log);
+	case STRING_OPS_OFFSET:
+		return add_string_op(ops, opcode, params, log);
 	default:
 		return AS_NODE_PARAM_ERR;
 	}

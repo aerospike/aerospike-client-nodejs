@@ -54,3 +54,4 @@ v8::Local<v8::Object> abortStatus();
 v8::Local<v8::Object> commitStatus();
 v8::Local<v8::Object> txnState();
 v8::Local<v8::Object> txnCapacity();
+v8::Local<v8::Object> string_enum_values();
