@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+Breaking changes below require a **major** version bump; they are intended to ship in **7.0.0**.
+
 * **Breaking Changes**
   * `exp.string.concat(policy, second, bin)`: the second argument must be a **string literal** (C `as_exp_string_concat`). List-valued operands must use **`exp.string.concatList(policy, valuesExp, bin)`** (C `as_exp_string_concat_list`).
   * `exp.string.regexReplace` now takes **`policy` first**, matching the C macro signature; the `flags` argument is reserved (current C expansion does not pack regex flags on the wire).
