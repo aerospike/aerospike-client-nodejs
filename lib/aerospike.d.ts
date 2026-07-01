@@ -2044,6 +2044,19 @@ export namespace policy {
          */
         public compress?: boolean;
         /**
+         * Request server error detail fields in responses.
+         *
+         * * 0 - disabled (no error details returned). Default.
+         * * 1 - return subcode only.
+         * * 2 - return subcode and human-readable message.
+         *
+         * Requires Aerospike Server version >= 8.1.3.
+         *
+         * @default 0
+         * @see {@link subcodeNamespace}
+         */
+        public errorDetailVerbosity?: number;
+        /**
          * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
          * be applied to creating a connection plus optional user authentication. Otherwise,
          * socket_timeout or total_timeout will be used depending on their values.
@@ -8123,6 +8136,16 @@ export class AerospikeError extends Error {
      */
     readonly inDoubt?: boolean;
     /**
+     * Server error detail subcode. When {@link BasePolicy#errorDetailVerbosity}
+     * is >= 1 and the server returns structured error details, this field
+     * contains the numeric subcode. Zero when no subcode was returned.
+     *
+     * Subcode values are only meaningful paired with {@link #code}.
+     *
+     * @see {@link subcodeNamespace}
+     */
+    readonly subcode: number;
+    /**
      * Constructs a new instace of AerospikeError.
      */
     constructor(message?: string, command?: any);
@@ -9594,6 +9617,19 @@ export interface BasePolicyOptions {
      * @since v3.14.0
      */
     compress?: boolean;
+    /**
+     * Request server error detail fields in responses.
+     *
+     * * 0 - disabled (no error details returned). Default.
+     * * 1 - return subcode only.
+     * * 2 - return subcode and human-readable message.
+     *
+     * Requires Aerospike Server version >= 8.1.3.
+     *
+     * @default 0
+     * @see {@link subcodeNamespace}
+     */
+    errorDetailVerbosity?: number;
     /**
      * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
      * be applied to creating a connection plus optional user authentication. Otherwise,
@@ -19436,3 +19472,92 @@ x     */
 }
 
 export {statusNamespace as status}
+
+/**
+ * Error detail verbosity levels and server subcode constants.
+ *
+ * Subcodes are organized by parent status code. A subcode integer is only
+ * meaningful paired with its parent {@link statusNamespace|status code}.
+ */
+declare namespace subcodeNamespace {
+    export const AEROSPIKE_ERROR_DETAIL_NONE: 0;
+    export const ERROR_DETAIL_NONE: 0;
+    export const AEROSPIKE_ERROR_DETAIL_SUBCODE: 1;
+    export const ERROR_DETAIL_SUBCODE: 1;
+    export const AEROSPIKE_ERROR_DETAIL_MESSAGE: 2;
+    export const ERROR_DETAIL_MESSAGE: 2;
+    export const AEROSPIKE_SUB_NONE: 0;
+    export const NONE: 0;
+    export const AEROSPIKE_SUB_PARAM_TTL_INVALID: 1;
+    export const PARAM_TTL_INVALID: 1;
+    export const AEROSPIKE_SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE: 2;
+    export const PARAM_BITS_OFFSET_OUT_OF_RANGE: 2;
+    export const AEROSPIKE_SUB_PARAM_BITS_SIZE_OUT_OF_RANGE: 3;
+    export const PARAM_BITS_SIZE_OUT_OF_RANGE: 3;
+    export const AEROSPIKE_SUB_PARAM_BITS_RESIZE_EXCEEDED: 4;
+    export const PARAM_BITS_RESIZE_EXCEEDED: 4;
+    export const AEROSPIKE_SUB_PARAM_BIN_COUNT_TOO_LARGE: 5;
+    export const PARAM_BIN_COUNT_TOO_LARGE: 5;
+    export const AEROSPIKE_SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED: 1;
+    export const UNAVAIL_INITIAL_BALANCE_UNRESOLVED: 1;
+    export const AEROSPIKE_SUB_UNAVAIL_REPLICA_UNAVAILABLE: 2;
+    export const UNAVAIL_REPLICA_UNAVAILABLE: 2;
+    export const AEROSPIKE_SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY: 1;
+    export const UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY: 1;
+    export const AEROSPIKE_SUB_UNSUPP_FEAT_GENERIC: 2;
+    export const UNSUPP_FEAT_GENERIC: 2;
+    export const AEROSPIKE_SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP: 1;
+    export const BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP: 1;
+    export const AEROSPIKE_SUB_BIN_NAME_COUNT_TOO_LARGE: 1;
+    export const BIN_NAME_COUNT_TOO_LARGE: 1;
+    export const AEROSPIKE_SUB_FORBID_XDR_FILTER_BLOCKED: 1;
+    export const FORBID_XDR_FILTER_BLOCKED: 1;
+    export const AEROSPIKE_SUB_FORBID_SET_COUNT_STOP_WRITES: 2;
+    export const FORBID_SET_COUNT_STOP_WRITES: 2;
+    export const AEROSPIKE_SUB_FORBID_SET_SIZE_STOP_WRITES: 3;
+    export const FORBID_SET_SIZE_STOP_WRITES: 3;
+    export const AEROSPIKE_SUB_FORBID_CLOCK_SKEW_STOP_WRITES: 4;
+    export const FORBID_CLOCK_SKEW_STOP_WRITES: 4;
+    export const AEROSPIKE_SUB_FORBID_REPLACE_CONFLICT_RESOLVING: 5;
+    export const FORBID_REPLACE_CONFLICT_RESOLVING: 5;
+    export const AEROSPIKE_SUB_FORBID_TRUNCATED: 6;
+    export const FORBID_TRUNCATED: 6;
+    export const AEROSPIKE_SUB_FORBID_MASKING_POLICY_BLOCKED: 7;
+    export const FORBID_MASKING_POLICY_BLOCKED: 7;
+    export const AEROSPIKE_SUB_FORBID_DURABILITY_VIOLATION: 8;
+    export const FORBID_DURABILITY_VIOLATION: 8;
+    export const AEROSPIKE_SUB_FORBID_MASKING_ROLE_VIOLATION: 9;
+    export const FORBID_MASKING_ROLE_VIOLATION: 9;
+    export const AEROSPIKE_SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS: 1;
+    export const OPNOT_CDT_INDEX_OUT_OF_BOUNDS: 1;
+    export const AEROSPIKE_SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS: 2;
+    export const OPNOT_CDT_RANK_OUT_OF_BOUNDS: 2;
+    export const AEROSPIKE_SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW: 3;
+    export const OPNOT_CDT_BOUNDED_LIST_OVERFLOW: 3;
+    export const AEROSPIKE_SUB_OPNOT_HLL_INDEX_BITS_UNSET: 4;
+    export const OPNOT_HLL_INDEX_BITS_UNSET: 4;
+    export const AEROSPIKE_SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS: 5;
+    export const OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS: 5;
+    export const AEROSPIKE_SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS: 6;
+    export const OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS: 6;
+    export const AEROSPIKE_SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH: 7;
+    export const OPNOT_HLL_CANNOT_FOLD_MINHASH: 7;
+    export const AEROSPIKE_SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE: 8;
+    export const OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE: 8;
+    export const AEROSPIKE_SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: 9;
+    export const OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: 9;
+    export const AEROSPIKE_SUB_FILTERED_META: 1;
+    export const FILTERED_META: 1;
+    export const AEROSPIKE_SUB_FILTERED_BINS: 2;
+    export const FILTERED_BINS: 2;
+    export const AEROSPIKE_SUB_FILTERED_META_EVAL_FAILED: 3;
+    export const FILTERED_META_EVAL_FAILED: 3;
+    export const AEROSPIKE_SUB_FILTERED_BINS_EVAL_FAILED: 4;
+    export const FILTERED_BINS_EVAL_FAILED: 4;
+    export const AEROSPIKE_SUB_MRT_BLOCKED_RECORD_LOCKED: 1;
+    export const MRT_BLOCKED_RECORD_LOCKED: 1;
+    export const AEROSPIKE_SUB_MRT_BLOCKED_ID_MISMATCH: 2;
+    export const MRT_BLOCKED_ID_MISMATCH: 2;
+}
+
+export {subcodeNamespace as subcode}

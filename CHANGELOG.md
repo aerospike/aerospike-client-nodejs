@@ -13,6 +13,7 @@ Breaking changes below require a **major** version bump; they are intended to sh
   * `strings.substrRange(bin, start, end)` — the third parameter is the **exclusive end** index (not a length).
 
 * **Improvements**
+  * Enhanced error detail support (Aerospike Server 8.1.3+): added `BasePolicy.errorDetailVerbosity` to request server subcodes and messages, exposed `AerospikeError.subcode`, and added the `Aerospike.subcode` integer constants module.
   * String package (Aerospike Server 8.1.3+): aligned `aerospike/strings` and `exp.string` with the C client `stage` string APIs — `append` / `prepend`, `snip(bin, start, end)` with half-open `[start, end)`, `substrRange(bin, start, end)` (third parameter is the exclusive end index, not a length), and expression helpers `concat` / `concatList` matching `as_exp_string_concat` / `as_exp_string_concat_list`.
   * Documented that nested string `operate()` context uses the flat string-op wire envelope (not CDT nested layout), that replace-style **expression** ops use a **QUOTED** pair on the wire, and that multi string ops on the same bin may return ordered per-op results when the server uses RESPOND_ALL_OPS (same family as MAP/BIT/HLL in the C client).
 

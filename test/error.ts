@@ -47,6 +47,7 @@ describe('AerospikeError #noserver', function () {
       expect(subject).to.have.property('file', null)
       expect(subject).to.have.property('line', null)
       expect(subject).to.have.property('inDoubt', false)
+      expect(subject).to.have.property('subcode', 0)
     })
 
     it('sets an error message', function () {
@@ -85,7 +86,8 @@ describe('AerospikeError #noserver', function () {
         func: 'connect',
         file: 'lib/client.js',
         line: 101,
-        inDoubt: true
+        inDoubt: true,
+        subcode: 3
       }
       const subject = (ASError as any).fromASError(error)
       expect(subject).to.have.property('code', -11)
@@ -94,6 +96,7 @@ describe('AerospikeError #noserver', function () {
       expect(subject).to.have.property('file', 'lib/client.js')
       expect(subject).to.have.property('line', 101)
       expect(subject).to.have.property('inDoubt', true)
+      expect(subject).to.have.property('subcode', 3)
     })
 
     it('replaces error codes with descriptive messages', function () {
