@@ -10681,8 +10681,12 @@ export interface ConfigPolicies {
 export interface ConfigProvider {
     /**
     * Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
-    * initialization and whenever the file changes. The policies fields in the file
-    * override all command policies as well as all policies specified in the Node.js Client {@link Config}.
+    * initialization and whenever the file changes. Most policy fields in the file override command policies
+    * and policies specified in the Node.js Client {@link Config}.
+    *
+    * {@link policy.key|send_key} is resolved as a union: dynamic config can enable send-key
+    * (<code>send_key: true</code>) but cannot disable it (<code>send_key: false</code> is ignored).
+    * If any layer sets send-key, writes use {@link policy.key.SEND}.
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.
