@@ -57,7 +57,13 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "TTL", as_exp_ops::_AS_EXP_CODE_TTL);
 	set(exp_ops, "SET_NAME", as_exp_ops::_AS_EXP_CODE_SET_NAME);
 	set(exp_ops, "KEY_EXIST", as_exp_ops::_AS_EXP_CODE_KEY_EXIST);
-	set(exp_ops, "IS_TOMBSTONE", as_exp_ops::_AS_EXP_CODE_NOT);
+	/*
+	 * IS_TOMBSTONE must map only to _AS_EXP_CODE_IS_TOMBSTONE (as_exp.h). Do not
+	 * register a second "IS_TOMBSTONE" entry or map this key to _AS_EXP_CODE_NOT:
+	 * exp.isTombstone() in JS uses exp.ops.IS_TOMBSTONE; a wrong opcode breaks
+	 * tombstone filter semantics for customers.
+	 */
+	set(exp_ops, "IS_TOMBSTONE", as_exp_ops::_AS_EXP_CODE_IS_TOMBSTONE);
 	set(exp_ops, "MEMORY_SIZE", as_exp_ops::_AS_EXP_CODE_MEMORY_SIZE);
 	set(exp_ops, "RECORD_SIZE", as_exp_ops::_AS_EXP_CODE_RECORD_SIZE);
 
@@ -66,8 +72,8 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "BIN_TYPE", as_exp_ops::_AS_EXP_CODE_BIN_TYPE);
 
 	set(exp_ops, "REMOVE_RESULT", as_exp_ops::_AS_EXP_CODE_REMOVE_RESULT);
-	set(exp_ops, "MAP_KEYS", as_exp_ops::_AS_EXP_CODE_MAP_KEYS);
-	set(exp_ops, "MAP_VALUES", as_exp_ops::_AS_EXP_CODE_MAP_VALUES);
+	set(exp_ops, "MAP_KEYS_IN", as_exp_ops::_AS_EXP_CODE_MAP_KEYS_IN);
+	set(exp_ops, "MAP_VALUES_IN", as_exp_ops::_AS_EXP_CODE_MAP_VALUES_IN);
 
 	set(exp_ops, "QUOTE", as_exp_ops::_AS_EXP_CODE_QUOTE);
 	set(exp_ops, "CALL", as_exp_ops::_AS_EXP_CODE_CALL);
@@ -138,6 +144,8 @@ Local<Object> exp_opcode_values()
 	set(exp_sys, "CALL_CDT", as_exp_call_system_type::_AS_EXP_SYS_CALL_CDT);
 	set(exp_sys, "CALL_BITS", as_exp_call_system_type::_AS_EXP_SYS_CALL_BITS);
 	set(exp_sys, "CALL_HLL", as_exp_call_system_type::_AS_EXP_SYS_CALL_HLL);
+	set(exp_sys, "CALL_STRING", as_exp_call_system_type::_AS_EXP_SYS_CALL_STRING);
+	set(exp_sys, "CALL_REPR", as_exp_call_system_type::_AS_EXP_SYS_CALL_REPR);
 	set(exp_sys, "FLAG_MODIFY_LOCAL",
 		as_exp_call_system_type::_AS_EXP_SYS_FLAG_MODIFY_LOCAL);
 

@@ -183,6 +183,8 @@ NAN_MODULE_INIT(Aerospike)
 	export("bitOperations", bit_opcode_values());
 	export("hllOperations", hll_opcode_values());
 	export("expOperations", expop_opcode_values());
+	export("string", string_enum_values());
+	export("stringOperations", string_opcode_values());
 	export("cdtOperations", cdt_opcode_values());
 	export("policy", policy());
 	export("status", status());

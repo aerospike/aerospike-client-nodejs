@@ -1,6 +1,6 @@
 {
   "name": "aerospike",
-  "version": "6.7.1",
+  "version": "7.0.0",
   "description": "Aerospike Client Library",
   "keywords": [
     "aerospike",
@@ -40,8 +40,7 @@
   "scripts": {
     "install": "npm run build",
     "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
-    "build-test": "cd test && tsc && cd ..",
-    "test": "npm run build-test && mocha test/${npm_config_testfile:-}",
+    "test": "mocha test/${npm_config_testfile:-}",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore scripts",
@@ -52,7 +51,7 @@
     "apidocs": "jsdoc -c jsdoc.json",
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand lib/aerospike.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
-    "valgrind": "npm run build-test && valgrind --smc-check=all-non-file node ./node_modules/mocha/bin/_mocha -g '#slow' -i",
+    "valgrind": "valgrind --leak-check=full --smc-check=all-non-file node $(which mocha) -g '#slow' -i",
     "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
     "prepare": "husky install",
     "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
@@ -87,6 +86,7 @@
     "p-throttle": "^8.1.0",
     "standard": "^17.1.0",
     "tmp": "^0.2.4",
+    "tsx": "^4.21.0",
     "typedoc": "^0.28.15",
     "typedoc-plugin-rename-defaults": "^0.7.1",
     "typescript": "^5.9.3",
