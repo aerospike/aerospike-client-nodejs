@@ -27,6 +27,7 @@ import * as helper from './test_helper.ts'
 
 const status = Aerospike.status
 const subcode = Aerospike.subcode
+const errorDetailVerbosity = Aerospike.errorDetailVerbosity
 const lists = Aerospike.lists
 const bitwise = Aerospike.bitwise
 
@@ -66,17 +67,17 @@ describe('error detail verbosity', function () {
     await client.put(bitsKey, { [binName]: Buffer.from([1, 2, 3, 4, 5]) })
   })
 
-  it('exposes subcode constants from Aerospike.subcode', function () {
-    expect(subcode.ERROR_DETAIL_NONE).to.equal(0)
-    expect(subcode.ERROR_DETAIL_SUBCODE).to.equal(1)
-    expect(subcode.ERROR_DETAIL_MESSAGE).to.equal(2)
+  it('exposes error detail verbosity and subcode constants', function () {
+    expect(errorDetailVerbosity.NONE).to.equal(0)
+    expect(errorDetailVerbosity.SUBCODE).to.equal(1)
+    expect(errorDetailVerbosity.MESSAGE).to.equal(2)
     expect(subcode.OPNOT_CDT_BOUNDED_LIST_OVERFLOW).to.equal(3)
     expect(subcode.PARAM_BITS_SIZE_OUT_OF_RANGE).to.equal(3)
   })
 
   it('write generation mismatch at verbosity 0 returns no subcode', async function () {
     const policy = new Aerospike.WritePolicy({
-      errorDetailVerbosity: subcode.ERROR_DETAIL_NONE,
+      errorDetailVerbosity: errorDetailVerbosity.NONE,
       gen: Aerospike.policy.gen.EQ,
       generation: 99
     })
@@ -91,7 +92,7 @@ describe('error detail verbosity', function () {
 
   it('write generation mismatch at verbosity 1 returns no dispatchable subcode', async function () {
     const policy = new Aerospike.WritePolicy({
-      errorDetailVerbosity: subcode.ERROR_DETAIL_SUBCODE,
+      errorDetailVerbosity: errorDetailVerbosity.SUBCODE,
       gen: Aerospike.policy.gen.EQ,
       generation: 99
     })
@@ -105,7 +106,7 @@ describe('error detail verbosity', function () {
 
   it('write generation mismatch at verbosity 2 still has no dispatchable subcode', async function () {
     const policy = new Aerospike.WritePolicy({
-      errorDetailVerbosity: subcode.ERROR_DETAIL_MESSAGE,
+      errorDetailVerbosity: errorDetailVerbosity.MESSAGE,
       gen: Aerospike.policy.gen.EQ,
       generation: 99
     })
@@ -121,7 +122,7 @@ describe('error detail verbosity', function () {
   it('get on missing key at verbosity 2 returns record not found', async function () {
     const missingKey = keygen.string(helper.namespace, helper.set, { prefix: 'test/error_detail_missing' })()
     const policy = new Aerospike.ReadPolicy({
-      errorDetailVerbosity: subcode.ERROR_DETAIL_MESSAGE
+      errorDetailVerbosity: errorDetailVerbosity.MESSAGE
     })
 
     const error = await expectError(() => client.get(missingKey, policy))
@@ -133,7 +134,7 @@ describe('error detail verbosity', function () {
 
   it('list index out of bounds returns op-not-applicable subcode', async function () {
     const policy = new Aerospike.OperatePolicy({
-      errorDetailVerbosity: subcode.ERROR_DETAIL_MESSAGE
+      errorDetailVerbosity: errorDetailVerbosity.MESSAGE
     })
 
     const error = await expectError(() =>
@@ -144,7 +145,7 @@ describe('error detail verbosity', function () {
 
   it('bounded list insert overflow returns op-not-applicable subcode', async function () {
     const policy = new Aerospike.OperatePolicy({
-      errorDetailVerbosity: subcode.ERROR_DETAIL_MESSAGE
+      errorDetailVerbosity: errorDetailVerbosity.MESSAGE
     })
     const listPolicy = new Aerospike.ListPolicy({
       order: lists.order.ORDERED,
@@ -161,7 +162,7 @@ describe('error detail verbosity', function () {
 
   it('bit size out of range returns parameter error subcode', async function () {
     const policy = new Aerospike.OperatePolicy({
-      errorDetailVerbosity: subcode.ERROR_DETAIL_MESSAGE
+      errorDetailVerbosity: errorDetailVerbosity.MESSAGE
     })
 
     const error = await expectError(() =>

@@ -2053,7 +2053,7 @@ export namespace policy {
          * Requires Aerospike Server version >= 8.1.3.
          *
          * @default 0
-         * @see {@link subcodeNamespace}
+         * @see {@link errorDetailVerbosityNamespace}
          */
         public errorDetailVerbosity?: number;
         /**
@@ -9627,7 +9627,7 @@ export interface BasePolicyOptions {
      * Requires Aerospike Server version >= 8.1.3.
      *
      * @default 0
-     * @see {@link subcodeNamespace}
+     * @see {@link errorDetailVerbosityNamespace}
      */
     errorDetailVerbosity?: number;
     /**
@@ -19478,89 +19478,215 @@ x     */
 export {statusNamespace as status}
 
 /**
- * Error detail verbosity levels and server subcode constants.
+ * Error detail verbosity levels for {@link BasePolicy#errorDetailVerbosity}.
+ *
+ * Requires Aerospike Server version >= 8.1.3.
+ */
+declare namespace errorDetailVerbosityNamespace {
+    /**
+     * No error details requested (default).
+     */
+    export const NONE: 0;
+    /**
+     * Request subcode only from the server on error responses.
+     */
+    export const SUBCODE: 1;
+    /**
+     * Request subcode and human-readable message from the server on error responses.
+     */
+    export const MESSAGE: 2;
+}
+
+export {errorDetailVerbosityNamespace as errorDetailVerbosity}
+
+/**
+ * Server error subcode constants.
  *
  * Subcodes are organized by parent status code. A subcode integer is only
  * meaningful paired with its parent {@link statusNamespace|status code}.
+ * Always dispatch on the `(code, subcode)` pair.
+ *
+ * For verbosity levels see {@link errorDetailVerbosityNamespace}.
  */
 declare namespace subcodeNamespace {
-    export const AEROSPIKE_ERROR_DETAIL_NONE: 0;
-    export const ERROR_DETAIL_NONE: 0;
-    export const AEROSPIKE_ERROR_DETAIL_SUBCODE: 1;
-    export const ERROR_DETAIL_SUBCODE: 1;
-    export const AEROSPIKE_ERROR_DETAIL_MESSAGE: 2;
-    export const ERROR_DETAIL_MESSAGE: 2;
-    export const AEROSPIKE_SUB_NONE: 0;
+    /**
+     * No dispatchable subcode. Reserved as 0 across all status families.
+     */
     export const NONE: 0;
-    export const AEROSPIKE_SUB_PARAM_TTL_INVALID: 1;
+    /**
+     * Per-record TTL exceeds the namespace's max-ttl.
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
     export const PARAM_TTL_INVALID: 1;
-    export const AEROSPIKE_SUB_PARAM_BITS_OFFSET_OUT_OF_RANGE: 2;
+    /**
+     * Bit op offset lands past the blob (or above the proto cap).
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
     export const PARAM_BITS_OFFSET_OUT_OF_RANGE: 2;
-    export const AEROSPIKE_SUB_PARAM_BITS_SIZE_OUT_OF_RANGE: 3;
+    /**
+     * Bit op size is out of range (e.g. zero, or too large).
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
     export const PARAM_BITS_SIZE_OUT_OF_RANGE: 3;
-    export const AEROSPIKE_SUB_PARAM_BITS_RESIZE_EXCEEDED: 4;
+    /**
+     * Blob resize would exceed RECORD_MAX_BLOB_SIZE.
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
     export const PARAM_BITS_RESIZE_EXCEEDED: 4;
-    export const AEROSPIKE_SUB_PARAM_BIN_COUNT_TOO_LARGE: 5;
+    /**
+     * Write would exceed the per-record bin-count limit.
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
     export const PARAM_BIN_COUNT_TOO_LARGE: 5;
-    export const AEROSPIKE_SUB_UNAVAIL_INITIAL_BALANCE_UNRESOLVED: 1;
+    /**
+     * Cluster is still resolving initial partition balance at startup.
+     * Paired with {@link statusNamespace.ERR_CLUSTER|ERR_CLUSTER}.
+     */
     export const UNAVAIL_INITIAL_BALANCE_UNRESOLVED: 1;
-    export const AEROSPIKE_SUB_UNAVAIL_REPLICA_UNAVAILABLE: 2;
+    /**
+     * A needed replica is unavailable (likely a partition split).
+     * Paired with {@link statusNamespace.ERR_CLUSTER|ERR_CLUSTER}.
+     */
     export const UNAVAIL_REPLICA_UNAVAILABLE: 2;
-    export const AEROSPIKE_SUB_UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY: 1;
+    /**
+     * MRT attempted against a non-SC (AP) namespace.
+     * Paired with {@link statusNamespace.ERR_UNSUPPORTED_FEATURE|ERR_UNSUPPORTED_FEATURE}.
+     */
     export const UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY: 1;
-    export const AEROSPIKE_SUB_UNSUPP_FEAT_GENERIC: 2;
+    /**
+     * Requested feature is unsupported in this context (generic).
+     * Paired with {@link statusNamespace.ERR_UNSUPPORTED_FEATURE|ERR_UNSUPPORTED_FEATURE}.
+     */
     export const UNSUPP_FEAT_GENERIC: 2;
-    export const AEROSPIKE_SUB_BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP: 1;
+    /**
+     * HLL op needs an existing bin and can't auto-create one.
+     * Paired with {@link statusNamespace.ERR_BIN_NOT_FOUND|ERR_BIN_NOT_FOUND}.
+     */
     export const BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP: 1;
-    export const AEROSPIKE_SUB_BIN_NAME_COUNT_TOO_LARGE: 1;
+    /**
+     * Write would exceed the per-record bin-count limit (UDF path).
+     * Paired with {@link statusNamespace.ERR_BIN_NAME|ERR_BIN_NAME}.
+     */
     export const BIN_NAME_COUNT_TOO_LARGE: 1;
-    export const AEROSPIKE_SUB_FORBID_XDR_FILTER_BLOCKED: 1;
+    /**
+     * Write bounced by an XDR ship filter at the destination.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_XDR_FILTER_BLOCKED: 1;
-    export const AEROSPIKE_SUB_FORBID_SET_COUNT_STOP_WRITES: 2;
+    /**
+     * Set-level record-count stop-writes limit reached.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_SET_COUNT_STOP_WRITES: 2;
-    export const AEROSPIKE_SUB_FORBID_SET_SIZE_STOP_WRITES: 3;
+    /**
+     * Set-level size stop-writes limit reached.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_SET_SIZE_STOP_WRITES: 3;
-    export const AEROSPIKE_SUB_FORBID_CLOCK_SKEW_STOP_WRITES: 4;
+    /**
+     * Writes stopped due to cluster clock skew.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_CLOCK_SKEW_STOP_WRITES: 4;
-    export const AEROSPIKE_SUB_FORBID_REPLACE_CONFLICT_RESOLVING: 5;
+    /**
+     * REPLACE / CREATE_OR_REPLACE forbidden while resolving conflicts.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_REPLACE_CONFLICT_RESOLVING: 5;
-    export const AEROSPIKE_SUB_FORBID_TRUNCATED: 6;
+    /**
+     * Write forbidden because the set/namespace is mid-truncate.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_TRUNCATED: 6;
-    export const AEROSPIKE_SUB_FORBID_MASKING_POLICY_BLOCKED: 7;
+    /**
+     * Access blocked by a data-masking policy.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_MASKING_POLICY_BLOCKED: 7;
-    export const AEROSPIKE_SUB_FORBID_DURABILITY_VIOLATION: 8;
+    /**
+     * Non-durable delete forbidden (would violate durability).
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_DURABILITY_VIOLATION: 8;
-    export const AEROSPIKE_SUB_FORBID_MASKING_ROLE_VIOLATION: 9;
+    /**
+     * Caller's role lacks unmasked access.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
     export const FORBID_MASKING_ROLE_VIOLATION: 9;
-    export const AEROSPIKE_SUB_OPNOT_CDT_INDEX_OUT_OF_BOUNDS: 1;
+    /**
+     * List index is outside the current element range.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_CDT_INDEX_OUT_OF_BOUNDS: 1;
-    export const AEROSPIKE_SUB_OPNOT_CDT_RANK_OUT_OF_BOUNDS: 2;
+    /**
+     * Requested rank is past the current population.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_CDT_RANK_OUT_OF_BOUNDS: 2;
-    export const AEROSPIKE_SUB_OPNOT_CDT_BOUNDED_LIST_OVERFLOW: 3;
+    /**
+     * Insert would exceed an ordered+bounded list's cap.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_CDT_BOUNDED_LIST_OVERFLOW: 3;
-    export const AEROSPIKE_SUB_OPNOT_HLL_INDEX_BITS_UNSET: 4;
+    /**
+     * HLL op needs index_bits but the sketch has none set.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_HLL_INDEX_BITS_UNSET: 4;
-    export const AEROSPIKE_SUB_OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS: 5;
+    /**
+     * Union needs to reduce index_bits but folding isn't allowed.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS: 5;
-    export const AEROSPIKE_SUB_OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS: 6;
+    /**
+     * Union needs to reduce minhash bits but folding isn't allowed.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS: 6;
-    export const AEROSPIKE_SUB_OPNOT_HLL_CANNOT_FOLD_MINHASH: 7;
+    /**
+     * Fold blocked because the sketch carries minhash bits.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_HLL_CANNOT_FOLD_MINHASH: 7;
-    export const AEROSPIKE_SUB_OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE: 8;
+    /**
+     * Fold target index_bits >= current (fold can only reduce).
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE: 8;
-    export const AEROSPIKE_SUB_OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: 9;
+    /**
+     * Intersect inputs have mismatched minhash parameters.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
     export const OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: 9;
-    export const AEROSPIKE_SUB_FILTERED_META: 1;
+    /**
+     * Record filtered out by a metadata-only filter expression.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
     export const FILTERED_META: 1;
-    export const AEROSPIKE_SUB_FILTERED_BINS: 2;
+    /**
+     * Record filtered out by a bin-reading filter expression.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
     export const FILTERED_BINS: 2;
-    export const AEROSPIKE_SUB_FILTERED_META_EVAL_FAILED: 3;
+    /**
+     * A metadata filter expression failed to evaluate.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
     export const FILTERED_META_EVAL_FAILED: 3;
-    export const AEROSPIKE_SUB_FILTERED_BINS_EVAL_FAILED: 4;
+    /**
+     * A bin filter expression failed to evaluate.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
     export const FILTERED_BINS_EVAL_FAILED: 4;
-    export const AEROSPIKE_SUB_MRT_BLOCKED_RECORD_LOCKED: 1;
+    /**
+     * Record is provisionally locked by another MRT.
+     * Paired with {@link statusNamespace.ERR_MRT_BLOCKED|ERR_MRT_BLOCKED}.
+     */
     export const MRT_BLOCKED_RECORD_LOCKED: 1;
-    export const AEROSPIKE_SUB_MRT_BLOCKED_ID_MISMATCH: 2;
+    /**
+     * Op belongs to a different MRT than the one holding the lock.
+     * Paired with {@link statusNamespace.ERR_MRT_BLOCKED|ERR_MRT_BLOCKED}.
+     */
     export const MRT_BLOCKED_ID_MISMATCH: 2;
 }
 
