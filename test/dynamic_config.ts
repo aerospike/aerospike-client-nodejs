@@ -145,6 +145,7 @@ describe('Dynamic Config tests', async function () {
 
               const filePath: string = dyn_config_path_edit;
               const lineNumber: number = 10; // zero-based index
+              // CLIENT-4977: send_key false in dynamic config is ignored; reload is still exercised.
               let newLine: string = '    send_key: false';
 
               let lines: Array<string> = fs.readFileSync(filePath, 'utf-8').split('\n');
@@ -159,8 +160,7 @@ describe('Dynamic Config tests', async function () {
               query = dummyClient.query(helper.namespace, helper.set)
               records = await query.results()
 
-              expect(records[0].key.key).to.be.undefined
-
+              expect(records[0].key.key).to.not.be.undefined
 
               newLine = '    send_key: true';
 
@@ -278,13 +278,7 @@ describe('Dynamic Config tests', async function () {
               
             }
 
-            process.env.AEROSPIKE_CLIENT_CONFIG_URL = dyn_config_path;
-
-            config.policies = { 
-              write: new Aerospike.WritePolicy({
-                key: Aerospike.policy.key.SEND
-              })
-            }
+            process.env.AEROSPIKE_CLIENT_CONFIG_URL = dyn_config_path_send_key_true;
 
             let dummyClient = await Aerospike.connect(config)
             try{
@@ -302,7 +296,7 @@ describe('Dynamic Config tests', async function () {
               let records: any = await query.results()
 
 
-              expect(records[0].key.key).to.be.undefined
+              expect(records[0].key.key).to.not.be.undefined
 
             }
             finally{
@@ -316,7 +310,7 @@ describe('Dynamic Config tests', async function () {
 
           })
 
-          it('Prefers the AEROSPIKE_CLIENT_CONFIG_URL value over the command-level policy', async function () {
+          it('send_key false in dynamic config does not override application SEND policy', async function () {
 
             const config: any = {
               hosts: helper.config.hosts,
@@ -350,7 +344,7 @@ describe('Dynamic Config tests', async function () {
               let records: any = await query.results()
 
 
-              expect(records[0].key.key).to.be.undefined
+              expect(records[0].key.key).to.not.be.undefined
             }
             finally{
               await dummyClient.close()
@@ -406,7 +400,7 @@ describe('Dynamic Config tests', async function () {
 
           })
 
-          it('Prefers the AEROSPIKE_CLIENT_CONFIG_URL value over all other values', async function () {
+          it('send_key true from configProvider enables send-key (union)', async function () {
 
             const config: any = {
               hosts: helper.config.hosts,
@@ -445,7 +439,7 @@ describe('Dynamic Config tests', async function () {
               let records: any = await query.results()
 
 
-              expect(records[0].key.key).to.be.undefined
+              expect(records[0].key.key).to.not.be.undefined
 
             }
             finally{

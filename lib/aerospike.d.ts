@@ -2044,6 +2044,19 @@ export namespace policy {
          */
         public compress?: boolean;
         /**
+         * Request server error detail fields in responses.
+         *
+         * * 0 - disabled (no error details returned). Default.
+         * * 1 - return subcode only.
+         * * 2 - return subcode and human-readable message.
+         *
+         * Requires Aerospike Server version >= 8.1.3.
+         *
+         * @default 0
+         * @see {@link errorDetailVerbosityNamespace}
+         */
+        public errorDetailVerbosity?: number;
+        /**
          * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
          * be applied to creating a connection plus optional user authentication. Otherwise,
          * socket_timeout or total_timeout will be used depending on their values.
@@ -8123,6 +8136,16 @@ export class AerospikeError extends Error {
      */
     readonly inDoubt?: boolean;
     /**
+     * Server error detail subcode. When {@link BasePolicy#errorDetailVerbosity}
+     * is >= 1 and the server returns structured error details, this field
+     * contains the numeric subcode. Zero when no subcode was returned.
+     *
+     * Subcode values are only meaningful paired with {@link #code}.
+     *
+     * @see {@link subcodeNamespace}
+     */
+    readonly subcode: number;
+    /**
      * Constructs a new instace of AerospikeError.
      */
     constructor(message?: string, command?: any);
@@ -9595,6 +9618,19 @@ export interface BasePolicyOptions {
      */
     compress?: boolean;
     /**
+     * Request server error detail fields in responses.
+     *
+     * * 0 - disabled (no error details returned). Default.
+     * * 1 - return subcode only.
+     * * 2 - return subcode and human-readable message.
+     *
+     * Requires Aerospike Server version >= 8.1.3.
+     *
+     * @default 0
+     * @see {@link errorDetailVerbosityNamespace}
+     */
+    errorDetailVerbosity?: number;
+    /**
      * Socket connect timeout in milliseconds. If connect_timeout greater than zero, it will
      * be applied to creating a connection plus optional user authentication. Otherwise,
      * socket_timeout or total_timeout will be used depending on their values.
@@ -10645,8 +10681,12 @@ export interface ConfigPolicies {
 export interface ConfigProvider {
     /**
     * Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
-    * initialization and whenever the file changes. The policies fields in the file
-    * override all command policies as well as all policies specified in the Node.js Client {@link Config}.
+    * initialization and whenever the file changes. Most policy fields in the file override command policies
+    * and policies specified in the Node.js Client {@link Config}.
+    *
+    * {@link policy.key|send_key} is resolved as a union: dynamic config can enable send-key
+    * (<code>send_key: true</code>) but cannot disable it (<code>send_key: false</code> is ignored).
+    * If any layer sets send-key, writes use {@link policy.key.SEND}.
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.
@@ -19436,3 +19476,218 @@ x     */
 }
 
 export {statusNamespace as status}
+
+/**
+ * Error detail verbosity levels for {@link BasePolicy#errorDetailVerbosity}.
+ *
+ * Requires Aerospike Server version >= 8.1.3.
+ */
+declare namespace errorDetailVerbosityNamespace {
+    /**
+     * No error details requested (default).
+     */
+    export const NONE: 0;
+    /**
+     * Request subcode only from the server on error responses.
+     */
+    export const SUBCODE: 1;
+    /**
+     * Request subcode and human-readable message from the server on error responses.
+     */
+    export const MESSAGE: 2;
+}
+
+export {errorDetailVerbosityNamespace as errorDetailVerbosity}
+
+/**
+ * Server error subcode constants.
+ *
+ * Subcodes are organized by parent status code. A subcode integer is only
+ * meaningful paired with its parent {@link statusNamespace|status code}.
+ * Always dispatch on the `(code, subcode)` pair.
+ *
+ * For verbosity levels see {@link errorDetailVerbosityNamespace}.
+ */
+declare namespace subcodeNamespace {
+    /**
+     * No dispatchable subcode. Reserved as 0 across all status families.
+     */
+    export const NONE: 0;
+    /**
+     * Per-record TTL exceeds the namespace's max-ttl.
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
+    export const PARAM_TTL_INVALID: 1;
+    /**
+     * Bit op offset lands past the blob (or above the proto cap).
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
+    export const PARAM_BITS_OFFSET_OUT_OF_RANGE: 2;
+    /**
+     * Bit op size is out of range (e.g. zero, or too large).
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
+    export const PARAM_BITS_SIZE_OUT_OF_RANGE: 3;
+    /**
+     * Blob resize would exceed RECORD_MAX_BLOB_SIZE.
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
+    export const PARAM_BITS_RESIZE_EXCEEDED: 4;
+    /**
+     * Write would exceed the per-record bin-count limit.
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
+    export const PARAM_BIN_COUNT_TOO_LARGE: 5;
+    /**
+     * Cluster is still resolving initial partition balance at startup.
+     * Paired with {@link statusNamespace.ERR_CLUSTER|ERR_CLUSTER}.
+     */
+    export const UNAVAIL_INITIAL_BALANCE_UNRESOLVED: 1;
+    /**
+     * A needed replica is unavailable (likely a partition split).
+     * Paired with {@link statusNamespace.ERR_CLUSTER|ERR_CLUSTER}.
+     */
+    export const UNAVAIL_REPLICA_UNAVAILABLE: 2;
+    /**
+     * MRT attempted against a non-SC (AP) namespace.
+     * Paired with {@link statusNamespace.ERR_UNSUPPORTED_FEATURE|ERR_UNSUPPORTED_FEATURE}.
+     */
+    export const UNSUPP_FEAT_MRT_REQUIRES_STRONG_CONSISTENCY: 1;
+    /**
+     * Requested feature is unsupported in this context (generic).
+     * Paired with {@link statusNamespace.ERR_UNSUPPORTED_FEATURE|ERR_UNSUPPORTED_FEATURE}.
+     */
+    export const UNSUPP_FEAT_GENERIC: 2;
+    /**
+     * HLL op needs an existing bin and can't auto-create one.
+     * Paired with {@link statusNamespace.ERR_BIN_NOT_FOUND|ERR_BIN_NOT_FOUND}.
+     */
+    export const BIN_NOT_FOUND_HLL_CANNOT_CREATE_WITH_OP: 1;
+    /**
+     * Write would exceed the per-record bin-count limit (UDF path).
+     * Paired with {@link statusNamespace.ERR_BIN_NAME|ERR_BIN_NAME}.
+     */
+    export const BIN_NAME_COUNT_TOO_LARGE: 1;
+    /**
+     * Write bounced by an XDR ship filter at the destination.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_XDR_FILTER_BLOCKED: 1;
+    /**
+     * Set-level record-count stop-writes limit reached.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_SET_COUNT_STOP_WRITES: 2;
+    /**
+     * Set-level size stop-writes limit reached.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_SET_SIZE_STOP_WRITES: 3;
+    /**
+     * Writes stopped due to cluster clock skew.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_CLOCK_SKEW_STOP_WRITES: 4;
+    /**
+     * REPLACE / CREATE_OR_REPLACE forbidden while resolving conflicts.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_REPLACE_CONFLICT_RESOLVING: 5;
+    /**
+     * Write forbidden because the set/namespace is mid-truncate.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_TRUNCATED: 6;
+    /**
+     * Access blocked by a data-masking policy.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_MASKING_POLICY_BLOCKED: 7;
+    /**
+     * Non-durable delete forbidden (would violate durability).
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_DURABILITY_VIOLATION: 8;
+    /**
+     * Caller's role lacks unmasked access.
+     * Paired with {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN}.
+     */
+    export const FORBID_MASKING_ROLE_VIOLATION: 9;
+    /**
+     * List index is outside the current element range.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_CDT_INDEX_OUT_OF_BOUNDS: 1;
+    /**
+     * Requested rank is past the current population.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_CDT_RANK_OUT_OF_BOUNDS: 2;
+    /**
+     * Insert would exceed an ordered+bounded list's cap.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_CDT_BOUNDED_LIST_OVERFLOW: 3;
+    /**
+     * HLL op needs index_bits but the sketch has none set.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_HLL_INDEX_BITS_UNSET: 4;
+    /**
+     * Union needs to reduce index_bits but folding isn't allowed.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_HLL_CANNOT_REDUCE_INDEX_BITS: 5;
+    /**
+     * Union needs to reduce minhash bits but folding isn't allowed.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_HLL_CANNOT_REDUCE_MINHASH_BITS: 6;
+    /**
+     * Fold blocked because the sketch carries minhash bits.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_HLL_CANNOT_FOLD_MINHASH: 7;
+    /**
+     * Fold target index_bits >= current (fold can only reduce).
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_HLL_FOLD_INDEX_BITS_TOO_LARGE: 8;
+    /**
+     * Intersect inputs have mismatched minhash parameters.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: 9;
+    /**
+     * Record filtered out by a metadata-only filter expression.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
+    export const FILTERED_META: 1;
+    /**
+     * Record filtered out by a bin-reading filter expression.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
+    export const FILTERED_BINS: 2;
+    /**
+     * A metadata filter expression failed to evaluate.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
+    export const FILTERED_META_EVAL_FAILED: 3;
+    /**
+     * A bin filter expression failed to evaluate.
+     * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.
+     */
+    export const FILTERED_BINS_EVAL_FAILED: 4;
+    /**
+     * Record is provisionally locked by another MRT.
+     * Paired with {@link statusNamespace.ERR_MRT_BLOCKED|ERR_MRT_BLOCKED}.
+     */
+    export const MRT_BLOCKED_RECORD_LOCKED: 1;
+    /**
+     * Op belongs to a different MRT than the one holding the lock.
+     * Paired with {@link statusNamespace.ERR_MRT_BLOCKED|ERR_MRT_BLOCKED}.
+     */
+    export const MRT_BLOCKED_ID_MISMATCH: 2;
+}
+
+export {subcodeNamespace as subcode}

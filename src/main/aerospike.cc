@@ -188,6 +188,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("cdtOperations", cdt_opcode_values());
 	export("policy", policy());
 	export("status", status());
+	export("subcode", subcode());
 	export("ttl", ttl_enum_values());
 	export("auth", auth_mode_enum_values());
 	export("batchTypes", batchTypes());
