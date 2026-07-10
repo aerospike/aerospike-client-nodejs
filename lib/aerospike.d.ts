@@ -10622,7 +10622,7 @@ export interface ConfigPolicies {
      */
     apply?: policy.ApplyPolicy;
     /**
-     * Batch policy. For more information, see {@link policy.BasePolicy | BasePolicy}
+     * Batch policy used in batch read commands. For more information, see {@link policy.BasePolicy | BasePolicy}
      */
     batch?: policy.BasePolicy;
     /**
@@ -10630,7 +10630,7 @@ export interface ConfigPolicies {
      */
     batchApply?: policy.BatchApplyPolicy;
     /**
-     * Batch parent write policy. For more information, see {@link policy.BatchPolicy | BatchPolicy}
+     * Batch policy used in batch write commands. For more information, see {@link policy.BatchPolicy | BatchPolicy}
      */
     batchParentWrite?: policy.BatchPolicy;
     /**
