@@ -4170,7 +4170,7 @@ export class Client extends EventEmitter {
     *   hosts: '192.168.33.10:3000',
     *   // Timeouts disabled, latency dependent on server location. Configure as needed.
     *   policies: {
-    *     batch : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
+    *     batchParentWrite : new Aerospike.BatchPolicy({socketTimeout : 0, totalTimeout : 0}),
     *   }
     * }
     *
