@@ -4,38 +4,28 @@ const { execSync } = require('child_process')
 const [pkg] = process.argv.slice(2)
 
 if (!pkg) {
-  console.error('Usage: node check-npm-script.js <package> ')
+  console.error('Usage: node verify-aerospike-npm-scripts.js <package>')
   process.exit(1)
 }
 
-let preInstallScript = null
-let installScript = null
-let postInstallScript = null
-
-try {
-  preInstallScript = execSync(`npm view ${pkg} scripts.preinstall`, { encoding: 'utf8' }).trim()
-  installScript = execSync(`npm view ${pkg} scripts.install`, { encoding: 'utf8' }).trim()
-  postInstallScript = execSync(`npm view ${pkg} scripts.postinstall`, { encoding: 'utf8' }).trim()
-  console.log(postInstallScript)
-} catch (err) {
-  console.error(`Failed to fetch scripts for ${pkg}:`, err.message)
-  process.exit(1)
+function readScript (name) {
+  try {
+    return execSync(`npm view ${pkg} scripts.${name}`, { encoding: 'utf8' }).trim()
+  } catch (err) {
+    if (String(err.message).includes('Scripts')) {
+      return ''
+    }
+    throw err
+  }
 }
 
-if (preInstallScript !== '') {
-  console.log(preInstallScript)
-  console.error('❌ preinstall script does not match expected value')
-  process.exit(1)
+const lifecycleScripts = ['preinstall', 'install', 'postinstall']
+for (const name of lifecycleScripts) {
+  const value = readScript(name)
+  if (value !== '') {
+    console.error(`❌ unexpected ${name} script on published package: ${value}`)
+    process.exit(1)
+  }
 }
 
-if (installScript !== 'npm-run-all removeExtraBinaries build') {
-  console.error('❌ install script does not match expected value')
-  process.exit(1)
-}
-
-if (postInstallScript !== '') {
-  console.error('❌ postinstall script does not match expected value')
-  process.exit(1)
-}
-
-console.log('✅ install scripts match expected value')
+console.log('✅ published package has no install lifecycle scripts')

@@ -66,7 +66,7 @@ jobs:
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
 
-  test-postinstall-script-removes-unneeded-binaries:
+  test-prebuilds-ignore-scripts:
     needs: get-runner-os
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     strategy:
@@ -97,20 +97,17 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - run: npm install --no-save *.tgz
+    - run: npm install --no-save --ignore-scripts *.tgz
       shell: bash
-
-    - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-      run: brew install jq
 
     - run: |
         set -ex
-        node_file_count=$(find lib/binding -type f | wc -l)
-        expected_file_count=$(echo "$NODEJS_TAGS" | jq 'length')
-        test $node_file_count -eq $expected_file_count
-      env:
-        # We pass the JSON input here so that the bash shell doesn't strip the double quotes from the strings
-        NODEJS_TAGS: ${{ inputs.nodejs-tags }}
+        abi=$(node -p "process.versions.modules")
+        platform=$(node -p "process.platform")
+        arch=$(node -p "process.arch")
+        prebuild="prebuilds/${platform}-${arch}/aerospike.${abi}.node"
+        test -f "$prebuild"
+        node -e "require('aerospike'); console.log('ok')"
       working-directory: node_modules/aerospike
       shell: bash
 
@@ -193,7 +190,7 @@ jobs:
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
         # npm install *.tgz --no-save
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # macOS x86 doesn't have tree by default
         # tree .
       shell: "bash -ex {0}"
@@ -631,7 +628,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
@@ -722,7 +719,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
@@ -790,7 +787,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
@@ -874,7 +871,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
@@ -956,7 +953,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
@@ -1025,7 +1022,7 @@ jobs:
 
       - run: |
           jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-          tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+          tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
           # tree .
         shell: "bash -ex {0}"
 
@@ -1112,7 +1109,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 

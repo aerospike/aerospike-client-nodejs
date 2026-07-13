@@ -4,114 +4,15 @@ permissions:
   contents: write
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
 
+# Production npm publish is not done from this repo. Release path:
+# 1. Promote the aerospike-nodejs-client release bundle to PROD in JFrog
+# 2. artifact-publisher publishes to registry.npmjs.org (JFrog webhook)
+# 3. Fast-forward master to stage manually after release
+#
+# master-upload-jfrog-build-to-npm.yml is legacy and unused.
 
 jobs:
-  # TODO: eventually we shouldn't need this job
   get-release-version:
     uses: ./.github/workflows/master-bump-version.yml
-
-  publish-to-npm:
-   name: Publish to npm
-   needs: [
-     get-release-version,
-   ]
-   uses: ./.github/workflows/master-upload-jfrog-build-to-npm.yml
-   with:
-     new_version: ${{ needs.get-release-version.outputs.new_master_version }}
-   secrets:
-     NPMRC_RELEASE: ${{ secrets.NPMRC_RELEASE }}
-     AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
-
-  verify-npm-install-scripts:
-    name: verify npm clean install works correctly
-    needs: [
-      publish-to-npm
-    ]
-    uses: ./.github/workflows/master-verify-npm-install.yml
-    with:
-      new_version: ${{ needs.get-release-version.outputs.new_master_version }}
-      scenario: 'omitscripts'
-
-  verify-npm-install-prod:
-    name: verify npm clean install works correctly
-    needs: [
-      get-release-version,
-      verify-npm-install-scripts
-    ]
-    uses: ./.github/workflows/master-verify-npm-install.yml
-    with:
-      new_version: ${{ needs.get-release-version.outputs.new_master_version }}
-      scenario: 'omitdev'
-
-  verify-npm-install:
-    name: verify npm clean install works correctly
-    needs: [
-      get-release-version,
-      verify-npm-install-prod
-    ]
-    uses: ./.github/workflows/master-verify-npm-install.yml
-    with:
-      new_version: ${{ needs.get-release-version.outputs.new_master_version }}
-      scenario: 'omitnone'
-
-  # reupload-master-to-jfrog:
-  #   name: Upload artifacts to JFrog
-  #   needs: [
-  #     # master-get-jfrog-version,
-  #     get-release-version,
-  #     #publish-to-npm,
-  #     verify-npm-install-scripts,
-  #     verify-npm-install-prod,
-  #     verify-npm-install
-  #   ]
-  #   uses: ./.github/workflows/shared-reupload-addons-to-jfrog.yml
-  #   with:
-  #     old_version: ${{ needs.master-get-jfrog-version.outputs.stage_version }}
-  #     new_version: ${{ needs.get-release-version.outputs.new_master_version }}
-  #     pipeline-stage: 'master'
-
-  # reupload-master-to-jfrog-npm-repo:
-  #   name: Upload artifacts to JFrog
-  #   needs: [
-  #     master-get-jfrog-version,
-  #     get-release-version,
-  #     #publish-to-npm,
-  #     verify-npm-install-scripts,
-  #     verify-npm-install-prod,
-  #     verify-npm-install,
-  #     reupload-master-to-jfrog
-  #   ]
-  #   uses: ./.github/workflows/shared-upload-npm-package-to-jfrog.yml
-  #   with:
-  #     new_version: ${{ needs.get-release-version.outputs.new_master_version }}
-  #     pipeline-stage: 'master'
-  #   secrets:
-  #     room_lane: ${{ secrets.room_lane }}
-
-
-#  ff-master-to-stage:
-#    uses: ./.github/workflows/fast-forward-merge.yml
-#    needs: [
-#      get-jfrog-stage-version,
-#      bump-dev-number,
-#      reupload-stage-to-jfrog,
-#      publish-to-npm
-#    ]
-#    with:
-#      ref_to_merge: origin/stage-CICD
-#      base_branch: master-test
-
-#  ff-stage-to-dev:
-#    uses: ./.github/workflows/fast-forward-merge.yml
-#    needs: [
-#      get-jfrog-stage-version,
-#      bump-dev-number,
-#      reupload-stage-to-jfrog,
-#      publish-to-npm
-#    ]
-#    with:
-#      ref_to_merge: origin/dev
-#      base_branch: stage
-

@@ -47,11 +47,11 @@ jobs:
       comprehensive-tests,
       stage-get-jfrog-version
     ]
-    uses: aerospike/aerospike-client-python/.github/workflows/promote-and-optionally-tag-release-bundle.yml@70de74e1518a6b0af8ef9430a59b3baab88dfddf
+    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
     with:
-      release-bundle-name: "aerospike-nodejs-client"
+      release-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
       release-bundle-version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
-      release-bundle-tag: ${{ needs.get-jfrog-build-info.outputs.tag_version }}
+      release-bundle-tag: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
       new-environment: TEST
       jfrog-project: database
     permissions:
