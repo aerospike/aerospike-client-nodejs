@@ -95,6 +95,7 @@ jobs:
   get-runner-os:
     outputs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
+      nodejs-matrix: ${{ steps.filter-nodejs-matrix.outputs.nodejs-matrix }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -115,15 +116,32 @@ jobs:
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
 
+    # Node 25 builds on macOS 15 runners only; Node 20–24 on macOS 14. Reusable workflow
+    # jobs cannot use matrix in job-level if, so filter the matrix here (Python client pattern).
+    - id: filter-nodejs-matrix
+      env:
+        NODEJS_TAGS: ${{ inputs.nodejs-tags }}
+        PLATFORM_TAG: ${{ inputs.platform-tag }}
+      run: |
+        filtered=$(echo "$NODEJS_TAGS" | jq -c --arg p "$PLATFORM_TAG" '
+          [.[] | select(
+            if .[1] == "25" then
+              ($p != "macosx_x86_64" and $p != "macosx_arm64")
+            else
+              ($p != "macosx_x86_64_2" and $p != "macosx_arm64_2")
+            end
+          )]
+        ')
+        echo "nodejs-matrix=${filtered}" >> "$GITHUB_OUTPUT"
+      shell: bash
+
   build-prebuild:
     needs: get-runner-os
+    if: ${{ needs.get-runner-os.outputs.nodejs-matrix != '[]' }}
     strategy:
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+        nodejs-tag: ${{ fromJSON(needs.get-runner-os.outputs.nodejs-matrix) }}
       fail-fast: false
-    if: |
-      ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64')) ||
-      (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
     uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
     with:
       runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
