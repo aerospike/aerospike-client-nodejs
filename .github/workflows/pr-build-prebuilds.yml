@@ -1,0 +1,78 @@
+name: PR build prebuilds
+
+run-name: PR prebuild smoke (${{ github.head_ref }}, manylinux_x86_64, no publish)
+
+permissions:
+  id-token: write
+  contents: read
+  statuses: write
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/ci/**'
+      - 'scripts/relocate-prebuilds.js'
+      - 'lib/native.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'binding.gyp'
+      - 'src/**'
+
+jobs:
+  build-prebuild-linux:
+    uses: ./.github/workflows/dev-build-node-cpp-bindings.yml
+    with:
+      platform-tag: manylinux_x86_64
+      version: ${{ github.head_ref }}
+      publish-build-info: false
+      run_tests: false
+    secrets:
+      soup_hat: ${{ secrets.soup_hat }}
+      cell_girl: ${{ secrets.cell_girl }}
+      song_loss: ${{ secrets.song_loss }}
+
+  verify-packed-install:
+    needs: build-prebuild-linux
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: "*.build"
+          merge-multiple: true
+          path: prebuilds
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 20
+
+      - name: Pack and verify Option B install without lifecycle scripts
+        run: |
+          set -ex
+          npm pack
+          PKG_TGZ=(aerospike-*.tgz)
+          npm install --no-save --ignore-scripts "${PKG_TGZ[0]}"
+          abi=$(node -p "process.versions.modules")
+          platform=$(node -p "process.platform")
+          arch=$(node -p "process.arch")
+          prebuild="node_modules/aerospike/prebuilds/${platform}-${arch}/aerospike.${abi}.node"
+          test -f "$prebuild"
+          node -e "require('aerospike'); console.log('ok')"
+          node -e "
+            const p = require('./node_modules/aerospike/package.json');
+            for (const s of ['preinstall','install','postinstall']) {
+              if (p.scripts?.[s]) { console.error('unexpected', s); process.exit(1); }
+            }
+          "
