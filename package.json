@@ -31,7 +31,7 @@
     "url": "https://github.com/aerospike/aerospike-client-nodejs/issues"
   },
   "scripts": {
-    "build": "node-gyp rebuild && node scripts/relocate-prebuilds.js",
+    "build": "node-gyp rebuild --addon_version=$(node -p \"require('./package.json').version\") && node scripts/relocate-prebuilds.js",
     "test": "mocha test/${npm_config_testfile:-}",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
