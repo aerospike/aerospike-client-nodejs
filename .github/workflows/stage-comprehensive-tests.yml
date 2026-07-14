@@ -56,17 +56,17 @@ jobs:
     - id: get-runner-os
       run: |
         declare -A map
-        map[manylinux_x86_64]='"ubuntu-22.04"'
-        map[manylinux_aarch64]='"ubuntu-22.04-arm"'
-        map[win_amd64]='"windows-2022"'
-        map[macosx_x86_64]='"macos-14-large"'
-        map[macosx_x86_64_2]='"macos-15-large"'
-        map[macosx_arm64]='["self-hosted", "macOS", "ARM64"]'
-        map[macosx_arm64_2]='"SMA3"'
+        map[linux_x86_64]='"ubuntu-22.04"'
+        map[linux_aarch64]='"ubuntu-22.04-arm"'
+        map[win32_x64]='"windows-2022"'
+        map[darwin_x86_64]='"macos-14-large"'
+        map[darwin_x86_64_2]='"macos-15-large"'
+        map[darwin_arm64]='["self-hosted", "macOS", "ARM64"]'
+        map[darwin_arm64_2]='"SMA3"'
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
 
-  test-postinstall-script-removes-unneeded-binaries:
+  test-prebuilds-ignore-scripts:
     needs: get-runner-os
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     strategy:
@@ -97,26 +97,23 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - run: npm install --no-save *.tgz
+    - run: npm install --no-save --ignore-scripts *.tgz
       shell: bash
-
-    - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-      run: brew install jq
 
     - run: |
         set -ex
-        node_file_count=$(find lib/binding -type f | wc -l)
-        expected_file_count=$(echo "$NODEJS_TAGS" | jq 'length')
-        test $node_file_count -eq $expected_file_count
-      env:
-        # We pass the JSON input here so that the bash shell doesn't strip the double quotes from the strings
-        NODEJS_TAGS: ${{ inputs.nodejs-tags }}
+        abi=$(node -p "process.versions.modules")
+        platform=$(node -p "process.platform")
+        arch=$(node -p "process.arch")
+        prebuild="prebuilds/${platform}-${arch}/aerospike.${abi}.node"
+        test -f "$prebuild"
+        node -e "require('aerospike'); console.log('ok')"
       working-directory: node_modules/aerospike
       shell: bash
 
   test-ee:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'darwin_x86_64') }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     strategy:
       matrix:
@@ -151,11 +148,11 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -164,7 +161,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -174,7 +171,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -193,17 +190,17 @@ jobs:
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
         # npm install *.tgz --no-save
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # macOS x86 doesn't have tree by default
         # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_arm64') }}
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64') }}
       run: npm ci --ignore-scripts
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux')}}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_')}}
       run: |
         cat .mocharc.yml
         OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run test
@@ -221,7 +218,7 @@ jobs:
 
   test-pnpm:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' || inputs.platform-tag == 'darwin_x86_64') }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     strategy:
       matrix:
@@ -256,11 +253,11 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -269,7 +266,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -279,7 +276,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -302,7 +299,7 @@ jobs:
       shell: "bash -ex {0}"
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_arm64') }}
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64') }}
       run: |
         npm ci --ignore-scripts;
         npm install -g pnpm@9.15.9 --ignore-scripts;
@@ -325,7 +322,7 @@ jobs:
 
   test-bun:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' || inputs.platform-tag == 'darwin_x86_64') }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     strategy:
       matrix:
@@ -360,11 +357,11 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -373,7 +370,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -383,7 +380,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -435,7 +432,7 @@ jobs:
 
   test-yarn:
     needs: get-runner-os
-    if: ${{ inputs.run_tests && (inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' || inputs.platform-tag == 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' || inputs.platform-tag == 'darwin_x86_64') }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     strategy:
       matrix:
@@ -470,11 +467,11 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -483,7 +480,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -493,7 +490,7 @@ jobs:
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -516,7 +513,7 @@ jobs:
       shell: "bash -ex {0}"
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_arm64' )}}
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64' )}}
       run: |
         npm ci --ignore-scripts
         npm install -g yarn
@@ -552,7 +549,7 @@ jobs:
           - valgrind
           - set-xdr-filter
       fail-fast: false
-    if: ${{ inputs.platform-tag == 'manylinux_x86_64' }}
+    if: ${{ inputs.platform-tag == 'linux_x86_64' }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -586,11 +583,11 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -599,7 +596,7 @@ jobs:
         docker-hub-password: ${{ secrets.cell_girl }}
 
     - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
       run: |
         if docker ps -aq | grep -q .; then
           docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
@@ -608,7 +605,7 @@ jobs:
         fi
 
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'manylinux_x86_64' || inputs.platform-tag == 'manylinux_aarch64' }}
+      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: false
@@ -631,12 +628,12 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         npm ci --ignore-scripts
         # tree ./node_modules
@@ -722,7 +719,7 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
@@ -749,7 +746,7 @@ jobs:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
-    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'macosx_x86_64' && inputs['platform-tag'] != 'win_amd64' && inputs['platform-tag']  != 'macosx_arm64' ) }}
+    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'darwin_x86_64' && inputs['platform-tag'] != 'win32_x64' && inputs['platform-tag']  != 'darwin_arm64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -790,21 +787,21 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         npm ci --ignore-scripts;
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
       run: |
         docker pull aerospike/aerospike-server:latest;
         npm run test --testfile=metrics_node_close.js -- --testMetrics true --h localhost --port 3000  --t 50000;
@@ -824,7 +821,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64') }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win32_x64' && inputs.platform-tag != 'darwin_x86_64') }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -857,7 +854,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Run latest Community edition Aerospike server
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
 
     - uses: ./.github/actions/wait-for-as-server-to-start
@@ -874,17 +871,17 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         npm ci --ignore-scripts;
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: npm run test -- --h localhost --port 3000;
 
     # - name: Set final commit status
@@ -901,7 +898,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win_amd64' && inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64' ) }}
+    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win32_x64' && inputs.platform-tag != 'darwin_x86_64' && inputs.platform-tag != 'darwin_arm64' ) }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -934,11 +931,11 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Run latest Community edition Aerospike server
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
 
     - name: Add 10ms latency to Docker traffic
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         sudo tc qdisc add dev lo root netem delay 10ms
 
@@ -956,19 +953,19 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         npm ci --ignore-scripts;
         # tree ./node_modules
         # tree ../node_modules
 
     - name: Run tests
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         npm run test --testfile=timeout_delay.js -- --testTimeoutDelay true --h localhost --port 3000;
         sudo tc qdisc del dev lo root netem
@@ -988,7 +985,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
-    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'macosx_x86_64' && inputs['platform-tag'] != 'win_amd64' && inputs['platform-tag'] != 'macosx_arm64' ) }}
+    if: ${{ inputs.run_tests && (inputs['platform-tag'] != 'darwin_x86_64' && inputs['platform-tag'] != 'win32_x64' && inputs['platform-tag'] != 'darwin_arm64' ) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
     steps:
@@ -1012,7 +1009,7 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       # Need to be able to save Docker Hub credentials to keychain
-      - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+      - if: ${{ inputs.platform-tag == 'darwin_arm64' }}
         run: security unlock-keychain -p ${{ secrets.song_loss }}
 
       - name: Set up JFrog credentials
@@ -1025,26 +1022,26 @@ jobs:
 
       - run: |
           jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-          tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+          tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
           # tree .
         shell: "bash -ex {0}"
 
       - name: Install test dependencies
-        if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+        if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
         run: |
           npm ci --ignore-scripts;
           # tree ./node_modules
           # tree ../node_modules
   
       - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-        #if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        #if: ${{ inputs.platform-tag == 'darwin_arm64' }}
         with:
           node-version: ${{ matrix.nodejs-tag[1] }}
 
       # REUSABLE SECTION 
 
       - name: Run tests
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        if: ${{ inputs.platform-tag == 'win32_x64' }}
         run: |
           npx tsc;
 
@@ -1062,7 +1059,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+    if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -1095,7 +1092,7 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: Run latest Community edition Aerospike server
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
 
     - uses: ./.github/actions/wait-for-as-server-to-start
@@ -1112,12 +1109,12 @@ jobs:
 
     - run: |
         jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/lib/binding'
+        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
         # tree .
       shell: "bash -ex {0}"
 
     - name: Install test dependencies
-      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         npm ci --ignore-scripts;
         # tree ./node_modules

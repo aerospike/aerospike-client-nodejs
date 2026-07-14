@@ -1,11 +1,9 @@
 name: 'Build node cpp bindings'
-run-name: 'Build node cpp bindings (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{ inputs.platform-tag }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
-
-# Build wheels on all (or select) Python versions supported by the Python client for a specific platform
+run-name: 'Build node cpp bindings (nodejs-tags=${{ inputs.nodejs-tags }}, platform-tag=${{ inputs.platform-tag }}, run_tests=${{ inputs.run_tests }}, publish-build-info=${{ inputs.publish-build-info }})'
 
 permissions:
-  # This is required for requesting the OIDC token
   id-token: write
+  contents: read
   statuses: write
 
 on:
@@ -22,23 +20,31 @@ on:
         type: boolean
         required: false
         default: false
+      publish-build-info:
+        type: boolean
+        required: false
+        default: false
+      jf-build-id:
+        type: string
+        required: false
+        default: ''
+      version:
+        type: string
+        required: false
       use-server-rc:
         required: false
         type: boolean
         default: false
-        description: 'Test against server release candidate?'
       server-tag:
         required: false
         type: string
         default: 'latest'
-        description: 'Server docker image tag'
       test-file:
         required: false
         type: string
         default: ''
   workflow_call:
     inputs:
-      # See workflow call hack in update-version.yml
       is_workflow_call:
         type: boolean
         default: true
@@ -57,22 +63,27 @@ on:
         type: boolean
         required: false
         default: false
+      publish-build-info:
+        type: boolean
+        required: false
+        default: false
+      jf-build-id:
+        type: string
+        required: false
+        default: ''
       use-server-rc:
         required: false
         type: boolean
         default: false
-        description: 'Test against server release candidate?'
       server-tag:
         required: false
         type: string
         default: 'latest'
-        description: 'Server docker image tag'
       test-file:
         required: false
         type: string
         default: ''
     secrets:
-      # Just make all the secrets required to make things simpler...
       soup_hat:
         required: true
       cell_girl:
@@ -84,6 +95,7 @@ jobs:
   get-runner-os:
     outputs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
+      nodejs-matrix: ${{ steps.filter-nodejs-matrix.outputs.nodejs-matrix }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -93,149 +105,66 @@ jobs:
 
     - id: get-runner-os
       run: |
+        # CI platform-tag naming (Node.js / prebuild conventions, not Python manylinux):
+        #   linux_{arch}   — GitHub-hosted Linux runners (glibc = runner image, not manylinux container)
+        #   darwin_{arch}  — matches process.platform "darwin"; _2 = macOS 15 runner (Node 25)
+        #   win32_x64      — matches process.platform "win32" + x64 (prebuilds/ win32-x64/)
         declare -A map
-        map[manylinux_x86_64]="ubuntu-22.04"
-        map[manylinux_aarch64]="ubuntu-22.04-arm"
-        map[win_amd64]="windows-2022"
-        map[macosx_x86_64]="macos-14-large"
-        map[macosx_x86_64_2]="macos-15-large"
-        map[macosx_arm64]="macos-14"
-        map[macosx_arm64_2]="macos-15"
+        map[linux_x86_64]="ubuntu-22.04"
+        map[linux_aarch64]="ubuntu-22.04-arm"
+        map[win32_x64]="windows-2022"
+        map[darwin_x86_64]="macos-14-large"
+        map[darwin_x86_64_2]="macos-15-large"
+        map[darwin_arm64]="macos-14"
+        map[darwin_arm64_2]="macos-15"
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
 
+    # Node 25 builds on macOS 15 runners only; Node 20–24 on macOS 14. Reusable workflow
+    # jobs cannot use matrix in job-level if, so filter the matrix here (Python client pattern).
+    - id: filter-nodejs-matrix
+      env:
+        NODEJS_TAGS: ${{ inputs.nodejs-tags }}
+        PLATFORM_TAG: ${{ inputs.platform-tag }}
+      run: |
+        filtered=$(echo "$NODEJS_TAGS" | jq -c --arg p "$PLATFORM_TAG" '
+          [.[] | select(
+            if .[1] == "25" then
+              ($p != "darwin_x86_64" and $p != "darwin_arm64")
+            else
+              ($p != "darwin_x86_64_2" and $p != "darwin_arm64_2")
+            end
+          )]
+        ')
+        echo "nodejs-matrix=${filtered}" >> "$GITHUB_OUTPUT"
+      shell: bash
 
-  cibuildbinding:
+  build-prebuild:
     needs: get-runner-os
+    if: ${{ needs.get-runner-os.outputs.nodejs-matrix != '[]' }}
     strategy:
       matrix:
-        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
+        nodejs-tag: ${{ fromJSON(needs.get-runner-os.outputs.nodejs-matrix) }}
       fail-fast: false
-    runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
-    env:
-      BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
-      MACOS_OPENSSL_VERSION: 3
-    steps:
-
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit
-
-    - name: Create status check message
-      run: echo STATUS_CHECK_MESSAGE="cibuildbinding (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
-        sha: ${{ github.sha }}
-
-    - name: Delete workspace
-      if: ${{ inputs.platform-tag != 'win_amd64' }}
-      run: rm -rf ${{ github.workspace }}/*
-
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-        submodules: recursive
-        fetch-depth: 0
-        ref: ${{ inputs.version }}
-
-    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
-      with:
-        node-version: ${{ matrix.nodejs-tag[1] }}
-
-    - name: 'Windows: Install C client deps'
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: nuget restore
-      working-directory: aerospike-client-c/vs
-
-    - name: 'Install libyaml'
-      if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
-      run: |
-        brew install libyaml
-
-    - if: ${{ startsWith(inputs.platform-tag, 'macosx_arm64') }}
-      name: Ensure that linker can find brew packages
-      # On mac m1, packages installed via brew are not in the linker's default library path
-      run: |
-        libraries=('libyaml' 'openssl')
-        for library in "${libraries[@]}"; do
-          LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix $library)/lib"
-        done
-        echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
-      shell: bash
-
-    - name: Replace AdditionalLibraryDirectories line in props file
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        $path = "props\nodejs.props"
-        $content = Get-Content $path -Raw
-        $pattern = '<AdditionalLibraryDirectories>.*?</AdditionalLibraryDirectories>'
-        $basePath = (Resolve-Path .).Path
-        $replacement = "<AdditionalLibraryDirectories>`$(NodejsPath);$basePath\packages\openssl-native.3.0.16\lib\win-x64\native;`%(AdditionalIncludeDirectories)</AdditionalLibraryDirectories>"
-        $updated = [System.Text.RegularExpressions.Regex]::Replace($content, $pattern, $replacement, 'Singleline')
-        Set-Content $path $updated
-      working-directory: aerospike-client-c/vs
-
-    - name: Print modified .props file
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: |
-        Get-Content "props\nodejs.props"
-      working-directory: aerospike-client-c/vs
-
-    - name: Build Binding
-      # Node.js 25 has compatibility issues with macOS 14
-      if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
-      run: |
-        ./scripts/build-c-client.sh;
-        npm ci --ignore-scripts;
-        # TODO: think this is redundant. node-pre-gyp is already in package.json
-        npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts;
-        npm run build;
-        ls lib/binding;
-
-    - name: Run tests
-      if: ${{ inputs.run_tests && !(startsWith(inputs.platform-tag, 'macosx_arm64') || inputs.platform-tag == 'win_amd64') }}
-      run: |
-        npm run test -- --h 172.17.0.2 --port 3000 --U superuser --P superuser;
-      env:
-        npm_config_testfile: ${{ inputs.test-file }}
-
-    - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-      env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
-      with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
-
-    - name: Cleanup Artifacts
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      shell: pwsh
-      run: |
-        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libssl.lib" -Destination "build\Release\libssl.lib" -Force
-        Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libcrypto.lib" -Destination "build\Release\libcrypto.lib" -Force
-        Remove-Item -Recurse -Force .\build\release\obj
-        Remove-Item -Force .\build\release\aerospike.pdb
-        Remove-Item -Force .\build\release\aerospike.ipdb
-        Remove-Item -Force .\build\release\aerospike.iobj
-
-    - name: Upload binding binaries to Github
-      # I just copy and pasted the same condition for building the bindings
-      if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build"
-        path: "lib/binding"
-
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
-      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-      with:
-        status: ${{ job.status }}
-        context: ${{ env.STATUS_CHECK_MESSAGE }}
-        sha: ${{ github.sha }}
+    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
+      gh-source-ref: ${{ inputs.version }}
+      jf-project: database
+      jf-build-name: nodejs-client
+      # Unique JFrog build-info per prebuild artifact (CICD-standard: {prefix}-buildinfo-{suffix}).
+      # Prefix is jf-build-id from dev-workflow (e.g. {run_id}-{run_attempt}); suffix is abi + platform.
+      jf-build-id: ${{ inputs.jf-build-id }}-buildinfo-${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}
+      jf-url: https://aerospike.jfrog.io
+      gh-artifact-name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
+      gh-artifact-directory: prebuilds
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      oidc-provider-name: database-gh-aerospike
+      oidc-audience: database-gh-aerospike
+      publish-build-info: ${{ inputs.publish-build-info }}
+      build-script-path: ./scripts/ci/build-node-prebuild.sh
+      working-directory: local
+      build-env: PLATFORM_TAG=${{ inputs.platform-tag }};NODE_VERSION=${{ matrix.nodejs-tag[1] }};MACOS_OPENSSL_VERSION=3
+    permissions:
+      id-token: write
+      contents: read

@@ -1,0 +1,52 @@
+permissions:
+  id-token: write
+
+on:
+  workflow_call:
+    inputs:
+      release-bundle-name:
+        type: string
+        required: true
+      release-bundle-version:
+        type: string
+        required: true
+      release-bundle-tag:
+        type: string
+        description: Optional tag to apply to release bundle when first creating it
+        required: false
+      new-environment:
+        type: string
+        required: true
+      jfrog-project:
+        type: string
+        required: true
+
+jobs:
+  promote-release-bundle:
+    runs-on: ubuntu-24.04
+    env:
+      RELEASE_BUNDLE_NAME: ${{ inputs.release-bundle-name }}
+      RELEASE_BUNDLE_VERSION: ${{ inputs.release-bundle-version }}
+      JF_PROJECT: ${{ inputs.jfrog-project }}
+    steps:
+    - name: Setup JFrog CLI
+      uses: jfrog/setup-jfrog-cli@1641575d87647fb969c0545f0b6a76873e328b7c # v5.0.0
+      env:
+        JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: ${{ inputs.jfrog-project }}
+      with:
+        version: '2.92.0'
+        oidc-provider-name: database-gh-aerospike
+        oidc-audience: database-gh-aerospike
+
+    - if: ${{ inputs.release-bundle-tag != '' }}
+      run: jf release-bundle-annotate --project "$JF_PROJECT" --tag "$RELEASE_BUNDLE_TAG" "$RELEASE_BUNDLE_NAME" "$RELEASE_BUNDLE_VERSION"
+      env:
+        RELEASE_BUNDLE_TAG: ${{ inputs.release-bundle-tag }}
+
+    - uses: aerospike/shared-workflows/.github/actions/promote-release-bundle@8a4e717507bc3394c4defac0abe4ffd73b4f4e14
+      with:
+        bundle-name: ${{ env.RELEASE_BUNDLE_NAME }}
+        version: ${{ env.RELEASE_BUNDLE_VERSION }}
+        environment: ${{ inputs.new-environment }}
+        jf-project: ${{ env.JF_PROJECT }}

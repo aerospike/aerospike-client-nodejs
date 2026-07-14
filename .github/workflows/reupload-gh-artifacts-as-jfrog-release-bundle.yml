@@ -1,0 +1,129 @@
+on:
+  workflow_call:
+    inputs:
+      jfrog_build_id:
+        required: true
+        type: string
+      next_release_version:
+        required: true
+        type: string
+      latest_tag:
+        required: true
+        type: string
+      dry-run:
+        required: true
+        type: boolean
+
+jobs:
+  pack-npm-tarball:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      artifact-name: npm-package
+    steps:
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+      with:
+        egress-policy: audit
+
+    - name: Checkout repository
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      with:
+        ref: ${{ inputs.latest_tag }}
+        submodules: recursive
+        fetch-depth: 0
+
+    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+      with:
+        pattern: "*.build"
+        merge-multiple: true
+        path: prebuilds
+
+    - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+      with:
+        node-version: 20
+
+    - name: Pack npm tarball
+      run: |
+        npm pack
+        ls -la aerospike-*.tgz
+
+    - name: Verify Option B install without lifecycle scripts
+      run: |
+        set -ex
+        PKG_TGZ=(aerospike-*.tgz)
+        npm install --no-save --ignore-scripts "${PKG_TGZ[0]}"
+        abi=$(node -p "process.versions.modules")
+        platform=$(node -p "process.platform")
+        arch=$(node -p "process.arch")
+        prebuild="node_modules/aerospike/prebuilds/${platform}-${arch}/aerospike.${abi}.node"
+        test -f "$prebuild"
+        node -e "require('aerospike'); console.log('ok')"
+        node -e "
+          const p = require('./node_modules/aerospike/package.json');
+          for (const s of ['preinstall','install','postinstall']) {
+            if (p.scripts?.[s]) { console.error('unexpected', s); process.exit(1); }
+          }
+        "
+
+    - name: Upload npm package artifact
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        name: npm-package
+        path: aerospike-*.tgz
+        retention-days: 1
+
+  upload-artifacts-to-jfrog:
+    needs: [pack-npm-tarball]
+    if: ${{ inputs.dry-run == false }}
+    uses: aerospike/shared-workflows/.github/workflows/reusable_deploy-artifacts.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      jf-project: database
+      jf-build-name: nodejs-client
+      gh-artifact-name: ${{ needs.pack-npm-tarball.outputs.artifact-name }}
+      # Parent build-info for the packed .tgz; aggregates child IDs via jf-metadata-build-id.
+      jf-build-id: ${{ inputs.jfrog_build_id }}
+      jf-metadata-build-id: ${{ inputs.jfrog_build_id }}-buildinfo
+      version: ${{ inputs.next_release_version }}
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      jf-url: https://aerospike.jfrog.io
+      oidc-provider-name: database-gh-aerospike
+      oidc-audience: database-gh-aerospike
+      dry-run: false
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+
+  create-release-bundle:
+    if: ${{ inputs.dry-run == false }}
+    needs: [upload-artifacts-to-jfrog]
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    with:
+      jf-project: database
+      jf-build-names: nodejs-client:${{ inputs.jfrog_build_id }}
+      jf-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
+      version: ${{ inputs.next_release_version }}
+      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      jf-url: https://aerospike.jfrog.io
+      oidc-provider-name: database-gh-aerospike
+      oidc-audience: database-gh-aerospike
+      dry-run: false
+    permissions:
+      contents: read
+      id-token: write
+
+  promote-release-bundle-to-dev:
+    if: ${{ inputs.dry-run == false }}
+    needs: [create-release-bundle]
+    uses: ./.github/workflows/promote-and-optionally-tag-release-bundle.yml
+    with:
+      jfrog-project: database
+      release-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
+      release-bundle-version: ${{ inputs.next_release_version }}
+      release-bundle-tag: ${{ inputs.latest_tag }}
+      new-environment: DEV
+    permissions:
+      id-token: write

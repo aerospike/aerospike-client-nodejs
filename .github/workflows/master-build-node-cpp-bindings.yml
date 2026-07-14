@@ -53,13 +53,13 @@ jobs:
     - id: get-runner-os
       run: |
         declare -A map
-        map[manylinux_x86_64]="ubuntu-22.04"
-        map[manylinux_aarch64]="ubuntu-22.04-arm"
-        map[win_amd64]="windows-2022"
-        map[macosx_x86_64]="macos-14-large"
-        map[macosx_x86_64_2]="macos-15-large"
-        map[macosx_arm64]="SMA2"
-        map[macosx_arm64_2]="SMA3"
+        map[linux_x86_64]="ubuntu-22.04"
+        map[linux_aarch64]="ubuntu-22.04-arm"
+        map[win32_x64]="windows-2022"
+        map[darwin_x86_64]="macos-14-large"
+        map[darwin_x86_64_2]="macos-15-large"
+        map[darwin_arm64]="SMA2"
+        map[darwin_arm64_2]="SMA3"
     
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
@@ -93,7 +93,7 @@ jobs:
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - name: Delete workspace
-      if: ${{ inputs.platform-tag != 'win_amd64' }}
+      if: ${{ inputs.platform-tag != 'win32_x64' }}
       run: rm -rf ${{ github.workspace }}/*
 
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -106,22 +106,22 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - name: 'Windows: Install C client deps'
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      if: ${{ inputs.platform-tag == 'win32_x64' }}
       run: nuget restore
       working-directory: aerospike-client-c/vs
 
     - name: 'Install libyaml'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       run: |
         brew install libyaml
 
     - name: 'Install libyaml'
-      if: ${{ inputs.platform-tag == 'macosx_x86_64_2' }}
+      if: ${{ inputs.platform-tag == 'darwin_x86_64_2' }}
       run: |
         brew install libyaml
 
     - name: Replace AdditionalLibraryDirectories line in props file
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      if: ${{ inputs.platform-tag == 'win32_x64' }}
       run: |
         $path = "props\nodejs.props"
         $content = Get-Content $path -Raw
@@ -133,19 +133,18 @@ jobs:
       working-directory: aerospike-client-c/vs
 
     - name: Print modified .props file
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      if: ${{ inputs.platform-tag == 'win32_x64' }}
       run: |
         Get-Content "props\nodejs.props"
       working-directory: aerospike-client-c/vs
 
     - name: Build Binding
-      if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'macosx_x86_64' && inputs.platform-tag != 'macosx_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'macosx_x86_64_2' && inputs.platform-tag != 'macosx_arm64_2')) }}
+      if: ${{ (matrix.nodejs-tag[1] == '25' && (inputs.platform-tag != 'darwin_x86_64' && inputs.platform-tag != 'darwin_arm64'))  || (matrix.nodejs-tag[1] != '25' && (inputs.platform-tag != 'darwin_x86_64_2' && inputs.platform-tag != 'darwin_arm64_2')) }}
       run: |
         ./scripts/build-c-client.sh;
         npm ci --ignore-scripts;
-        npm install @mapbox/node-pre-gyp@2.0.3 --ignore-scripts;
         npm run build;
-        ls lib/binding;
+        ls -R prebuilds;
       env:
         NEW_VERSION: ${{ inputs.version }}
 
