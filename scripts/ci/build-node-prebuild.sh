@@ -4,13 +4,61 @@ set -euo pipefail
 PLATFORM_TAG="${PLATFORM_TAG:?PLATFORM_TAG is required}"
 NODE_VERSION="${NODE_VERSION:?NODE_VERSION is required}"
 
+setup_node_windows() {
+  local node_dir="" candidate major toolcache
+
+  toolcache="${RUNNER_TOOL_CACHE:-/c/hostedtoolcache/windows}"
+  shopt -s nullglob
+  for candidate in "${toolcache}/Node/${NODE_VERSION}."*/x64; do
+    if [[ -x "${candidate}/node.exe" ]]; then
+      node_dir="${candidate}"
+      break
+    fi
+  done
+  shopt -u nullglob
+
+  if [[ -n "${node_dir}" ]]; then
+    export PATH="${node_dir}:${PATH}"
+    return
+  fi
+
+  if command -v node >/dev/null 2>&1; then
+    major="$(node -p "process.version.split('.')[0].slice(1)")"
+    if [[ "${major}" == "${NODE_VERSION}" ]]; then
+      return
+    fi
+  fi
+
+  # Fallback: download latest patch for the requested major from nodejs.org.
+  node_dir="$(pwsh -NoProfile -Command "
+    \$major = '${NODE_VERSION}'
+    \$dest = Join-Path \$env:RUNNER_TEMP \"node-\$major\"
+    if (Test-Path (Join-Path \$dest 'node.exe')) {
+      \$unix = '/' + \$dest.Substring(0,1).ToLower() + \$dest.Substring(2).Replace('\\', '/')
+      Write-Output \$unix
+      exit 0
+    }
+    \$index = Invoke-RestMethod 'https://nodejs.org/dist/index.json'
+    \$match = \$index | Where-Object { \$_.version -match \"^v\$major\\.\" } | Select-Object -First 1
+    if (-not \$match) { exit 1 }
+    \$ver = \$match.version.TrimStart('v')
+    \$zip = Join-Path \$env:RUNNER_TEMP \"node-v\$ver-win-x64.zip\"
+    Invoke-WebRequest -Uri \"https://nodejs.org/dist/v\$ver/node-v\$ver-win-x64.zip\" -OutFile \$zip
+    Expand-Archive -Path \$zip -DestinationPath \$dest -Force
+    Move-Item -Path (Join-Path \$dest \"node-v\$ver-win-x64\\*\") -Destination \$dest -Force
+    \$unix = '/' + \$dest.Substring(0,1).ToLower() + \$dest.Substring(2).Replace('\\', '/')
+    Write-Output \$unix
+  ")" || {
+    echo "ERROR: could not provision Node.js ${NODE_VERSION} on Windows" >&2
+    exit 1
+  }
+
+  export PATH="${node_dir}:${PATH}"
+}
+
 setup_node() {
   if [[ "${RUNNER_OS:-}" == "Windows" ]]; then
-    if ! command -v node >/dev/null 2>&1 \
-      || [[ "$(node -p "process.version.split('.')[0].slice(1)")" != "${NODE_VERSION}" ]]; then
-      choco install nodejs --version="${NODE_VERSION}.18.0" -y --no-progress
-      export PATH="/c/Program Files/nodejs:$PATH"
-    fi
+    setup_node_windows
     return
   fi
 

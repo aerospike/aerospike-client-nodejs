@@ -12,6 +12,7 @@ on:
     paths:
       - '.github/workflows/**'
       - 'scripts/ci/**'
+      - 'scripts/build-native.js'
       - 'scripts/relocate-prebuilds.js'
       - 'lib/native.js'
       - 'package.json'
