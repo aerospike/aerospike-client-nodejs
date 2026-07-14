@@ -34,6 +34,10 @@ patch_windows_props() {
   ''' --working-directory aerospike-client-c/vs
 }
 
+# Post-build Windows hygiene from legacy build-package.ps1 (whole build/Release was copied
+# into lib/binding). Copies OpenSSL import libs beside aerospike.node and strips MSVC
+# debug/intermediate files. Option B publishes only prebuilds/*.node, so the .lib copy is
+# redundant for CI artifacts; linking is handled by patch_windows_props() before build.
 cleanup_windows_artifacts() {
   pwsh -NoProfile -Command '''
     Copy-Item -Path "aerospike-client-c\vs\packages\openssl-native.3.0.16\lib\win-x64\native\libssl.lib" -Destination "build\Release\libssl.lib" -Force

@@ -152,9 +152,9 @@ jobs:
       gh-source-ref: ${{ inputs.version }}
       jf-project: database
       jf-build-name: nodejs-client
-      # Unique JFrog build-info per prebuild artifact: {run-prefix}-buildinfo-{abi}-{platform}.
-      # run-prefix is jf-build-id from dev-workflow (e.g. {run_id}-{run_attempt}).
-      jf-build-id: ${{ inputs.jf-build-id != '' && inputs.jf-build-id || format('{0}-{1}', github.run_id, github.run_attempt) }}-buildinfo-${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}
+      # Unique JFrog build-info per prebuild artifact (CICD-standard: {prefix}-buildinfo-{suffix}).
+      # Prefix is jf-build-id from dev-workflow (e.g. {run_id}-{run_attempt}); suffix is abi + platform.
+      jf-build-id: ${{ inputs.jf-build-id }}-buildinfo-${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}
       jf-url: https://aerospike.jfrog.io
       gh-artifact-name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
       gh-artifact-directory: prebuilds
