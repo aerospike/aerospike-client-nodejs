@@ -23,6 +23,8 @@ jobs:
     needs: [bump-dev-number-and-tag]
     with:
       version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      # Run-level JFrog build-info prefix (not the final per-artifact ID). Each matrix
+      # cell in dev-build-node-cpp-bindings.yml appends -buildinfo-{abi}-{platform}.
       jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
       publish-build-info: true
       run_tests: false
@@ -35,6 +37,8 @@ jobs:
     needs: [bump-dev-number-and-tag, build-node-cpp-addons]
     uses: ./.github/workflows/reupload-gh-artifacts-as-jfrog-release-bundle.yml
     with:
+      # Parent deploy build-info ID; child compile jobs use {id}-buildinfo-{abi}-{platform}.
+      # jf-metadata-build-id in reupload links children via {id}-buildinfo.
       jfrog_build_id: ${{ github.run_id }}-${{ github.run_attempt }}
       next_release_version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       latest_tag: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}

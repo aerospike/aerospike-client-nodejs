@@ -83,6 +83,7 @@ jobs:
       jf-project: database
       jf-build-name: nodejs-client
       gh-artifact-name: ${{ needs.pack-npm-tarball.outputs.artifact-name }}
+      # Parent build-info for the packed .tgz; aggregates child IDs via jf-metadata-build-id.
       jf-build-id: ${{ inputs.jfrog_build_id }}
       jf-metadata-build-id: ${{ inputs.jfrog_build_id }}-buildinfo
       version: ${{ inputs.next_release_version }}

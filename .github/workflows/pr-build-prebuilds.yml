@@ -1,6 +1,6 @@
 name: PR build prebuilds
 
-run-name: PR prebuild smoke (${{ github.head_ref }}, manylinux_x86_64, no publish)
+run-name: PR prebuild smoke (${{ github.head_ref }}, linux_x86_64, no publish)
 
 permissions:
   id-token: write
@@ -23,7 +23,7 @@ jobs:
   build-prebuild-linux:
     uses: ./.github/workflows/dev-build-node-cpp-bindings.yml
     with:
-      platform-tag: manylinux_x86_64
+      platform-tag: linux_x86_64
       version: ${{ github.head_ref }}
       publish-build-info: false
       run_tests: false

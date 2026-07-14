@@ -1,8 +1,8 @@
 name: Build Node C++ Addons
 run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
 
-# Builds manylinux wheels and source distribution
-# Optionally run tests on manylinux wheels
+# Builds native prebuilds
+# Optionally run tests on prebuilds
 # Then upload artifacts to Github
 
 
@@ -32,13 +32,13 @@ jobs:
     strategy:
       matrix:
         platform-tag: [
-          "manylinux_x86_64",
-          "manylinux_aarch64",
-          "macosx_x86_64",
-          "macosx_x86_64_2",
-          "macosx_arm64",
-          "macosx_arm64_2",
-          "win_amd64"
+          "linux_x86_64",
+          "linux_aarch64",
+          "darwin_x86_64",
+          "darwin_x86_64_2",
+          "darwin_arm64",
+          "darwin_arm64_2",
+          "win32_x64"
         ]
       fail-fast: false
     uses: ./.github/workflows/master-build-node-cpp-bindings.yml

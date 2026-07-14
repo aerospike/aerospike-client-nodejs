@@ -4,7 +4,7 @@ permissions:
   contents: write
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
 
 # Production npm publish is not done from this repo. Release path:
 # 1. Promote the aerospike-nodejs-client release bundle to PROD in JFrog

@@ -32,6 +32,8 @@ on:
       version:
         type: string
         required: true
+      # Run-level prefix forwarded to dev-build-node-cpp-bindings.yml, which suffixes
+      # -buildinfo-{abi}-{platform} per Node × platform matrix job (unique per artifact).
       jf-build-id:
         type: string
         required: false
@@ -57,13 +59,13 @@ jobs:
     strategy:
       matrix:
         platform-tag: [
-          "manylinux_x86_64",
-          "manylinux_aarch64",
-          "macosx_x86_64",
-          "macosx_x86_64_2",
-          "macosx_arm64",
-          "macosx_arm64_2",
-          "win_amd64"
+          "linux_x86_64",
+          "linux_aarch64",
+          "darwin_x86_64",
+          "darwin_x86_64_2",
+          "darwin_arm64",
+          "darwin_arm64_2",
+          "win32_x64"
         ]
       fail-fast: false
     uses: ./.github/workflows/dev-build-node-cpp-bindings.yml
@@ -71,6 +73,7 @@ jobs:
       platform-tag: ${{ matrix.platform-tag }}
       run_tests: ${{ inputs.run_tests }}
       publish-build-info: ${{ inputs.publish-build-info }}
+      # Prefix only; per-artifact uniqueness is applied in dev-build-node-cpp-bindings.yml.
       jf-build-id: ${{ inputs.jf-build-id }}
       use-server-rc: false
       server-tag: ${{ inputs.server-tag }}

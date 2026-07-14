@@ -50,13 +50,13 @@ node --version
 npm --version
 
 case "${PLATFORM_TAG}" in
-  win_amd64)
+  win32_x64)
     nuget restore aerospike-client-c/vs
     patch_windows_props
     ;;
-  macosx_*)
+  darwin_*)
     brew install libyaml
-    if [[ "${PLATFORM_TAG}" == macosx_arm64* ]]; then
+    if [[ "${PLATFORM_TAG}" == darwin_arm64* ]]; then
       libraries=(libyaml openssl)
       for library in "${libraries[@]}"; do
         LIBRARY_PATH="${LIBRARY_PATH:-}:$(brew --prefix "$library")/lib"
@@ -71,6 +71,6 @@ npm ci --ignore-scripts
 npm run build
 ls -R prebuilds
 
-if [[ "${PLATFORM_TAG}" == "win_amd64" ]]; then
+if [[ "${PLATFORM_TAG}" == "win32_x64" ]]; then
   cleanup_windows_artifacts
 fi
