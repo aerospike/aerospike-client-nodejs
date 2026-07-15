@@ -4604,7 +4604,7 @@ export class Client extends EventEmitter {
      * Creates an expression index on integer data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
-     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.INTEGER</code>.
      *
      * @param options - Options for creating the index.
      * @param policy - The Info Policy to use for this command.
@@ -4868,7 +4868,7 @@ export class Client extends EventEmitter {
      * Creates an index on integer data.
      *
      * @remarks This is a short-hand for calling {@link Client#createIndex}
-     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.NUMERIC</code>.
+     * with the <code>datatype</code> option set to <code>Aerospike.indexDataType.INTEGER</code>.
      *
      * @param options - Options for creating the index.
      * @param policy - The Info Policy to use for this command.
@@ -12177,25 +12177,31 @@ export enum indexDataType {
     /*
      * Values contained in the SI are strings.
      */
-    STRING,
+    STRING = 0,
     /*
-     * Values contained in the SI are integers.
+     * For use with server versions 8.1.3+. The Aerospike C client maps this to NUMERIC on
+     * older servers.
      */
-    NUMERIC,
+    INTEGER = 1,
     /**
      * Values contained in the SI are GeoJSON values (points or polygons).
      */
-    GEO2DSPHERE,
+    GEO2DSPHERE = 2,
     /*
      * Values contained in the SI are blobs (Buffer in Node.js).
      */
-    BLOB,
+    BLOB = 3,
+    /**
+     * @deprecated For use with server versions prior to 8.1.3. Use {@link indexDataType.INTEGER}
+     * for server 8.1.3+. The C client maps this to INTEGER on server 8.1.3+.
+     */
+    NUMERIC = 4,
     /*
     * When creating set indices, the specific data type doesn't matter.
     * This definition provides a convenient way of expressing that you
     * don't care about the data type.
      */
-    DEFAULT
+    DEFAULT = 0
 }
 
 /**

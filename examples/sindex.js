@@ -30,7 +30,16 @@ async function sindexCreate (client, argv) {
 
   let type = argv.type.toUpperCase()
   switch (type) {
+    case 'INTEGER':
+      options.datatype = Aerospike.indexDataType.INTEGER
+      break
     case 'NUMERIC':
+      // Deprecated alias; C client maps NUMERIC -> INTEGER on server >= 8.1.3.
+      process.emitWarning(
+        'numeric index type is deprecated; use integer instead.',
+        'DeprecationWarning',
+        'AEROSPIKE_SINDEX_NUMERIC'
+      )
       options.datatype = Aerospike.indexDataType.NUMERIC
       break
     case 'STRING':
@@ -64,7 +73,7 @@ exports.builder = yargs => {
       handler: shared.run(sindexCreate),
       builder: {
         type: {
-          choices: ['numeric', 'string', 'geo2dsphere'],
+          choices: ['integer', 'numeric', 'string', 'geo2dsphere'],
           hidden: true
         }
       }
