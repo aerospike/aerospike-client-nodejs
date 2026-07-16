@@ -43,3 +43,17 @@ if (!src) {
 fs.mkdirSync(destDir, { recursive: true })
 fs.copyFileSync(src, dest)
 console.log(`relocate-prebuilds: ${src} -> ${dest}`)
+
+// Windows links aerospike.dll at runtime (AS_SHARED_IMPORT). Linux/macOS are fully static in .node.
+if (platform === 'win32') {
+  const releaseDir = path.dirname(src)
+  for (const name of fs.readdirSync(releaseDir)) {
+    if (!name.toLowerCase().endsWith('.dll')) {
+      continue
+    }
+    const from = path.join(releaseDir, name)
+    const to = path.join(destDir, name)
+    fs.copyFileSync(from, to)
+    console.log(`relocate-prebuilds: ${from} -> ${to}`)
+  }
+}

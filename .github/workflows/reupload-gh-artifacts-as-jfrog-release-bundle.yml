@@ -55,12 +55,7 @@ jobs:
         set -ex
         PKG_TGZ=(aerospike-*.tgz)
         npm install --no-save --ignore-scripts "${PKG_TGZ[0]}"
-        abi=$(node -p "process.versions.modules")
-        platform=$(node -p "process.platform")
-        arch=$(node -p "process.arch")
-        prebuild="node_modules/aerospike/prebuilds/${platform}-${arch}/node.abi${abi}.node"
-        test -f "$prebuild"
-        node -e "require('aerospike'); console.log('ok')"
+        node node_modules/aerospike/scripts/verify-prebuild-smoke.js
         node -e "
           const p = require('./node_modules/aerospike/package.json');
           for (const s of ['preinstall','install','postinstall']) {
