@@ -100,14 +100,7 @@ jobs:
     - run: npm install --no-save --ignore-scripts *.tgz
       shell: bash
 
-    - run: |
-        set -ex
-        abi=$(node -p "process.versions.modules")
-        platform=$(node -p "process.platform")
-        arch=$(node -p "process.arch")
-        prebuild="prebuilds/${platform}-${arch}/node.abi${abi}.node"
-        test -f "$prebuild"
-        node -e "require('aerospike'); console.log('ok')"
+    - run: node scripts/verify-prebuild-smoke.js
       working-directory: node_modules/aerospike
       shell: bash
 
