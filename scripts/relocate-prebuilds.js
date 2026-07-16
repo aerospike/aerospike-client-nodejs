@@ -10,7 +10,8 @@ const abi = process.versions.modules
 const platform = process.platform
 const arch = process.arch
 const destDir = path.join(prebuildsDir, `${platform}-${arch}`)
-const dest = path.join(destDir, `aerospike.${abi}.node`)
+// node-gyp-build expects prebuildify-style tags (e.g. node.abi115.node), not aerospike.115.node
+const dest = path.join(destDir, `node.abi${abi}.node`)
 
 function findSource () {
   const releasePath = path.join(root, 'build', 'Release', 'aerospike.node')

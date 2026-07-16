@@ -68,7 +68,7 @@ jobs:
           abi=$(node -p "process.versions.modules")
           platform=$(node -p "process.platform")
           arch=$(node -p "process.arch")
-          prebuild="node_modules/aerospike/prebuilds/${platform}-${arch}/aerospike.${abi}.node"
+          prebuild="node_modules/aerospike/prebuilds/${platform}-${arch}/node.abi${abi}.node"
           test -f "$prebuild"
           node -e "require('aerospike'); console.log('ok')"
           node -e "
