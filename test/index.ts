@@ -200,6 +200,51 @@ context('secondary indexes', function () {
     })
   })
 
+  describe('indexDataType.INTEGER', function () {
+    helper.skipUnlessVersion('>= 8.1.3', this)
+
+    it('should create an index with INTEGER datatype', function () {
+      const options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name,
+        datatype: Aerospike.indexDataType.INTEGER
+      }
+
+      return client.createIndex(options)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+    })
+  })
+
+  describe('indexDataType.NUMERIC deprecation', function () {
+    it('emits a deprecation warning when NUMERIC datatype is used', function () {
+      const warnings: any[] = []
+      const listener = (warning: any) => warnings.push(warning)
+      process.on('warning', listener)
+
+      const options = {
+        ns: helper.namespace,
+        set: helper.set,
+        bin: testIndex.bin,
+        index: testIndex.name,
+        datatype: Aerospike.indexDataType.NUMERIC
+      }
+
+      return client.createIndex(options)
+        .then(() => verifyIndexExists(helper.namespace, testIndex.name))
+        .finally(() => process.off('warning', listener))
+        .then(() => {
+          const deprecated = warnings.find((warning) =>
+            warning.name === 'DeprecationWarning' &&
+            warning.code === 'AEROSPIKE_INDEX_DATATYPE_NUMERIC'
+          )
+          expect(deprecated).to.exist
+          expect(String(deprecated.message)).to.match(/NUMERIC.*INTEGER/i)
+        })
+    })
+  })
+
   describe('Client#createStringIndex()', function () {
     it('should create an string index', function () {
       const args = {
