@@ -47,6 +47,7 @@ jobs:
 
     - name: Pack npm tarball
       run: |
+        node scripts/verify-prebuild-manifest.js
         npm pack
         ls -la aerospike-*.tgz
 
