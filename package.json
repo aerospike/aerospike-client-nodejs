@@ -33,6 +33,7 @@
   "scripts": {
     "build": "node scripts/build-native.js",
     "test": "mocha test/${npm_config_testfile:-}",
+    "test-ci": "mocha test/${npm_config_testfile:-}",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore scripts",

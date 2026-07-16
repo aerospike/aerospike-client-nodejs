@@ -190,13 +190,16 @@ jobs:
 
     - name: Install test dependencies
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64') }}
-      run: npm ci --ignore-scripts
+      run: |
+        npm ci --ignore-scripts
+        node scripts/verify-prebuild-smoke.js
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_')}}
       run: |
         cat .mocharc.yml
-        OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run test
+        node scripts/verify-prebuild-smoke.js
+        PREBUILDS_ONLY=1 OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run test-ci
 
     - if: ${{ always() }}
       run: docker logs aerospike
@@ -249,34 +252,14 @@ jobs:
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
+    - name: Run CE Aerospike server for package manager smoke test
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
+      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
       with:
-        use-server-rc: false
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.soup_hat }}
-        docker-hub-password: ${{ secrets.cell_girl }}
-
-    - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
-      run: |
-        if docker ps -aq | grep -q .; then
-          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-        else
-          echo "No containers to remove."
-        fi
-
-    # TODO: combine this composite action and the above into one
-    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
-      with:
-        use-server-rc: false
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.soup_hat }}
-        docker-hub-password: ${{ secrets.cell_girl }}
-
+        container-name: aerospike
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
@@ -292,7 +275,7 @@ jobs:
       shell: "bash -ex {0}"
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64') }}
+      if: ${{ inputs.run_tests }}
       run: |
         npm ci --ignore-scripts;
         npm install -g pnpm@9.15.9 --ignore-scripts;
@@ -302,7 +285,7 @@ jobs:
         mv *.tgz pnpm
         cd pnpm
         echo '{}' > package.json
-        pnpm add ./*.tgz
+        pnpm add file:./aerospike-${{ inputs.version }}.tgz
         node basic_test.js
 
     # - name: Set final commit status
@@ -353,34 +336,14 @@ jobs:
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
+    - name: Run CE Aerospike server for package manager smoke test
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
+      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
       with:
-        use-server-rc: false
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.soup_hat }}
-        docker-hub-password: ${{ secrets.cell_girl }}
-
-    - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
-      run: |
-        if docker ps -aq | grep -q .; then
-          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-        else
-          echo "No containers to remove."
-        fi
-
-    # TODO: combine this composite action and the above into one
-    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
-      with:
-        use-server-rc: false
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.soup_hat }}
-        docker-hub-password: ${{ secrets.cell_girl }}
-
+        container-name: aerospike
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
@@ -396,6 +359,7 @@ jobs:
       shell: "bash -ex {0}"
 
     - name: Run tests
+      if: ${{ inputs.run_tests }}
       run: |
         npm ci --ignore-scripts;
         curl -fsSL https://bun.sh/install | bash;
@@ -406,7 +370,7 @@ jobs:
         mv *.tgz bun/
         cd bun;
         echo '{}' > package.json;
-        bun add *.tgz
+        bun add ./aerospike-${{ inputs.version }}.tgz
         node basic_test.js;
 
     #- name: Debug server
@@ -463,34 +427,14 @@ jobs:
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
+    - name: Run CE Aerospike server for package manager smoke test
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
+      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
       with:
-        use-server-rc: false
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.soup_hat }}
-        docker-hub-password: ${{ secrets.cell_girl }}
-
-    - name: Remove aerospike docker image
-      if: ${{ inputs.platform-tag == 'linux_aarch64' }}
-      run: |
-        if docker ps -aq | grep -q .; then
-          docker rm -f $(docker ps -aq) || echo "Failed to remove one or more containers."
-        else
-          echo "No containers to remove."
-        fi
-
-    # TODO: combine this composite action and the above into one
-    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
-      with:
-        use-server-rc: false
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.soup_hat }}
-        docker-hub-password: ${{ secrets.cell_girl }}
-
+        container-name: aerospike
 
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
@@ -506,7 +450,7 @@ jobs:
       shell: "bash -ex {0}"
 
     - name: Run tests
-      if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64' )}}
+      if: ${{ inputs.run_tests }}
       run: |
         npm ci --ignore-scripts
         npm install -g yarn
@@ -629,12 +573,16 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         npm ci --ignore-scripts
+        node scripts/verify-prebuild-smoke.js
         # tree ./node_modules
         # tree ../node_modules
 
     - name: Install Aerolab
       if: ${{ matrix.description == 'set-xdr-filter' }}
       run: |
+        set -ex
+        sudo apt-get update
+        sudo apt-get install -y unzip
         curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
         unzip aerolab.zip
         chmod +x aerolab
@@ -643,7 +591,8 @@ jobs:
         aerolab config backend -t docker
         aerolab xdr create-clusters -n dc1 -c 3 -N dc2 -C 3 -M test
         aerolab cluster list
-        npm run test --testfile=set_xdr_filter.ts -- --testXDR true --h 172.17.0.2 --port 3100;
+        sleep 30
+        PREBUILDS_ONLY=1 npm run test-ci --testfile=set_xdr_filter.ts -- --testXDR true --h 172.17.0.2 --port 3100;
         # Cleanup steps
         echo y | aerolab cluster destroy --name dc1
         echo y | aerolab cluster destroy --name dc2
@@ -653,7 +602,7 @@ jobs:
       run: |
         sudo apt-get update;
         sudo apt-get install -y valgrind;
-        MOCHA_OPTIONS="--timeout 40000" OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run valgrind;
+        PREBUILDS_ONLY=1 MOCHA_OPTIONS="--timeout 40000" OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run valgrind;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -770,6 +719,15 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
+    - name: Run CE Aerospike server for metrics tests
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
+      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
+      with:
+        container-name: aerospike
+
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
@@ -796,9 +754,10 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
       run: |
+        node scripts/verify-prebuild-smoke.js
         docker pull aerospike/aerospike-server:latest;
-        npm run test --testfile=metrics_node_close.ts -- --testMetrics true --h localhost --port 3000  --t 50000;
-        npm run test --testfile=metrics_cluster_name.ts -- --testMetrics true --h localhost --port 3000  --t 50000;
+        PREBUILDS_ONLY=1 npm run test-ci --testfile=metrics_node_close.ts -- --testMetrics true --h localhost --port 3000  --t 50000;
+        PREBUILDS_ONLY=1 npm run test-ci --testfile=metrics_cluster_name.ts -- --testMetrics true --h localhost --port 3000  --t 50000;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -875,7 +834,9 @@ jobs:
 
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
-      run: npm run test -- --h localhost --port 3000;
+      run: |
+        node scripts/verify-prebuild-smoke.js
+        PREBUILDS_ONLY=1 npm run test-ci -- --h localhost --port 3000;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
@@ -960,7 +921,8 @@ jobs:
     - name: Run tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
-        npm run test --testfile=timeout_delay.ts -- --testTimeoutDelay true --h localhost --port 3000;
+        node scripts/verify-prebuild-smoke.js
+        PREBUILDS_ONLY=1 npm run test-ci --testfile=timeout_delay.ts -- --testTimeoutDelay true --h localhost --port 3000;
         sudo tc qdisc del dev lo root netem
 
     # - name: Set final commit status
