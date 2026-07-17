@@ -4,13 +4,48 @@ set -euo pipefail
 PLATFORM_TAG="${PLATFORM_TAG:?PLATFORM_TAG is required}"
 NODE_VERSION="${NODE_VERSION:?NODE_VERSION is required}"
 
+expected_abi_for_node_version() {
+  case "${NODE_VERSION}" in
+    20) echo 115 ;;
+    22) echo 127 ;;
+    24) echo 137 ;;
+    25) echo 141 ;;
+    *)
+      echo "ERROR: unsupported NODE_VERSION ${NODE_VERSION}" >&2
+      exit 1
+      ;;
+  esac
+}
+
+assert_active_node() {
+  local expected_major="${NODE_VERSION}" expected_abi actual_major actual_abi
+  expected_abi="$(expected_abi_for_node_version)"
+  actual_major="$(node -p "process.version.split('.')[0].slice(1)")"
+  actual_abi="$(node -p "process.versions.modules")"
+  if [[ "${actual_major}" != "${expected_major}" || "${actual_abi}" != "${expected_abi}" ]]; then
+    echo "ERROR: expected Node ${expected_major} (ABI ${expected_abi}), got $(node --version) (ABI ${actual_abi})" >&2
+    echo "PATH=${PATH}" >&2
+    command -v node >&2 || true
+    command -v npm >&2 || true
+    exit 1
+  fi
+}
+
+run_npm() {
+  if [[ "${RUNNER_OS:-}" == "Windows" && -n "${NODE_DIR:-}" ]]; then
+    (cd "${NODE_DIR}" && ./npm.cmd "$@")
+  else
+    npm "$@"
+  fi
+}
+
 setup_node_windows() {
   local node_dir="" candidate major toolcache
 
   toolcache="${RUNNER_TOOL_CACHE:-/c/hostedtoolcache/windows}"
   shopt -s nullglob
   for candidate in "${toolcache}/Node/${NODE_VERSION}."*/x64; do
-    if [[ -x "${candidate}/node.exe" ]]; then
+    if [[ -x "${candidate}/node.exe" && -f "${candidate}/npm.cmd" ]]; then
       node_dir="${candidate}"
       break
     fi
@@ -18,13 +53,16 @@ setup_node_windows() {
   shopt -u nullglob
 
   if [[ -n "${node_dir}" ]]; then
+    export NODE_DIR="${node_dir}"
     export PATH="${node_dir}:${PATH}"
+    assert_active_node
     return
   fi
 
   if command -v node >/dev/null 2>&1; then
     major="$(node -p "process.version.split('.')[0].slice(1)")"
-    if [[ "${major}" == "${NODE_VERSION}" ]]; then
+    if [[ "${major}" == "${NODE_VERSION}" ]] && command -v npm >/dev/null 2>&1; then
+      assert_active_node
       return
     fi
   fi
@@ -53,7 +91,9 @@ setup_node_windows() {
     exit 1
   }
 
+  export NODE_DIR="${node_dir}"
   export PATH="${node_dir}:${PATH}"
+  assert_active_node
 }
 
 setup_node() {
@@ -70,6 +110,27 @@ setup_node() {
   source "$NVM_DIR/nvm.sh"
   nvm install "${NODE_VERSION}"
   nvm use "${NODE_VERSION}"
+  assert_active_node
+}
+
+assert_prebuild_output() {
+  node -e "
+    const fs = require('fs');
+    const path = require('path');
+    const abi = process.versions.modules;
+    const dir = path.join('prebuilds', process.platform + '-' + process.arch);
+    const file = path.join(dir, 'node.abi' + abi + '.node');
+    if (!fs.existsSync(file)) {
+      console.error('missing expected prebuild:', file);
+      if (fs.existsSync(dir)) {
+        console.error('available:', fs.readdirSync(dir).join(', '));
+      } else {
+        console.error('missing directory:', dir);
+      }
+      process.exit(1);
+    }
+    console.log('prebuild ok:', file);
+  "
 }
 
 patch_windows_props() {
@@ -99,7 +160,7 @@ cleanup_windows_artifacts() {
 
 setup_node
 node --version
-npm --version
+run_npm --version
 
 case "${PLATFORM_TAG}" in
   win32_x64)
@@ -123,8 +184,9 @@ if [[ "${PLATFORM_TAG}" != "win32_x64" ]]; then
   ./scripts/build-c-client.sh
 fi
 
-npm ci --ignore-scripts
-npm run build
+run_npm ci --ignore-scripts
+run_npm run build
+assert_prebuild_output
 ls -R prebuilds
 
 if [[ "${PLATFORM_TAG}" == "win32_x64" ]]; then
