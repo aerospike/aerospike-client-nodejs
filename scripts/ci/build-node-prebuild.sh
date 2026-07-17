@@ -33,7 +33,8 @@ assert_active_node() {
 
 run_npm() {
   if [[ "${RUNNER_OS:-}" == "Windows" && -n "${NODE_DIR:-}" ]]; then
-    (cd "${NODE_DIR}" && ./npm.cmd "$@")
+    # Use npm.cmd from the selected Node install; do not cd away from the repo.
+    "${NODE_DIR}/npm.cmd" "$@"
   else
     npm "$@"
   fi
