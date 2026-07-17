@@ -40,6 +40,18 @@ run_npm() {
   fi
 }
 
+export_windows_node_dir() {
+  local node_bin node_dir
+  node_bin="$(command -v node)"
+  node_dir="$(dirname "${node_bin}")"
+  if [[ ! -x "${node_dir}/node.exe" || ! -f "${node_dir}/npm.cmd" ]]; then
+    echo "ERROR: node/npm not paired under ${node_dir}" >&2
+    exit 1
+  fi
+  export NODE_DIR="${node_dir}"
+  export PATH="${NODE_DIR}:${PATH}"
+}
+
 setup_node_windows() {
   local node_dir="" candidate major toolcache
 
@@ -62,7 +74,8 @@ setup_node_windows() {
 
   if command -v node >/dev/null 2>&1; then
     major="$(node -p "process.version.split('.')[0].slice(1)")"
-    if [[ "${major}" == "${NODE_VERSION}" ]] && command -v npm >/dev/null 2>&1; then
+    if [[ "${major}" == "${NODE_VERSION}" ]]; then
+      export_windows_node_dir
       assert_active_node
       return
     fi
