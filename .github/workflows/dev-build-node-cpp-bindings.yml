@@ -146,7 +146,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(needs.get-runner-os.outputs.nodejs-matrix) }}
       fail-fast: false
-    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@1004088a1b5122b9b71a39b40f619f6b50e78d16
+    uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@a341c9f258175f2dded37ae4c3037962fc31fd1a
     with:
       runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
       gh-source-ref: ${{ inputs.version }}
@@ -158,7 +158,8 @@ jobs:
       jf-url: https://aerospike.jfrog.io
       gh-artifact-name: ${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}.build
       gh-artifact-directory: prebuilds
-      gh-workflows-ref: 1004088a1b5122b9b71a39b40f619f6b50e78d16
+      gh-workflows-ref: a341c9f258175f2dded37ae4c3037962fc31fd1a
+      setup-node-version: ${{ matrix.nodejs-tag[1] }}
       oidc-provider-name: database-gh-aerospike
       oidc-audience: database-gh-aerospike
       publish-build-info: ${{ inputs.publish-build-info }}
