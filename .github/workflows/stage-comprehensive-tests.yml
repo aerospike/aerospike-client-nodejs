@@ -199,7 +199,7 @@ jobs:
       run: |
         cat .mocharc.yml
         node scripts/verify-prebuild-smoke.js
-        PREBUILDS_ONLY=1 OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm run test-ci
+        PREBUILDS_ONLY=1 OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm test --ignore-scripts
 
     - if: ${{ always() }}
       run: docker logs aerospike
@@ -836,7 +836,7 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         node scripts/verify-prebuild-smoke.js
-        PREBUILDS_ONLY=1 OPTIONS="--h localhost --port 3000" npm run test-ci;
+        PREBUILDS_ONLY=1 OPTIONS="--h localhost --port 3000" npm test --ignore-scripts;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
