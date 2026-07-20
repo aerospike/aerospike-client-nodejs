@@ -19,12 +19,12 @@
 /* global expect, describe, it, context, before */
 /* eslint-disable no-unused-expressions */
 
+import type { AerospikeError, Host } from '../lib/aerospike.js'
 import * as Aerospike from '../lib/aerospike.js'
 import * as info from '../lib/info.js'
-import * as helper from './test_helper.js'
+import * as helper from './test_helper.ts'
 import * as utils from '../lib/utils.js'
-
-const AerospikeError = Aerospike.AerospikeError
+import { expect } from 'chai'
 
 context('Info commands', function () {
   const client = helper.client
@@ -33,8 +33,8 @@ context('Info commands', function () {
     helper.skipIf(this, () => !!helper.config.password && helper.cluster.isVersionInRange('>= 5.5'),
       'client#info does not support authenticated connections on server 5.5 or later')
 
-    let node = null
-    let host = null
+    let node: any = null
+    let host: Host | null = null
 
     before(() => {
       node = helper.cluster.randomNode()
@@ -42,7 +42,7 @@ context('Info commands', function () {
     })
 
     it('sends status query to a specific cluster node', function (done) {
-      client.info('status', host, (error, response) => {
+      client.info('status', host, (error: AerospikeError | null, response: string) => {
         if (error) throw error
         expect(response).to.equal('status\tok\n')
         done()
@@ -50,7 +50,7 @@ context('Info commands', function () {
     })
 
     it('accepts a string with the host address', function (done) {
-      client.info('status', node.address, (error, response) => {
+      client.info('status', node.address, (error: AerospikeError | null, response: string) => {
         if (error) throw error
         expect(response).to.equal('status\tok\n')
         done()
@@ -58,7 +58,7 @@ context('Info commands', function () {
     })
 
     it('fetches all info if no request is passed', function (done) {
-      client.info(null, host, (error, response) => {
+      client.info(null, host, (error: AerospikeError | null, response: string) => {
         if (error) throw error
         expect(response).to.contain('\nversion\t')
         expect(response).to.contain('\nedition\t')
@@ -67,15 +67,15 @@ context('Info commands', function () {
     })
 
     it('should return a client error if the client is not connected', function (done) {
-      Aerospike.client(helper.config).info('status', host, error => {
-        expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
+      Aerospike.client(helper.config).info('status', host, (error: AerospikeError | null) => {
+        expect(error).to.be.instanceof(Aerospike.AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
         done()
       })
     })
   })
 
   describe('Client#infoNode()', function () {
-    let node = null
+    let node: any = null
 
     before(() => {
       node = helper.cluster.randomNode()
@@ -95,8 +95,8 @@ context('Info commands', function () {
     })
 
     it('should return a client error if the client is not connected', function (done) {
-      Aerospike.client(helper.config).infoNode('status', node, error => {
-        expect(error).to.be.instanceof(AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
+      Aerospike.client(helper.config).infoNode('status', node, (error: AerospikeError | null) => {
+        expect(error).to.be.instanceof(Aerospike.AerospikeError).with.property('code', Aerospike.status.ERR_CLIENT)
         done()
       })
     })
@@ -104,7 +104,7 @@ context('Info commands', function () {
 
   describe('Client#infoAny()', function () {
     it('executes the info command on a single cluster node', function (done) {
-      client.infoAny('status', function (err, result) {
+      client.infoAny('status', function (err: AerospikeError | null, result: string) {
         expect(err).to.not.be.ok
         expect(result).to.equal('status\tok\n')
         done()
@@ -121,7 +121,7 @@ context('Info commands', function () {
 
   describe('client.infoAll()', function () {
     it('executes the info command on all cluster nodes an returns a list of results', function (done) {
-      client.infoAll('status', function (err, results) {
+      client.infoAll('status', function (err: AerospikeError | null, results: Array<{ host: string, info: string }>) {
         expect(err).to.not.be.ok
         expect(Array.isArray(results)).to.be.true
         results.forEach(function (result) {

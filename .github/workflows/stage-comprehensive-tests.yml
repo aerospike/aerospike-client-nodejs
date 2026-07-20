@@ -836,7 +836,7 @@ jobs:
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: |
         node scripts/verify-prebuild-smoke.js
-        PREBUILDS_ONLY=1 npm run test-ci -- --h localhost --port 3000;
+        PREBUILDS_ONLY=1 OPTIONS="--h localhost --port 3000" npm run test-ci;
 
     # - name: Set final commit status
     #   uses: myrotvorets/set-commit-status-action@3730c0a348a2ace3c110851bed53331bc6406e9f # 2.0.1
