@@ -16,10 +16,12 @@
 
 'use strict'
 
-/* eslint-env mocha */
-/* global expect */
+/* global context */
 
-// require('./test_helper.mts')
+import { createRequire } from 'module'
+import { expect } from 'chai'
+
+const require = createRequire(import.meta.url)
 const Command = require('../lib/commands/command')
 
 describe('Command', function () {

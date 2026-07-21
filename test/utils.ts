@@ -16,11 +16,8 @@
 
 'use strict'
 
-/* global expect, describe, it */
-
-// require('./test_helper.ts')
+import { expect } from 'chai'
 import * as utils from '../lib/utils.js'
-// const utils = require('../lib/utils')
 
 describe('utils.parseHostString() #noserver', function () {
   it('parses a domain name', function () {
