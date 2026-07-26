@@ -79,7 +79,7 @@
     "chai": "^6.2.0",
     "chai-as-promised": "^8.0.2",
     "choma": "^1.2.1",
-    "dockerode": "^4.0.9",
+    "dockerode": "^5.0.1",
     "eslint": "^9.39.2",
     "globals": "^17.3.0",
     "mocha": "^11.7.5",
