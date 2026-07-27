@@ -12890,17 +12890,57 @@ export namespace bitwise {
 
 /**
  * String bin operations for {@link Client#operate} (server 8.1.3+).
+ *
+ * @remarks Requires Aerospike Server 8.1.3 or later. See {@link exp.string} for
+ * filter/write expressions.
+ *
+ * **Missing bin:** additive modifies ({@link strings.append}, {@link strings.prepend},
+ * {@link strings.concat}, {@link strings.concatList}, {@link strings.insert},
+ * {@link strings.overwrite}, {@link strings.padStart}, {@link strings.padEnd},
+ * {@link strings.repeat}) create the bin; in-place modifies ({@link strings.snip},
+ * {@link strings.replace}, {@link strings.replaceAll}, {@link strings.upper},
+ * {@link strings.lower}, {@link strings.caseFold}, {@link strings.normalizeNfc},
+ * {@link strings.trimStart}, {@link strings.trimEnd}, {@link strings.trim},
+ * {@link strings.regexReplace}, {@link strings.toString}) no-op. Read ops require
+ * an applicable bin/value.
+ *
+ * **Errors:** {@link strings.writeFlags.NO_FAIL} suppresses in-operation failure
+ * with the bin unchanged; it does not suppress wrong-type errors. Use
+ * {@link OperatePolicy#errorDetailVerbosity} and {@link AerospikeError#subcode}
+ * for server 8.1.3+ detail. For raw blob append/prepend use
+ * {@link operations.append} / {@link operations.prepend}; for Unicode string bins
+ * use {@link strings.append} / {@link strings.prepend}.
  */
 export namespace strings {
+    /**
+     * String operation policy passed to {@link StringOperation.withPolicy}.
+     */
     export interface StringPolicy {
+        /**
+         * {@link writeFlags} bit flags for supported modify operations.
+         * @default {@link writeFlags.DEFAULT}
+         */
         writeFlags?: number;
     }
 
+    /**
+     * String operation policy write bit flags. Use bitwise OR to combine flags.
+     */
     export enum writeFlags {
+        /**
+         * Default. Does not suppress an in-operation execution failure.
+         */
         DEFAULT = 0,
+        /**
+         * Suppress an operation failure with the bin unchanged. Does not suppress
+         * wrong-type or invalid-bin-type errors.
+         */
         NO_FAIL = 4
     }
 
+    /**
+     * Regex flags for {@link regexCompareFlags} and {@link regexReplace}.
+     */
     export enum regexFlags {
         NONE = 0,
         CASE_INSENSITIVE = 1,
@@ -12910,6 +12950,9 @@ export namespace strings {
         GLOBAL = 16
     }
 
+    /**
+     * Numeric type filter for {@link isNumericType}.
+     */
     export enum numericType {
         ANY = 0,
         INT = 1,
@@ -12921,58 +12964,118 @@ export namespace strings {
 
     export class StringOperation extends operations.Operation {
         withContext(contextOrFunction: cdt.Context | ((ctx: cdt.Context) => void)): StringOperation;
+        /**
+         * Attach `{ writeFlags }` for supported modify ops. Not used by
+         * {@link regexReplace} (regex flags are a separate argument).
+         */
         withPolicy(policy: StringPolicy): StringOperation;
     }
 
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function strlen(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function substr(bin: string, start: number): StringOperation;
-    /** Half-open codepoint range `[start, end)` (exclusive `end`). */
+    /**
+     * Half-open codepoint range `[start, end)` (exclusive `end`). Read-only.
+     * @remarks Requires applicable string bin; errors if missing or wrong type.
+     */
     export function substrRange(bin: string, start: number, end: number): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function charAt(bin: string, index: number): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function find(bin: string, needle: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function findOccurrence(bin: string, needle: string, occurrence: number): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function contains(bin: string, needle: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function startsWith(bin: string, prefix: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function endsWith(bin: string, suffix: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function toInteger(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function toDouble(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function byteLength(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function isNumeric(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function isNumericType(bin: string, numericType: numericType): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function isUpper(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function isLower(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function toBlob(bin: string): StringOperation;
-    /** Splits by Unicode codepoint (one list element per codepoint). Use {@link splitSeparator} for a delimiter. */
+    /**
+     * Splits by Unicode codepoint (one list element per codepoint). Use {@link splitSeparator} for a delimiter.
+     * @remarks Requires applicable string bin; errors if missing or wrong type.
+     */
     export function split(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function splitSeparator(bin: string, separator: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function b64Decode(bin: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function regexCompare(bin: string, pattern: string): StringOperation;
+    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function regexCompareFlags(bin: string, pattern: string, flags: number): StringOperation;
+    /** @remarks If the bin is missing, creates a new bin. */
     export function insert(bin: string, index: number, value: string): StringOperation;
+    /** @remarks If the bin is missing, creates a new bin. */
     export function overwrite(bin: string, index: number, value: string): StringOperation;
+    /** @remarks If the bin is missing, creates a new bin. */
     export function concat(bin: string, value: string): StringOperation;
+    /** @remarks If the bin is missing, creates a new bin. */
     export function concatList(bin: string, values: any[]): StringOperation;
-    /** Unicode-aware append (`AS_STRING_OP_APPEND`). */
+    /**
+     * Unicode-aware append (`AS_STRING_OP_APPEND`).
+     * @remarks If the bin is missing, creates a new bin.
+     */
     export function append(bin: string, value: string): StringOperation;
-    /** Unicode-aware prepend (`AS_STRING_OP_PREPEND`). */
+    /**
+     * Unicode-aware prepend (`AS_STRING_OP_PREPEND`).
+     * @remarks If the bin is missing, creates a new bin.
+     */
     export function prepend(bin: string, value: string): StringOperation;
-    /** Removes half-open codepoint range `[start, end)`. */
+    /**
+     * Removes half-open codepoint range `[start, end)`.
+     * @remarks If the bin is missing, no-op (record unchanged).
+     */
     export function snip(bin: string, start: number, end: number): StringOperation;
     /** @deprecated Use {@link snip} (same wire). */
     export function snipRange(bin: string, start: number, end: number): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function replace(bin: string, needle: string, replacement: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function replaceAll(bin: string, needle: string, replacement: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function upper(bin: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function lower(bin: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function caseFold(bin: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function normalizeNfc(bin: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function trimStart(bin: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function trimEnd(bin: string): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function trim(bin: string): StringOperation;
+    /** @remarks If the bin is missing, creates a new bin. */
     export function padStart(bin: string, targetLength: number, padString: string): StringOperation;
+    /** @remarks If the bin is missing, creates a new bin. */
     export function padEnd(bin: string, targetLength: number, padString: string): StringOperation;
+    /** @remarks If the bin is missing, creates a new bin. */
     export function repeat(bin: string, count: number): StringOperation;
+    /**
+     * Regex replace; uses {@link regexFlags}, not {@link writeFlags}.
+     * @remarks If the bin is missing, no-op (record unchanged).
+     */
     export function regexReplace(bin: string, pattern: string, replacement: string, flags: number): StringOperation;
+    /** @remarks If the bin is missing, no-op (record unchanged). */
     export function toString(bin: string): StringOperation;
 }
 /**
