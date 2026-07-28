@@ -29,7 +29,7 @@ These no longer have `node run` scripts; use the harness name instead:
 | `batch` | `npm run examples -- Batch` |
 | `operate` | `npm run examples -- Operate` |
 
-See [`harness/MIGRATION.md`](harness/MIGRATION.md) for the full migration plan.
+Legacy `node run` commands are being retired as each API moves into this harness list.
 
 ## Legacy CLI (being retired)
 
