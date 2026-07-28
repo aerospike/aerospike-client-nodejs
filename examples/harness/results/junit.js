@@ -51,10 +51,10 @@ function writeJUnitReport (filePath, results) {
     return `    <testcase classname="AerospikeExample" name="${escapeXml(r.name)}" time="${duration}"/>`
   }).join('\n')
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n` +
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
     `<testsuite name="AerospikeExample" tests="${tests}" failures="${failures}" skipped="${skipped}" time="${timeSec}">\n` +
     `${cases}\n` +
-    `</testsuite>\n`
+    '</testsuite>\n'
 
   fs.writeFileSync(filePath, xml, 'utf8')
 }

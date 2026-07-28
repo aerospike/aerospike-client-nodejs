@@ -24,7 +24,7 @@ async function runExample ({ client, ns, set, policy, console }) {
   const readPolicy = { ...policy, totalTimeout: 1000 }
   console.info(`Read policy: totalTimeout=${readPolicy.totalTimeout}`)
 
-  let exists = await client.exists(key, policy)
+  const exists = await client.exists(key, policy)
   console.info(`Exists: ${exists}`)
 
   const header = await client.get(key, policy)
