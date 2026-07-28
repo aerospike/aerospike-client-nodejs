@@ -1,83 +1,49 @@
 # Aerospike Node.js Client Examples
 
-## Requirements
+## Canonical path: harness (CI-verified)
 
-The examples require Node.js v10 or later to run. 
+Documentation examples live in [`doc/`](doc/) and run through [`harness/`](harness/). This is the supported path for learning APIs and for CI (**Example Run**).
 
-(These requirements apply to running the provided examples only. The Aerospike
-Node.js client itself may support a different range of Node.js versions and may
-have additional requirements.)
-
-## Setup
-
-To use the examples, you will need to install the `aerospike` module into the
-`examples` directory. To do so, you need to first ensure the `aerospike` module
-is built. In the main `aerospike-client-nodejs` directory, run the following
-command:
-
-    $ npm install
-    
-Refer to the [client's README](https://github.com/aerospike/aerospike-client-nodejs#readme)
-for more details.
-
-From change to the `examples` directory, and run the same command there as well:
-
-    $ cd examples
-    $ npm install
-
-## Usage
-
-### Documentation examples (harness)
-
-CI-verified documentation examples run through the harness (see [`harness/README.md`](harness/README.md)):
+From the repository root (build the client first with `npm run build`):
 
 ```bash
 npm run examples:all
+npm run examples -- Get PutGet
 ```
 
-### CLI examples
+Settings: [`/.settings.json`](.settings.json) and `AEROSPIKE_HOST`, `AEROSPIKE_PORT`, etc. See [`harness/README.md`](harness/README.md).
 
-You can simply run each example independently:
+Registered harness examples: Connect, ServerInfo, PutGet, Get, Exists, Add, Append, Prepend, Delete, Replace, Operate, Batch, ScanParallel, QueryInteger, UserDefinedFunction.
 
-    $ node run <example>
+### Migrated off legacy CLI (Phase 1)
 
-Most of these examples require a key, and can optionally take a hostname, port,
-and namespace of the cluster. The default server is on 127.0.0.1 at port 3000
-(a local server installation).
+These no longer have `node run` scripts; use the harness name instead:
 
-To see a list of all the options that apply to all the examples, execute the
-runner with the `--help` flag:
+| Former CLI | Use |
+|------------|-----|
+| `connect` | `npm run examples -- Connect` |
+| `get` | `npm run examples -- Get` |
+| `exists` | `npm run examples -- Exists` |
+| `add` | `npm run examples -- Add` |
+| `append` | `npm run examples -- Append` |
+| `batch` | `npm run examples -- Batch` |
+| `operate` | `npm run examples -- Operate` |
 
-    $ node run --help
+See [`harness/MIGRATION.md`](harness/MIGRATION.md) for the full migration plan.
 
-Each example also provides more detailed usage information via a `--help` flag:
+## Legacy CLI (being retired)
 
-    $ node run <example> --help
+Some examples still use the older yargs runner under this directory. They require a separate install in `examples/`:
 
-## Examples
+```bash
+cd examples
+npm install
+node run --help
+node run put myKey bin=value
+```
 
-The following are the included examples:
+Remaining commands: `apply`, `put`, `remove`, `info`, `query`, `scan`, `sindex`, `udf`, `dynamicConfig`, `metrics`, `mrtCommit`, `mrtAbort`, `geospatialMonteCarlo`.
 
-- **Single Key Operations**
-  - add - Increment the value of a single bin
-  - append - Append a string or bytes to a single bin
-  - apply - Apply a UDF to a single record
-  - exists - Check the existence of a record
-  - get - Read a record
-  - operate - Perform multiple operations on a record
-  - put - Write a record
-  - remove - Remove a record
-- **Advanced Operations**
-  - info - Get cluster state information
-  - batch - Read a batch of records in a single transaction
-  - query - Run a query to fetch records matching a filter, optionally
-    performing aggregation using UDFs
-  - scan - Run a scan on an entire namespace or set
-  - sindex - Manage secondary indexes (create/remove index)
-  - Connect- Connect to aerospike
-  - udf - Manage User-Defined Functions (create/remove module)
-  - metrics - Enable metrics with custom settings.
-  - dynamicConfig - Connect with a dynamic configuration.
-- **Complex Examples**
-  - geospatialMonteCarlo - Performs a Monte Carlo simulation to approximate PI
-    using Aerospike's geospatial indexing and query functionality
+Default cluster: `127.0.0.1:3000`, namespace `test`, set `demo`.
+
+These will move into the harness in follow-up work; prefer **`npm run examples`** for anything already listed in the harness registry.

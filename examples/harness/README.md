@@ -21,6 +21,8 @@ npm run examples -- PutGet Get
 node examples/harness/run.js --settings examples/.settings.json PutGet
 ```
 
+CLI to harness migration status: [`MIGRATION.md`](MIGRATION.md).
+
 ## Example shape
 
 ```javascript

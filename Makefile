@@ -40,11 +40,11 @@ put: build
 .PHONY: get-valgrind
 get-valgrind: build
 	mkdir -p valgrind
-	valgrind $(VALGRIND_OPTS) node examples/get.js -q -I 100 foo 1>valgrind/get-100.out 2>valgrind/get-100.valgrind
+	valgrind $(VALGRIND_OPTS) npm run examples -- Get 1>valgrind/get-100.out 2>valgrind/get-100.valgrind
 
 .PHONY: get
 get: build
-	node examples/get.js -q -I 100 foo
+	npm run examples -- Get
 
 .PHONY: query-valgrind
 query-valgrind: build

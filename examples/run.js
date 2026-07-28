@@ -20,20 +20,13 @@ const yargs = require('yargs')
 
 const VERSION = require('../package.json').version
 const commands = [
-  'add',
-  'append',
   'apply',
-  'batch',
-  'connect',
   'dynamicConfig',
-  'exists',
   'geospatialMonteCarlo',
-  'get',
   'info',
   'metrics',
   'mrtAbort',
   'mrtCommit',
-  'operate',
   'put',
   'query',
   'remove',
