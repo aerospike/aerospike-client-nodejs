@@ -32,6 +32,8 @@
   },
   "scripts": {
     "build": "node scripts/build-native.js",
+    "examples:all": "node examples/harness/run.js --settings examples/.settings.json all",
+    "examples": "node examples/harness/run.js --settings examples/.settings.json",
     "test": "mocha test/${npm_config_testfile:-}",
     "test-ci-single": "mocha --no-config --require choma --require mocha-clean --node-option import=tsx",
     "test-dry-run": "mocha --dry-run",

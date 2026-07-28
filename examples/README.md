@@ -27,6 +27,16 @@ From change to the `examples` directory, and run the same command there as well:
 
 ## Usage
 
+### Documentation examples (harness)
+
+CI-verified documentation examples run through the harness (see [`harness/README.md`](harness/README.md)):
+
+```bash
+npm run examples:all
+```
+
+### CLI examples
+
 You can simply run each example independently:
 
     $ node run <example>

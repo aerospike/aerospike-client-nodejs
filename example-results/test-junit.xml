@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="AerospikeExample" tests="3" failures="1" skipped="1" time="0.022">
+    <testcase classname="AerospikeExample" name="A" time="0.010"/>
+    <testcase classname="AerospikeExample" name="B" time="0.005">
+      <skipped message="skip"/>
+    </testcase>
+    <testcase classname="AerospikeExample" name="C" time="0.007">
+      <failure message="fail">fail</failure>
+    </testcase>
+</testsuite>
