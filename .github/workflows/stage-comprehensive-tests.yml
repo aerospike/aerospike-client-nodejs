@@ -216,7 +216,7 @@ jobs:
       if: ${{ !cancelled() && inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') && matrix.nodejs-tag[1] == '20' }}
       uses: step-security/publish-unit-test-result-action@681100d67b09305624c089873f12c545ee7cbc24 # v2.23.0
       with:
-        files: example-results/**/*.xml
+        files: example-results/results.xml
         check_name: Example Run (${{ inputs.server-tag }})
 
     - if: ${{ always() }}

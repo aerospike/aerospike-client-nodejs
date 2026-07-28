@@ -92,7 +92,7 @@ jobs:
       if: ${{ !cancelled() && matrix.node-version == 20 }}
       uses: step-security/publish-unit-test-result-action@681100d67b09305624c089873f12c545ee7cbc24 # v2.23.0
       with:
-        files: example-results/**/*.xml
+        files: example-results/results.xml
         check_name: Example Run (${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.2.3' }})
 
     - if: ${{ !cancelled() }}

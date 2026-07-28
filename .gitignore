@@ -25,3 +25,4 @@ tsconfig.tsbuildinfo
 # Generated javascript tests from typescript tests
 test/**/*.*js
 prebuilds/
+example-results/
