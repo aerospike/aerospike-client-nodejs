@@ -85,3 +85,25 @@ node examples/harness/run.js --settings examples/.settings.json \
 - `cleanup` — always in `finally`
 
 Shared helpers live in [`fixtures/support.js`](fixtures/support.js) (keys, indexes, UDF register/remove, delete ranges).
+
+## Phase 6 verification (local)
+
+Without a server (registry only — still requires a built native addon):
+
+```bash
+npm run build
+npm run verify:examples
+```
+
+Full CE smoke parity: run Aerospike locally (e.g. Docker on port 3000), `npm run build`, then:
+
+```bash
+mkdir -p example-results
+npm run examples:all -- --report-junit example-results/results.xml
+```
+
+Same flow as [`.github/workflows/smoke-tests.yml`](../../.github/workflows/smoke-tests.yml) (Node 20 row).
+
+On community edition, expect **Skipped** (not Failed): **Delete** (after `requireEnterprise()` for durable delete), **MrtCommit**, **MrtAbort**. Override geo dart count with `EXAMPLES_GEO_DARTS`.
+
+Registry canonical list: [`expectedRegistry.js`](expectedRegistry.js). CI JUnit test count should match `EXPECTED_REGISTRY_SIZE` (29).

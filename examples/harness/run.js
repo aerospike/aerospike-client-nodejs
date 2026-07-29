@@ -71,6 +71,10 @@ function printSummary (results) {
   const passed = results.filter(r => r.status === ExampleResult.Passed)
 
   console.info(`Summary: ${passed.length} passed, ${skipped.length} skipped, ${failed.length} failed`)
+  if (results.length !== names.length) {
+    console.error(`Registry size mismatch: ran ${results.length}, registry has ${names.length}`)
+    return 1
+  }
   return failed.length > 0 ? 1 : 0
 }
 
