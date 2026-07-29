@@ -4,9 +4,9 @@ The `examples/harness` directory runs documentation-shaped examples against a li
 
 Example code lives in [`../doc/`](../doc/). Each file exports a `runExample(context)` function that uses injected `client`, `ns`, `set`, policies, and `console`. Keep example bodies focused on teachable API usage; use fixtures for seed data, assertions, and cleanup.
 
-## Registered examples
+## Registered examples (29)
 
-Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics.
+Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics, MrtCommit, MrtAbort, GeospatialMonteCarlo, PathExpressions.
 
 Run all registered examples:
 
@@ -45,7 +45,12 @@ Context helpers (throw `ExampleSkipError` → **Skipped**, not Failed):
 - `requireMinServerVersion('8.0.0')`
 - `skipUnless(condition, reason)`
 
-Examples such as **Delete** (durable delete) use `requireEnterprise()` so community servers skip the enterprise-only portion without failing the job.
+| Example | Gate behavior |
+|---------|----------------|
+| **Delete** | Durable delete: `requireEnterprise()` |
+| **MrtCommit**, **MrtAbort** | EE + SC + server `>= 8.0.0` (skipped on CE smoke) |
+| **GeospatialMonteCarlo** | Runs on CE; uses set `montecarlo`, 500 darts by default (`EXAMPLES_GEO_DARTS` to override) |
+| **PathExpressions** | Standard namespace/set fixtures |
 
 ## Register an example
 
@@ -80,7 +85,3 @@ node examples/harness/run.js --settings examples/.settings.json \
 - `cleanup` — always in `finally`
 
 Shared helpers live in [`fixtures/support.js`](fixtures/support.js) (keys, indexes, UDF register/remove, delete ranges).
-
-## CLI examples
-
-The yargs CLI under [`../run.js`](../run.js) remains unchanged for interactive use.
