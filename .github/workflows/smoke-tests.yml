@@ -3,6 +3,8 @@ run-name: Smoke tests (server-tag=${{ inputs.server-tag }})
 permissions:
   contents: read
   id-token: write
+  checks: write
+  pull-requests: write
 
 on:
   pull_request:
@@ -79,6 +81,19 @@ jobs:
 
     - name: Run tests
       run: npm run test
+
+    - name: Run documentation examples
+      if: matrix.node-version == 20
+      run: |
+        mkdir -p example-results
+        npm run examples:all -- --report-junit example-results/results.xml
+
+    - name: Publish example run results
+      if: ${{ !cancelled() && matrix.node-version == 20 }}
+      uses: step-security/publish-unit-test-result-action@681100d67b09305624c089873f12c545ee7cbc24 # v2.23.0
+      with:
+        files: example-results/results.xml
+        check_name: Example Run (${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || '8.1.2.3' }})
 
     - if: ${{ !cancelled() }}
       run: |

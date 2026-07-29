@@ -6,6 +6,8 @@ permissions:
   id-token: write
   statuses: write
   contents: read
+  checks: write
+  pull-requests: write
 
 on:
 
@@ -200,6 +202,22 @@ jobs:
         cat .mocharc.yml
         node scripts/verify-prebuild-smoke.js
         PREBUILDS_ONLY=1 OPTIONS="-t 40000 -h 127.0.0.1 --port 3000 -U superuser -P superuser" npm test --ignore-scripts
+
+    - name: Run documentation examples
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') && matrix.nodejs-tag[1] == '20' }}
+      env:
+        AEROSPIKE_USER: superuser
+        AEROSPIKE_PASSWORD: superuser
+      run: |
+        mkdir -p example-results
+        npm run examples:all -- --report-junit example-results/results.xml
+
+    - name: Publish example run results
+      if: ${{ !cancelled() && inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') && matrix.nodejs-tag[1] == '20' }}
+      uses: step-security/publish-unit-test-result-action@681100d67b09305624c089873f12c545ee7cbc24 # v2.23.0
+      with:
+        files: example-results/results.xml
+        check_name: Example Run (${{ inputs.server-tag }})
 
     - if: ${{ always() }}
       run: docker logs aerospike
