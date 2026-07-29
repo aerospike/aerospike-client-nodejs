@@ -16,7 +16,7 @@
 
 const Aerospike = require('../harness/aerospikeClient')
 
-const TARGET = 'equal-match'
+const TARGET = 42
 
 async function runExample ({ client, ns, set, console }) {
   const query = client.query(ns, set)

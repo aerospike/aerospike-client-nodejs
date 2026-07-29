@@ -224,13 +224,13 @@ async function cleanupApply (client, args) {
 
 async function setupQueryEqual (client, args) {
   await support.dropIndexQuietly(client, args, 'queryindexeq')
-  await support.createIndex(client, args, 'queryindexeq', 'querybineq', Aerospike.indexDataType.STRING)
-  await support.putBins(client, args, 'queryeq1', { querybineq: 'equal-match' })
-  await support.putBins(client, args, 'queryeq2', { querybineq: 'other-value' })
+  await support.createIndex(client, args, 'queryindexeq', 'querybineq', Aerospike.indexDataType.INTEGER)
+  await support.putBins(client, args, 'queryeq1', { querybineq: 42 })
+  await support.putBins(client, args, 'queryeq2', { querybineq: 99 })
 }
 
 async function queryEqualValidate (client, args) {
-  await support.assertBin(client, args, 'queryeq1', 'querybineq', 'equal-match')
+  await support.assertBin(client, args, 'queryeq1', 'querybineq', 42)
 }
 
 async function cleanupQueryEqual (client, args) {

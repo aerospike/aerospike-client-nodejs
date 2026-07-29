@@ -27,7 +27,7 @@ async function runExample ({ args, console }) {
     hosts: [{ addr: args.host, port: args.port }],
     configProvider: {
       path: configPath,
-      interval: 1
+      interval: Math.max(1000, args.totalTimeout || 1000)
     },
     policies: {
       read: defaultPolicy,

@@ -99,7 +99,7 @@ async function createIndex (client, args, indexName, binName, datatype) {
     set: args.set,
     bin: binName,
     index: indexName,
-    datatype: datatype || Aerospike.indexDataType.NUMERIC,
+    datatype: datatype || Aerospike.indexDataType.INTEGER,
     type: Aerospike.indexType.DEFAULT
   })
   await job.wait()
