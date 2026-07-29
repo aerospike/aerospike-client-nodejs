@@ -20,19 +20,9 @@ const yargs = require('yargs')
 
 const VERSION = require('../package.json').version
 const commands = [
-  'apply',
-  'dynamicConfig',
   'geospatialMonteCarlo',
-  'info',
-  'metrics',
   'mrtAbort',
-  'mrtCommit',
-  'put',
-  'query',
-  'remove',
-  'scan',
-  'sindex',
-  'udf'
+  'mrtCommit'
 ]
 
 const squish = (str) => str.replace(/(^ +| +$)/gm, '').trim()

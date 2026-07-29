@@ -15,6 +15,7 @@
 // *****************************************************************************
 
 const support = require('./support')
+const Aerospike = require('../aerospikeClient')
 
 const SCAN_SEED_BEGIN = 1
 const SCAN_SEED_END = 10
@@ -194,6 +195,81 @@ async function cleanupUserDefinedFunction (client, args) {
   ])
 }
 
+async function putValidate (client, args) {
+  await support.assertBin(client, args, 'putkey', 'name', 'Alice')
+  await support.assertBin(client, args, 'putkey', 'age', 43)
+}
+
+async function setupRemove (client, args) {
+  await support.putBins(client, args, 'removekey', { bin: 'value' })
+}
+
+async function removeValidate (client, args) {
+  await support.assertNotExists(client, args, 'removekey')
+}
+
+async function setupApply (client, args) {
+  await support.removeUdfQuietly(client, 'record_example.lua')
+  await support.registerUdf(client, 'record_example.lua')
+  await support.deleteKeys(client, args, ['applykey'])
+}
+
+async function applyValidate (client, args) {
+  await support.assertBin(client, args, 'applykey', 'applybin', 'from-udf')
+}
+
+async function cleanupApply (client, args) {
+  await support.deleteKeys(client, args, ['applykey'])
+}
+
+async function setupQueryEqual (client, args) {
+  await support.dropIndexQuietly(client, args, 'queryindexeq')
+  await support.createIndex(client, args, 'queryindexeq', 'querybineq', Aerospike.indexDataType.STRING)
+  await support.putBins(client, args, 'queryeq1', { querybineq: 'equal-match' })
+  await support.putBins(client, args, 'queryeq2', { querybineq: 'other-value' })
+}
+
+async function queryEqualValidate (client, args) {
+  await support.assertBin(client, args, 'queryeq1', 'querybineq', 'equal-match')
+}
+
+async function cleanupQueryEqual (client, args) {
+  await support.dropIndexQuietly(client, args, 'queryindexeq')
+  await support.deleteKeys(client, args, ['queryeq1', 'queryeq2'])
+}
+
+const SINDEX_NAME = 'sindexdemo'
+
+async function setupSecondaryIndex (client, args) {
+  await support.dropIndexQuietly(client, args, SINDEX_NAME)
+  await support.deleteKeys(client, args, ['sindexkey1'])
+  await support.putBins(client, args, 'sindexkey1', { sindexbin: 'match-value' })
+}
+
+async function secondaryIndexValidate (client, args) {
+  await support.assertExists(client, args, 'sindexkey1')
+}
+
+async function cleanupSecondaryIndex (client, args) {
+  await support.dropIndexQuietly(client, args, SINDEX_NAME)
+  await support.deleteKeys(client, args, ['sindexkey1'])
+}
+
+async function setupUdfModule (client, args) {
+  await support.removeUdfQuietly(client, 'record_example.lua')
+}
+
+async function udfModuleValidate (client, args) {
+  const info = await client.infoAny('udf-list')
+  if (!info || !info.includes('record_example')) {
+    throw new Error('UdfModule verification failed: record_example not in udf-list.')
+  }
+}
+
+async function cleanupUdfModule (client, args) {
+  await support.removeUdfQuietly(client, 'record_example.lua')
+}
+
 module.exports = {
   putGet,
   exists,
@@ -219,5 +295,20 @@ module.exports = {
   cleanupQueryInteger,
   setupUserDefinedFunction,
   userDefinedFunction,
-  cleanupUserDefinedFunction
+  cleanupUserDefinedFunction,
+  putValidate,
+  setupRemove,
+  removeValidate,
+  setupApply,
+  applyValidate,
+  cleanupApply,
+  setupQueryEqual,
+  queryEqualValidate,
+  cleanupQueryEqual,
+  setupSecondaryIndex,
+  secondaryIndexValidate,
+  cleanupSecondaryIndex,
+  setupUdfModule,
+  udfModuleValidate,
+  cleanupUdfModule
 }

@@ -1,6 +1,5 @@
-#!/usr/bin/env node
 // *****************************************************************************
-// Copyright 2013-2024 Aerospike, Inc.
+// Copyright 2026 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -15,17 +14,20 @@
 // limitations under the License.
 // *****************************************************************************
 
-const Aerospike = require('aerospike')
-const shared = require('./shared')
+async function runExample ({ client, ns, set, console }) {
+  let recordCount = 0
+  const scan = client.scan(ns, set, { concurrent: false })
+  const stream = scan.foreach()
 
-shared.runner()
+  await new Promise((resolve, reject) => {
+    stream.on('data', () => {
+      recordCount += 1
+    })
+    stream.on('error', reject)
+    stream.on('end', resolve)
+  })
 
-async function remove (client, argv) {
-  const key = new Aerospike.Key(argv.namespace, argv.set, argv.key)
-  await client.remove(key)
-  console.info('Removed record:', key)
+  console.info(`Scan serial: records=${recordCount}`)
 }
 
-exports.command = 'remove <key>'
-exports.describe = 'Remove a record from the database'
-exports.handler = shared.run(remove)
+module.exports = { name: 'Scan', runExample }

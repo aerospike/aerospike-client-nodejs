@@ -6,7 +6,7 @@ Example code lives in [`../doc/`](../doc/). Each file exports a `runExample(cont
 
 ## Registered examples
 
-Connect, ServerInfo, PutGet, Get, Exists, Add, Append, Prepend, Delete, Replace, Operate, Batch, ScanParallel, QueryInteger, UserDefinedFunction.
+Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics.
 
 Run all registered examples:
 

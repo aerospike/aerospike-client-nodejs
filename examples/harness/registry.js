@@ -25,24 +25,36 @@ const {
 
 const connect = require('../doc/connect')
 const putGet = require('../doc/putGet')
+const put = require('../doc/put')
 const getDocExample = require('../doc/get')
 const existsExample = require('../doc/exists')
 const serverInfo = require('../doc/serverInfo')
+const info = require('../doc/info')
 const add = require('../doc/add')
 const append = require('../doc/append')
 const prepend = require('../doc/prepend')
 const deleteExample = require('../doc/delete')
+const removeExample = require('../doc/remove')
 const replace = require('../doc/replace')
 const operate = require('../doc/operate')
 const batch = require('../doc/batch')
+const applyExample = require('../doc/apply')
+const scan = require('../doc/scan')
 const scanParallel = require('../doc/scanParallel')
 const queryInteger = require('../doc/queryInteger')
+const queryEqual = require('../doc/queryEqual')
+const secondaryIndex = require('../doc/secondaryIndex')
 const userDefinedFunction = require('../doc/userDefinedFunction')
+const udfModule = require('../doc/udfModule')
+const dynamicConfig = require('../doc/dynamicConfig')
+const metrics = require('../doc/metrics')
 
 const examples = [
   { name: 'Connect', runExample: connect.runExample, fixture: emptyFixture() },
   { name: 'ServerInfo', runExample: serverInfo.runExample, fixture: emptyFixture() },
+  { name: 'Info', runExample: info.runExample, fixture: emptyFixture() },
   { name: 'PutGet', runExample: putGet.runExample, fixture: validateAndCleanup(validation.putGet, 'putgetkey') },
+  { name: 'Put', runExample: put.runExample, fixture: validateAndCleanup(validation.putValidate, 'putkey') },
   { name: 'Get', runExample: getDocExample.runExample, fixture: fixture(validation.getSetup, validation.getValidate, validation.getCleanup) },
   { name: 'Exists', runExample: existsExample.runExample, fixture: validateAndCleanup(validation.exists, 'existskey') },
   { name: 'Add', runExample: add.runExample, fixture: validateAndCleanup(validation.add, 'addkey') },
@@ -57,6 +69,18 @@ const examples = [
       async (client, args) => {
         const support = require('./fixtures/support')
         await support.deleteKeys(client, args, ['deletekey', 'durabledeletekey'])
+      }
+    )
+  },
+  {
+    name: 'Remove',
+    runExample: removeExample.runExample,
+    fixture: fixture(
+      validation.setupRemove,
+      validation.removeValidate,
+      async (client, args) => {
+        const support = require('./fixtures/support')
+        await support.deleteKeys(client, args, ['removekey'])
       }
     )
   },
@@ -89,6 +113,20 @@ const examples = [
     })
   },
   {
+    name: 'Apply',
+    runExample: applyExample.runExample,
+    fixture: fixture(validation.setupApply, validation.applyValidate, validation.cleanupApply)
+  },
+  {
+    name: 'Scan',
+    runExample: scan.runExample,
+    fixture: scanDefaultSetFixture(
+      validation.setupScanDefaultSet,
+      validation.scanDefaultSet,
+      validation.cleanupScanDefaultSet
+    )
+  },
+  {
     name: 'ScanParallel',
     runExample: scanParallel.runExample,
     fixture: scanDefaultSetFixture(
@@ -107,6 +145,24 @@ const examples = [
     )
   },
   {
+    name: 'QueryEqual',
+    runExample: queryEqual.runExample,
+    fixture: queryCleanup(
+      validation.setupQueryEqual,
+      validation.queryEqualValidate,
+      validation.cleanupQueryEqual
+    )
+  },
+  {
+    name: 'SecondaryIndex',
+    runExample: secondaryIndex.runExample,
+    fixture: fixture(
+      validation.setupSecondaryIndex,
+      validation.secondaryIndexValidate,
+      validation.cleanupSecondaryIndex
+    )
+  },
+  {
     name: 'UserDefinedFunction',
     runExample: userDefinedFunction.runExample,
     fixture: fixture(
@@ -114,7 +170,18 @@ const examples = [
       validation.userDefinedFunction,
       validation.cleanupUserDefinedFunction
     )
-  }
+  },
+  {
+    name: 'UdfModule',
+    runExample: udfModule.runExample,
+    fixture: fixture(
+      validation.setupUdfModule,
+      validation.udfModuleValidate,
+      validation.cleanupUdfModule
+    )
+  },
+  { name: 'DynamicConfig', runExample: dynamicConfig.runExample, fixture: emptyFixture() },
+  { name: 'Metrics', runExample: metrics.runExample, fixture: emptyFixture() }
 ]
 
 const names = examples.map(entry => entry.name)
