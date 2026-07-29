@@ -270,6 +270,103 @@ async function cleanupUdfModule (client, args) {
   await support.removeUdfQuietly(client, 'record_example.lua')
 }
 
+const MRT_COMMIT_KEYS = ['mrtkey1', 'mrtkey2']
+const MRT_ABORT_KEYS = ['mrtabort1', 'mrtabort2']
+const MRT_TXN_DEF = 456
+const PATH_EXPR_KEY = 'pathexprkey'
+const MONTE_CARLO_SET = 'montecarlo'
+const MONTE_CARLO_INDEX = 'geopi_montecarlo'
+const MONTE_CARLO_GEO_BIN = 'geo'
+const MONTE_CARLO_DEFAULT_DARTS = 500
+
+async function setupMrtCommit (client, args) {
+  await support.deleteKeys(client, args, MRT_COMMIT_KEYS)
+}
+
+async function mrtCommitValidate (client, args) {
+  for (const userKey of MRT_COMMIT_KEYS) {
+    await support.assertBin(client, args, userKey, 'def', MRT_TXN_DEF)
+  }
+}
+
+async function cleanupMrtCommit (client, args) {
+  await support.deleteKeys(client, args, MRT_COMMIT_KEYS)
+}
+
+async function setupMrtAbort (client, args) {
+  await support.deleteKeys(client, args, MRT_ABORT_KEYS)
+}
+
+async function mrtAbortValidate (client, args) {
+  for (const userKey of MRT_ABORT_KEYS) {
+    await support.assertNotExists(client, args, userKey)
+  }
+}
+
+async function cleanupMrtAbort (client, args) {
+  await support.deleteKeys(client, args, MRT_ABORT_KEYS)
+}
+
+async function setupPathExpressions (client, args) {
+  await support.putBins(client, args, PATH_EXPR_KEY, {
+    floatList: [2.4, 4.8, 7.2]
+  })
+}
+
+async function pathExpressionsValidate (client, args) {
+  await support.assertBinList(client, args, PATH_EXPR_KEY, 'floatList', [
+    8.88, 17.76, 26.64
+  ])
+}
+
+async function cleanupPathExpressions (client, args) {
+  await support.deleteKeys(client, args, [PATH_EXPR_KEY])
+}
+
+async function setupGeospatialMonteCarlo (client, args) {
+  const fromEnv = parseInt(process.env.EXAMPLES_GEO_DARTS || '', 10)
+  args.monteCarloSet = MONTE_CARLO_SET
+  args.monteCarloDarts = (!Number.isNaN(fromEnv) && fromEnv > 0)
+    ? fromEnv
+    : MONTE_CARLO_DEFAULT_DARTS
+  await support.registerUdf(client, 'monte_carlo.lua')
+  await support.createIndexOnSet(
+    client,
+    args,
+    MONTE_CARLO_SET,
+    MONTE_CARLO_INDEX,
+    MONTE_CARLO_GEO_BIN,
+    Aerospike.indexDataType.GEO2DSPHERE
+  )
+  try {
+    await client.truncate(args.namespace, MONTE_CARLO_SET, 0)
+  } catch (err) {
+    // set may not exist yet
+  }
+}
+
+async function geospatialMonteCarloValidate (client, args) {
+  const hits = args.monteCarloLastHits
+  const darts = args.monteCarloLastDarts
+  if (typeof hits !== 'number' || typeof darts !== 'number' || darts <= 0) {
+    throw new Error('GeospatialMonteCarlo validation failed: missing hit counts from example run')
+  }
+  if (hits < 0 || hits > darts) {
+    throw new Error(`GeospatialMonteCarlo validation failed: hits=${hits} darts=${darts}`)
+  }
+}
+
+async function cleanupGeospatialMonteCarlo (client, args) {
+  await support.dropIndexQuietly(client, args, MONTE_CARLO_INDEX)
+  const darts = args.monteCarloLastDarts || args.monteCarloDarts || MONTE_CARLO_DEFAULT_DARTS
+  await support.deleteIntegerRange(client, { ...args, set: MONTE_CARLO_SET }, 1, darts)
+  try {
+    await client.truncate(args.namespace, MONTE_CARLO_SET, 0)
+  } catch (err) {
+    // ignore
+  }
+}
+
 module.exports = {
   putGet,
   exists,
@@ -310,5 +407,17 @@ module.exports = {
   cleanupSecondaryIndex,
   setupUdfModule,
   udfModuleValidate,
-  cleanupUdfModule
+  cleanupUdfModule,
+  setupMrtCommit,
+  mrtCommitValidate,
+  cleanupMrtCommit,
+  setupMrtAbort,
+  mrtAbortValidate,
+  cleanupMrtAbort,
+  setupPathExpressions,
+  pathExpressionsValidate,
+  cleanupPathExpressions,
+  setupGeospatialMonteCarlo,
+  geospatialMonteCarloValidate,
+  cleanupGeospatialMonteCarlo
 }

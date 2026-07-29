@@ -105,6 +105,30 @@ async function createIndex (client, args, indexName, binName, datatype) {
   await job.wait()
 }
 
+async function createIndexOnSet (client, args, setName, indexName, binName, datatype) {
+  await dropIndexQuietly(client, args, indexName)
+  const job = await client.createIndex({
+    ns: args.namespace,
+    set: setName,
+    bin: binName,
+    index: indexName,
+    datatype: datatype || Aerospike.indexDataType.INTEGER,
+    type: Aerospike.indexType.DEFAULT
+  })
+  await job.wait()
+}
+
+async function assertBinList (client, args, userKey, binName, expected) {
+  const readPolicy = { ...client.config.policies.read }
+  const record = await client.select(key(args, userKey), [binName], readPolicy)
+  const received = record ? record.bins[binName] : undefined
+  if (!Array.isArray(received) || !Array.isArray(expected) ||
+      received.length !== expected.length ||
+      expected.some((value, index) => received[index] !== value)) {
+    throw new Error(`Expected ${binName}=${JSON.stringify(expected)}, got ${JSON.stringify(received)}`)
+  }
+}
+
 async function registerUdf (client, filename) {
   const scriptPath = path.join(__dirname, '..', '..', 'lua', filename)
   const job = await client.udfRegister(scriptPath)
@@ -134,6 +158,8 @@ module.exports = {
   assertBin,
   dropIndexQuietly,
   createIndex,
+  createIndexOnSet,
+  assertBinList,
   registerUdf,
   removeUdfQuietly
 }

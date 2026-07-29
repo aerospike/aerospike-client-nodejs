@@ -48,6 +48,10 @@ const userDefinedFunction = require('../doc/userDefinedFunction')
 const udfModule = require('../doc/udfModule')
 const dynamicConfig = require('../doc/dynamicConfig')
 const metrics = require('../doc/metrics')
+const mrtCommit = require('../doc/mrtCommit')
+const mrtAbort = require('../doc/mrtAbort')
+const geospatialMonteCarlo = require('../doc/geospatialMonteCarlo')
+const pathExpressions = require('../doc/pathExpressions')
 
 const examples = [
   { name: 'Connect', runExample: connect.runExample, fixture: emptyFixture() },
@@ -181,7 +185,43 @@ const examples = [
     )
   },
   { name: 'DynamicConfig', runExample: dynamicConfig.runExample, fixture: emptyFixture() },
-  { name: 'Metrics', runExample: metrics.runExample, fixture: emptyFixture() }
+  { name: 'Metrics', runExample: metrics.runExample, fixture: emptyFixture() },
+  {
+    name: 'MrtCommit',
+    runExample: mrtCommit.runExample,
+    fixture: fixture(
+      validation.setupMrtCommit,
+      validation.mrtCommitValidate,
+      validation.cleanupMrtCommit
+    )
+  },
+  {
+    name: 'MrtAbort',
+    runExample: mrtAbort.runExample,
+    fixture: fixture(
+      validation.setupMrtAbort,
+      validation.mrtAbortValidate,
+      validation.cleanupMrtAbort
+    )
+  },
+  {
+    name: 'GeospatialMonteCarlo',
+    runExample: geospatialMonteCarlo.runExample,
+    fixture: fixture(
+      validation.setupGeospatialMonteCarlo,
+      validation.geospatialMonteCarloValidate,
+      validation.cleanupGeospatialMonteCarlo
+    )
+  },
+  {
+    name: 'PathExpressions',
+    runExample: pathExpressions.runExample,
+    fixture: fixture(
+      validation.setupPathExpressions,
+      validation.pathExpressionsValidate,
+      validation.cleanupPathExpressions
+    )
+  }
 ]
 
 const names = examples.map(entry => entry.name)
