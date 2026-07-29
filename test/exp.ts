@@ -645,7 +645,7 @@ describe('Aerospike.exp', function () {
         expect(result.bins.ExpVar).to.eql(true)
       })
 
-      it('toString repr on string bin', async function () {
+      it('toString on string bin', async function () {
         const key = await createRecord({ text: 'quoted' })
         const ops = [
           exp.operations.read(tempBin,
