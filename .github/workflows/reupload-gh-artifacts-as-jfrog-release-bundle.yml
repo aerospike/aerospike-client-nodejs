@@ -50,14 +50,30 @@ jobs:
         set -ex
         ls -R prebuilds
         node scripts/verify-prebuild-manifest.js
+        node scripts/ci/split-prebuild-packages.js
         npm pack
         ls -la aerospike-*.tgz
+        for d in packages/prebuild-*/; do
+          (cd "$d" && npm pack && ls -la *.tgz)
+        done
 
     - name: Verify Option B install without lifecycle scripts
       run: |
         set -ex
-        PKG_TGZ=(aerospike-*.tgz)
-        npm install --no-save --ignore-scripts "${PKG_TGZ[0]}"
+        TAG=linux-x64
+        MAIN_TGZ=(aerospike-*.tgz)
+        OPT_TGZ=(packages/prebuild-${TAG}/*.tgz)
+        if tar -tzf "${MAIN_TGZ[0]}" | grep -q '^package/prebuilds/'; then
+          echo 'main tarball must not ship prebuilds/'
+          exit 1
+        fi
+        rm -rf /tmp/slim-ci-verify
+        mkdir -p /tmp/slim-ci-verify
+        cd /tmp/slim-ci-verify
+        echo '{"name":"slim-ci","private":true}' > package.json
+        npm install --no-save --ignore-scripts \
+          "file:${{ github.workspace }}/${MAIN_TGZ[0]}" \
+          "file:${{ github.workspace }}/${OPT_TGZ[0]}"
         node node_modules/aerospike/scripts/verify-prebuild-smoke.js
         node -e "
           const p = require('./node_modules/aerospike/package.json');
@@ -70,7 +86,9 @@ jobs:
       uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: npm-package
-        path: aerospike-*.tgz
+        path: |
+          aerospike-*.tgz
+          packages/prebuild-*/*.tgz
         retention-days: 1
 
   upload-artifacts-to-jfrog:

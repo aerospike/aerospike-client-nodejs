@@ -3,18 +3,24 @@
 
 const fs = require('fs')
 const path = require('path')
+const { resolvePrebuildRoot } = require('./resolve-prebuild-root')
 
 const pkgRoot = path.join(__dirname, '..')
+const prebuildRoot = resolvePrebuildRoot(pkgRoot)
 const abi = process.versions.modules
 const prebuildDir = path.join(
-  pkgRoot,
+  prebuildRoot,
   'prebuilds',
   `${process.platform}-${process.arch}`
 )
-const prebuild = path.join(prebuildDir, `node.abi${abi}.node`)
+const abiTag = `node.abi${abi}.node`
+const legacyTag = `aerospike.${abi}.node`
+const prebuild = [abiTag, legacyTag]
+  .map((name) => path.join(prebuildDir, name))
+  .find((p) => fs.existsSync(p))
 
-if (!fs.existsSync(prebuild)) {
-  console.error(`missing prebuild: ${prebuild}`)
+if (!prebuild) {
+  console.error(`missing prebuild: ${path.join(prebuildDir, abiTag)}`)
   if (fs.existsSync(prebuildDir)) {
     console.error('available:', fs.readdirSync(prebuildDir).join(', '))
   } else {
