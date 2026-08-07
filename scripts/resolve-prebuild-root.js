@@ -4,8 +4,8 @@ const fs = require('fs')
 const path = require('path')
 
 /**
- * Root directory passed to node-gyp-build: embedded prebuilds/ in the main
- * package, or an @aerospike/prebuild-{platform}-{arch} optional dependency.
+ * Root directory for platform-keyed native resolution: embedded prebuilds/ in
+ * the main package, or an @aerospike/prebuild-{platform}-{arch} optional dep.
  *
  * @param {string} mainPackageRoot absolute path to aerospike package root
  * @returns {string}

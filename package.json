@@ -53,8 +53,7 @@
     "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i"
   },
   "dependencies": {
-    "minimatch": "^10.1.1",
-    "node-gyp-build": "^4.8.4"
+    "minimatch": "^10.1.1"
   },
   "optionalDependencies": {
     "@aerospike/prebuild-darwin-arm64": "7.0.0",

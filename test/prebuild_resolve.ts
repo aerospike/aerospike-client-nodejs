@@ -22,6 +22,7 @@ import { expect } from 'chai'
 import * as path from 'path'
 import * as fs from 'fs'
 import { resolvePrebuildRoot } from '../scripts/resolve-prebuild-root.js'
+import { resolveNativeBinding } from '../scripts/resolve-native-binding.js'
 
 describe('resolvePrebuildRoot #noserver', function () {
   const pkgRoot = path.join(__dirname, '..')
@@ -49,5 +50,30 @@ describe('resolvePrebuildRoot #noserver', function () {
       this.skip()
     }
     expect(resolvePrebuildRoot(pkgRoot)).to.equal(optionalRoot)
+  })
+})
+
+describe('resolveNativeBinding #noserver', function () {
+  const pkgRoot = path.join(__dirname, '..')
+  const tag = `${process.platform}-${process.arch}`
+  const abi = process.versions.modules
+
+  it('loads prebuild from embedded or optional package layout', function () {
+    const embedded = path.join(pkgRoot, 'prebuilds', tag)
+    const optionalRoot = path.join(
+      pkgRoot,
+      'node_modules',
+      `@aerospike/prebuild-${tag}`
+    )
+    if (!fs.existsSync(embedded) && !fs.existsSync(optionalRoot)) {
+      this.skip()
+    }
+    const binding = resolveNativeBinding(pkgRoot)
+    expect(binding.endsWith('.node')).to.equal(true)
+    expect(fs.existsSync(binding)).to.equal(true)
+    expect(
+      binding.includes(`node.abi${abi}.node`) ||
+      binding.includes(`aerospike.${abi}.node`)
+    ).to.equal(true)
   })
 })
