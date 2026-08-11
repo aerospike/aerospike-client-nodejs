@@ -24,6 +24,10 @@ on:
         type: string
         description: Build version
         required: true
+      bundle-version:
+        type: string
+        description: Release bundle version (e.g. 7.0.0-dev.9)
+        required: true
       run_tests:
         type: boolean
         required: false
@@ -99,6 +103,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh install
       shell: bash
 
@@ -184,6 +189,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh extract
         # macOS x86 doesn't have tree by default
         # tree .
@@ -288,6 +294,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh download
         # tree .
       shell: "bash -ex {0}"
@@ -375,6 +382,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh download
         # tree .
       shell: "bash -ex {0}"
@@ -469,6 +477,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh download
         # tree .
       shell: "bash -ex {0}"
@@ -591,6 +600,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
@@ -687,6 +697,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
@@ -764,6 +775,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
@@ -849,6 +861,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
@@ -933,6 +946,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
@@ -1003,6 +1017,7 @@ jobs:
 
       - run: |
           PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+            BUNDLE_VERSION=${{ inputs.bundle-version }} \
             scripts/ci/jfrog-fetch-slim-packages.sh extract
           # tree .
         shell: "bash -ex {0}"
@@ -1090,6 +1105,7 @@ jobs:
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          BUNDLE_VERSION=${{ inputs.bundle-version }} \
           scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"

@@ -12,6 +12,10 @@ on:
         type: string
         description: Build version
         required: true
+      bundle-version:
+        type: string
+        description: Release bundle version (e.g. 7.0.0-dev.9)
+        required: true
       server-tag:
         type: string
         required: false
@@ -25,6 +29,10 @@ on:
       version:
         type: string
         description: Build version
+        required: true
+      bundle-version:
+        type: string
+        description: Release bundle version (e.g. 7.0.0-dev.9)
         required: true
       server-tag:
         type: string
@@ -58,6 +66,7 @@ jobs:
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       version: ${{ inputs.version }}
+      bundle-version: ${{ inputs.bundle-version }}
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
       cell_girl: ${{ secrets.cell_girl }}

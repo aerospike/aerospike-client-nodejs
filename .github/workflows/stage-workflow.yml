@@ -12,6 +12,7 @@ jobs:
     uses: ./.github/workflows/stage-tests.yml
     with:
       version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
+      bundle-version: ${{ needs.stage-get-jfrog-version.outputs.tag_version }}
       run_tests: true
     needs: [
       stage-get-jfrog-version,
