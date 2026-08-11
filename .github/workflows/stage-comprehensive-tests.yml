@@ -83,6 +83,8 @@ jobs:
       with:
         egress-policy: audit
 
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
@@ -91,19 +93,17 @@ jobs:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
 
-    - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-      shell: "bash -ex {0}"
-
     - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
-    - run: npm install --no-save --ignore-scripts *.tgz
+    - run: |
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh install
       shell: bash
 
     - run: node scripts/verify-prebuild-smoke.js
-      working-directory: node_modules/aerospike
+      working-directory: .slim-install/node_modules/aerospike
       shell: bash
 
   test-ee:
@@ -183,9 +183,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        # npm install *.tgz --no-save
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh extract
         # macOS x86 doesn't have tree by default
         # tree .
       shell: "bash -ex {0}"
@@ -288,7 +287,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh download
         # tree .
       shell: "bash -ex {0}"
 
@@ -300,10 +300,12 @@ jobs:
         pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
-        mv *.tgz pnpm
+        mv aerospike-*.tgz @aerospike-prebuild-*.tgz pnpm/
         cd pnpm
         echo '{}' > package.json
-        pnpm add file:./aerospike-${{ inputs.version }}.tgz --ignore-scripts
+        MAIN_TGZ=(aerospike-*.tgz)
+        PREBUILD_TGZ=(@aerospike-prebuild-*.tgz)
+        pnpm add "file:./${MAIN_TGZ[0]}" "file:./${PREBUILD_TGZ[0]}" --ignore-scripts
         node basic_test.js
 
     # - name: Set final commit status
@@ -372,7 +374,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh download
         # tree .
       shell: "bash -ex {0}"
 
@@ -385,10 +388,12 @@ jobs:
         bun --version;
         mkdir bun;
         cp ./scripts/basic_test.js bun/basic_test.js;
-        mv *.tgz bun/
+        mv aerospike-*.tgz @aerospike-prebuild-*.tgz bun/
         cd bun;
         echo '{}' > package.json;
-        bun add ./aerospike-${{ inputs.version }}.tgz
+        MAIN_TGZ=(aerospike-*.tgz)
+        PREBUILD_TGZ=(@aerospike-prebuild-*.tgz)
+        bun add "./${MAIN_TGZ[0]}" "./${PREBUILD_TGZ[0]}"
         node basic_test.js;
 
     #- name: Debug server
@@ -463,7 +468,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh download
         # tree .
       shell: "bash -ex {0}"
 
@@ -475,10 +481,12 @@ jobs:
         yarn --version
         mkdir yarn
         cp ./scripts/basic_test.js yarn/basic_test.js
-        mv *.tgz yarn/
+        mv aerospike-*.tgz @aerospike-prebuild-*.tgz yarn/
         cd yarn
         echo '{}' > package.json
-        yarn add file:./aerospike-${{ inputs.version }}.tgz --ignore-scripts
+        MAIN_TGZ=(aerospike-*.tgz)
+        PREBUILD_TGZ=(@aerospike-prebuild-*.tgz)
+        yarn add "file:./${MAIN_TGZ[0]}" "file:./${PREBUILD_TGZ[0]}" --ignore-scripts
         node basic_test.js
 
     #- name: Debug server
@@ -582,8 +590,8 @@ jobs:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
 
@@ -678,8 +686,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
 
@@ -755,8 +763,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
 
@@ -840,8 +848,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
 
@@ -924,8 +932,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
 
@@ -994,8 +1002,8 @@ jobs:
           oidc-audience: database-gh-aerospike
 
       - run: |
-          jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-          tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+          PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+            scripts/ci/jfrog-fetch-slim-packages.sh extract
           # tree .
         shell: "bash -ex {0}"
 
@@ -1081,8 +1089,8 @@ jobs:
         oidc-audience: database-gh-aerospike
 
     - run: |
-        jf rt dl --flat --fail-no-op "database-npm-dev-local/aerospike/-/aerospike-${{ inputs.version }}.tgz" .
-        tar xvf aerospike-${{ inputs.version }}.tgz --strip-components 1 'package/prebuilds'
+        PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
+          scripts/ci/jfrog-fetch-slim-packages.sh extract
         # tree .
       shell: "bash -ex {0}"
 
