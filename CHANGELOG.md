@@ -8,7 +8,7 @@ Breaking changes below require a **major** version bump; they are intended to sh
 
 * **Breaking Changes**
   * `exp.string.concat(policy, second, bin)`: the second argument must be a **string literal** (C `as_exp_string_concat`). List-valued operands must use **`exp.string.concatList(policy, valuesExp, bin)`** (C `as_exp_string_concat_list`).
-  * `exp.string.regexReplace` now takes **`policy` first**, matching the C macro signature; the `flags` argument is reserved (current C expansion does not pack regex flags on the wire).
+  * `exp.string.regexReplace` takes **`policy` first** for API symmetry with other string modify expressions; **regex flags** and **string policy flags** are both packed on the wire (C client `stage`, CLIENT-4824).
   * `strings.snip(bin, start, end)` now requires the **exclusive end** index (half-open range); the one-argument `snip(bin, start)` form is removed.
   * `strings.substrRange(bin, start, end)` — the third parameter is the **exclusive end** index (not a length).
 
@@ -16,6 +16,9 @@ Breaking changes below require a **major** version bump; they are intended to sh
   * [CLIENT-4358] Added `Aerospike.indexDataType.INTEGER` for integer secondary indexes (server >= 8.1.3). The Aerospike C client maps `INTEGER` <-> `NUMERIC` by server version in `aerospike_index_create_private()`; Node exposes `INTEGER` and deprecates `NUMERIC`. `Client#createIntegerIndex` and `Client#createExpIntegerIndex` now use `INTEGER`.
   * Enhanced error detail support (Aerospike Server 8.1.3+): added `BasePolicy.errorDetailVerbosity` to request server subcodes and messages, exposed `AerospikeError.subcode`, and added `Aerospike.errorDetailVerbosity` (verbosity levels) and `Aerospike.subcode` (server subcode constants) modules.
   * String package (Aerospike Server 8.1.3+): aligned `aerospike/strings` and `exp.string` with the C client `stage` string APIs — `append` / `prepend`, `snip(bin, start, end)` with half-open `[start, end)`, `substrRange(bin, start, end)` (third parameter is the exclusive end index, not a length), and expression helpers `concat` / `concatList` matching `as_exp_string_concat` / `as_exp_string_concat_list`.
+  * [CLIENT-5213] Platform-scoped native prebuilds ship as **`@aerospike/prebuild-{platform}-{arch}`** optional dependencies; the main `aerospike` package no longer bundles all prebuilds. Native load uses platform-keyed resolution (optional prebuild package or local `prebuilds/`), not `node-gyp-build`.
+  * Bump `aerospike-client-c` to `stage` @ `781c00b7` (CLIENT-4824 regex replace policy on wire; CLIENT-4747 C examples only).
+  * `strings.writeFlags.UPDATE_ONLY` exported for string modify operations.
   * Documented that nested string `operate()` context uses the flat string-op wire envelope (not CDT nested layout), that replace-style **expression** ops use a **QUOTED** pair on the wire, and that multi string ops on the same bin may return ordered per-op results when the server uses RESPOND_ALL_OPS (same family as MAP/BIT/HLL in the C client).
 
 * **Documentation**

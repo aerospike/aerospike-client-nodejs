@@ -3,27 +3,19 @@
 
 const fs = require('fs')
 const path = require('path')
+const { resolveNativeBinding } = require('./resolve-native-binding')
 
 const pkgRoot = path.join(__dirname, '..')
-const abi = process.versions.modules
-const prebuildDir = path.join(
-  pkgRoot,
-  'prebuilds',
-  `${process.platform}-${process.arch}`
-)
-const prebuild = path.join(prebuildDir, `node.abi${abi}.node`)
-
-if (!fs.existsSync(prebuild)) {
-  console.error(`missing prebuild: ${prebuild}`)
-  if (fs.existsSync(prebuildDir)) {
-    console.error('available:', fs.readdirSync(prebuildDir).join(', '))
-  } else {
-    console.error(`missing directory: ${prebuildDir}`)
-  }
+let prebuild
+try {
+  prebuild = resolveNativeBinding(pkgRoot)
+} catch (err) {
+  console.error(err.message)
   process.exit(1)
 }
 
 if (process.platform === 'win32') {
+  const prebuildDir = path.dirname(prebuild)
   const dlls = fs.readdirSync(prebuildDir).filter((name) => name.toLowerCase().endsWith('.dll'))
   if (dlls.length === 0) {
     console.error(`win32 prebuild dir has no DLLs next to ${path.basename(prebuild)}`)

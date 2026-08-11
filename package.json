@@ -32,6 +32,7 @@
   },
   "scripts": {
     "build": "node scripts/build-native.js",
+    "verify:slim-layout": "node scripts/verify-slim-package-layout.js",
     "examples:all": "node examples/harness/run.js --settings examples/.settings.json all",
     "examples": "node examples/harness/run.js --settings examples/.settings.json",
     "examples:verify-registry": "node examples/harness/verifyRegistry.js",
@@ -52,8 +53,14 @@
     "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i"
   },
   "dependencies": {
-    "minimatch": "^10.1.1",
-    "node-gyp-build": "^4.8.4"
+    "minimatch": "^10.1.1"
+  },
+  "optionalDependencies": {
+    "@aerospike/prebuild-darwin-arm64": "7.0.0",
+    "@aerospike/prebuild-darwin-x64": "7.0.0",
+    "@aerospike/prebuild-linux-arm64": "7.0.0",
+    "@aerospike/prebuild-linux-x64": "7.0.0",
+    "@aerospike/prebuild-win32-x64": "7.0.0"
   },
   "devDependencies": {
     "@types/chai": "^5.2.3",
@@ -100,7 +107,6 @@
     "benchmarks/",
     "examples/",
     "lib/",
-    "prebuilds/",
     "scripts/",
     "src/",
     "test/",

@@ -914,6 +914,32 @@ describe('Aerospike.exp', function () {
         expect(result.bins.ExpVar).to.be.a('string')
       })
 
+      it('regexReplace GLOBAL replaces all matches (CLIENT-4955)', async function () {
+        const key = await createRecord({ text: 'asdfasdf' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.regexReplace(null, 'asdf', '1234', strings.regexFlags.GLOBAL, exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('asdfasdf')
+        expect(result.bins.ExpVar).to.eql('12341234')
+      })
+
+      it('regexReplace CASE_INSENSITIVE (CLIENT-4955)', async function () {
+        const key = await createRecord({ text: 'hello world' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.regexReplace(null, 'HELLO', 'bye', strings.regexFlags.CASE_INSENSITIVE, exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('hello world')
+        expect(result.bins.ExpVar).to.eql('bye world')
+      })
+
       it('snipRange alias matches snip', async function () {
         const key = await createRecord({ text: 'vwxyz' })
         const ops = [

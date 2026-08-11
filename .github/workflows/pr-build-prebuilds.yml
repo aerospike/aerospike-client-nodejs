@@ -14,7 +14,10 @@ on:
       - 'scripts/ci/**'
       - 'scripts/build-native.js'
       - 'scripts/relocate-prebuilds.js'
-      - 'scripts/verify-prebuild-smoke.js'
+      - 'scripts/resolve-prebuild-root.js'
+      - 'scripts/resolve-native-binding.js'
+      - 'scripts/prebuild-platforms.json'
+      - 'scripts/verify-slim-package-layout.js'
       - 'lib/native.js'
       - 'package.json'
       - 'package-lock.json'
@@ -60,12 +63,27 @@ jobs:
         with:
           node-version: 20
 
-      - name: Pack and verify Option B install without lifecycle scripts
+      - name: Pack and verify slim install without lifecycle scripts
         run: |
           set -ex
+          ls -R prebuilds
+          TAG=linux-x64
+          PREBUILD_SPLIT_PLATFORMS=${TAG} node scripts/ci/split-prebuild-packages.js
           npm pack
-          PKG_TGZ=(aerospike-*.tgz)
-          npm install --no-save --ignore-scripts "${PKG_TGZ[0]}"
+          MAIN_TGZ=(aerospike-*.tgz)
+          (cd "packages/prebuild-${TAG}" && npm pack)
+          OPT_TGZ=(packages/prebuild-${TAG}/*.tgz)
+          if tar -tzf "${MAIN_TGZ[0]}" | grep -q '^package/prebuilds/'; then
+            echo 'main tarball must not ship prebuilds/'
+            exit 1
+          fi
+          rm -rf /tmp/slim-pr-verify
+          mkdir -p /tmp/slim-pr-verify
+          cd /tmp/slim-pr-verify
+          echo '{"name":"slim-pr","private":true}' > package.json
+          npm install --no-save --ignore-scripts \
+            "file:${{ github.workspace }}/${MAIN_TGZ[0]}" \
+            "file:${{ github.workspace }}/${OPT_TGZ[0]}"
           node node_modules/aerospike/scripts/verify-prebuild-smoke.js
           node -e "
             const p = require('./node_modules/aerospike/package.json');
