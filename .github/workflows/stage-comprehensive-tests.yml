@@ -93,6 +93,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -183,6 +184,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -288,6 +290,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -376,6 +379,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -471,6 +475,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -589,7 +594,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: "database"
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -691,6 +696,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -769,6 +775,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -855,6 +862,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -940,6 +948,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike
@@ -1011,6 +1020,7 @@ jobs:
         uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
         env:
           JF_URL: https://aerospike.jfrog.io
+          JF_PROJECT: database
         with:
           oidc-provider-name: database-gh-aerospike
           oidc-audience: database-gh-aerospike
@@ -1099,6 +1109,7 @@ jobs:
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
         JF_URL: https://aerospike.jfrog.io
+        JF_PROJECT: database
       with:
         oidc-provider-name: database-gh-aerospike
         oidc-audience: database-gh-aerospike

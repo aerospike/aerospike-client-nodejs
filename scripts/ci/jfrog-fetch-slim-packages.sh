@@ -49,6 +49,61 @@ find_artifact () {
   find "$root" -type f -name "$pattern" 2>/dev/null | head -n 1
 }
 
+count_files () {
+  find "$1" -type f 2>/dev/null | wc -l | tr -d ' '
+}
+
+configure_jfrog_npm () {
+  echo "configuring npm client for ${JF_REPO} (project=${JF_PROJECT})" >&2
+  jf npm config --repo-resolve="${JF_REPO}" --project="${JF_PROJECT}"
+}
+
+try_rt_dl_flat () {
+  local spec="$1" dest="$2"
+  local extra=()
+  if [[ -n "${BUNDLE_VERSION:-}" ]]; then
+    extra=(--bundle "${BUNDLE_NAME}/${BUNDLE_VERSION}")
+  fi
+  jf rt dl --flat --project "$JF_PROJECT" "${extra[@]}" "$spec" "$dest"
+}
+
+fetch_from_bundle_paths () {
+  local repo="$1"
+  [[ -n "$BUNDLE_VERSION" ]] || return 1
+
+  echo "try bundle-scoped npm paths for ${BUNDLE_NAME}/${BUNDLE_VERSION}" >&2
+
+  if [[ ! -f "$MAIN" ]]; then
+    try_rt_dl_flat "${repo}/aerospike/-/${MAIN}" "./${MAIN}" \
+      || rm -f "./${MAIN}"
+  fi
+
+  if [[ ! -f "$PREBUILD" ]]; then
+    local spec dest="./${PREBUILD}"
+    for spec in \
+      "${repo}/@aerospike/prebuild-${PREBUILD_TAG}/-/${PREBUILD}" \
+      "${repo}/@aerospike/prebuild-${PREBUILD_TAG}/-/prebuild-${PREBUILD_TAG}-${PKG_VERSION}.tgz" \
+      "${repo}/@aerospike/prebuild-${PREBUILD_TAG}/*/*.tgz"
+    do
+      rm -f "./${PREBUILD}" || true
+      shopt -s nullglob
+      rm -f ./*prebuild-"${PREBUILD_TAG}"*.tgz || true
+      shopt -u nullglob
+      if try_rt_dl_flat "$spec" "$dest"; then
+        break
+      fi
+      local got
+      got="$(find . -maxdepth 1 -type f -name "*prebuild-${PREBUILD_TAG}*${PKG_VERSION}.tgz" | head -n 1)"
+      if [[ -n "$got" && "$got" != "./${PREBUILD}" ]]; then
+        mv "$got" "./${PREBUILD}"
+        break
+      fi
+    done
+  fi
+
+  [[ -f "$MAIN" && -f "$PREBUILD" ]]
+}
+
 fetch_from_release_bundle () {
   local root="$1"
   rm -rf "$root"
@@ -62,45 +117,43 @@ fetch_from_release_bundle () {
     echo "warning: release bundle download failed" >&2
     return 1
   fi
+
+  local n
+  n="$(count_files "$root")"
+  if [[ "$n" == "0" ]]; then
+    echo "warning: release bundle download returned 0 files" >&2
+    return 1
+  fi
+  echo "release bundle download fetched ${n} file(s)" >&2
 }
 
 fetch_from_npm_paths () {
   local repo="$1"
+  BUNDLE_VERSION=""
+
   local main_path="${repo}/aerospike/-/${MAIN}"
   local prebuild_path="${repo}/@aerospike/prebuild-${PREBUILD_TAG}/-/${PREBUILD}"
 
   echo "try npm path: ${main_path}" >&2
-  if jf rt dl --flat --project "$JF_PROJECT" "$main_path" "./${MAIN}"; then
-    :
-  else
-    rm -f "./${MAIN}"
-  fi
+  try_rt_dl_flat "$main_path" "./${MAIN}" || rm -f "./${MAIN}"
 
   echo "try npm path: ${prebuild_path}" >&2
-  if jf rt dl --flat --project "$JF_PROJECT" "$prebuild_path" "./${PREBUILD}"; then
-    :
-  else
-    rm -f "./${PREBUILD}"
-  fi
+  try_rt_dl_flat "$prebuild_path" "./${PREBUILD}" || rm -f "./${PREBUILD}"
 
-  # JFrog CLI has historically uploaded scoped tarballs without the @scope prefix.
   local alt_prebuild="prebuild-${PREBUILD_TAG}-${PKG_VERSION}.tgz"
   if [[ ! -f "$PREBUILD" ]]; then
     local alt_path="${repo}/@aerospike/prebuild-${PREBUILD_TAG}/-/${alt_prebuild}"
     echo "try alternate npm path: ${alt_path}" >&2
-    if jf rt dl --flat --project "$JF_PROJECT" "$alt_path" "./${PREBUILD}"; then
-      :
-    else
-      rm -f "./${PREBUILD}"
-    fi
+    try_rt_dl_flat "$alt_path" "./${PREBUILD}" || rm -f "./${PREBUILD}"
   fi
 }
 
 fetch_from_npm_registry () {
-  local registry="${JF_URL%/}/artifactory/api/npm/${JF_REPO}/"
   local optional="@aerospike/prebuild-${PREBUILD_TAG}@${PKG_VERSION}"
 
-  echo "try npm registry: ${registry}" >&2
+  configure_jfrog_npm || return 1
+
+  echo "try npm registry install for aerospike@${PKG_VERSION} and ${optional}" >&2
   rm -rf .npm-jfrog-fetch
   mkdir .npm-jfrog-fetch
   (
@@ -108,15 +161,14 @@ fetch_from_npm_registry () {
     echo '{"name":"jfrog-fetch","private":true}' > package.json
     npm install --no-save --ignore-scripts \
       "aerospike@${PKG_VERSION}" \
-      "${optional}" \
-      --registry "$registry"
+      "${optional}"
   )
 
   if [[ "$MODE" == "download" ]]; then
     (
       cd .npm-jfrog-fetch
-      npm pack "aerospike@${PKG_VERSION}" --registry "$registry"
-      npm pack "${optional}" --registry "$registry"
+      npm pack "aerospike@${PKG_VERSION}"
+      npm pack "${optional}"
     )
     copy_if_found ".npm-jfrog-fetch/aerospike-${PKG_VERSION}.tgz" "./${MAIN}" || true
     copy_if_found ".npm-jfrog-fetch/${PREBUILD}" "./${PREBUILD}" || true
@@ -160,27 +212,32 @@ if [[ "$MODE" != "install" && "$MODE" != "extract" ]]; then
 fi
 
 if [[ -n "$BUNDLE_VERSION" ]]; then
-  bundle_root="$(mktemp -d)"
-  fetch_from_release_bundle "$bundle_root" || true
-  main_src="$(find_artifact "$bundle_root" "$MAIN")"
-  pre_src="$(find_artifact "$bundle_root" "$PREBUILD")"
-  if [[ -z "$pre_src" ]]; then
-    pre_src="$(find_artifact "$bundle_root" "prebuild-${PREBUILD_TAG}-${PKG_VERSION}.tgz")"
-    if [[ -n "$pre_src" ]]; then
-      PREBUILD="$(basename "$pre_src")"
+  fetch_from_bundle_paths "$JF_REPO" || true
+
+  if [[ ! -f "$MAIN" || ! -f "$PREBUILD" ]]; then
+    bundle_root="$(mktemp -d)"
+    if fetch_from_release_bundle "$bundle_root"; then
+      main_src="$(find_artifact "$bundle_root" "$MAIN")"
+      pre_src="$(find_artifact "$bundle_root" "$PREBUILD")"
+      if [[ -z "$pre_src" ]]; then
+        pre_src="$(find_artifact "$bundle_root" "prebuild-${PREBUILD_TAG}-${PKG_VERSION}.tgz")"
+        if [[ -n "$pre_src" ]]; then
+          PREBUILD="$(basename "$pre_src")"
+        fi
+      fi
+      copy_if_found "$main_src" "./${MAIN}" || true
+      copy_if_found "$pre_src" "./${PREBUILD}" || true
     fi
+    rm -rf "$bundle_root"
   fi
-  copy_if_found "$main_src" "./${MAIN}" || true
-  copy_if_found "$pre_src" "./${PREBUILD}" || true
-  rm -rf "$bundle_root"
 fi
 
 if [[ ! -f "$MAIN" || ! -f "$PREBUILD" ]]; then
-  fetch_from_npm_paths "$JF_REPO"
+  fetch_from_npm_paths "$JF_REPO" || true
 fi
 
 if [[ ! -f "$MAIN" || ! -f "$PREBUILD" ]]; then
-  fetch_from_npm_registry
+  fetch_from_npm_registry || true
 fi
 
 if [[ "$MODE" == "install" && -d .slim-install/node_modules/aerospike ]]; then
@@ -195,10 +252,12 @@ fi
 
 if [[ ! -f "$MAIN" ]]; then
   echo "missing main package: ${MAIN}" >&2
+  echo "hint: confirm release bundle ${BUNDLE_NAME}/${BUNDLE_VERSION:-?} exists in JFrog DEV" >&2
   exit 1
 fi
 if [[ ! -f "$PREBUILD" ]]; then
   echo "missing prebuild package: ${PREBUILD}" >&2
+  echo "hint: confirm @aerospike/prebuild-${PREBUILD_TAG}@${PKG_VERSION} is in bundle ${BUNDLE_VERSION:-?}" >&2
   exit 1
 fi
 
