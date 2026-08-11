@@ -12932,6 +12932,10 @@ export namespace strings {
          */
         DEFAULT = 0,
         /**
+         * Update existing values only.
+         */
+        UPDATE_ONLY = 2,
+        /**
          * Suppress an operation failure with the bin unchanged. Does not suppress
          * wrong-type or invalid-bin-type errors.
          */
@@ -12965,8 +12969,8 @@ export namespace strings {
     export class StringOperation extends operations.Operation {
         withContext(contextOrFunction: cdt.Context | ((ctx: cdt.Context) => void)): StringOperation;
         /**
-         * Attach `{ writeFlags }` for supported modify ops. Not used by
-         * {@link regexReplace} (regex flags are a separate argument).
+         * Attach `{ writeFlags }` for supported modify ops, including
+         * {@link regexReplace}. Regex flags remain a separate argument on that op.
          */
         withPolicy(policy: StringPolicy): StringOperation;
     }
@@ -13071,7 +13075,7 @@ export namespace strings {
     /** @remarks If the bin is missing, creates a new bin. */
     export function repeat(bin: string, count: number): StringOperation;
     /**
-     * Regex replace; uses {@link regexFlags}, not {@link writeFlags}.
+     * Regex replace; uses {@link regexFlags} and optional {@link writeFlags}.
      * @remarks If the bin is missing, no-op (record unchanged).
      */
     export function regexReplace(bin: string, pattern: string, replacement: string, flags: number): StringOperation;

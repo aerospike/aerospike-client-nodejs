@@ -29,12 +29,19 @@ const strings = Aerospike.strings
 const VAL_UINT = native.exp.ops.VAL_UINT
 
 describe('exp.string wire encoding #noserver', function () {
-  it('regexReplace packs regex flags as VAL_UINT (CLIENT-4955)', function () {
-    const flags = strings.regexFlags.GLOBAL | strings.regexFlags.CASE_INSENSITIVE
-    const expr = exp.string.regexReplace(null, 'a', 'b', flags, exp.binStr('x'))
-    const flagNode = expr.find(
-      (node) => node.op === VAL_UINT && node.uintVal === flags
+  it('regexReplace packs regex flags then policy flags (CLIENT-4824)', function () {
+    const regexFlags =
+      strings.regexFlags.GLOBAL | strings.regexFlags.CASE_INSENSITIVE
+    const policyFlags = strings.writeFlags.NO_FAIL
+    const expr = exp.string.regexReplace(
+      { flags: policyFlags },
+      'a',
+      'b',
+      regexFlags,
+      exp.binStr('x')
     )
-    expect(flagNode).to.exist
+    const uints = expr.filter((node) => node.op === VAL_UINT)
+    expect(uints.some((node) => node.uintVal === regexFlags)).to.equal(true)
+    expect(uints.some((node) => node.uintVal === policyFlags)).to.equal(true)
   })
 })
