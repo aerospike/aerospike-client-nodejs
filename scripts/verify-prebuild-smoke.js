@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 'use strict'
 
+if (process.env.ELECTRON_RUN_AS_NODE) {
+  delete process.env.ELECTRON_RUN_AS_NODE
+}
+
 const fs = require('fs')
 const path = require('path')
 const { resolveNativeBinding } = require('./resolve-native-binding')

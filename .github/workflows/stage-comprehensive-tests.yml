@@ -310,12 +310,15 @@ jobs:
         pnpm --version
         mkdir pnpm
         cp ./scripts/basic_test.js pnpm/basic_test.js
-        mv aerospike-*.tgz @aerospike-prebuild-*.tgz pnpm/
+        shopt -s nullglob
+        for f in aerospike-*.tgz aerospike-prebuild-*.tgz @aerospike-prebuild-*.tgz prebuild-*.tgz; do
+          [[ -f "$f" ]] && mv "$f" pnpm/
+        done
         cd pnpm
         echo '{}' > package.json
-        MAIN_TGZ=(aerospike-*.tgz)
-        PREBUILD_TGZ=(@aerospike-prebuild-*.tgz)
-        pnpm add "file:./${MAIN_TGZ[0]}" "file:./${PREBUILD_TGZ[0]}" --ignore-scripts
+        source ../scripts/ci/select-slim-tarballs.sh
+        select_slim_tarballs
+        pnpm add "file:./${MAIN_TGZ}" "file:./${PREBUILD_TGZ}" --ignore-scripts
         node basic_test.js
 
     # - name: Set final commit status
@@ -400,12 +403,15 @@ jobs:
         bun --version;
         mkdir bun;
         cp ./scripts/basic_test.js bun/basic_test.js;
-        mv aerospike-*.tgz @aerospike-prebuild-*.tgz bun/
+        shopt -s nullglob
+        for f in aerospike-*.tgz aerospike-prebuild-*.tgz @aerospike-prebuild-*.tgz prebuild-*.tgz; do
+          [[ -f "$f" ]] && mv "$f" bun/
+        done
         cd bun;
         echo '{}' > package.json;
-        MAIN_TGZ=(aerospike-*.tgz)
-        PREBUILD_TGZ=(@aerospike-prebuild-*.tgz)
-        bun add "./${MAIN_TGZ[0]}" "./${PREBUILD_TGZ[0]}"
+        source ../scripts/ci/select-slim-tarballs.sh
+        select_slim_tarballs
+        bun add "./${MAIN_TGZ}" "./${PREBUILD_TGZ}"
         node basic_test.js;
 
     #- name: Debug server
@@ -495,12 +501,15 @@ jobs:
         yarn --version
         mkdir yarn
         cp ./scripts/basic_test.js yarn/basic_test.js
-        mv aerospike-*.tgz @aerospike-prebuild-*.tgz yarn/
+        shopt -s nullglob
+        for f in aerospike-*.tgz aerospike-prebuild-*.tgz @aerospike-prebuild-*.tgz prebuild-*.tgz; do
+          [[ -f "$f" ]] && mv "$f" yarn/
+        done
         cd yarn
         echo '{}' > package.json
-        MAIN_TGZ=(aerospike-*.tgz)
-        PREBUILD_TGZ=(@aerospike-prebuild-*.tgz)
-        yarn add "file:./${MAIN_TGZ[0]}" "file:./${PREBUILD_TGZ[0]}" --ignore-scripts
+        source ../scripts/ci/select-slim-tarballs.sh
+        select_slim_tarballs
+        yarn add "file:./${MAIN_TGZ}" "file:./${PREBUILD_TGZ}" --ignore-scripts
         node basic_test.js
 
     #- name: Debug server
