@@ -142,7 +142,14 @@ validate_prebuild_tgz () {
 }
 
 prebuild_tgz_listing () {
-  tar_listing "$1" | grep "package/prebuilds/${PREBUILD_TAG}/" | head -10 || true
+  local nodes dlls
+  nodes="$(tar_listing "$1" | grep "package/prebuilds/${PREBUILD_TAG}/" | grep '\.node' || true)"
+  if [[ -n "$nodes" ]]; then
+    echo "$nodes" | head -10
+    return 0
+  fi
+  dlls="$(tar_listing "$1" | grep "package/prebuilds/${PREBUILD_TAG}/" | head -10 || true)"
+  [[ -n "$dlls" ]] && echo "$dlls"
 }
 
 reject_invalid_tarballs () {
