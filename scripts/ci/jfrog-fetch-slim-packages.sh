@@ -102,13 +102,22 @@ ensure_jfrog_env () {
   fi
 }
 
+tar_listing () {
+  # GNU tar may exit 2 (warning) after printing a full listing; capture stdout anyway.
+  tar -tzf "$1" 2>/dev/null || true
+}
+
 validate_main_tgz () {
   local file="$1"
+  local listing name
   [[ -f "$file" ]] || return 1
-  if ! tar -tzf "$file" package/package.json >/dev/null 2>&1; then
+  listing="$(tar_listing "$file")"
+  [[ -n "$listing" ]] || return 1
+  [[ "$listing" == *"package/package.json"* ]] || return 1
+  if [[ "$listing" == *"package/prebuilds/"* ]]; then
+    echo "validate_main_tgz: slim main must not contain package/prebuilds/" >&2
     return 1
   fi
-  local name
   name="$(
     tar -xOf "$file" package/package.json 2>/dev/null \
       | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{try{process.stdout.write(JSON.parse(s).name||'')}catch{process.exit(1)}})"
@@ -118,18 +127,29 @@ validate_main_tgz () {
 
 validate_prebuild_tgz () {
   local file="$1"
-  local abi
+  local listing abi
   [[ -f "$file" ]] || return 1
-  tar -tzf "$file" 2>/dev/null | grep -q "package/prebuilds/${PREBUILD_TAG}/" || return 1
+  listing="$(tar_listing "$file")"
+  [[ -n "$listing" ]] || return 1
+  [[ "$listing" == *"package/prebuilds/${PREBUILD_TAG}/"* ]] || return 1
   for abi in 115 127 137 141; do
-    tar -tzf "$file" 2>/dev/null | grep -qE \
-      "package/prebuilds/${PREBUILD_TAG}/(node\.abi${abi}\.node|aerospike\.${abi}\.node)" \
-      || return 1
+    if [[ "$listing" != *"package/prebuilds/${PREBUILD_TAG}/node.abi${abi}.node"* ]] \
+      && [[ "$listing" != *"package/prebuilds/${PREBUILD_TAG}/aerospike.${abi}.node"* ]]; then
+      echo "validate_prebuild_tgz: missing ABI ${abi} under prebuilds/${PREBUILD_TAG}/ in ${file}" >&2
+      return 1
+    fi
   done
 }
 
 prebuild_tgz_listing () {
-  tar -tzf "$1" 2>/dev/null | grep "package/prebuilds/${PREBUILD_TAG}/" | head -10 || true
+  local nodes dlls
+  nodes="$(tar_listing "$1" | grep "package/prebuilds/${PREBUILD_TAG}/" | grep '\.node' || true)"
+  if [[ -n "$nodes" ]]; then
+    echo "$nodes" | head -10
+    return 0
+  fi
+  dlls="$(tar_listing "$1" | grep "package/prebuilds/${PREBUILD_TAG}/" | head -10 || true)"
+  [[ -n "$dlls" ]] && echo "$dlls"
 }
 
 reject_invalid_tarballs () {
