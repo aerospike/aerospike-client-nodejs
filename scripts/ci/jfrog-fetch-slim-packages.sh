@@ -235,24 +235,41 @@ verify_slim_install () {
   echo "slim install verified for ${PREBUILD_TAG}" >&2
 }
 
-install_slim_from_tarballs () {
-  local main_path="${WORKSPACE_ROOT}/${MAIN}"
-  local prebuild_path
-  prebuild_path="$(resolve_prebuild_path)"
+prepare_slim_main_for_install () {
+  rm -rf .slim-main-pkg
+  mkdir -p .slim-main-pkg
+  tar xzf "./${MAIN}" -C .slim-main-pkg
+  node <<'NODE'
+const fs = require('fs')
+const path = require('path')
+const pkgPath = path.join(process.cwd(), '.slim-main-pkg', 'package', 'package.json')
+const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
+delete pkg.optionalDependencies
+fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
+NODE
+}
 
-  if [[ ! -f "$main_path" ]]; then
-    echo "install_slim_from_tarballs: missing main tarball ${main_path}" >&2
+install_slim_from_tarballs () {
+  if [[ ! -f "./${MAIN}" ]]; then
+    echo "install_slim_from_tarballs: missing main tarball ${WORKSPACE_ROOT}/${MAIN}" >&2
     exit 1
   fi
+  if ! resolve_prebuild_path >/dev/null; then
+    echo "install_slim_from_tarballs: missing prebuild tarball ${WORKSPACE_ROOT}/${PREBUILD}" >&2
+    exit 1
+  fi
+
+  prepare_slim_main_for_install
 
   rm -rf .slim-install
   mkdir .slim-install
   (
     cd .slim-install
     echo '{"name":"slim-jfrog-smoke","private":true}' > package.json
-    npm install --no-save --ignore-scripts \
-      "file:${main_path}" \
-      "file:${prebuild_path}"
+    # Relative file: paths avoid Git Bash -> npm path mangling on Windows (D:\d\a\...).
+    npm install --no-save --ignore-scripts --omit=optional \
+      "file:../.slim-main-pkg/package" \
+      "file:../${PREBUILD}"
   )
   verify_slim_install
 }
