@@ -98,8 +98,13 @@ validate_main_tgz () {
 
 validate_prebuild_tgz () {
   local file="$1"
+  local abi
   [[ -f "$file" ]] || return 1
-  tar -tzf "$file" 2>/dev/null | grep -q "package/prebuilds/${PREBUILD_TAG}/"
+  tar -tzf "$file" 2>/dev/null | grep -q "package/prebuilds/${PREBUILD_TAG}/" || return 1
+  for abi in 115 127 137 141; do
+    tar -tzf "$file" 2>/dev/null \
+      | grep -q "package/prebuilds/${PREBUILD_TAG}/node.abi${abi}.node" || return 1
+  done
 }
 
 reject_invalid_tarballs () {
@@ -403,6 +408,7 @@ case "$MODE" in
     echo "downloaded ${MAIN} and ${PREBUILD}" >&2
     ;;
   extract)
+    rm -rf "prebuilds/${PREBUILD_TAG}"
     mkdir -p prebuilds
     tmp="$(mktemp -d)"
     tar xzf "$PREBUILD" -C "$tmp"
