@@ -495,7 +495,7 @@ jobs:
       if: ${{ inputs.run_tests }}
       run: |
         npm ci --ignore-scripts
-        npm install -g yarn
+        npm install -g yarn@1.22.22 --ignore-scripts
         yarn --version
         mkdir yarn
         cp ./scripts/basic_test.js yarn/basic_test.js

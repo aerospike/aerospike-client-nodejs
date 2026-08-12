@@ -378,6 +378,19 @@ fetch_from_npm_registry () {
   rm -rf .npm-jfrog-fetch
 }
 
+bundle_workspace_dir () {
+  [[ -n "${BUNDLE_VERSION:-}" ]] \
+    && [[ -d "${WORKSPACE_ROOT}/${BUNDLE_NAME}/${BUNDLE_VERSION}" ]]
+}
+
+report_bundle_copy_failure () {
+  echo "error: release bundle tree present but no valid slim tarballs for ${PREBUILD_TAG}" >&2
+  echo "  expected main=${MAIN} prebuild=${PREBUILD}" >&2
+  find "${WORKSPACE_ROOT}/${BUNDLE_NAME}/${BUNDLE_VERSION}" -type f -name '*.tgz' 2>/dev/null \
+    | head -20 >&2 || true
+}
+
+main () {
 [[ $# -eq 1 ]] || usage
 MODE=$1
 
@@ -416,6 +429,10 @@ if [[ -n "$BUNDLE_VERSION" ]]; then
 fi
 
 if ! have_valid_tarballs; then
+  if bundle_workspace_dir; then
+    report_bundle_copy_failure
+    exit 1
+  fi
   fetch_from_npm_paths "$JF_REPO" || true
 fi
 
@@ -471,3 +488,8 @@ case "$MODE" in
     usage
     ;;
 esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi
