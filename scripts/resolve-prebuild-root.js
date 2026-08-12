@@ -18,6 +18,19 @@ function resolvePrebuildRoot (mainPackageRoot) {
   }
 
   const optionalName = `@aerospike/prebuild-${tag}`
+  let dir = mainPackageRoot
+  while (true) {
+    const optionalRoot = path.join(dir, 'node_modules', optionalName)
+    if (fs.existsSync(path.join(optionalRoot, 'package.json'))) {
+      return optionalRoot
+    }
+    const parent = path.dirname(dir)
+    if (parent === dir) {
+      break
+    }
+    dir = parent
+  }
+
   try {
     const pkgJson = require.resolve(`${optionalName}/package.json`, {
       paths: [mainPackageRoot]
