@@ -31,5 +31,6 @@ jobs:
 
     - id: stage-get-jfrog-version
       run: |
-        echo dev_version=$(npm pkg get version | tr -d '"') >> $GITHUB_OUTPUT
-        echo tag_version=$(git tag -l --sort=-creatordate | head -n 1) >> $GITHUB_OUTPUT
+        release=$(npm pkg get version | tr -d '"')
+        echo dev_version=${release} >> $GITHUB_OUTPUT
+        echo tag_version=$(git tag -l "${release}-dev.*" --sort=-v:refname | head -n 1) >> $GITHUB_OUTPUT
