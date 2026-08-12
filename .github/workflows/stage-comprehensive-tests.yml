@@ -319,10 +319,7 @@ jobs:
           [[ -f "$f" ]] && mv "$f" pnpm/
         done
         cd pnpm
-        echo '{}' > package.json
-        source ../scripts/ci/select-slim-tarballs.sh
-        select_slim_tarballs
-        pnpm add "file:./${MAIN_TGZ}" "file:./${PREBUILD_TGZ}" --ignore-scripts
+        bash ../scripts/ci/install-slim-pm-smoke.sh pnpm
         node basic_test.js
 
     # - name: Set final commit status
@@ -412,10 +409,7 @@ jobs:
           [[ -f "$f" ]] && mv "$f" bun/
         done
         cd bun;
-        echo '{}' > package.json;
-        source ../scripts/ci/select-slim-tarballs.sh
-        select_slim_tarballs
-        bun add "./${MAIN_TGZ}" "./${PREBUILD_TGZ}"
+        bash ../scripts/ci/install-slim-pm-smoke.sh bun
         node basic_test.js;
 
     #- name: Debug server
@@ -510,10 +504,7 @@ jobs:
           [[ -f "$f" ]] && mv "$f" yarn/
         done
         cd yarn
-        echo '{}' > package.json
-        source ../scripts/ci/select-slim-tarballs.sh
-        select_slim_tarballs
-        yarn add "file:./${MAIN_TGZ}" "file:./${PREBUILD_TGZ}" --ignore-scripts
+        bash ../scripts/ci/install-slim-pm-smoke.sh yarn
         node basic_test.js
 
     #- name: Debug server
