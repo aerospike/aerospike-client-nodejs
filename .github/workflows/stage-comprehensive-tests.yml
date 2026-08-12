@@ -47,6 +47,10 @@ on:
 
 env:
   COMMIT_SHA_TO_BUILD_AND_TEST: ${{ github.sha }}
+  JF_URL: ${{ vars.JFROG_PLATFORM_URL }}
+  JF_PROJECT: ${{ vars.JFROG_PROJECT }}
+  JF_OIDC_PROVIDER: ${{ vars.JFROG_OIDC_PROVIDER }}
+  JF_OIDC_AUDIENCE: ${{ vars.JFROG_OIDC_AUDIENCE }}
 
 jobs:
   get-runner-os:
@@ -92,11 +96,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
@@ -183,11 +187,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -289,11 +293,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -381,11 +385,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -480,11 +484,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -602,11 +606,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
@@ -704,11 +708,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -783,11 +787,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -870,11 +874,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -956,11 +960,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -1028,11 +1032,11 @@ jobs:
       - name: Set up JFrog credentials
         uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
         env:
-          JF_URL: https://aerospike.jfrog.io
-          JF_PROJECT: database
+          JF_URL: ${{ env.JF_URL }}
+          JF_PROJECT: ${{ env.JF_PROJECT }}
         with:
-          oidc-provider-name: database-gh-aerospike
-          oidc-audience: database-gh-aerospike
+          oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+          oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
       - run: |
           PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
@@ -1117,11 +1121,11 @@ jobs:
     - name: Set up JFrog credentials
       uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
       env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
+        JF_URL: ${{ env.JF_URL }}
+        JF_PROJECT: ${{ env.JF_PROJECT }}
       with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
+        oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+        oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
 
     - run: |
         PKG_VERSION=${{ inputs.version }} PLATFORM_TAG=${{ inputs.platform-tag }} \
