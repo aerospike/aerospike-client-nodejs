@@ -70,6 +70,26 @@ count_files () {
   find "$1" -type f 2>/dev/null | wc -l | tr -d ' '
 }
 
+bundle_artifact_roots () {
+  local root="$1"
+  local candidates=(
+    "$root"
+    "${root}/${BUNDLE_NAME}/${BUNDLE_VERSION}"
+    "${WORKSPACE_ROOT}/${BUNDLE_NAME}/${BUNDLE_VERSION}"
+  )
+  local dir seen="" total
+  for dir in "${candidates[@]}"; do
+    [[ -d "$dir" ]] || continue
+    total="$(count_files "$dir")"
+    [[ "$total" != "0" ]] || continue
+    case " ${seen} " in
+      *" ${dir} "*) continue ;;
+    esac
+    seen="${seen} ${dir}"
+    echo "$dir"
+  done
+}
+
 ensure_jfrog_env () {
   if [[ -z "${JF_URL}" ]]; then
     JF_URL=https://aerospike.jfrog.io
@@ -102,9 +122,14 @@ validate_prebuild_tgz () {
   [[ -f "$file" ]] || return 1
   tar -tzf "$file" 2>/dev/null | grep -q "package/prebuilds/${PREBUILD_TAG}/" || return 1
   for abi in 115 127 137 141; do
-    tar -tzf "$file" 2>/dev/null \
-      | grep -q "package/prebuilds/${PREBUILD_TAG}/node.abi${abi}.node" || return 1
+    tar -tzf "$file" 2>/dev/null | grep -qE \
+      "package/prebuilds/${PREBUILD_TAG}/(node\.abi${abi}\.node|aerospike\.${abi}\.node)" \
+      || return 1
   done
+}
+
+prebuild_tgz_listing () {
+  tar -tzf "$1" 2>/dev/null | grep "package/prebuilds/${PREBUILD_TAG}/" | head -10 || true
 }
 
 reject_invalid_tarballs () {
@@ -113,7 +138,8 @@ reject_invalid_tarballs () {
     rm -f "$MAIN"
   fi
   if [[ -f "$PREBUILD" ]] && ! validate_prebuild_tgz "$PREBUILD"; then
-    echo "warning: rejecting invalid prebuild tarball ${PREBUILD} (expected prebuilds/${PREBUILD_TAG}/)" >&2
+    echo "warning: rejecting invalid prebuild tarball ${PREBUILD} (expected prebuilds/${PREBUILD_TAG}/ with ABIs 115,127,137,141)" >&2
+    prebuild_tgz_listing "$PREBUILD" >&2 || true
     rm -f "$PREBUILD"
   fi
 }
@@ -240,13 +266,30 @@ fetch_from_release_bundle () {
     return 1
   fi
 
-  local n
-  n="$(count_files "$root")"
-  if [[ "$n" == "0" ]]; then
-    echo "warning: release bundle download returned 0 files" >&2
+  local total=0 dir
+  while IFS= read -r dir; do
+    [[ -n "$dir" ]] || continue
+    total=$(( total + $(count_files "$dir") ))
+    echo "release bundle artifacts under ${dir}" >&2
+  done < <(bundle_artifact_roots "$root")
+
+  if [[ "$total" == "0" ]]; then
+    echo "warning: release bundle download returned 0 files under expected paths" >&2
     return 1
   fi
-  echo "release bundle download fetched ${n} file(s)" >&2
+  echo "release bundle download fetched ${total} file(s)" >&2
+}
+
+copy_bundle_artifacts_from_download () {
+  local bundle_root="$1"
+  local search
+  while IFS= read -r search; do
+    [[ -n "$search" ]] || continue
+    if copy_bundle_artifacts "$search"; then
+      return 0
+    fi
+  done < <(bundle_artifact_roots "$bundle_root")
+  return 1
 }
 
 normalize_downloaded_prebuild () {
@@ -278,6 +321,7 @@ fetch_from_npm_paths () {
     [[ -f "$PREBUILD" ]] && validate_prebuild_tgz "$PREBUILD" && break
     echo "try npm path: ${spec}" >&2
     try_rt_dl_flat "$spec" "./${PREBUILD}" || rm -f "./${PREBUILD}"
+    validate_prebuild_tgz "$PREBUILD" || rm -f "./${PREBUILD}"
   done
 
   reject_invalid_tarballs
@@ -334,6 +378,19 @@ fetch_from_npm_registry () {
   rm -rf .npm-jfrog-fetch
 }
 
+bundle_workspace_dir () {
+  [[ -n "${BUNDLE_VERSION:-}" ]] \
+    && [[ -d "${WORKSPACE_ROOT}/${BUNDLE_NAME}/${BUNDLE_VERSION}" ]]
+}
+
+report_bundle_copy_failure () {
+  echo "error: release bundle tree present but no valid slim tarballs for ${PREBUILD_TAG}" >&2
+  echo "  expected main=${MAIN} prebuild=${PREBUILD}" >&2
+  find "${WORKSPACE_ROOT}/${BUNDLE_NAME}/${BUNDLE_VERSION}" -type f -name '*.tgz' 2>/dev/null \
+    | head -20 >&2 || true
+}
+
+main () {
 [[ $# -eq 1 ]] || usage
 MODE=$1
 
@@ -362,12 +419,20 @@ reject_invalid_tarballs
 if [[ -n "$BUNDLE_VERSION" ]]; then
   bundle_root="$(mktemp -d)"
   if fetch_from_release_bundle "$bundle_root"; then
-    copy_bundle_artifacts "$bundle_root" || true
+    copy_bundle_artifacts_from_download "$bundle_root" || true
   fi
   rm -rf "$bundle_root"
+  # JFrog CLI may leave bundle tree in the workspace; search it even if temp dir is empty.
+  if ! have_valid_tarballs && [[ -d "${WORKSPACE_ROOT}/${BUNDLE_NAME}/${BUNDLE_VERSION}" ]]; then
+    copy_bundle_artifacts "${WORKSPACE_ROOT}/${BUNDLE_NAME}/${BUNDLE_VERSION}" || true
+  fi
 fi
 
 if ! have_valid_tarballs; then
+  if bundle_workspace_dir; then
+    report_bundle_copy_failure
+    exit 1
+  fi
   fetch_from_npm_paths "$JF_REPO" || true
 fi
 
@@ -423,3 +488,8 @@ case "$MODE" in
     usage
     ;;
 esac
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  main "$@"
+fi
