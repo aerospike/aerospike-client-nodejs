@@ -70,6 +70,18 @@ count_files () {
   find "$1" -type f 2>/dev/null | wc -l | tr -d ' '
 }
 
+ensure_jfrog_env () {
+  if [[ -z "${JF_URL}" ]]; then
+    JF_URL=https://aerospike.jfrog.io
+  fi
+  if [[ -z "${JF_PROJECT}" ]]; then
+    JF_PROJECT=database
+  fi
+  if [[ -z "${JF_REPO}" ]]; then
+    JF_REPO=database-npm-dev-local
+  fi
+}
+
 configure_jfrog_npm () {
   if ! command -v jf >/dev/null 2>&1; then
     echo "warning: jf CLI not available for npm registry fallback" >&2
@@ -314,11 +326,12 @@ BUNDLE_NAME="${BUNDLE_NAME:-aerospike-nodejs-client}"
 BUNDLE_VERSION="${BUNDLE_VERSION:-}"
 PREBUILD_TAG="$(map_prebuild_tag "$PLATFORM_TAG")"
 WORKSPACE_ROOT="$(pwd)"
+ensure_jfrog_env
 
 MAIN="aerospike-${PKG_VERSION}.tgz"
 PREBUILD="aerospike-prebuild-${PREBUILD_TAG}-${PKG_VERSION}.tgz"
 
-echo "jfrog-fetch-slim-packages: main=${MAIN} prebuild=${PREBUILD} mode=${MODE} bundle=${BUNDLE_VERSION:-none}" >&2
+echo "jfrog-fetch-slim-packages: main=${MAIN} prebuild=${PREBUILD} mode=${MODE} bundle=${BUNDLE_VERSION:-none} project=${JF_PROJECT}" >&2
 
 if [[ "$MODE" != "install" && "$MODE" != "extract" ]]; then
   rm -f "./${MAIN}" "./${PREBUILD}"

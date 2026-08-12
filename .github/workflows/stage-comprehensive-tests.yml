@@ -47,10 +47,10 @@ on:
 
 env:
   COMMIT_SHA_TO_BUILD_AND_TEST: ${{ github.sha }}
-  JF_URL: ${{ vars.JFROG_PLATFORM_URL }}
-  JF_PROJECT: ${{ vars.JFROG_PROJECT }}
-  JF_OIDC_PROVIDER: ${{ vars.JFROG_OIDC_PROVIDER }}
-  JF_OIDC_AUDIENCE: ${{ vars.JFROG_OIDC_AUDIENCE }}
+  JF_URL: ${{ vars.JFROG_PLATFORM_URL != '' && vars.JFROG_PLATFORM_URL || 'https://aerospike.jfrog.io' }}
+  JF_PROJECT: ${{ vars.JFROG_PROJECT != '' && vars.JFROG_PROJECT || 'database' }}
+  JF_OIDC_PROVIDER: ${{ vars.JFROG_OIDC_PROVIDER != '' && vars.JFROG_OIDC_PROVIDER || 'database-gh-aerospike' }}
+  JF_OIDC_AUDIENCE: ${{ vars.JFROG_OIDC_AUDIENCE != '' && vars.JFROG_OIDC_AUDIENCE || 'database-gh-aerospike' }}
 
 jobs:
   get-runner-os:
