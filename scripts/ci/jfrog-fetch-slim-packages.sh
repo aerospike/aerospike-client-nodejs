@@ -82,6 +82,43 @@ ensure_jfrog_env () {
   fi
 }
 
+validate_main_tgz () {
+  local file="$1"
+  [[ -f "$file" ]] || return 1
+  if ! tar -tzf "$file" package/package.json >/dev/null 2>&1; then
+    return 1
+  fi
+  local name
+  name="$(
+    tar -xOf "$file" package/package.json 2>/dev/null \
+      | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{try{process.stdout.write(JSON.parse(s).name||'')}catch{process.exit(1)}})"
+  )"
+  [[ "$name" == "aerospike" ]]
+}
+
+validate_prebuild_tgz () {
+  local file="$1"
+  [[ -f "$file" ]] || return 1
+  tar -tzf "$file" 2>/dev/null | grep -q "package/prebuilds/${PREBUILD_TAG}/"
+}
+
+reject_invalid_tarballs () {
+  if [[ -f "$MAIN" ]] && ! validate_main_tgz "$MAIN"; then
+    echo "warning: rejecting invalid main tarball ${MAIN}" >&2
+    rm -f "$MAIN"
+  fi
+  if [[ -f "$PREBUILD" ]] && ! validate_prebuild_tgz "$PREBUILD"; then
+    echo "warning: rejecting invalid prebuild tarball ${PREBUILD} (expected prebuilds/${PREBUILD_TAG}/)" >&2
+    rm -f "$PREBUILD"
+  fi
+}
+
+have_valid_tarballs () {
+  [[ -f "$MAIN" && -f "$PREBUILD" ]] \
+    && validate_main_tgz "$MAIN" \
+    && validate_prebuild_tgz "$PREBUILD"
+}
+
 configure_jfrog_npm () {
   if ! command -v jf >/dev/null 2>&1; then
     echo "warning: jf CLI not available for npm registry fallback" >&2
@@ -93,11 +130,13 @@ configure_jfrog_npm () {
 
 try_rt_dl_flat () {
   local spec="$1" dest="$2"
-  local extra=()
   if [[ -n "${BUNDLE_VERSION:-}" ]]; then
-    extra=(--bundle "${BUNDLE_NAME}/${BUNDLE_VERSION}")
+    jf rt dl --flat --project "$JF_PROJECT" \
+      --bundle "${BUNDLE_NAME}/${BUNDLE_VERSION}" \
+      "$spec" "$dest"
+  else
+    jf rt dl --flat --project "$JF_PROJECT" "$spec" "$dest"
   fi
-  jf rt dl --flat --project "$JF_PROJECT" "${extra[@]}" "$spec" "$dest"
 }
 
 resolve_prebuild_path () {
@@ -167,55 +206,19 @@ install_slim_from_tarballs () {
   verify_slim_install
 }
 
-fetch_from_bundle_paths () {
-  local repo="$1"
-  [[ -n "$BUNDLE_VERSION" ]] || return 1
+copy_bundle_artifacts () {
+  local root="$1"
+  local main_src pre_src
 
-  echo "try bundle-scoped npm paths for ${BUNDLE_NAME}/${BUNDLE_VERSION}" >&2
-
-  if [[ ! -f "$MAIN" ]]; then
-    try_rt_dl_flat "${repo}/aerospike/-/${MAIN}" "./${MAIN}" \
-      || rm -f "./${MAIN}"
+  main_src="$(find_artifact "$root" "$MAIN")"
+  pre_src="$(find_prebuild_artifact "$root")"
+  if [[ -n "$pre_src" ]]; then
+    PREBUILD="$(basename "$pre_src")"
   fi
-
-  if [[ ! -f "$PREBUILD" ]]; then
-    local spec dest="./${PREBUILD}"
-    for spec in \
-      "${repo}/@aerospike/prebuild-${PREBUILD_TAG}/-/${PREBUILD}" \
-      "${repo}/@aerospike/prebuild-${PREBUILD_TAG}/-/aerospike-prebuild-${PREBUILD_TAG}-${PKG_VERSION}.tgz" \
-      "${repo}/@aerospike/prebuild-${PREBUILD_TAG}/-/prebuild-${PREBUILD_TAG}-${PKG_VERSION}.tgz" \
-      "${repo}/@aerospike/prebuild-${PREBUILD_TAG}/*/*.tgz"
-    do
-      rm -f "./${PREBUILD}" || true
-      shopt -s nullglob
-      rm -f ./*prebuild-"${PREBUILD_TAG}"*.tgz || true
-      shopt -u nullglob
-      if try_rt_dl_flat "$spec" "$dest"; then
-        break
-      fi
-      local got
-      got="$(find . -maxdepth 1 -type f -name "*prebuild-${PREBUILD_TAG}*${PKG_VERSION}.tgz" | head -n 1)"
-      if [[ -n "$got" ]]; then
-        if [[ "$got" != "./${PREBUILD}" ]]; then
-          mv "$got" "./${PREBUILD}"
-        fi
-        break
-      fi
-    done
-  fi
-
-  normalize_downloaded_prebuild || true
-  [[ -f "$MAIN" && -f "$PREBUILD" ]]
-}
-
-normalize_downloaded_prebuild () {
-  if [[ -f "$PREBUILD" ]]; then
-    return 0
-  fi
-
-  local resolved
-  resolved="$(resolve_prebuild_path)" || return 1
-  PREBUILD="$(basename "$resolved")"
+  copy_if_found "$main_src" "./${MAIN}" || true
+  copy_if_found "$pre_src" "./${PREBUILD}" || true
+  reject_invalid_tarballs
+  have_valid_tarballs
 }
 
 fetch_from_release_bundle () {
@@ -241,6 +244,16 @@ fetch_from_release_bundle () {
   echo "release bundle download fetched ${n} file(s)" >&2
 }
 
+normalize_downloaded_prebuild () {
+  if [[ -f "$PREBUILD" ]] && validate_prebuild_tgz "$PREBUILD"; then
+    return 0
+  fi
+
+  local resolved
+  resolved="$(resolve_prebuild_path)" || return 1
+  PREBUILD="$(basename "$resolved")"
+}
+
 fetch_from_npm_paths () {
   local repo="$1"
   BUNDLE_VERSION=""
@@ -254,13 +267,15 @@ fetch_from_npm_paths () {
 
   echo "try npm path: ${main_path}" >&2
   try_rt_dl_flat "$main_path" "./${MAIN}" || rm -f "./${MAIN}"
+  validate_main_tgz "$MAIN" || rm -f "./${MAIN}"
 
   for spec in "${prebuild_specs[@]}"; do
-    [[ -f "$PREBUILD" ]] && break
+    [[ -f "$PREBUILD" ]] && validate_prebuild_tgz "$PREBUILD" && break
     echo "try npm path: ${spec}" >&2
     try_rt_dl_flat "$spec" "./${PREBUILD}" || rm -f "./${PREBUILD}"
   done
 
+  reject_invalid_tarballs
   normalize_downloaded_prebuild || true
 }
 
@@ -337,35 +352,28 @@ if [[ "$MODE" != "install" && "$MODE" != "extract" ]]; then
   rm -f "./${MAIN}" "./${PREBUILD}"
 fi
 
-if [[ -n "$BUNDLE_VERSION" ]]; then
-  fetch_from_bundle_paths "$JF_REPO" || true
+reject_invalid_tarballs
 
-  if [[ ! -f "$MAIN" || ! -f "$PREBUILD" ]]; then
-    bundle_root="$(mktemp -d)"
-    if fetch_from_release_bundle "$bundle_root"; then
-      main_src="$(find_artifact "$bundle_root" "$MAIN")"
-      pre_src="$(find_prebuild_artifact "$bundle_root")"
-      if [[ -n "$pre_src" ]]; then
-        PREBUILD="$(basename "$pre_src")"
-      fi
-      copy_if_found "$main_src" "./${MAIN}" || true
-      copy_if_found "$pre_src" "./${PREBUILD}" || true
-    fi
-    rm -rf "$bundle_root"
+if [[ -n "$BUNDLE_VERSION" ]]; then
+  bundle_root="$(mktemp -d)"
+  if fetch_from_release_bundle "$bundle_root"; then
+    copy_bundle_artifacts "$bundle_root" || true
   fi
+  rm -rf "$bundle_root"
 fi
 
-if [[ ! -f "$MAIN" || ! -f "$PREBUILD" ]]; then
+if ! have_valid_tarballs; then
   fetch_from_npm_paths "$JF_REPO" || true
 fi
 
 normalize_downloaded_prebuild || true
 
-if [[ ! -f "$MAIN" || ! -f "$PREBUILD" ]]; then
+if ! have_valid_tarballs; then
   fetch_from_npm_registry || true
 fi
 
 normalize_downloaded_prebuild || true
+reject_invalid_tarballs
 
 if [[ "$MODE" == "install" && -d .slim-install/node_modules/aerospike ]]; then
   echo "installed via npm registry into .slim-install" >&2
@@ -377,14 +385,14 @@ if [[ "$MODE" == "extract" && -d prebuilds/${PREBUILD_TAG} ]]; then
   exit 0
 fi
 
-if [[ ! -f "$MAIN" ]]; then
-  echo "missing main package: ${MAIN}" >&2
+if [[ ! -f "$MAIN" ]] || ! validate_main_tgz "$MAIN"; then
+  echo "missing or invalid main package: ${MAIN}" >&2
   echo "hint: confirm release bundle ${BUNDLE_NAME}/${BUNDLE_VERSION:-?} exists in JFrog DEV" >&2
   exit 1
 fi
 
-if [[ ! -f "$PREBUILD" ]]; then
-  echo "missing prebuild package for ${PREBUILD_TAG} (expected ${PREBUILD})" >&2
+if [[ ! -f "$PREBUILD" ]] || ! validate_prebuild_tgz "$PREBUILD"; then
+  echo "missing or invalid prebuild package for ${PREBUILD_TAG} (expected ${PREBUILD})" >&2
   ls -la ./*prebuild* 2>/dev/null || true
   echo "hint: confirm @aerospike/prebuild-${PREBUILD_TAG}@${PKG_VERSION} is in bundle ${BUNDLE_VERSION:-?}" >&2
   exit 1
