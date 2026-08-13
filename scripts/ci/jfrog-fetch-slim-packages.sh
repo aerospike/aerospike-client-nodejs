@@ -235,14 +235,16 @@ verify_slim_install () {
   echo "slim install verified for ${PREBUILD_TAG}" >&2
 }
 
-prepare_slim_main_for_install () {
-  rm -rf .slim-main-pkg
-  mkdir -p .slim-main-pkg
-  tar xzf "./${MAIN}" -C .slim-main-pkg
-  node <<'NODE'
+prepare_slim_main_in_dir () {
+  local dest="$1"
+  rm -rf "$dest"
+  mkdir -p "$dest"
+  tar xzf "./${MAIN}" -C "$dest"
+  SLIM_MAIN_DIR="$dest" node <<'NODE'
 const fs = require('fs')
 const path = require('path')
-const pkgPath = path.join(process.cwd(), '.slim-main-pkg', 'package', 'package.json')
+const dest = process.env.SLIM_MAIN_DIR
+const pkgPath = path.join(process.cwd(), dest, 'package', 'package.json')
 const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'))
 delete pkg.optionalDependencies
 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n')
@@ -250,6 +252,8 @@ NODE
 }
 
 install_slim_from_tarballs () {
+  local prebuild_pkg="@aerospike/prebuild-${PREBUILD_TAG}"
+
   if [[ ! -f "./${MAIN}" ]]; then
     echo "install_slim_from_tarballs: missing main tarball ${WORKSPACE_ROOT}/${MAIN}" >&2
     exit 1
@@ -259,17 +263,27 @@ install_slim_from_tarballs () {
     exit 1
   fi
 
-  prepare_slim_main_for_install
-
   rm -rf .slim-install
-  mkdir .slim-install
+  mkdir -p .slim-install
+  # Keep extracted main under .slim-install so resolve-prebuild-root.js can walk
+  # up from the file:-linked aerospike package to .slim-install/node_modules/.
+  prepare_slim_main_in_dir ".slim-install/.slim-main-pkg"
+
+  cat > .slim-install/package.json <<EOF
+{
+  "name": "slim-jfrog-smoke",
+  "private": true,
+  "dependencies": {
+    "aerospike": "file:./.slim-main-pkg/package",
+    "${prebuild_pkg}": "file:../${PREBUILD}"
+  }
+}
+EOF
+
   (
     cd .slim-install
-    echo '{"name":"slim-jfrog-smoke","private":true}' > package.json
-    # Relative file: paths avoid Git Bash -> npm path mangling on Windows (D:\d\a\...).
-    npm install --no-save --ignore-scripts --omit=optional \
-      "file:../.slim-main-pkg/package" \
-      "file:../${PREBUILD}"
+    # Relative file: paths avoid Git Bash -> npm path mangling on Windows (D:\\d\\a\\...).
+    npm install --ignore-scripts
   )
   verify_slim_install
 }
