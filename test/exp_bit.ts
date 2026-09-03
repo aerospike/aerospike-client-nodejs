@@ -65,5 +65,55 @@ describe('Aerospike.exp_operations', function () {
         expect(bins.ExpVar).to.eql(4)
       })
     })
+
+    describe('bit b64 encode', function () {
+      helper.skipUnlessVersion('>= 8.1.3', this)
+
+      let b64EncodeSupported = false
+
+      before(async function () {
+        const blob = Buffer.from([1, 1, 1, 1, 1])
+        const key: Key = await createRecord({ blob })
+        try {
+          await client.operate(key, [
+            exp.operations.read(tempBin,
+              exp.bit.b64Encode(exp.binBlob('blob')),
+              0)
+          ])
+          b64EncodeSupported = true
+        } catch (error: any) {
+          if (error.code !== Aerospike.status.ERR_OP_NOT_APPLICABLE &&
+              error.code !== Aerospike.status.ERR_REQUEST_INVALID) {
+            throw error
+          }
+        }
+      })
+
+      helper.skipUnless(this, () => b64EncodeSupported, 'exp bit b64Encode requires 8.1.3.0-105+')
+
+      it('encodes the whole blob', async function () {
+        const blob = Buffer.from([1, 1, 1, 1, 1])
+        const key: Key = await createRecord({ blob })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.bit.b64Encode(exp.binBlob('blob')),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.ExpVar).to.eql(blob.toString('base64'))
+      })
+
+      it('encodes from an offset', async function () {
+        const blob = Buffer.from([1, 1, 1, 1, 1])
+        const key: Key = await createRecord({ blob })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.bit.b64EncodeFrom(exp.binBlob('blob'), exp.int(1)),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.ExpVar).to.eql(Buffer.from([1, 1, 1, 1]).toString('base64'))
+      })
+    })
   })
 })

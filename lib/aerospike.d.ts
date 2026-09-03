@@ -12861,6 +12861,22 @@ export namespace bitwise {
      */
     export function getInt(bin: string, bitOffset: number, bitSize: number, sign: boolean): BitwiseOperation;
     /**
+     * Create bit "b64 encode" operation for the whole blob.
+     * @remarks Server returns the base64 text of the blob as a string. Requires server 8.1.3+.
+     */
+    export function b64Encode(bin: string): BitwiseOperation;
+    /**
+     * Create bit "b64 encode" from a byte offset through the end of the blob.
+     * @remarks A negative byteOffset counts back from the end. Requires server 8.1.3+.
+     */
+    export function b64EncodeFrom(bin: string, byteOffset: number): BitwiseOperation;
+    /**
+     * Create bit "b64 encode" on a byte span.
+     * @remarks When invertSize is true, byteSize counts back from the blob end,
+     * so 0 means to the end. Requires server 8.1.3+.
+     */
+    export function b64EncodeRange(bin: string, byteOffset: number, byteSize: number, invertSize?: boolean): BitwiseOperation;
+    /**
      * Create bit "left scan" operation.
      * @remarks Server returns integer bit offset of the first specified value
      * bit in bitmap.
@@ -12928,16 +12944,23 @@ export namespace strings {
      */
     export enum writeFlags {
         /**
-         * Default. Does not suppress an in-operation execution failure.
+         * Default. Allow create or update.
          */
         DEFAULT = 0,
         /**
-         * Update existing values only.
+         * Create the bin only when it is missing. Valid on insert, overwrite,
+         * concat, append, prepend, padStart, padEnd, and repeat. Returns
+         * BIN_EXISTS if the bin already exists. Mutually exclusive with
+         * {@link UPDATE_ONLY}. Invalid with a CDT context path.
+         */
+        CREATE_ONLY = 1,
+        /**
+         * Update existing values only. Mutually exclusive with {@link CREATE_ONLY}.
          */
         UPDATE_ONLY = 2,
         /**
          * Suppress an operation failure with the bin unchanged. Does not suppress
-         * wrong-type or invalid-bin-type errors.
+         * wrong-type or invalid-bin-type errors, and does not suppress parse errors.
          */
         NO_FAIL = 4
     }
@@ -12960,6 +12983,10 @@ export namespace strings {
     export enum numericType {
         ANY = 0,
         INT = 1,
+        /**
+         * Floating-point only. Requires `.` plus a digit (not `strtod`):
+         * `"3.14"` matches, `"5"` / `"5."` / `"1e5"` do not.
+         */
         FLOAT = 2
     }
 
@@ -12992,9 +13019,12 @@ export namespace strings {
     export function findOccurrence(bin: string, needle: string, occurrence: number): StringOperation;
     /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function contains(bin: string, needle: string): StringOperation;
-    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
+    /**
+     * Matching is Unicode canonical (NFC vs NFD), not byte-exact.
+     * @remarks Requires applicable string bin; errors if missing or wrong type.
+     */
     export function startsWith(bin: string, prefix: string): StringOperation;
-    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
+    /** Matching is Unicode canonical (NFC vs NFD), not byte-exact. */
     export function endsWith(bin: string, suffix: string): StringOperation;
     /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function toInteger(bin: string): StringOperation;
@@ -13044,15 +13074,21 @@ export namespace strings {
      */
     export function prepend(bin: string, value: string): StringOperation;
     /**
-     * Removes half-open codepoint range `[start, end)`.
+     * Removes from `start` through `end`, or through the end of the string when
+     * `end` is omitted (packs `[53, start]`).
      * @remarks If the bin is missing, no-op (record unchanged).
      */
-    export function snip(bin: string, start: number, end: number): StringOperation;
+    export function snip(bin: string, start: number, end?: number): StringOperation;
+    /**
+     * Removes from `start` through the end of the string. Packs `[53, start]` only.
+     * @remarks If the bin is missing, no-op (record unchanged).
+     */
+    export function snipStart(bin: string, start: number): StringOperation;
     /** @deprecated Use {@link snip} (same wire). */
     export function snipRange(bin: string, start: number, end: number): StringOperation;
-    /** @remarks If the bin is missing, no-op (record unchanged). */
+    /** Matching is Unicode canonical (NFC vs NFD), not byte-exact. If the bin is missing, no-op. */
     export function replace(bin: string, needle: string, replacement: string): StringOperation;
-    /** @remarks If the bin is missing, no-op (record unchanged). */
+    /** Matching is Unicode canonical (NFC vs NFD), not byte-exact. If the bin is missing, no-op. */
     export function replaceAll(bin: string, needle: string, replacement: string): StringOperation;
     /** @remarks If the bin is missing, no-op (record unchanged). */
     export function upper(bin: string): StringOperation;
@@ -14780,6 +14816,16 @@ export namespace lists {
      * })
      */
     export function size(bin: string): ListOperation;
+    /**
+     * Concatenate the string items of a list and return a single string.
+     * @remarks Inverse of {@link strings.splitSeparator}. Requires server 8.1.3+.
+     */
+    export function join(bin: string): ListOperation;
+    /**
+     * Concatenate the string items of a list with a separator and return a single string.
+     * @remarks Requires server 8.1.3+.
+     */
+    export function joinSeparator(bin: string, separator: string): ListOperation;
 }
 
 export namespace maps {
@@ -15962,6 +16008,9 @@ export namespace exp {
          * @return integer value Index of the left most bit starting from offset set to value.
          */
         export const getInt: (bin: AerospikeExp, sign: boolean, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
+        export const b64Encode: (bin: AerospikeExp) => AerospikeExp;
+        export const b64EncodeFrom: (bin: AerospikeExp, byteOffset: AerospikeExp) => AerospikeExp;
+        export const b64EncodeRange: (bin: AerospikeExp, byteOffset: AerospikeExp, byteSize: AerospikeExp, invertSize?: boolean) => AerospikeExp;
     }
     /**
      * aerospike/exp/hll
@@ -16114,6 +16163,8 @@ export namespace exp {
         export const append: (policy: { flags?: number } | null, value: string, bin: AerospikeExp) => AerospikeExp;
         export const prepend: (policy: { flags?: number } | null, value: string, bin: AerospikeExp) => AerospikeExp;
         export const snip: (policy: { flags?: number } | null, start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
+        /** Packs `[53, start]` only. Policy is accepted for API parity and is not packed. */
+        export const snipStart: (policy: { flags?: number } | null, start: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
         /** @deprecated Use {@link snip}. */
         export const snipRange: (policy: { flags?: number } | null, start: number | AerospikeExp, end: number | AerospikeExp, bin: AerospikeExp) => AerospikeExp;
         export const replace: (policy: { flags?: number } | null, needle: string, replacement: string, bin: AerospikeExp) => AerospikeExp;
@@ -16142,6 +16193,14 @@ export namespace exp {
          * @return (integer expression)
          */
         export const size: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+        /**
+         * Concatenate the string items of a list and return a single string.
+         */
+        export const join: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
+        /**
+         * Concatenate the string items of a list with a separator and return a single string.
+         */
+        export const joinSeparator: (bin: AerospikeExp, separator: string, ctx?: cdt.Context | null) => AerospikeExp;
           /**
          * Create expression that selects list items identified by value and returns selected
          * data specified by returnType.
@@ -19608,6 +19667,10 @@ declare namespace errorDetailVerbosityNamespace {
      * Request subcode and human-readable message from the server on error responses.
      */
     export const MESSAGE: 2;
+    /**
+     * Request subcode, message, and expression-trace diagnostics when present.
+     */
+    export const EXP_TRACE: 3;
 }
 
 export {errorDetailVerbosityNamespace as errorDetailVerbosity}
@@ -19651,6 +19714,11 @@ declare namespace subcodeNamespace {
      * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
      */
     export const PARAM_BIN_COUNT_TOO_LARGE: 5;
+    /**
+     * String op CTX envelope is malformed.
+     * Paired with {@link statusNamespace.ERR_PARAM|ERR_PARAM}.
+     */
+    export const PARAM_STRING_CTX_MALFORMED: 8;
     /**
      * Cluster is still resolving initial partition balance at startup.
      * Paired with {@link statusNamespace.ERR_CLUSTER|ERR_CLUSTER}.
@@ -19771,6 +19839,26 @@ declare namespace subcodeNamespace {
      * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
      */
     export const OPNOT_HLL_INTERSECT_MINHASH_MISMATCH: 9;
+    /**
+     * String conversion failed.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_STRING_CONVERSION_FAILED: 10;
+    /**
+     * Source blob/string is not valid UTF-8.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_STRING_UTF8_INVALID: 11;
+    /**
+     * Regex pattern exceeded a server limit.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_STRING_REGEX_LIMIT_EXCEEDED: 12;
+    /**
+     * Base64 input is malformed.
+     * Paired with {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}.
+     */
+    export const OPNOT_STRING_B64_INVALID: 13;
     /**
      * Record filtered out by a metadata-only filter expression.
      * Paired with {@link statusNamespace.ERR_FILTERED_OUT|ERR_FILTERED_OUT}.

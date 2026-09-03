@@ -80,6 +80,32 @@ describe('Aerospike.exp_operations', function () {
       })
     })
 
+    describe('list join', function () {
+      helper.skipUnlessVersion('>= 8.1.3', this)
+
+      it('joins string items without a separator', async function () {
+        const key: Key = await createRecord({ tags: ['a', 'b', 'c'] })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.lists.join(exp.binList('tags')),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.ExpVar).to.eql('abc')
+      })
+
+      it('joins string items with a separator', async function () {
+        const key: Key = await createRecord({ tags: ['a', 'b', 'c'] })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.lists.joinSeparator(exp.binList('tags'), ','),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.ExpVar).to.eql('a,b,c')
+      })
+    })
+
     describe('list size with context', function () {
       it('matches the size of a list value within a nested context', async function () {
         const key: Key = await createRecord({ tags: ['blue', 'green', ['orange', 'pink', 'white', 'black']] })

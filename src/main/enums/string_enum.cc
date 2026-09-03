@@ -35,6 +35,7 @@ v8::Local<v8::Object> string_enum_values()
 
 	Local<Object> write_flags = Nan::New<Object>();
 	set(write_flags, "DEFAULT", 0);
+	set(write_flags, "CREATE_ONLY", 1);
 	set(write_flags, "UPDATE_ONLY", 2);
 	set(write_flags, "NO_FAIL", 4);
 
