@@ -67,6 +67,14 @@ describe('lists.join()', function () {
     expect(result.bins.items).to.eql('a,b,c')
   })
 
+  it('join(bin, separator) matches joinSeparator', async function () {
+    const key = await putKey({ items: ['a', 'b', 'c'] })
+    const result: AerospikeRecord = await client.operate(key, [
+      lists.join('items', ',')
+    ])
+    expect(result.bins.items).to.eql('a,b,c')
+  })
+
   it('errors when an item is not a string', async function () {
     const key = await putKey({ items: ['a', 1, 'c'] })
     try {

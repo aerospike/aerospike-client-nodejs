@@ -114,6 +114,18 @@ describe('Aerospike.exp_operations', function () {
         const result: AerospikeRecord = await client.operate(key, ops, {})
         expect(result.bins.ExpVar).to.eql(Buffer.from([1, 1, 1, 1]).toString('base64'))
       })
+
+      it('b64Encode with offset matches b64EncodeFrom', async function () {
+        const blob = Buffer.from([1, 1, 1, 1, 1])
+        const key: Key = await createRecord({ blob })
+        const ops: operations.Operation[] = [
+          exp.operations.read(tempBin,
+            exp.bit.b64Encode(exp.binBlob('blob'), exp.int(1)),
+            0)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.ExpVar).to.eql(Buffer.from([1, 1, 1, 1]).toString('base64'))
+      })
     })
   })
 })
