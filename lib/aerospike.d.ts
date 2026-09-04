@@ -12861,23 +12861,18 @@ export namespace bitwise {
      */
     export function getInt(bin: string, bitOffset: number, bitSize: number, sign: boolean): BitwiseOperation;
     /**
-     * Create bit "b64 encode" operation.
-     * @remarks Omit `byteOffset` to encode the whole blob. Pass only `byteOffset`
-     * to encode from that offset through the end. Pass `byteOffset` and
-     * `byteSize` for a span (`invertSize` true counts size back from the end,
-     * so 0 means to the end). Requires server 8.1.3+.
+     * Create bit "b64 encode" operation for the whole blob.
+     * @remarks Server returns the base64 text of the blob as a string. Requires server 8.1.3+.
      */
-    export function b64Encode(bin: string, byteOffset?: number, byteSize?: number, invertSize?: boolean): BitwiseOperation;
+    export function b64Encode(bin: string): BitwiseOperation;
     /**
      * Create bit "b64 encode" from a byte offset through the end of the blob.
-     * @remarks Same as {@link b64Encode} with `byteOffset` only. A negative
-     * byteOffset counts back from the end. Requires server 8.1.3+.
+     * @remarks A negative byteOffset counts back from the end. Requires server 8.1.3+.
      */
     export function b64EncodeFrom(bin: string, byteOffset: number): BitwiseOperation;
     /**
      * Create bit "b64 encode" on a byte span.
-     * @remarks Same as {@link b64Encode} with offset, size, and optional invertSize.
-     * When invertSize is true, byteSize counts back from the blob end,
+     * @remarks When invertSize is true, byteSize counts back from the blob end,
      * so 0 means to the end. Requires server 8.1.3+.
      */
     export function b64EncodeRange(bin: string, byteOffset: number, byteSize: number, invertSize?: boolean): BitwiseOperation;
@@ -14823,14 +14818,12 @@ export namespace lists {
     export function size(bin: string): ListOperation;
     /**
      * Concatenate the string items of a list and return a single string.
-     * @remarks Pass `separator` to place it between items (same as
-     * {@link joinSeparator}). Inverse of {@link strings.splitSeparator}.
-     * Requires server 8.1.3+.
+     * @remarks Inverse of {@link strings.splitSeparator}. Requires server 8.1.3+.
      */
-    export function join(bin: string, separator?: string): ListOperation;
+    export function join(bin: string): ListOperation;
     /**
      * Concatenate the string items of a list with a separator and return a single string.
-     * @remarks Same as {@link join} with a separator. Requires server 8.1.3+.
+     * @remarks Requires server 8.1.3+.
      */
     export function joinSeparator(bin: string, separator: string): ListOperation;
 }
@@ -16015,7 +16008,7 @@ export namespace exp {
          * @return integer value Index of the left most bit starting from offset set to value.
          */
         export const getInt: (bin: AerospikeExp, sign: boolean, bitSize: AerospikeExp, bitOffset: AerospikeExp) => AerospikeExp;
-        export const b64Encode: (bin: AerospikeExp, byteOffset?: AerospikeExp, byteSize?: AerospikeExp, invertSize?: boolean) => AerospikeExp;
+        export const b64Encode: (bin: AerospikeExp) => AerospikeExp;
         export const b64EncodeFrom: (bin: AerospikeExp, byteOffset: AerospikeExp) => AerospikeExp;
         export const b64EncodeRange: (bin: AerospikeExp, byteOffset: AerospikeExp, byteSize: AerospikeExp, invertSize?: boolean) => AerospikeExp;
     }
@@ -16205,9 +16198,8 @@ export namespace exp {
         export const size: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
         /**
          * Concatenate the string items of a list and return a single string.
-         * Pass a string `separator` as the second argument to join with a delimiter.
          */
-        export const join: (bin: AerospikeExp, separatorOrCtx?: string | cdt.Context | null, ctx?: cdt.Context | null) => AerospikeExp;
+        export const join: (bin: AerospikeExp, ctx?: cdt.Context | null) => AerospikeExp;
         /**
          * Concatenate the string items of a list with a separator and return a single string.
          */

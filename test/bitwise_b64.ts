@@ -73,29 +73,11 @@ describe('bitwise.b64Encode()', function () {
     expect(result.bins.blob).to.eql(Buffer.from([1, 1, 1, 1]).toString('base64'))
   })
 
-  it('b64Encode(bin, offset) matches b64EncodeFrom', async function () {
-    const blob = Buffer.from([1, 1, 1, 1, 1])
-    const key = await putKey({ blob })
-    const result: AerospikeRecord = await client.operate(key, [
-      bits.b64Encode('blob', 1)
-    ])
-    expect(result.bins.blob).to.eql(Buffer.from([1, 1, 1, 1]).toString('base64'))
-  })
-
   it('encodes a byte range', async function () {
     const blob = Buffer.from([1, 1, 1, 1, 1])
     const key = await putKey({ blob })
     const result: AerospikeRecord = await client.operate(key, [
       bits.b64EncodeRange('blob', 1, 2)
-    ])
-    expect(result.bins.blob).to.eql(Buffer.from([1, 1]).toString('base64'))
-  })
-
-  it('b64Encode(bin, offset, size) matches b64EncodeRange', async function () {
-    const blob = Buffer.from([1, 1, 1, 1, 1])
-    const key = await putKey({ blob })
-    const result: AerospikeRecord = await client.operate(key, [
-      bits.b64Encode('blob', 1, 2)
     ])
     expect(result.bins.blob).to.eql(Buffer.from([1, 1]).toString('base64'))
   })

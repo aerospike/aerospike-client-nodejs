@@ -104,17 +104,6 @@ describe('Aerospike.exp_operations', function () {
         const result: AerospikeRecord = await client.operate(key, ops, {})
         expect(result.bins.ExpVar).to.eql('a,b,c')
       })
-
-      it('join with a separator argument matches joinSeparator', async function () {
-        const key: Key = await createRecord({ tags: ['a', 'b', 'c'] })
-        const ops: operations.Operation[] = [
-          exp.operations.read(tempBin,
-            exp.lists.join(exp.binList('tags'), ','),
-            0)
-        ]
-        const result: AerospikeRecord = await client.operate(key, ops, {})
-        expect(result.bins.ExpVar).to.eql('a,b,c')
-      })
     })
 
     describe('list size with context', function () {
