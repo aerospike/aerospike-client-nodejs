@@ -1063,6 +1063,28 @@ bool add_list_size_op(as_operations *ops, const char *bin, as_cdt_ctx *context,
 	return true;
 }
 
+bool add_list_join_op(as_operations *ops, const char *bin, as_cdt_ctx *context,
+					  Local<Object> obj, LogInfo *log)
+{
+	(void)obj;
+	(void)log;
+	return as_operations_list_join(ops, bin, context);
+}
+
+bool add_list_join_separator_op(as_operations *ops, const char *bin,
+								as_cdt_ctx *context, Local<Object> obj,
+								LogInfo *log)
+{
+	char *separator = NULL;
+	if (get_string_property(&separator, obj, "separator", log) !=
+		AS_NODE_PARAM_OK) {
+		return false;
+	}
+	bool ok = as_operations_list_join_separator(ops, bin, context, separator);
+	free(separator);
+	return ok;
+}
+
 typedef bool (*ListOperation)(as_operations *ops, const char *bin,
 							  as_cdt_ctx *context, Local<Object> op,
 							  LogInfo *log);
@@ -1108,7 +1130,9 @@ const ops_table_entry ops_table[] = {
 	{"LIST_GET_BY_RANK_RANGE", add_list_get_by_rank_range_op},
 	{"LIST_INCREMENT", add_list_increment_op},
 	{"LIST_SIZE", add_list_size_op},
-	{"LIST_CREATE", add_list_create_op}};
+	{"LIST_CREATE", add_list_create_op},
+	{"LIST_JOIN", add_list_join_op},
+	{"LIST_JOIN_SEPARATOR", add_list_join_separator_op}};
 
 int add_list_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 				LogInfo *log)

@@ -158,6 +158,7 @@
         'src/main/enums/index.cc',
         'src/main/enums/policy_enum.cc',
         'src/main/enums/status.cc',
+        'src/main/enums/subcode.cc',
         'src/main/enums/job_status.cc',
         'src/main/enums/udf_languages.cc',
         'src/main/enums/ttl.cc',
@@ -251,17 +252,6 @@
             }
           },
         }],
-      ]
-    },
-    {
-      "target_name": "action_after_build",
-      "type": "none",
-      "dependencies": [ "<(module_name)" ],
-      "copies": [
-        {
-          "files": [ "<(PRODUCT_DIR)/<(module_name).node" ],
-          "destination": "<(module_path)"
-        }
       ]
     }
   ]

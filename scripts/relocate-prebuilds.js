@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+'use strict'
+
+const fs = require('fs')
+const path = require('path')
+
+const root = path.join(__dirname, '..')
+const prebuildsDir = path.join(root, 'prebuilds')
+const abi = process.versions.modules
+const platform = process.platform
+const arch = process.arch
+const destDir = path.join(prebuildsDir, `${platform}-${arch}`)
+// node-gyp-build expects prebuildify-style tags (e.g. node.abi115.node), not aerospike.115.node
+const dest = path.join(destDir, `node.abi${abi}.node`)
+
+function findSource () {
+  const releasePath = path.join(root, 'build', 'Release', 'aerospike.node')
+  if (fs.existsSync(releasePath)) {
+    return releasePath
+  }
+
+  const bindingRoot = path.join(root, 'lib', 'binding')
+  if (!fs.existsSync(bindingRoot)) {
+    return null
+  }
+
+  for (const dir of fs.readdirSync(bindingRoot)) {
+    const candidate = path.join(bindingRoot, dir, 'aerospike.node')
+    if (fs.existsSync(candidate)) {
+      return candidate
+    }
+  }
+
+  return null
+}
+
+const src = findSource()
+if (!src) {
+  console.error('relocate-prebuilds: no aerospike.node found under build/Release or lib/binding')
+  process.exit(1)
+}
+
+fs.mkdirSync(destDir, { recursive: true })
+fs.copyFileSync(src, dest)
+console.log(`relocate-prebuilds: ${src} -> ${dest}`)
+
+// Windows links aerospike.dll at runtime (AS_SHARED_IMPORT). Linux/macOS are fully static in .node.
+if (platform === 'win32') {
+  const releaseDir = path.dirname(src)
+  for (const name of fs.readdirSync(releaseDir)) {
+    if (!name.toLowerCase().endsWith('.dll')) {
+      continue
+    }
+    const from = path.join(releaseDir, name)
+    const to = path.join(destDir, name)
+    fs.copyFileSync(from, to)
+    console.log(`relocate-prebuilds: ${from} -> ${to}`)
+  }
+}

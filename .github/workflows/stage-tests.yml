@@ -12,6 +12,10 @@ on:
         type: string
         description: Build version
         required: true
+      bundle-version:
+        type: string
+        description: Release bundle version (e.g. 7.0.0-dev.9)
+        required: true
       server-tag:
         type: string
         required: false
@@ -25,6 +29,10 @@ on:
       version:
         type: string
         description: Build version
+        required: true
+      bundle-version:
+        type: string
+        description: Release bundle version (e.g. 7.0.0-dev.9)
         required: true
       server-tag:
         type: string
@@ -43,13 +51,13 @@ jobs:
     strategy:
       matrix:
         platform-tag: [
-          "manylinux_x86_64",
-          "manylinux_aarch64",
-          "macosx_x86_64",
-          #"macosx_x86_64_2",
-          "macosx_arm64",
-          #"macosx_arm64_2",
-          "win_amd64"
+          "linux_x86_64",
+          "linux_aarch64",
+          "darwin_x86_64",
+          #"darwin_x86_64_2",
+          "darwin_arm64",
+          #"darwin_arm64_2",
+          "win32_x64"
         ]
       fail-fast: false
     uses: ./.github/workflows/stage-comprehensive-tests.yml
@@ -58,6 +66,7 @@ jobs:
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
       version: ${{ inputs.version }}
+      bundle-version: ${{ inputs.bundle-version }}
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
       cell_girl: ${{ secrets.cell_girl }}

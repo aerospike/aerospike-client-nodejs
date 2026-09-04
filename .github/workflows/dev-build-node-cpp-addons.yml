@@ -1,15 +1,14 @@
 name: Build Node C++ Addons
-run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, server-tag=${{ inputs.server-tag }})
-
-# Builds manylinux wheels and source distribution
-# Optionally run tests on manylinux wheels
-# Then upload artifacts to Github
-
+run-name: Build Node C++ Addons (run_tests=${{ inputs.run_tests }}, publish-build-info=${{ inputs.publish-build-info }})
 
 on:
   workflow_dispatch:
     inputs:
       run_tests:
+        required: false
+        type: boolean
+        default: false
+      publish-build-info:
         required: false
         type: boolean
         default: false
@@ -22,16 +21,23 @@ on:
         default: 'latest'
   workflow_call:
     inputs:
-      # The "dev" tests test the artifacts against a server
-      # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
       run_tests:
+        required: false
+        type: boolean
+        default: false
+      publish-build-info:
         required: false
         type: boolean
         default: false
       version:
         type: string
         required: true
-      # workflow_call hack
+      # Run-level prefix forwarded to dev-build-node-cpp-bindings.yml, which suffixes
+      # -buildinfo-{abi}-{platform} per Node × platform matrix job (unique per artifact).
+      jf-build-id:
+        type: string
+        required: false
+        default: ''
       is_workflow_call:
         type: boolean
         default: true
@@ -53,20 +59,22 @@ jobs:
     strategy:
       matrix:
         platform-tag: [
-          "manylinux_x86_64",
-          "manylinux_aarch64",
-          "macosx_x86_64",
-          "macosx_x86_64_2",
-          "macosx_arm64",
-          "macosx_arm64_2",
-          "win_amd64"
+          "linux_x86_64",
+          "linux_aarch64",
+          "darwin_x86_64",
+          "darwin_x86_64_2",
+          "darwin_arm64",
+          "darwin_arm64_2",
+          "win32_x64"
         ]
       fail-fast: false
     uses: ./.github/workflows/dev-build-node-cpp-bindings.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      # Can't use env context here, so just copy from build-sdist env var
       run_tests: ${{ inputs.run_tests }}
+      publish-build-info: ${{ inputs.publish-build-info }}
+      # Prefix only; per-artifact uniqueness is applied in dev-build-node-cpp-bindings.yml.
+      jf-build-id: ${{ inputs.jf-build-id }}
       use-server-rc: false
       server-tag: ${{ inputs.server-tag }}
       version: ${{ inputs.version }}

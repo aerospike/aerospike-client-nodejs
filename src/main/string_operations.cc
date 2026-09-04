@@ -106,6 +106,7 @@ typedef enum {
 	STRING_OP_REPEAT,
 	STRING_OP_REGEX_REPLACE,
 	STRING_OP_TO_STRING,
+	STRING_OP_SNIP_START,
 	STRING_OP_COUNT
 } string_op_index;
 
@@ -154,6 +155,7 @@ static const char *string_op_names[STRING_OP_COUNT] = {
 	"REPEAT",
 	"REGEX_REPLACE",
 	"TO_STRING",
+	"SNIP_START",
 };
 
 int add_string_op(as_operations *ops, uint32_t opcode, Local<Object> op,
@@ -404,13 +406,30 @@ int add_string_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 	case STRING_OP_SNIP_RANGE: {
 		int64_t start;
 		int64_t end;
+		bool end_defined = false;
 		if (get_int64_property(&start, op, "start", log) != AS_NODE_PARAM_OK) {
 			break;
 		}
-		if (get_int64_property(&end, op, "end", log) != AS_NODE_PARAM_OK) {
+		if (get_optional_int64_property(&end, &end_defined, op, "end", log) !=
+			AS_NODE_PARAM_OK) {
 			break;
 		}
-		ok = as_operations_string_snip(ops, bin, ctx_ptr, pol_ptr, start, end);
+		if (end_defined) {
+			ok = as_operations_string_snip(ops, bin, ctx_ptr, pol_ptr, start,
+										   end);
+		}
+		else {
+			ok = as_operations_string_snip_start(ops, bin, ctx_ptr, pol_ptr,
+												 start);
+		}
+		break;
+	}
+	case STRING_OP_SNIP_START: {
+		int64_t start;
+		if (get_int64_property(&start, op, "start", log) != AS_NODE_PARAM_OK) {
+			break;
+		}
+		ok = as_operations_string_snip_start(ops, bin, ctx_ptr, pol_ptr, start);
 		break;
 	}
 	case STRING_OP_APPEND: {

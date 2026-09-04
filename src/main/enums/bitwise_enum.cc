@@ -72,6 +72,7 @@ Local<Object> bitwise_enum_values()
 	set(opcodes, "LSCAN", AS_BIT_OP_LSCAN);
 	set(opcodes, "RSCAN", AS_BIT_OP_RSCAN);
 	set(opcodes, "GET_INT", AS_BIT_OP_GET_INT);
+	set(opcodes, "B64_ENCODE", AS_BIT_OP_B64_ENCODE);
 
 	Local<Object> enums = Nan::New<Object>();
 	Nan::Set(enums, Nan::New("writeFlags").ToLocalChecked(), write_flags);

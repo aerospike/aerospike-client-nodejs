@@ -115,6 +115,14 @@ int basepolicy_from_jsobject(as_policy_base *policy, Local<Object> obj,
 		return rc;
 	}
 
+	uint32_t error_detail_verbosity = 0;
+	if ((rc = get_optional_uint32_property(&error_detail_verbosity, NULL, obj,
+										   "errorDetailVerbosity", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	policy->error_detail_verbosity = (uint8_t)error_detail_verbosity;
+
 	if ((rc = get_optional_transaction_property(&policy->txn, NULL, obj,
 										 "txn", log)) !=
 		AS_NODE_PARAM_OK) {

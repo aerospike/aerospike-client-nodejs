@@ -30,17 +30,15 @@
   "bugs": {
     "url": "https://github.com/aerospike/aerospike-client-nodejs/issues"
   },
-  "binary": {
-    "module_name": "aerospike",
-    "module_path": "./lib/binding/{node_abi}-{platform}-{arch}/",
-    "remote_path": "./{module_name}/v{version}/",
-    "package_name": "{module_name}-v{version}-{node_abi}-{platform}-{arch}.tar.gz",
-    "host": "https://www.npmjs.com/package/aerospike"
-  },
   "scripts": {
-    "install": "npm run build",
-    "build": "node-pre-gyp install --fallback-to-build --addon_version=$(node -p \"require('./package.json').version\")",
+    "build": "node scripts/build-native.js",
+    "verify:slim-layout": "node scripts/verify-slim-package-layout.js",
+    "examples:all": "node examples/harness/run.js --settings examples/.settings.json all",
+    "examples": "node examples/harness/run.js --settings examples/.settings.json",
+    "examples:verify-registry": "node examples/harness/verifyRegistry.js",
+    "verify:examples": "npm run lint && npm run examples:verify-registry && npm run test-noserver -- --grep 'examples harness registry'",
     "test": "mocha test/${npm_config_testfile:-}",
+    "test-ci-single": "mocha --no-config --require choma --require mocha-clean --node-option import=tsx",
     "test-dry-run": "mocha --dry-run",
     "test-noserver": "GLOBAL_CLIENT=false mocha -g '#noserver'",
     "lint": "standard --ignore scripts",
@@ -52,18 +50,17 @@
     "build-docs": "npx typedoc --plugin typedoc-plugin-rename-defaults --entryPointStrategy expand lib/aerospike.d.ts",
     "cppcheck": "cppcheck --quiet --enable=warning,style -I src/include src/main/",
     "valgrind": "valgrind --leak-check=full --smc-check=all-non-file node $(which mocha) -g '#slow' -i",
-    "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i",
-    "prepare": "husky install",
-    "removeExtraBinaries": "node ./scripts/prebuiltBinding.js"
+    "gdb": "gdb --args node ./node_modules/mocha/bin/_mocha -R dot -g '#slow' -i"
   },
   "dependencies": {
-    "@mapbox/node-pre-gyp": "^2.0.3",
-    "bindings": "^1.5.0",
-    "husky": "^9.0.11",
-    "minimatch": "^10.1.1",
-    "nan": "^2.22.0",
-    "node-gyp": "^12.1.0",
-    "npm-run-all": "^4.1.5"
+    "minimatch": "^10.1.1"
+  },
+  "optionalDependencies": {
+    "@aerospike/prebuild-darwin-arm64": "7.0.0",
+    "@aerospike/prebuild-darwin-x64": "7.0.0",
+    "@aerospike/prebuild-linux-arm64": "7.0.0",
+    "@aerospike/prebuild-linux-x64": "7.0.0",
+    "@aerospike/prebuild-win32-x64": "7.0.0"
   },
   "devDependencies": {
     "@types/chai": "^5.2.3",
@@ -81,8 +78,11 @@
     "dockerode": "^4.0.9",
     "eslint": "^9.39.2",
     "globals": "^17.3.0",
+    "husky": "^9.0.11",
     "mocha": "^11.7.5",
     "mocha-clean": "^1.0.0",
+    "nan": "^2.22.0",
+    "node-gyp": "^12.1.0",
     "p-throttle": "^8.1.0",
     "standard": "^17.1.0",
     "tmp": "^0.2.4",

@@ -31,10 +31,13 @@ Local<Object> indexDataType()
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
 	set(obj, "STRING", AS_INDEX_STRING);
-	set(obj, "NUMERIC", AS_INDEX_NUMERIC);
+	// CLIENT-4358: expose AS_INDEX_INTEGER to JS. INTEGER <-> NUMERIC
+	// mapping by server version (8.1.3 boundary) is handled by the Aerospike C client
+	// in aerospike_index_create_private(), not in this binding.
+	set(obj, "INTEGER", AS_INDEX_INTEGER);
 	set(obj, "GEO2DSPHERE", AS_INDEX_GEO2DSPHERE);
 	set(obj, "BLOB", AS_INDEX_BLOB);
-	set(obj, "INTEGER", AS_INDEX_INTEGER);
+	set(obj, "NUMERIC", AS_INDEX_NUMERIC);
 	// Use this when creating a set sindex
 	set(obj, "DEFAULT", AS_INDEX_DEFAULT);
 

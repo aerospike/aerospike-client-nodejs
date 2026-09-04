@@ -15,6 +15,11 @@ To run the test cases:
 
     $ npm test
 
+`npm test` runs the full mocha suite and then `posttest` lint. CI uses
+`npm test --ignore-scripts` for the same mocha run without lint. For a single
+test file without loading the full `.mocharc.yml` suite, use
+`npm run test-ci-single -- test/<file>.ts`.
+
 The tests are written and run using [`mocha`](http://visionmedia.github.io/mocha).
 You can choose to use `mocha` directly, but you must first install `mocha`:
 

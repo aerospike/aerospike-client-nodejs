@@ -78,6 +78,7 @@ Local<Object> list_enum_values()
 	set(opcodes, "INCREMENT", AS_CDT_OP_LIST_INCREMENT);
 	set(opcodes, "SORT", AS_CDT_OP_LIST_SORT);
 	set(opcodes, "SIZE", AS_CDT_OP_LIST_SIZE);
+	set(opcodes, "STRING_LIST_JOIN", AS_CDT_OP_LIST_STRING_LIST_JOIN);
 	set(opcodes, "GET", AS_CDT_OP_LIST_GET);
 	set(opcodes, "GET_RANGE", AS_CDT_OP_LIST_GET_RANGE);
 	set(opcodes, "GET_BY_INDEX", AS_CDT_OP_LIST_GET_BY_INDEX);

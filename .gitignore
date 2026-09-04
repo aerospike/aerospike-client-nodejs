@@ -24,3 +24,7 @@ tsconfig.tsbuildinfo
 **/*.log
 # Generated javascript tests from typescript tests
 test/**/*.*js
+prebuilds/
+packages/prebuild-*/
+.tmp-slim-verify/
+example-results/

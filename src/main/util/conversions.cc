@@ -973,6 +973,8 @@ Local<Object> error_to_jsobject(as_error *error, const LogInfo *log)
 	}
 
 	Nan::Set(err, Nan::New("code").ToLocalChecked(), Nan::New(error->code));
+	Nan::Set(err, Nan::New("subcode").ToLocalChecked(),
+			 Nan::New(error->subcode));
 	Nan::Set(err, Nan::New("message").ToLocalChecked(),
 			 error->message[0] != '\0'
 				 ? Nan::New(error->message).ToLocalChecked()

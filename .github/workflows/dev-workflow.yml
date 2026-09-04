@@ -1,9 +1,5 @@
 name: Dev workflow
 
-# 1. When a PR review is requested, run tests on that PR
-# 2. If all of the tests pass, allow the PR to be merged into `dev`
-# 3. Whenever a PR is merged to `dev`, bump version number in `dev`
-
 on:
   workflow_dispatch:
     inputs:
@@ -16,12 +12,6 @@ on:
         description: From last release version
         required: true
 
-    # inputs:
-    #   run_server_release_tests:
-    #     description: 'DEBUG: Run server release tests in build-wheels workflow?'
-    #     type: boolean
-    #     default: false
-
 jobs:
   bump-dev-number-and-tag:
     uses: ./.github/workflows/dev-bump-version.yml
@@ -30,96 +20,30 @@ jobs:
 
   build-node-cpp-addons:
     uses: ./.github/workflows/dev-build-node-cpp-addons.yml
-    needs: [
-      bump-dev-number-and-tag
-    ]
+    needs: [bump-dev-number-and-tag]
     with:
       version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      # Run-level JFrog build-info prefix (not the final per-artifact ID). Each matrix
+      # cell in dev-build-node-cpp-bindings.yml appends -buildinfo-{abi}-{platform}.
+      jf-build-id: ${{ github.run_id }}-${{ github.run_attempt }}
+      publish-build-info: true
       run_tests: false
     secrets:
       soup_hat: ${{ secrets.soup_hat }}
       cell_girl: ${{ secrets.cell_girl }}
       song_loss: ${{ secrets.song_loss }}
 
-  # TODO: for now, use our own workflow because the shared-workflow's deploy workflow doesn't support npm repos
-  upload-artifacts-as-jfrog-build:
-    needs: [
-      bump-dev-number-and-tag,
-      build-node-cpp-addons
-    ]
-    runs-on: ubuntu-22.04
-    permissions:
-      # This is required for requesting the OIDC token
-      id-token: write
-      contents: read
-    steps:
-    - name: Harden the runner (Audit all outbound calls)
-      uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
-      with:
-        egress-policy: audit
-
-    - name: Checkout repository
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      with:
-        ref: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
-        submodules: recursive
-        fetch-depth: 0
-
-    - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
-      with:
-        pattern: "*.build"
-        merge-multiple: true
-        # Maintain the same folder structure that was used to build the bindings so we can pack it later
-        path: "lib/binding"
-
-    - name: Set up JFrog credentials
-      uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
-      env:
-        JF_URL: https://aerospike.jfrog.io
-        JF_PROJECT: database
-      with:
-        oidc-provider-name: database-gh-aerospike
-        oidc-audience: database-gh-aerospike
-
-    - run: |
-        tree lib/binding
-        node ./scripts/change-install-command.js
-        # Install husky from package.json. "npm pack" depends on this
-        npm install husky
-        jf npm-config --repo-deploy=database-npm-dev-local
-        jf npm publish --build-name=nodejs-client --build-number=${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
-        jf rt bp nodejs-client ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
-
-  create-release-bundle:
-    name: Create release bundle from JFrog build
-    needs: [
-      bump-dev-number-and-tag,
-      upload-artifacts-as-jfrog-build
-    ]
-    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@8f53b63b33d86e63aeb37d951283dd974574885b
+  reupload-and-promote-to-dev:
+    needs: [bump-dev-number-and-tag, build-node-cpp-addons]
+    uses: ./.github/workflows/reupload-gh-artifacts-as-jfrog-release-bundle.yml
     with:
-      jf-project: database
-      jf-build-names: "nodejs-client:${{ needs.bump-dev-number-and-tag.outputs.dev_version }}"
-      jf-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
-      version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
-      gh-workflows-ref: 8f53b63b33d86e63aeb37d951283dd974574885b
+      # Parent deploy build-info ID; child compile jobs use {id}-buildinfo-{abi}-{platform}.
+      # jf-metadata-build-id in reupload links children via {id}-buildinfo.
+      jfrog_build_id: ${{ github.run_id }}-${{ github.run_attempt }}
+      next_release_version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
+      latest_tag: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
       dry-run: false
-      oidc-provider-name: database-gh-aerospike
-      oidc-audience: database-gh-aerospike
     permissions:
-      id-token: write
       contents: read
-
-  promote-release-bundle:
-    needs: [
-      create-release-bundle,
-      bump-dev-number-and-tag
-    ]
-    uses: aerospike/aerospike-client-python/.github/workflows/promote-and-optionally-tag-release-bundle.yml@70de74e1518a6b0af8ef9430a59b3baab88dfddf
-    with:
-      release-bundle-name: ${{ vars.RELEASE_BUNDLE_NAME }}
-      release-bundle-version: ${{ needs.bump-dev-number-and-tag.outputs.dev_version }}
-      new-environment: DEV
-      jfrog-project: database
-    permissions:
+      actions: read
       id-token: write

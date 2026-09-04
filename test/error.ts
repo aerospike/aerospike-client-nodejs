@@ -19,7 +19,7 @@
 /* global expect, describe, it */
 /* eslint-disable no-unused-expressions */
 
-import { AerospikeError, status as statusModule } from '../lib/aerospike.js';
+import { AerospikeError, status as statusModule, subcode as subcodeModule } from '../lib/aerospike.js';
 
 import { expect } from 'chai'; 
 import * as helper from './test_helper.ts';
@@ -27,6 +27,7 @@ import * as Aerospike from '../lib/aerospike.js';
 
 const ASError: typeof AerospikeError = Aerospike.AerospikeError
 const status: typeof statusModule = Aerospike.status
+const subcode: typeof subcodeModule = Aerospike.subcode
 
 describe('AerospikeError #noserver', function () {
   describe('constructor', function () {
@@ -47,6 +48,7 @@ describe('AerospikeError #noserver', function () {
       expect(subject).to.have.property('file', null)
       expect(subject).to.have.property('line', null)
       expect(subject).to.have.property('inDoubt', false)
+      expect(subject).to.have.property('subcode', 0)
     })
 
     it('sets an error message', function () {
@@ -85,7 +87,8 @@ describe('AerospikeError #noserver', function () {
         func: 'connect',
         file: 'lib/client.js',
         line: 101,
-        inDoubt: true
+        inDoubt: true,
+        subcode: subcode.FILTERED_META_EVAL_FAILED
       }
       const subject = (ASError as any).fromASError(error)
       expect(subject).to.have.property('code', -11)
@@ -94,6 +97,7 @@ describe('AerospikeError #noserver', function () {
       expect(subject).to.have.property('file', 'lib/client.js')
       expect(subject).to.have.property('line', 101)
       expect(subject).to.have.property('inDoubt', true)
+      expect(subject).to.have.property('subcode', subcode.FILTERED_META_EVAL_FAILED)
     })
 
     it('replaces error codes with descriptive messages', function () {
