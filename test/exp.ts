@@ -698,6 +698,60 @@ describe('Aerospike.exp', function () {
         expect(result.bins.ExpVar).to.eql('ae')
       })
 
+      it('snipStart local result', async function () {
+        const key = await createRecord({ text: 'hello world' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.snipStart(null, 5, exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT),
+          op.read('text')
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.text).to.eql('hello world')
+        expect(result.bins.ExpVar).to.eql('hello')
+      })
+
+      it('isNumericType FLOAT truth table', async function () {
+        const cases: Array<[string, number, boolean]> = [
+          ['3.14', strings.numericType.FLOAT, true],
+          ['5', strings.numericType.FLOAT, false],
+          ['5', strings.numericType.ANY, true],
+          ['5.', strings.numericType.FLOAT, false],
+          ['1e5', strings.numericType.FLOAT, false],
+          ['1e5', strings.numericType.ANY, false]
+        ]
+        for (const [value, numericType, expected] of cases) {
+          const key = await createRecord({ text: value })
+          const ops = [
+            exp.operations.read(tempBin,
+              exp.string.isNumericType(numericType, exp.binStr('text')),
+              exp.expWriteFlags.DEFAULT)
+          ]
+          const result: AerospikeRecord = await client.operate(key, ops, {})
+          expect(result.bins.ExpVar, `"${value}" type ${numericType}`).to.eql(expected)
+        }
+      })
+
+      it('canonical startsWith and replace', async function () {
+        const nfc = '\u00e9'
+        const nfd = 'e\u0301'
+        const key = await createRecord({ text: nfc + 'clair' })
+        const ops = [
+          exp.operations.read(tempBin,
+            exp.string.startsWith(nfd, exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT)
+        ]
+        const result: AerospikeRecord = await client.operate(key, ops, {})
+        expect(result.bins.ExpVar).to.eql(true)
+
+        const replaced = await client.operate(key, [
+          exp.operations.read(tempBin,
+            exp.string.replace(null, nfd, 'X', exp.binStr('text')),
+            exp.expWriteFlags.DEFAULT)
+        ])
+        expect(replaced.bins.ExpVar).to.eql('Xclair')
+      })
+
       it('append vs concat literal wire', async function () {
         await helper.skipUnlessStringAppendPrepend.call(this)
         const key = await createRecord({ text: 'x' })
@@ -901,7 +955,29 @@ describe('Aerospike.exp', function () {
         expect(result.bins.ExpVar).to.eql('aZcde')
       })
 
-      it('regexReplace local (wire per C macro)', async function () {
+      describe('regexReplace', function () {
+        let expRegexReplaceSupported = false
+
+        before(async function () {
+          const key = await createRecord({ text: 'axa' })
+          try {
+            await client.operate(key, [
+              exp.operations.read(tempBin,
+                exp.string.regexReplace(null, 'a', 'b', strings.regexFlags.NONE, exp.binStr('text')),
+                exp.expWriteFlags.DEFAULT)
+            ])
+            expRegexReplaceSupported = true
+          } catch (error: any) {
+            if (error.code !== Aerospike.status.ERR_OP_NOT_APPLICABLE &&
+                error.code !== Aerospike.status.ERR_REQUEST_INVALID) {
+              throw error
+            }
+          }
+        })
+
+        helper.skipUnless(this, () => expRegexReplaceSupported, 'exp regexReplace requires 8.1.3.0-105+')
+
+        it('regexReplace local (wire per C macro)', async function () {
         const key = await createRecord({ text: 'axa' })
         const ops = [
           exp.operations.read(tempBin,
@@ -938,6 +1014,24 @@ describe('Aerospike.exp', function () {
         const result: AerospikeRecord = await client.operate(key, ops, {})
         expect(result.bins.text).to.eql('hello world')
         expect(result.bins.ExpVar).to.eql('bye world')
+      })
+
+        it('regexReplace with NO_FAIL and invalid pattern returns the source string', async function () {
+          const key = await createRecord({ text: 'abc' })
+          const ops = [
+            exp.operations.read(tempBin,
+              exp.string.regexReplace(
+                { flags: strings.writeFlags.NO_FAIL },
+                '[unclosed',
+                'x',
+                strings.regexFlags.NONE,
+                exp.binStr('text')
+              ),
+              exp.expWriteFlags.DEFAULT)
+          ]
+          const result: AerospikeRecord = await client.operate(key, ops, {})
+          expect(result.bins.ExpVar).to.eql('abc')
+        })
       })
 
       it('snipRange alias matches snip', async function () {

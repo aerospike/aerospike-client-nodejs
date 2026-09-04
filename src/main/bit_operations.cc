@@ -435,6 +435,54 @@ bool add_bit_get_int_op(as_operations *ops, char *bin, as_bit_policy *policy,
 									 sign);
 }
 
+bool add_bit_b64_encode_op(as_operations *ops, char *bin, as_bit_policy *policy,
+						   Local<Object> op, LogInfo *log)
+{
+	(void)policy;
+	(void)op;
+	(void)log;
+	return as_operations_bit_b64_encode(ops, bin, NULL);
+}
+
+bool add_bit_b64_encode_from_op(as_operations *ops, char *bin,
+								as_bit_policy *policy, Local<Object> op,
+								LogInfo *log)
+{
+	(void)policy;
+	int byte_offset;
+	if (get_int_property(&byte_offset, op, "byteOffset", log) !=
+		AS_NODE_PARAM_OK) {
+		return false;
+	}
+	return as_operations_bit_b64_encode_from(ops, bin, NULL, byte_offset);
+}
+
+bool add_bit_b64_encode_range_op(as_operations *ops, char *bin,
+								 as_bit_policy *policy, Local<Object> op,
+								 LogInfo *log)
+{
+	(void)policy;
+	int byte_offset;
+	if (get_int_property(&byte_offset, op, "byteOffset", log) !=
+		AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	int byte_size;
+	if (get_int_property(&byte_size, op, "byteSize", log) != AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	bool invert_size = false;
+	if (get_optional_bool_property(&invert_size, NULL, op, "invertSize", log) !=
+		AS_NODE_PARAM_OK) {
+		return false;
+	}
+
+	return as_operations_bit_b64_encode_range(ops, bin, NULL, byte_offset,
+											  byte_size, invert_size);
+}
+
 typedef bool (*BitOperation)(as_operations *ops, char *bin,
 							 as_bit_policy *policy, Local<Object> op,
 							 LogInfo *log);
@@ -453,7 +501,10 @@ const ops_table_entry ops_table[] = {
 	{"BIT_ADD", add_bit_add_op},		 {"BIT_SUBTRACT", add_bit_subtract_op},
 	{"BIT_SET_INT", add_bit_set_int_op}, {"BIT_GET", add_bit_get_op},
 	{"BIT_LSCAN", add_bit_lscan_op},	 {"BIT_RSCAN", add_bit_rscan_op},
-	{"BIT_GET_INT", add_bit_get_int_op}};
+	{"BIT_GET_INT", add_bit_get_int_op},
+	{"BIT_B64_ENCODE", add_bit_b64_encode_op},
+	{"BIT_B64_ENCODE_FROM", add_bit_b64_encode_from_op},
+	{"BIT_B64_ENCODE_RANGE", add_bit_b64_encode_range_op}};
 
 int add_bit_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 			   LogInfo *log)

@@ -381,32 +381,25 @@ import * as url from "node:url"
 
   if (process.env.GLOBAL_CLIENT !== 'false') {
     /* global before */
-    before(() => {
-      if(helper_client_exists){
-        client.connect()
-        .catch((error: any) => {
-          console.error('ERROR:', error)
-          console.error('CONFIG:', client.config)
-          console.error("Client connection failed.")
-          console.error("Without a valid connection, tests cannot be run.")
-          console.error("Testing failed, exiting with error")
-          process.exit(1)
-        })        
-        .then(() => serverInfoHelper.fetchInfo())
-        .then(() => serverInfoHelper.fetchNamespaceInfo(options.namespace))
-        .catch((error: any) => {
-          console.error('ERROR:', error)
-          console.error('CONFIG:', client.config)
-          console.error("Client connection failed, tests cannot be executed. Tests failed, exiting with error.")
-          process.exit(1)
-        })
+    before(async () => {
+      if (!helper_client_exists) {
+        return
+      }
+      try {
+        await client.connect()
+        await serverInfoHelper.fetchInfo()
+        await serverInfoHelper.fetchNamespaceInfo(options.namespace)
+      } catch (error: any) {
+        console.error('ERROR:', error)
+        console.error('CONFIG:', client.config)
+        console.error('Client connection failed, tests cannot be executed. Tests failed, exiting with error.')
+        process.exit(1)
       }
     })
 
     /* global after */
     after(async function () {
-
-      if(helper_client_exists){
+      if (helper_client_exists) {
         await client.close()
       }
     })

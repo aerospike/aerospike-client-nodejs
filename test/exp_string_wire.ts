@@ -44,4 +44,20 @@ describe('exp.string wire encoding #noserver', function () {
     expect(uints.some((node) => node.uintVal === regexFlags)).to.equal(true)
     expect(uints.some((node) => node.uintVal === policyFlags)).to.equal(true)
   })
+
+  it('snipStart packs one int after SNIP and no policy uint', function () {
+    const expr = exp.string.snipStart(null, 5, exp.binStr('x'))
+    const ints = expr.filter((node) => node.op === native.exp.ops.VAL_INT)
+    expect(ints.some((node) => node.intVal === 5)).to.equal(true)
+    const uints = expr.filter((node) => node.op === VAL_UINT)
+    expect(uints).to.have.length(0)
+    const vops = expr.filter((node) => node.op === native.exp.ops.CALL_VOP_START)
+    expect(vops.some((node) => node.count === 2)).to.equal(true)
+  })
+
+  it('exposes CREATE_ONLY write flag as 1', function () {
+    expect(strings.writeFlags.CREATE_ONLY).to.equal(1)
+    expect(strings.writeFlags.UPDATE_ONLY).to.equal(2)
+    expect(strings.writeFlags.NO_FAIL).to.equal(4)
+  })
 })

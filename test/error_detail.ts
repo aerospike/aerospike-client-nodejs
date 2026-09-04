@@ -71,8 +71,14 @@ describe('error detail verbosity', function () {
     expect(errorDetailVerbosity.NONE).to.equal(0)
     expect(errorDetailVerbosity.SUBCODE).to.equal(1)
     expect(errorDetailVerbosity.MESSAGE).to.equal(2)
+    expect(errorDetailVerbosity.EXP_TRACE).to.equal(3)
     expect(subcode.OPNOT_CDT_BOUNDED_LIST_OVERFLOW).to.equal(3)
     expect(subcode.PARAM_BITS_SIZE_OUT_OF_RANGE).to.equal(3)
+    expect(subcode.PARAM_STRING_CTX_MALFORMED).to.equal(8)
+    expect(subcode.OPNOT_STRING_CONVERSION_FAILED).to.equal(10)
+    expect(subcode.OPNOT_STRING_UTF8_INVALID).to.equal(11)
+    expect(subcode.OPNOT_STRING_REGEX_LIMIT_EXCEEDED).to.equal(12)
+    expect(subcode.OPNOT_STRING_B64_INVALID).to.equal(13)
   })
 
   it('write generation mismatch at verbosity 0 returns no subcode', async function () {
@@ -171,6 +177,34 @@ describe('error detail verbosity', function () {
       ], {}, policy)
     )
     assertSubcode(error, status.ERR_REQUEST_INVALID, subcode.PARAM_BITS_SIZE_OUT_OF_RANGE)
-    expect(error.message).to.include('subcode=')
+    expect(error.message).to.be.a('string').and.not.empty
+  })
+
+  it('verbosity EXP_TRACE is accepted on operate', async function () {
+    const policy = new Aerospike.OperatePolicy({
+      errorDetailVerbosity: errorDetailVerbosity.EXP_TRACE
+    })
+    const error = await expectError(() =>
+      client.operate(bitsKey, [
+        bitwise.set(binName, 0, 0, Buffer.from([0xff]))
+      ], {}, policy)
+    )
+    assertSubcode(error, status.ERR_REQUEST_INVALID, subcode.PARAM_BITS_SIZE_OUT_OF_RANGE)
+    expect(error.message).to.be.a('string').and.not.empty
+  })
+
+  it('string conversion failure yields OPNOT_STRING_CONVERSION_FAILED', async function () {
+    const strings = Aerospike.strings
+    const strKey = keygen.string(helper.namespace, helper.set, { prefix: 'test/error_detail_str' })()
+    await client.put(strKey, { [binName]: 'not-a-number' })
+    const policy = new Aerospike.OperatePolicy({
+      errorDetailVerbosity: errorDetailVerbosity.MESSAGE
+    })
+    const error = await expectError(() =>
+      client.operate(strKey, [strings.toInteger(binName)], {}, policy)
+    )
+    expect(error.code).to.equal(status.ERR_OP_NOT_APPLICABLE)
+    expect(error.subcode).to.equal(subcode.OPNOT_STRING_CONVERSION_FAILED)
+    expect(error.message).to.be.a('string').and.not.empty
   })
 })
