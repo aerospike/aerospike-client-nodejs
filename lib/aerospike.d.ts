@@ -47,7 +47,7 @@ export type AerospikeMapKey = number | string | Buffer;
 /**
  * Represents a basic value in an Aerospike bin.
  */
-export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
+export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Vector | Array<PartialAerospikeBinValue> | object;
 
 /**
  * Bin name - maximum 15 characters.

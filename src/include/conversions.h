@@ -66,6 +66,15 @@ bool is_geojson_value(v8::Local<v8::Value> value);
 
 char *geojson_as_string(v8::Local<v8::Value> value);
 
+// Functions dealing with the pure-JS Vector class (see lib/vector.js). Unlike
+// HyperLogLog, Vector has no native ObjectWrap counterpart - the JS
+// constructor is registered once (via register_vector_constructor(), called
+// from lib/aerospike.js) so native code can call back into
+// Vector.fromBuffer()/Vector#toBuffer() when converting AS_BYTES_VECTOR
+// values to/from as_bytes.
+bool is_vector_value(v8::Local<v8::Value> value);
+void register_vector_constructor(v8::Local<v8::Function> ctor);
+
 // Utility functions to extract property values from V8 v8::Object instances
 int get_bool_property(bool *boolp, v8::Local<v8::Object> obj, char const *prop,
 					  const LogInfo *log);

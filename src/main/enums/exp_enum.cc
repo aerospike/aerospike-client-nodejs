@@ -66,8 +66,10 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "BIN_TYPE", as_exp_ops::_AS_EXP_CODE_BIN_TYPE);
 
 	set(exp_ops, "REMOVE_RESULT", as_exp_ops::_AS_EXP_CODE_REMOVE_RESULT);
-	set(exp_ops, "MAP_KEYS", as_exp_ops::_AS_EXP_CODE_MAP_KEYS);
-	set(exp_ops, "MAP_VALUES", as_exp_ops::_AS_EXP_CODE_MAP_VALUES);
+	// Renamed upstream (aie/vector, PR #230 and unrelated string-ops work):
+	// _AS_EXP_CODE_MAP_KEYS/_AS_EXP_CODE_MAP_VALUES -> ..._IN.
+	set(exp_ops, "MAP_KEYS", as_exp_ops::_AS_EXP_CODE_MAP_KEYS_IN);
+	set(exp_ops, "MAP_VALUES", as_exp_ops::_AS_EXP_CODE_MAP_VALUES_IN);
 
 	set(exp_ops, "QUOTE", as_exp_ops::_AS_EXP_CODE_QUOTE);
 	set(exp_ops, "CALL", as_exp_ops::_AS_EXP_CODE_CALL);
