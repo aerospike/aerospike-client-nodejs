@@ -1,6 +1,7 @@
 .DS_Store
 .nyc_output/
 .vscode/
+.vs/
 lib/binding
 .idea/
 build/

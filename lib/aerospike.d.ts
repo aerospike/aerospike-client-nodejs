@@ -1617,6 +1617,101 @@ export class Query {
      * @returns Promise that resolves to a Job instance.
      */
     public operate(operations: operations.Operation[], policy: policy.WritePolicy | null, queryID: number| null, callback?: TypedCallback<Job>): void;
+    /**
+     * Top-K global order key, set by {@link Query#orderBy}. `undefined` if
+     * {@link Query#orderBy} has not been called.
+     */
+    public orderByBin?: query.OrderByBin | null;
+    /**
+     * Top-K global limit, set by {@link Query#topK}. `undefined` if
+     * {@link Query#topK} has not been called.
+     */
+    public topKLimit?: number | null;
+    /**
+     * Declares the Top-K global order key. See {@link Query#topK}.
+     *
+     * Top-K is implemented as a client-side reduce layered on top of an
+     * ordinary query - it has no server/native counterpart yet, so all
+     * validation happens here and in {@link Query#topK}, and the actual
+     * ranking is performed client-side once the query completes. Because
+     * Aerospike has no schema, `type` must be declared explicitly; it is
+     * not inferred from the bin's actual on-server value.
+     *
+     * @param binName - Name of the (projected or physical) bin to order by. Max. 14 characters.
+     * @param type - One of {@link query.orderByType}: INTEGER, DOUBLE, STRING, BYTES.
+     * @param direction - One of {@link query.order}: ASC or DESC. Default: DESC.
+     * @param flags - One of {@link query.orderByFlags}, e.g. CASE_INSENSITIVE (STRING only). Default: NONE.
+     *
+     * @throws {AerospikeError} `ERR_PARAM` if any argument is invalid.
+     */
+    public orderBy(binName: string, type: query.orderByType, direction?: query.order, flags?: query.orderByFlags): void;
+    /**
+     * Sets the global Top-K limit. Requires {@link Query#orderBy} to have
+     * been called first.
+     *
+     * @param k - Must be an integer in the inclusive range [1, 1000].
+     *
+     * @throws {AerospikeError} `ERR_PARAM` if {@link Query#orderBy} has not
+     * been called yet, or if `k` is out of range.
+     */
+    public topK(k: number): void;
+}
+
+/**
+ * The {@link query} module defines enumerations used by {@link
+ * Query#orderBy} and {@link Query#topK} to declare a Top-K global
+ * order-by/limit clause on a foreground {@link Query}.
+ */
+export namespace query {
+    /**
+     * Declares the scalar type of the {@link Query#orderBy} bin.
+     * Aerospike has no schema, so the type of the order-by bin must be
+     * declared explicitly - there is no way for the client to infer it.
+     */
+    export enum orderByType {
+        /** 64-bit signed integer bin value. */
+        INTEGER,
+        /** Double-precision floating point bin value. */
+        DOUBLE,
+        /** String bin value. */
+        STRING,
+        /** Byte array (blob) bin value. */
+        BYTES
+    }
+    /**
+     * Sort direction for {@link Query#orderBy}.
+     */
+    export enum order {
+        /** Ascending order - smallest/lowest-ranked value ranks best. */
+        ASC,
+        /** Descending order - largest/highest-ranked value ranks best. */
+        DESC
+    }
+    /**
+     * Modifier flags for {@link Query#orderBy}.
+     */
+    export enum orderByFlags {
+        /** No modifier flags. */
+        NONE,
+        /**
+         * Case-insensitive comparison. Only valid when the declared
+         * {@link orderByType} is `STRING`.
+         */
+        CASE_INSENSITIVE
+    }
+    /**
+     * Top-K global order key, as stored in {@link Query#orderByBin}.
+     */
+    export interface OrderByBin {
+        /** Name of the (projected or physical) bin to order by. */
+        binName: string;
+        /** One of {@link orderByType}. */
+        type: orderByType;
+        /** One of {@link order}. */
+        direction: order;
+        /** One of {@link orderByFlags}. */
+        flags: orderByFlags;
+    }
 }
 
 export namespace cdt {
@@ -8294,6 +8389,105 @@ export class GeoJSON {
     public value(): GeoJSONType;
 
 }
+
+/**
+ * Element type of a {@link Vector}. See {@link Vector.ElementType}.
+ */
+export type VectorElementType = number;
+
+/**
+ * Underlying typed-array storage for a {@link Vector}'s elements. The
+ * concrete type depends on the vector's {@link Vector.elementType}.
+ */
+export type VectorElements = Uint16Array | Int32Array | Float32Array | Float64Array;
+
+/**
+ * Representation of a fixed-dimension numeric vector, used for vector
+ * similarity search. There is no public constructor - use one of the
+ * `Vector.of*` static factory methods, matching the real C/Java client
+ * implementations. See `docs/design/vector-phase-1-client-design.md` in
+ * this repository for the design rationale.
+ */
+export class Vector {
+    private constructor(elementType: VectorElementType, elements: VectorElements, version?: number);
+
+    /**
+     * Current vector wire format version.
+     */
+    static VERSION: number;
+
+    /**
+     * Vector element type. There is intentionally no `BIN`/Hamming type.
+     */
+    static ElementType: {
+        FLOAT16: number;
+        INT32: number;
+        FLOAT32: number;
+        FLOAT64: number;
+    };
+
+    /**
+     * Creates a vector of raw float16 (IEEE 754 half precision) elements,
+     * passed as their raw 16-bit bit patterns (no float&harr;half-float
+     * value conversion is performed).
+     */
+    static ofFloat16(data: number[] | Uint16Array): Vector;
+
+    /**
+     * Creates a vector of int32 elements.
+     */
+    static ofInt32(data: number[] | Int32Array): Vector;
+
+    /**
+     * Creates a vector of float (fp32) elements.
+     */
+    static ofFloat32(data: number[] | Float32Array): Vector;
+
+    /**
+     * Creates a vector of double (fp64) elements.
+     */
+    static ofFloat64(data: number[] | Float64Array): Vector;
+
+    /**
+     * Deserializes a vector from its wire format (the inverse of
+     * {@link Vector.toBuffer}), validating the header and buffer length.
+     */
+    static fromBuffer(buffer: Buffer): Vector;
+
+    /**
+     * Wire format version of this vector instance.
+     */
+    readonly version: number;
+
+    /**
+     * Element type of this vector. One of {@link Vector.ElementType}.
+     */
+    readonly elementType: VectorElementType;
+
+    /**
+     * This vector's elements, as a typed array.
+     */
+    readonly elements: VectorElements;
+
+    /**
+     * Number of elements in this vector.
+     */
+    readonly dimensions: number;
+
+    /**
+     * Serializes this vector into its wire format: an 8-byte header
+     * followed by the little-endian element data.
+     */
+    toBuffer(): Buffer;
+
+    /**
+     * Returns this vector's element data only, little-endian, without the
+     * 8-byte header - the form expected by a vector-distance expression's
+     * query-vector argument.
+     */
+    elementBytes(): Buffer;
+}
+
 /**
  * Return type of {@link UdfJob.info} and {@link IndexJob.info}
  */
