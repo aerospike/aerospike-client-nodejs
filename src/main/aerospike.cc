@@ -123,10 +123,8 @@ NAN_METHOD(wrapHLL) {
     }
 }
 
-// Registers the pure-JS Vector constructor (lib/vector.js) with the native
-// conversion layer, so record bins/CDT elements tagged AS_BYTES_VECTOR are
-// decoded back into Vector instances (and vice versa on write). Called once
-// from lib/aerospike.js right after `require('./vector')`.
+// Registers the pure-JS Vector constructor (lib/vector.js) so bins tagged
+// AS_BYTES_VECTOR are decoded back into Vector instances.
 NAN_METHOD(registerVectorType) {
 	Nan::HandleScope scope;
 

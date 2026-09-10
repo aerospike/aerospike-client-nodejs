@@ -77,10 +77,9 @@ const uint64_t UMAX_SAFE_INTEGER = std::pow(2, 53) - 1;
 bool g_wrap_hll = false; 
 
 // Persistent handle to the pure-JS Vector constructor (lib/vector.js),
-// registered once via register_vector_constructor() (called from
-// lib/aerospike.js after the addon is loaded). Lets native code build a
-// Vector from a Buffer (Vector.fromBuffer) or serialize one to a Buffer
-// (Vector#toBuffer) without duplicating the wire-format logic in C++.
+// registered once via register_vector_constructor(). Lets native code
+// build/serialize a Vector via Vector.fromBuffer()/Vector#toBuffer()
+// without duplicating the wire-format logic in C++.
 static Nan::Persistent<Function> g_vector_constructor;
 
 bool is_hyperloglog_value(Local<Value> value)
@@ -98,9 +97,7 @@ void register_vector_constructor(Local<Function> ctor)
 	g_vector_constructor.Reset(ctor);
 }
 
-// Deserializes a wire-format Buffer into a JS Vector via Vector.fromBuffer().
-// Returns an empty Local<Value> if the constructor hasn't been registered or
-// the call failed/threw.
+// Deserializes a Buffer into a JS Vector via Vector.fromBuffer().
 static Local<Value> vector_from_buffer(Local<Object> buffer)
 {
 	Nan::EscapableHandleScope scope;
@@ -116,9 +113,8 @@ static Local<Value> vector_from_buffer(Local<Object> buffer)
 	return scope.Escape(result);
 }
 
-// Serializes a JS Vector to its wire-format Buffer via Vector#toBuffer(), and
-// extracts the raw bytes for wrapping in an as_bytes/record bin tagged
-// AS_BYTES_VECTOR. Mirrors the HyperLogLog write path below.
+// Serializes a JS Vector via Vector#toBuffer() and extracts the raw bytes
+// for wrapping in an as_bytes tagged AS_BYTES_VECTOR.
 static int extract_vector_bytes(Local<Value> v8value, uint8_t **data, int *size,
 								 const LogInfo *log)
 {

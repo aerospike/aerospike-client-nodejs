@@ -30,20 +30,8 @@ const orderByType: typeof queryModule.orderByType = Aerospike.query.orderByType
 const order: typeof queryModule.order = Aerospike.query.order
 const orderByFlags: typeof queryModule.orderByFlags = Aerospike.query.orderByFlags
 
-// Query#orderBy/Query#topK's own argument checks, and Query#foreach's
-// assertValidOrderBy pre-flight checks that throw before any command is
-// dispatched, run entirely synchronously and require no live cluster - see
-// docs/design/vector-phase-1-client-design.md §4.3.2. To keep this suite
-// #noserver-safe, every case below either (a) throws synchronously before
-// ever reaching the native layer, or (b) only inspects Query state
-// (orderByBin/topKLimit) without calling foreach()/results() - actually
-// executing a query, even against a deliberately unconnected client, is
-// intentionally out of scope here.
-//
-// Aerospike.client() (no config) constructs an unconnected client - see
-// the equivalent pattern in test/client.ts - which is enough to build
-// Query instances directly (bypassing Client#query's own connected-check)
-// without requiring a live server.
+// Aerospike.client() (no config) constructs an unconnected client, which is
+// enough to build Query instances directly without requiring a live server.
 function newQuery (options?: object): Q {
   const client = Aerospike.client()
   return new Query(client, 'test', 'demo', options as any)
@@ -75,10 +63,10 @@ describe('Query#orderBy / Query#topK #noserver', function () {
       })
     })
 
-    it('rejects a bin name longer than 14 characters', function () {
+    it('rejects a bin name longer than 15 characters', function () {
       const query = newQuery()
       const fn = () => query.orderBy('this_name_is_way_too_long', orderByType.INTEGER)
-      expect(fn).to.throw(/14-character limit/)
+      expect(fn).to.throw(/15-character limit/)
     })
 
     it('rejects a missing type', function () {
@@ -196,6 +184,14 @@ describe('Query#orderBy / Query#topK #noserver', function () {
       query.setUdf('someModule', 'someFunction')
       const fn = () => query.foreach()
       expect(fn).to.throw(/incompatible with aggregate UDFs/)
+    })
+
+    it('rejects maxRecords combined with orderBy/topK, regardless of value', function () {
+      const query = newQuery({ maxRecords: 10 })
+      query.orderBy('score', orderByType.INTEGER)
+      query.topK(5)
+      const fn = () => query.foreach()
+      expect(fn).to.throw(/cannot be combined with maxRecords/)
     })
   })
 
