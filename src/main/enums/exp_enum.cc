@@ -66,8 +66,8 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "BIN_TYPE", as_exp_ops::_AS_EXP_CODE_BIN_TYPE);
 
 	set(exp_ops, "REMOVE_RESULT", as_exp_ops::_AS_EXP_CODE_REMOVE_RESULT);
-	set(exp_ops, "MAP_KEYS", as_exp_ops::_AS_EXP_CODE_MAP_KEYS);
-	set(exp_ops, "MAP_VALUES", as_exp_ops::_AS_EXP_CODE_MAP_VALUES);
+	set(exp_ops, "MAP_KEYS", as_exp_ops::_AS_EXP_CODE_MAP_KEYS_IN);
+	set(exp_ops, "MAP_VALUES", as_exp_ops::_AS_EXP_CODE_MAP_VALUES_IN);
 
 	set(exp_ops, "QUOTE", as_exp_ops::_AS_EXP_CODE_QUOTE);
 	set(exp_ops, "CALL", as_exp_ops::_AS_EXP_CODE_CALL);
@@ -121,6 +121,11 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "MIN", as_exp_ops::_AS_EXP_CODE_MIN);
 	set(exp_ops, "MAX", as_exp_ops::_AS_EXP_CODE_MAX);
 
+	// One opcode per vector distance metric - see lib/exp.js's exports.vectorDist.
+	set(exp_ops, "VECTOR_EUCLIDEAN_DIST", as_exp_ops::_AS_EXP_CODE_VECTOR_EUCLIDEAN_DIST);
+	set(exp_ops, "VECTOR_DOT_PRODUCT", as_exp_ops::_AS_EXP_CODE_VECTOR_DOT_PRODUCT);
+	set(exp_ops, "VECTOR_COSINE_SIM", as_exp_ops::_AS_EXP_CODE_VECTOR_COSINE_SIM);
+
 
 	set(exp_ops, "RESULT_REMOVE", as_exp_ops::_AS_EXP_CODE_REMOVE_RESULT);
 	set(exp_ops, "LOOPVAR", as_exp_ops::_AS_EXP_CODE_LOOPVAR);
@@ -152,6 +157,7 @@ Local<Object> exp_opcode_values()
 	set(exp_type, "FLOAT", as_exp_type::AS_EXP_TYPE_FLOAT);
 	set(exp_type, "GEOJSON", as_exp_type::AS_EXP_TYPE_GEOJSON);
 	set(exp_type, "HLL", as_exp_type::AS_EXP_TYPE_HLL);
+	set(exp_type, "VECTOR", as_exp_type::AS_EXP_TYPE_VECTOR);
 
 	set(exp_type, "AUTO", as_exp_type::AS_EXP_TYPE_AUTO);
 	set(exp_type, "ERROR", as_exp_type::AS_EXP_TYPE_ERROR);

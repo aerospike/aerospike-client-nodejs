@@ -66,6 +66,10 @@ bool is_geojson_value(v8::Local<v8::Value> value);
 
 char *geojson_as_string(v8::Local<v8::Value> value);
 
+// Functions dealing with the pure-JS Vector class (see lib/vector.js).
+bool is_vector_value(v8::Local<v8::Value> value);
+void register_vector_constructor(v8::Local<v8::Function> ctor);
+
 // Utility functions to extract property values from V8 v8::Object instances
 int get_bool_property(bool *boolp, v8::Local<v8::Object> obj, char const *prop,
 					  const LogInfo *log);

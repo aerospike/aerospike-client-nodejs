@@ -47,7 +47,7 @@ export type AerospikeMapKey = number | string | Buffer;
 /**
  * Represents a basic value in an Aerospike bin.
  */
-export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
+export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Vector | Array<PartialAerospikeBinValue> | object;
 
 /**
  * Bin name - maximum 15 characters.
@@ -1617,6 +1617,99 @@ export class Query {
      * @returns Promise that resolves to a Job instance.
      */
     public operate(operations: operations.Operation[], policy: policy.WritePolicy | null, queryID: number| null, callback?: TypedCallback<Job>): void;
+    /**
+     * Top-K global order key, set by {@link Query#orderBy}. `undefined` if
+     * {@link Query#orderBy} has not been called.
+     */
+    public orderByBin?: query.OrderByBin | null;
+    /**
+     * Top-K global limit, set by {@link Query#topK}. `undefined` if
+     * {@link Query#topK} has not been called.
+     */
+    public topKLimit?: number | null;
+    /**
+     * Declares the Top-K global order key. See {@link Query#topK}.
+     *
+     * Top-K (`ORDER BY <bin> LIMIT k`) ranks and limits results
+     * server-side. Because Aerospike has no schema, `type` must be
+     * declared explicitly; it is not inferred from the bin's actual
+     * on-server value.
+     *
+     * @param binName - Name of the (projected or physical) bin to order by. Max. 15 characters.
+     * @param type - One of {@link query.orderByType}: INTEGER, DOUBLE, STRING, BYTES.
+     * @param direction - One of {@link query.order}: ASC or DESC. Default: DESC.
+     * @param flags - One of {@link query.orderByFlags}, e.g. CASE_INSENSITIVE (STRING only). Default: NONE.
+     *
+     * @throws {AerospikeError} `ERR_PARAM` if any argument is invalid.
+     */
+    public orderBy(binName: string, type: query.orderByType, direction?: query.order, flags?: query.orderByFlags): void;
+    /**
+     * Sets the global Top-K limit. Requires {@link Query#orderBy} to have
+     * been called first.
+     *
+     * @param k - Must be an integer in the inclusive range [1, 1000].
+     *
+     * @throws {AerospikeError} `ERR_PARAM` if {@link Query#orderBy} has not
+     * been called yet, or if `k` is out of range.
+     */
+    public topK(k: number): void;
+}
+
+/**
+ * The {@link query} module defines enumerations used by {@link
+ * Query#orderBy} and {@link Query#topK} to declare a Top-K
+ * (`ORDER BY <bin> LIMIT k`) clause on a foreground {@link Query}.
+ */
+export namespace query {
+    /**
+     * Declares the scalar type of the {@link Query#orderBy} bin.
+     * Aerospike has no schema, so the type of the order-by bin must be
+     * declared explicitly - there is no way for the client to infer it.
+     */
+    export enum orderByType {
+        /** 64-bit signed integer bin value. */
+        INTEGER = 1,
+        /** Double-precision floating point bin value. */
+        DOUBLE = 2,
+        /** String bin value. */
+        STRING = 3,
+        /** Byte array (blob) bin value. */
+        BYTES = 4
+    }
+    /**
+     * Sort direction for {@link Query#orderBy}.
+     */
+    export enum order {
+        /** Ascending order - smallest/lowest-ranked value ranks best. */
+        ASC = 0,
+        /** Descending order - largest/highest-ranked value ranks best. */
+        DESC = 1
+    }
+    /**
+     * Modifier flags for {@link Query#orderBy}.
+     */
+    export enum orderByFlags {
+        /** No modifier flags. */
+        NONE = 0,
+        /**
+         * Case-insensitive comparison. Only valid when the declared
+         * {@link orderByType} is `STRING`.
+         */
+        CASE_INSENSITIVE = 1
+    }
+    /**
+     * Top-K global order key, as stored in {@link Query#orderByBin}.
+     */
+    export interface OrderByBin {
+        /** Name of the (projected or physical) bin to order by. */
+        binName: string;
+        /** One of {@link orderByType}. */
+        type: orderByType;
+        /** One of {@link order}. */
+        direction: order;
+        /** One of {@link orderByFlags}. */
+        flags: orderByFlags;
+    }
 }
 
 export namespace cdt {
@@ -8294,6 +8387,106 @@ export class GeoJSON {
     public value(): GeoJSONType;
 
 }
+
+/**
+ * Element type of a {@link Vector}. See {@link Vector.ElementType}.
+ */
+export type VectorElementType = number;
+
+/**
+ * Underlying typed-array storage for a {@link Vector}'s elements. The
+ * concrete type depends on the vector's {@link Vector.elementType}.
+ */
+export type VectorElements = Uint16Array | Int32Array | Float32Array | Float64Array;
+
+/**
+ * Representation of a fixed-dimension numeric vector, used for vector
+ * similarity search. There is no public constructor - use one of the
+ * `Vector.of*` static factory methods.
+ */
+export class Vector {
+    private constructor(elementType: VectorElementType, elements: VectorElements, version?: number);
+
+    /**
+     * Current vector wire format version.
+     */
+    static VERSION: number;
+
+    /**
+     * Vector element type. There is intentionally no `BIN`/Hamming type.
+     */
+    static ElementType: {
+        FLOAT16: number;
+        INT32: number;
+        FLOAT32: number;
+        FLOAT64: number;
+    };
+
+    /**
+     * Creates a vector of raw float16 (IEEE 754 half precision) elements,
+     * passed as their raw 16-bit bit patterns (no float&harr;half-float
+     * value conversion is performed).
+     */
+    static ofFloat16(data: number[] | Uint16Array): Vector;
+
+    /**
+     * Creates a vector of int32 elements.
+     */
+    static ofInt32(data: number[] | Int32Array): Vector;
+
+    /**
+     * Creates a vector of float (fp32) elements.
+     */
+    static ofFloat32(data: number[] | Float32Array): Vector;
+
+    /**
+     * Creates a vector of double (fp64) elements.
+     */
+    static ofFloat64(data: number[] | Float64Array): Vector;
+
+    /**
+     * Deserializes a vector from its wire format (the inverse of
+     * {@link Vector.toBuffer}), validating the header and buffer length.
+     */
+    static fromBuffer(buffer: Buffer): Vector;
+
+    /**
+     * Wire format version of this vector instance.
+     */
+    readonly version: number;
+
+    /**
+     * Element type of this vector. One of {@link Vector.ElementType}.
+     */
+    readonly elementType: VectorElementType;
+
+    /**
+     * This vector's elements, as a typed array.
+     */
+    readonly elements: VectorElements;
+
+    /**
+     * Number of elements in this vector.
+     */
+    readonly dimensions: number;
+
+    /**
+     * Serializes this vector into its wire format: an 8-byte header
+     * followed by the little-endian element data.
+     */
+    toBuffer(): Buffer;
+
+    /**
+     * Returns this vector's element data only, little-endian, without the
+     * 8-byte header.
+     *
+     * Note: {@link module:aerospike/exp.vectorDist}'s query-vector argument
+     * expects the *complete* serialized vector (see {@link Vector.toBuffer})
+     * including its header, not this headerless form.
+     */
+    elementBytes(): Buffer;
+}
+
 /**
  * Return type of {@link UdfJob.info} and {@link IndexJob.info}
  */
@@ -9319,6 +9512,11 @@ export namespace features {
      * BLOB_BITS feature string.
      */
     export const BLOB_BITS: 'blob-bits';
+    /**
+     * QUERY_ORDER_BY feature string - server support for
+     * {@link Query#orderBy}/{@link Query#topK}.
+     */
+    export const QUERY_ORDER_BY: 'query-order-by';
 }
 
 export const Record: typeof AerospikeRecord;
@@ -17085,6 +17283,38 @@ export namespace exp {
      * @return hll bin
      */
     export const binHll: _binTypeExp;
+    /**
+     * Create expression that returns a bin as a vector (see {@link Vector}).
+     * Returns 'unknown' if the bin is not a vector. Typically used as the
+     * `bin` argument to {@link exp.vectorDist}.
+     *
+     * @param binName - Bin name.
+     * @return vector bin
+     */
+    export const binVector: _binTypeExp;
+    /**
+     * Distance metric for {@link exp.vectorDist}.
+     */
+    export const vectorDistanceMetric: {
+        /** Squared Euclidean (L2) distance. Smaller values indicate closer vectors. */
+        EUCLIDEAN: number;
+        /** Dot product. Larger values indicate closer vectors. */
+        DOT_PRODUCT: number;
+        /** Cosine similarity. Larger values indicate closer vectors. */
+        COSINE: number;
+    };
+    /**
+     * Create expression that returns the distance between a stored vector
+     * bin and a query vector as a 64-bit float, using the given distance
+     * metric. The query vector's element type and dimension count must
+     * match the stored vector, or the expression evaluates to 'unknown'.
+     *
+     * @param metric - One of {@link exp.vectorDistanceMetric}.
+     * @param query - Query vector, compared against the stored bin.
+     * @param bin - Vector bin expression, typically {@link exp.binVector}.
+     * @return float value - the distance/similarity score.
+     */
+    export function vectorDist(metric: number, query: Vector, bin: AerospikeExp): AerospikeExp;
     /**
      * Create expression that returns the type of a bin as a integer.
      * @param binName - Bin name.

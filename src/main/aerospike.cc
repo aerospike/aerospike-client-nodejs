@@ -123,6 +123,19 @@ NAN_METHOD(wrapHLL) {
     }
 }
 
+// Registers the pure-JS Vector constructor (lib/vector.js) so bins tagged
+// AS_BYTES_VECTOR are decoded back into Vector instances.
+NAN_METHOD(registerVectorType) {
+	Nan::HandleScope scope;
+
+	if (info.Length() > 0 && info[0]->IsFunction()) {
+		register_vector_constructor(info[0].As<Function>());
+	}
+	else {
+		return Nan::ThrowError("registerVectorType requires exactly one Function argument");
+	}
+}
+
 NAN_METHOD(client)
 {
 	Nan::HandleScope();
@@ -162,6 +175,7 @@ NAN_MODULE_INIT(Aerospike)
 	NAN_EXPORT(target, wrapHLL);
 	NAN_EXPORT(target, unref_as_event_loop);
 	NAN_EXPORT(target, setDefaultLogging);
+	NAN_EXPORT(target, registerVectorType);
 
 	// enumerations
 	export("bitwise", bitwise_enum_values());

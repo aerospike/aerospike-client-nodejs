@@ -418,6 +418,44 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 			Nan::ThrowTypeError("Error in parsing the operations");
 		}
 	}
+
+	// Top-K (ORDER BY <bin> LIMIT k) - see Query#orderBy/Query#topK in
+	// lib/query.js. orderByBin/topKLimit are set on the Query object and
+	// forwarded here into as_query_order_by()/as_query_top_k().
+	Local<Value> orderByBin =
+		Nan::Get(options, Nan::New("orderByBin").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(orderByBin, IsObject, "orderByBin must be an object");
+	if (orderByBin->IsObject()) {
+		Local<Object> ob = orderByBin.As<Object>();
+		Local<Value> binNameVal =
+			Nan::Get(ob, Nan::New("binName").ToLocalChecked()).ToLocalChecked();
+		Local<Value> typeVal =
+			Nan::Get(ob, Nan::New("type").ToLocalChecked()).ToLocalChecked();
+		Local<Value> directionVal =
+			Nan::Get(ob, Nan::New("direction").ToLocalChecked()).ToLocalChecked();
+		Local<Value> flagsVal =
+			Nan::Get(ob, Nan::New("flags").ToLocalChecked()).ToLocalChecked();
+
+		if (!binNameVal->IsString() || !typeVal->IsNumber() ||
+			!directionVal->IsNumber() || !flagsVal->IsNumber()) {
+			as_v8_error(log, "orderByBin must have binName (string), type, direction and flags (numbers)");
+			Nan::ThrowTypeError("orderByBin must have binName (string), type, direction and flags (numbers)");
+		}
+		else {
+			as_query_order_by(
+				query, *Nan::Utf8String(binNameVal),
+				(as_query_order_by_type)Nan::To<int32_t>(typeVal).FromJust(),
+				(as_order)Nan::To<int32_t>(directionVal).FromJust(),
+				(as_query_order_by_flags)Nan::To<uint32_t>(flagsVal).FromJust());
+		}
+	}
+
+	Local<Value> topKLimit =
+		Nan::Get(options, Nan::New("topKLimit").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(topKLimit, IsNumber, "topKLimit must be a number");
+	if (topKLimit->IsNumber()) {
+		as_query_top_k(query, Nan::To<uint32_t>(topKLimit).FromJust());
+	}
 }
 
 void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
