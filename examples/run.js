@@ -39,7 +39,8 @@ const commands = [
   'remove',
   'scan',
   'sindex',
-  'udf'
+  'udf',
+  'vectorSearch'
 ]
 
 const squish = (str) => str.replace(/(^ +| +$)/gm, '').trim()

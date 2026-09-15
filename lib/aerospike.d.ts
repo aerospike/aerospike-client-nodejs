@@ -1653,6 +1653,30 @@ export class Query {
      * been called yet, or if `k` is out of range.
      */
     public topK(k: number): void;
+    /**
+     * Finds the minimum value of a scalar bin across the query's result set.
+     *
+     * @param binName - Name of the scalar bin to minimize. Max. 15 characters.
+     * @param type - One of {@link query.orderByType}: INTEGER, DOUBLE, STRING, BYTES.
+     * @param policy - The Query Policy to use for this operation.
+     *
+     * @throws {AerospikeError} `ERR_PARAM` if any argument is invalid.
+     *
+     * @returns Promise that resolves to the minimum value found, or `null` if no record qualified.
+     */
+    public min(binName: string, type: query.orderByType, policy?: policy.QueryPolicy | null): Promise<AerospikeBinValue>;
+    /**
+     * Finds the maximum value of a scalar bin across the query's result set.
+     *
+     * @param binName - Name of the scalar bin to maximize. Max. 15 characters.
+     * @param type - One of {@link query.orderByType}: INTEGER, DOUBLE, STRING, BYTES.
+     * @param policy - The Query Policy to use for this operation.
+     *
+     * @throws {AerospikeError} `ERR_PARAM` if any argument is invalid.
+     *
+     * @returns Promise that resolves to the maximum value found, or `null` if no record qualified.
+     */
+    public max(binName: string, type: query.orderByType, policy?: policy.QueryPolicy | null): Promise<AerospikeBinValue>;
 }
 
 /**

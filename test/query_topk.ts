@@ -233,4 +233,53 @@ describe('Query#orderBy / Query#topK - server integration', function () {
       }
     })
   })
+
+  describe('Query#min / Query#max', function () {
+    it('finds the minimum value of an INTEGER bin', async function () {
+      const query = client.query(helper.namespace, testSet)
+      const min = await query.min('score', orderByType.INTEGER)
+      expect(min).to.equal(0)
+    })
+
+    it('finds the maximum value of an INTEGER bin', async function () {
+      const query = client.query(helper.namespace, testSet)
+      const max = await query.max('score', orderByType.INTEGER)
+      expect(max).to.equal(TIE_SCORE)
+    })
+
+    it('finds the minimum value of a DOUBLE bin', async function () {
+      const query = client.query(helper.namespace, testSet)
+      const min = await query.min('fscore', orderByType.DOUBLE)
+      expect(min).to.equal(0)
+    })
+
+    it('finds the maximum value of a DOUBLE bin', async function () {
+      const query = client.query(helper.namespace, testSet)
+      const max = await query.max('fscore', orderByType.DOUBLE)
+      expect(max).to.equal(36)
+    })
+
+    it('projects only the requested bin when the query has no prior projection', async function () {
+      const query = client.query(helper.namespace, testSet)
+      await query.min('score', orderByType.INTEGER)
+      expect(query.selected).to.eql(['score'])
+    })
+
+    it('accepts a bin already covered by an existing projection', async function () {
+      const query = client.query(helper.namespace, testSet, { select: ['score', 'fscore'] })
+      const min = await query.min('score', orderByType.INTEGER)
+      expect(min).to.equal(0)
+    })
+
+    it('rejects a bin not covered by an existing projection', async function () {
+      const query = client.query(helper.namespace, testSet, { select: ['fscore'] })
+      await expect(query.min('score', orderByType.INTEGER)).to.be.rejectedWith(Aerospike.AerospikeError)
+    })
+
+    it('returns null when the result set is empty', async function () {
+      const query = client.query(helper.namespace, testSet + '-empty')
+      const min = await query.min('score', orderByType.INTEGER)
+      expect(min).to.equal(null)
+    })
+  })
 })
