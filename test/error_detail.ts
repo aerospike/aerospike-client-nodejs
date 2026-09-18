@@ -50,7 +50,7 @@ describe('error detail verbosity', function () {
   const client = helper.client
   const keygen = helper.keygen
 
-  helper.skipUnlessVersion('>= 8.1.3', this)
+  helper.skipUnlessVersion('>= 8.2.0', this)
 
   const binName = 'edv-bin'
   let seedKey: KeyOptions

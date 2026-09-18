@@ -33,7 +33,7 @@ describe('lists.join()', function () {
   const client = helper.client
   const keygen = helper.keygen
 
-  helper.skipUnlessVersion('>= 8.1.3', this)
+  helper.skipUnlessVersion('>= 8.2.0', this)
 
   async function putKey (bins: AerospikeBins): Promise<KeyOptions> {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/lists_join' })()

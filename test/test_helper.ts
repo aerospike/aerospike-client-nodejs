@@ -342,7 +342,7 @@ import * as url from "node:url"
   let stringAppendPrependSupported: boolean | null = null
 
   /**
-   * Probe whether STRING_MODIFY append/prepend wire is accepted (some 8.1.3 lab
+   * Probe whether STRING_MODIFY append/prepend wire is accepted (some 8.2.0 lab
    * builds return ERR_OP_NOT_APPLICABLE or ERR_REQUEST_INVALID).
    */
   export async function supportsStringAppendPrepend (): Promise<boolean> {

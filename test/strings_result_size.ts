@@ -32,7 +32,7 @@ describe('string result-size cap', function () {
   const client = helper.client
   const keygen = helper.keygen
 
-  helper.skipUnlessVersion('>= 8.1.3', this)
+  helper.skipUnlessVersion('>= 8.2.0', this)
 
   it('repeat / pad that exceed the server cap return PARAM, not record-too-big', async function () {
     const policy = new Aerospike.OperatePolicy({
@@ -50,7 +50,7 @@ describe('string result-size cap', function () {
         try { await client.remove(key) } catch (_) { /* ignore */ }
         // Default Docker namespaces cap records at 1 MiB, so mid-size pads hit
         // record-too-big (13) first. Keep going until the string result-size
-        // cap returns PARAM (4), which is the 8.1.3.0-105+ contract.
+        // cap returns PARAM (4), which is the 8.2.0+ contract.
         if (error.code === status.ERR_RECORD_TOO_BIG) {
           continue
         }

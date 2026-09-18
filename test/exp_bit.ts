@@ -67,7 +67,7 @@ describe('Aerospike.exp_operations', function () {
     })
 
     describe('bit b64 encode', function () {
-      helper.skipUnlessVersion('>= 8.1.3', this)
+      helper.skipUnlessVersion('>= 8.2.0', this)
 
       let b64EncodeSupported = false
 
@@ -89,7 +89,7 @@ describe('Aerospike.exp_operations', function () {
         }
       })
 
-      helper.skipUnless(this, () => b64EncodeSupported, 'exp bit b64Encode requires 8.1.3.0-105+')
+      helper.skipUnless(this, () => b64EncodeSupported, 'exp bit b64Encode requires 8.2.0+')
 
       it('encodes the whole blob', async function () {
         const blob = Buffer.from([1, 1, 1, 1, 1])
