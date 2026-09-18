@@ -383,7 +383,7 @@ describe('Aerospike.exp', function () {
   })
 
   describe('string expressions', function () {
-    helper.skipUnlessVersion('>= 8.1.3', this)
+    helper.skipUnlessVersion('>= 8.2.0', this)
 
     it('evaluates exp_read for strlen on a string bin', async function () {
       const key = await createRecord({ text: 'hello' })
@@ -975,7 +975,7 @@ describe('Aerospike.exp', function () {
           }
         })
 
-        helper.skipUnless(this, () => expRegexReplaceSupported, 'exp regexReplace requires 8.1.3.0-105+')
+        helper.skipUnless(this, () => expRegexReplaceSupported, 'exp regexReplace requires 8.2.0+')
 
         it('regexReplace local (wire per C macro)', async function () {
         const key = await createRecord({ text: 'axa' })

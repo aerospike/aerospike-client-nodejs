@@ -32,7 +32,7 @@ describe('bitwise.b64Encode()', function () {
   const client = helper.client
   const keygen = helper.keygen
 
-  helper.skipUnlessVersion('>= 8.1.3', this)
+  helper.skipUnlessVersion('>= 8.2.0', this)
 
   let b64EncodeSupported = false
 
@@ -49,7 +49,7 @@ describe('bitwise.b64Encode()', function () {
     }
   })
 
-  helper.skipUnless(this, () => b64EncodeSupported, 'bit b64Encode requires 8.1.3.0-105+')
+  helper.skipUnless(this, () => b64EncodeSupported, 'bit b64Encode requires 8.2.0+')
 
   async function putKey (bins: AerospikeBins): Promise<KeyOptions> {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/bitwise_b64' })()

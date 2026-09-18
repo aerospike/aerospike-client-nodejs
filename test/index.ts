@@ -201,7 +201,7 @@ context('secondary indexes', function () {
   })
 
   describe('indexDataType.INTEGER', function () {
-    helper.skipUnlessVersion('>= 8.1.3', this)
+    helper.skipUnlessVersion('>= 8.2.0', this)
 
     it('should create an index with INTEGER datatype', function () {
       const options = {

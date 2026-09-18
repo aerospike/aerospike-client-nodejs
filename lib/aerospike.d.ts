@@ -2050,7 +2050,7 @@ export namespace policy {
          * * 1 - return subcode only.
          * * 2 - return subcode and human-readable message.
          *
-         * Requires Aerospike Server version >= 8.1.3.
+         * Requires Aerospike Server version >= 8.2.0.
          *
          * @default 0
          * @see {@link errorDetailVerbosityNamespace}
@@ -9624,7 +9624,7 @@ export interface BasePolicyOptions {
      * * 1 - return subcode only.
      * * 2 - return subcode and human-readable message.
      *
-     * Requires Aerospike Server version >= 8.1.3.
+     * Requires Aerospike Server version >= 8.2.0.
      *
      * @default 0
      * @see {@link errorDetailVerbosityNamespace}
@@ -12179,7 +12179,7 @@ export enum indexDataType {
      */
     STRING = 0,
     /*
-     * For use with server versions 8.1.3+. The Aerospike C client maps this to NUMERIC on
+     * For use with server versions 8.2.0+. The Aerospike C client maps this to NUMERIC on
      * older servers.
      */
     INTEGER = 1,
@@ -12192,8 +12192,8 @@ export enum indexDataType {
      */
     BLOB = 3,
     /**
-     * @deprecated For use with server versions prior to 8.1.3. Use {@link indexDataType.INTEGER}
-     * for server 8.1.3+. The C client maps this to INTEGER on server 8.1.3+.
+     * @deprecated For use with server versions prior to 8.2.0. Use {@link indexDataType.INTEGER}
+     * for server 8.2.0+. The C client maps this to INTEGER on server 8.2.0+.
      */
     NUMERIC = 4,
     /*
@@ -12862,18 +12862,18 @@ export namespace bitwise {
     export function getInt(bin: string, bitOffset: number, bitSize: number, sign: boolean): BitwiseOperation;
     /**
      * Create bit "b64 encode" operation for the whole blob.
-     * @remarks Server returns the base64 text of the blob as a string. Requires server 8.1.3+.
+     * @remarks Server returns the base64 text of the blob as a string. Requires server 8.2.0+.
      */
     export function b64Encode(bin: string): BitwiseOperation;
     /**
      * Create bit "b64 encode" from a byte offset through the end of the blob.
-     * @remarks A negative byteOffset counts back from the end. Requires server 8.1.3+.
+     * @remarks A negative byteOffset counts back from the end. Requires server 8.2.0+.
      */
     export function b64EncodeFrom(bin: string, byteOffset: number): BitwiseOperation;
     /**
      * Create bit "b64 encode" on a byte span.
      * @remarks When invertSize is true, byteSize counts back from the blob end,
-     * so 0 means to the end. Requires server 8.1.3+.
+     * so 0 means to the end. Requires server 8.2.0+.
      */
     export function b64EncodeRange(bin: string, byteOffset: number, byteSize: number, invertSize?: boolean): BitwiseOperation;
     /**
@@ -12905,9 +12905,9 @@ export namespace bitwise {
 }
 
 /**
- * String bin operations for {@link Client#operate} (server 8.1.3+).
+ * String bin operations for {@link Client#operate} (server 8.2.0+).
  *
- * @remarks Requires Aerospike Server 8.1.3 or later. See {@link exp.string} for
+ * @remarks Requires Aerospike Server 8.2.0 or later. See {@link exp.string} for
  * filter/write expressions.
  *
  * **Missing bin:** additive modifies ({@link strings.append}, {@link strings.prepend},
@@ -12923,7 +12923,7 @@ export namespace bitwise {
  * **Errors:** {@link strings.writeFlags.NO_FAIL} suppresses in-operation failure
  * with the bin unchanged; it does not suppress wrong-type errors. Use
  * {@link OperatePolicy#errorDetailVerbosity} and {@link AerospikeError#subcode}
- * for server 8.1.3+ detail. For raw blob append/prepend use
+ * for server 8.2.0+ detail. For raw blob append/prepend use
  * {@link operations.append} / {@link operations.prepend}; for Unicode string bins
  * use {@link strings.append} / {@link strings.prepend}.
  */
@@ -13026,9 +13026,21 @@ export namespace strings {
     export function startsWith(bin: string, prefix: string): StringOperation;
     /** Matching is Unicode canonical (NFC vs NFD), not byte-exact. */
     export function endsWith(bin: string, suffix: string): StringOperation;
-    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
+    /**
+     * Parse bin contents as integer.
+     * Failed conversion returns {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}
+     * (26) with {@link subcodeNamespace.OPNOT_STRING_CONVERSION_FAILED|OPNOT_STRING_CONVERSION_FAILED}
+     * (10).
+     * @remarks Requires applicable string bin; errors if missing or wrong type.
+     */
     export function toInteger(bin: string): StringOperation;
-    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
+    /**
+     * Parse bin contents as double.
+     * Failed conversion returns {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}
+     * (26) with {@link subcodeNamespace.OPNOT_STRING_CONVERSION_FAILED|OPNOT_STRING_CONVERSION_FAILED}
+     * (10).
+     * @remarks Requires applicable string bin; errors if missing or wrong type.
+     */
     export function toDouble(bin: string): StringOperation;
     /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function byteLength(bin: string): StringOperation;
@@ -13049,7 +13061,12 @@ export namespace strings {
     export function split(bin: string): StringOperation;
     /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function splitSeparator(bin: string, separator: string): StringOperation;
-    /** @remarks Requires applicable string bin; errors if missing or wrong type. */
+    /**
+     * Base64-decode string bin to blob.
+     * Invalid base64 returns {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE}
+     * (26) with {@link subcodeNamespace.OPNOT_STRING_B64_INVALID|OPNOT_STRING_B64_INVALID} (13).
+     * @remarks Requires applicable string bin; errors if missing or wrong type.
+     */
     export function b64Decode(bin: string): StringOperation;
     /** @remarks Requires applicable string bin; errors if missing or wrong type. */
     export function regexCompare(bin: string, pattern: string): StringOperation;
@@ -13115,7 +13132,16 @@ export namespace strings {
      * @remarks If the bin is missing, no-op (record unchanged).
      */
     export function regexReplace(bin: string, pattern: string, replacement: string, flags: number): StringOperation;
-    /** @remarks If the bin is missing, no-op (record unchanged). */
+    /**
+     * Coerce bin value to string in place. Accepted source types are integer,
+     * float, bool, string, and blob. List, map, GeoJSON, and HLL return
+     * {@link statusNamespace.ERR_BIN_INCOMPATIBLE_TYPE|ERR_BIN_INCOMPATIBLE_TYPE}
+     * (12). A blob whose bytes are not valid UTF-8 returns
+     * {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE} (26)
+     * with {@link subcodeNamespace.OPNOT_STRING_UTF8_INVALID|OPNOT_STRING_UTF8_INVALID}
+     * (11). This top-level conversion does not apply context.
+     * @remarks If the bin is missing, no-op (record unchanged).
+     */
     export function toString(bin: string): StringOperation;
 }
 /**
@@ -14818,12 +14844,12 @@ export namespace lists {
     export function size(bin: string): ListOperation;
     /**
      * Concatenate the string items of a list and return a single string.
-     * @remarks Inverse of {@link strings.splitSeparator}. Requires server 8.1.3+.
+     * @remarks Inverse of {@link strings.splitSeparator}. Requires server 8.2.0+.
      */
     export function join(bin: string): ListOperation;
     /**
      * Concatenate the string items of a list with a separator and return a single string.
-     * @remarks Requires server 8.1.3+.
+     * @remarks Requires server 8.2.0+.
      */
     export function joinSeparator(bin: string, separator: string): ListOperation;
 }
@@ -16127,7 +16153,7 @@ export namespace exp {
     }
 
     /**
-     * String read/modify expressions (server 8.1.3+). See {@link strings} for operate() string ops.
+     * String read/modify expressions (server 8.2.0+). See {@link strings} for operate() string ops.
      */
     export namespace string {
         export const strlen: (bin: AerospikeExp) => AerospikeExp;
@@ -16141,7 +16167,19 @@ export namespace exp {
         export const contains: (needle: string, bin: AerospikeExp) => AerospikeExp;
         export const startsWith: (prefix: string, bin: AerospikeExp) => AerospikeExp;
         export const endsWith: (suffix: string, bin: AerospikeExp) => AerospikeExp;
+        /**
+         * Parse a string expression as an integer. Failed conversion yields
+         * {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE} (26)
+         * with {@link subcodeNamespace.OPNOT_STRING_CONVERSION_FAILED|OPNOT_STRING_CONVERSION_FAILED}
+         * (10).
+         */
         export const toInteger: (bin: AerospikeExp) => AerospikeExp;
+        /**
+         * Parse a string expression as a double. Failed conversion yields
+         * {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE} (26)
+         * with {@link subcodeNamespace.OPNOT_STRING_CONVERSION_FAILED|OPNOT_STRING_CONVERSION_FAILED}
+         * (10).
+         */
         export const toDouble: (bin: AerospikeExp) => AerospikeExp;
         export const byteLength: (bin: AerospikeExp) => AerospikeExp;
         export const isNumeric: (bin: AerospikeExp) => AerospikeExp;
@@ -16151,6 +16189,12 @@ export namespace exp {
         export const toBlob: (bin: AerospikeExp) => AerospikeExp;
         export const split: (bin: AerospikeExp) => AerospikeExp;
         export const splitSeparator: (separator: string, bin: AerospikeExp) => AerospikeExp;
+        /**
+         * Base64-decode a string expression to a blob. Invalid base64 yields
+         * {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE} (26)
+         * with {@link subcodeNamespace.OPNOT_STRING_B64_INVALID|OPNOT_STRING_B64_INVALID}
+         * (13).
+         */
         export const b64Decode: (bin: AerospikeExp) => AerospikeExp;
         export const regexCompare: (pattern: string, bin: AerospikeExp) => AerospikeExp;
         export const regexCompareFlags: (pattern: string, flags: number, bin: AerospikeExp) => AerospikeExp;
@@ -16184,6 +16228,15 @@ export namespace exp {
          * flags, then string policy flags (`NO_FAIL`, etc.) on the wire.
          */
         export const regexReplace: (policy: { flags?: number } | null, pattern: string, replacement: string, flags: number, bin: AerospikeExp) => AerospikeExp;
+        /**
+         * Convert an integer, float, bool, string, or blob expression to a string.
+         * List, map, GeoJSON, and HLL yield
+         * {@link statusNamespace.ERR_BIN_INCOMPATIBLE_TYPE|ERR_BIN_INCOMPATIBLE_TYPE}
+         * (12). A blob whose bytes are not valid UTF-8 yields
+         * {@link statusNamespace.ERR_OP_NOT_APPLICABLE|ERR_OP_NOT_APPLICABLE} (26)
+         * with {@link subcodeNamespace.OPNOT_STRING_UTF8_INVALID|OPNOT_STRING_UTF8_INVALID}
+         * (11).
+         */
         export const toString: (bin: AerospikeExp) => AerospikeExp;
     }
 
@@ -19655,7 +19708,7 @@ export {statusNamespace as status}
 /**
  * Error detail verbosity levels for {@link BasePolicy#errorDetailVerbosity}.
  *
- * Requires Aerospike Server version >= 8.1.3.
+ * Requires Aerospike Server version >= 8.2.0.
  */
 declare namespace errorDetailVerbosityNamespace {
     /**
