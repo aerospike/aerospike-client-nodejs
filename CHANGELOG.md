@@ -22,6 +22,7 @@ Breaking changes below require a **major** version bump; they are intended to sh
   * Documented that nested string `operate()` context uses the flat string-op wire envelope (not CDT nested layout), that replace-style **expression** ops use a **QUOTED** pair on the wire, and that multi string ops on the same bin may return ordered per-op results when the server uses RESPOND_ALL_OPS (same family as MAP/BIT/HLL in the C client).
 
 * **Documentation**
+  * String `toInteger` / `toDouble` / `b64Decode` / `toString` (operate and `exp.string`): document the server error contract (`ERR_OP_NOT_APPLICABLE` with conversion / UTF-8 / base64 subcodes; `toString` accepts integer, float, bool, string, blob and returns `ERR_BIN_INCOMPATIBLE_TYPE` for list/map/GeoJSON/HLL).
   * `exp.isTombstone()` / `exp.ops.IS_TOMBSTONE`: documented that the Node binding maps this API to Aerospike `_AS_EXP_CODE_IS_TOMBSTONE` only; a duplicate or incorrect mapping (for example to `NOT`) would break tombstone checks. See `src/main/enums/exp_enum.cc` maintainer comment.
 
 ## [6.5.2]
