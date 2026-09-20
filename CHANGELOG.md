@@ -11,6 +11,7 @@ Breaking changes below require a **major** version bump; they are intended to sh
   * `exp.string.regexReplace` takes **`policy` first** for API symmetry with other string modify expressions; **regex flags** and **string policy flags** are both packed on the wire (C client `stage`, CLIENT-4824).
   * `strings.snip(bin, start, end)` now requires the **exclusive end** index (half-open range); the one-argument `snip(bin, start)` form is removed.
   * `strings.substrRange(bin, start, end)` — the third parameter is the **exclusive end** index (not a length).
+  * [AER-6957] CVE-2026-63662: C client 7.6.1 **bounds-checks msgpack deserialization** and **rejects nested list/map (CDT) values deeper than 64** (`MSGPACK_MAX_DEPTH`). This matches the server stored-value bound. Reads of deeper nesting now fail instead of unpacking.
 
 * **Improvements**
   * [CLIENT-4358] Added `Aerospike.indexDataType.INTEGER` for integer secondary indexes (server >= 8.2.0). The Aerospike C client maps `INTEGER` <-> `NUMERIC` by server version in `aerospike_index_create_private()`; Node exposes `INTEGER` and deprecates `NUMERIC`. `Client#createIntegerIndex` and `Client#createExpIntegerIndex` now use `INTEGER`.
@@ -18,7 +19,7 @@ Breaking changes below require a **major** version bump; they are intended to sh
   * String package (Aerospike Server 8.2.0+): aligned `aerospike/strings` and `exp.string` with the C client `stage` string APIs — `append` / `prepend`, `snip(bin, start, end)` with half-open `[start, end)`, `substrRange(bin, start, end)` (third parameter is the exclusive end index, not a length), and expression helpers `concat` / `concatList` matching `as_exp_string_concat` / `as_exp_string_concat_list`.
   * [CLIENT-5213] Platform-scoped native prebuilds ship as **`@aerospike/prebuild-{platform}-{arch}`** optional dependencies; the main `aerospike` package no longer bundles all prebuilds. Native load uses platform-keyed resolution (optional prebuild package or local `prebuilds/`), not `node-gyp-build`.
   * Bump `aerospike-client-c` to `stage` @ `1ebcc487` (7.6.1; includes 7.6.0 string ops / extended errors, CLIENT-5378, CLIENT-5454, AER-6957).
-  * String ops, extended errors, and `indexDataType.INTEGER` now require Aerospike Server **8.2.0+** (C client 7.6.0 renamed the published floor from 8.1.3).
+  * String ops, extended errors, and `indexDataType.INTEGER` now require Aerospike Server **8.2.0+**.
   * `strings.writeFlags.UPDATE_ONLY` exported for string modify operations.
   * Documented that nested string `operate()` context uses the flat string-op wire envelope (not CDT nested layout), that replace-style **expression** ops use a **QUOTED** pair on the wire, and that multi string ops on the same bin may return ordered per-op results when the server uses RESPOND_ALL_OPS (same family as MAP/BIT/HLL in the C client).
 

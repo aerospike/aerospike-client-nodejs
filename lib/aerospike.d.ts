@@ -1645,6 +1645,10 @@ export namespace cdt {
     /**
      * Nested CDT context type.
      *
+     * Nested list/map values are limited to 64 levels of nesting. The C client
+     * (7.6.1, AER-6957 / CVE-2026-63662) rejects deeper msgpack on deserialize;
+     * this matches the server stored-value bound.
+     *
      * @see {@link lists~ListOperation#withContext|ListOperation#withContext} Adding context to list operations
      * @see {@link maps~MapOperation#withContext|Map#Operation#withContext} Adding context to map operations
      *
