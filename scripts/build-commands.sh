@@ -42,10 +42,24 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
 
-  LIBUV_DIR=/usr/local/opt/libuv
+  # Node ships libuv. Compiling the C client against Homebrew /usr/local
+  # libuv (Intel keg on Apple Silicon) ABI-mismatches Node and segfaults in
+  # uv_async_init on connect(). Prefer Node's uv.h; fall back to brew --prefix.
+  NODE_UV_INCLUDE="$(node -p "require('path').join(require('path').dirname(process.execPath), '..', 'include', 'node')" 2>/dev/null || true)"
+  BREW_LIBUV_PREFIX=""
+  if command -v brew >/dev/null 2>&1; then
+    BREW_LIBUV_PREFIX="$(brew --prefix libuv 2>/dev/null || true)"
+  fi
+  if [ -f "${NODE_UV_INCLUDE}/uv.h" ]; then
+    LIBUV_INCLUDE_DIR=${NODE_UV_INCLUDE}
+  elif [ -n "${BREW_LIBUV_PREFIX}" ] && [ -f "${BREW_LIBUV_PREFIX}/include/uv.h" ]; then
+    LIBUV_INCLUDE_DIR=${BREW_LIBUV_PREFIX}/include
+  else
+    LIBUV_INCLUDE_DIR=/usr/local/opt/libuv/include
+  fi
+  LIBUV_DIR=$(dirname "${LIBUV_INCLUDE_DIR}")
   LIBUV_ABS_DIR=${LIBUV_DIR}
   LIBUV_LIBRARY_DIR=${LIBUV_DIR}/lib
-  LIBUV_INCLUDE_DIR=${LIBUV_DIR}/include
   LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
 elif [[ "$OSTYPE" == "linux"* ]]; then
@@ -118,7 +132,7 @@ rebuild_c_client() {
   # if [ ! -f ${AEROSPIKE_LIBRARY} ]; then
     cd ${AEROSPIKE_C_HOME}
     make clean
-    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.log
+    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_INCLUDE_DIR}" 2>&1 | tee ${CWD}/${0}-cclient-output.log
     # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.log
   # fi
 }
