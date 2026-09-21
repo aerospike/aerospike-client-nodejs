@@ -32,7 +32,7 @@ Local<Object> indexDataType()
 	Local<Object> obj = Nan::New<Object>();
 	set(obj, "STRING", AS_INDEX_STRING);
 	// CLIENT-4358: expose AS_INDEX_INTEGER to JS. INTEGER <-> NUMERIC
-	// mapping by server version (8.1.3 boundary) is handled by the Aerospike C client
+	// mapping by server version (8.2.0 boundary) is handled by the Aerospike C client
 	// in aerospike_index_create_private(), not in this binding.
 	set(obj, "INTEGER", AS_INDEX_INTEGER);
 	set(obj, "GEO2DSPHERE", AS_INDEX_GEO2DSPHERE);

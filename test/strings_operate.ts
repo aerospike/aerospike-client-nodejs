@@ -33,7 +33,7 @@ describe('strings operate()', function () {
   const client = helper.client
   const keygen = helper.keygen
 
-  helper.skipUnlessVersion('>= 8.1.3', this)
+  helper.skipUnlessVersion('>= 8.2.0', this)
 
   async function putKey (bins: AerospikeBins): Promise<KeyOptions> {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/strings_operate' })()
@@ -191,7 +191,7 @@ describe('strings operate()', function () {
       }
     })
 
-    helper.skipUnless(this, () => nestedStringCtxSupported, 'nested string CTX requires 8.1.3.0-105+')
+    helper.skipUnless(this, () => nestedStringCtxSupported, 'nested string CTX requires 8.2.0+')
 
     it('uppers a string nested at a list index', async function () {
       const key = await putKey({ items: ['hello', 'world'] })
@@ -291,7 +291,7 @@ describe('strings operate()', function () {
       }
     })
 
-    helper.skipUnless(this, () => regexReplaceSupported, 'regexReplace requires 8.1.3.0-105+')
+    helper.skipUnless(this, () => regexReplaceSupported, 'regexReplace requires 8.2.0+')
 
     it('invalid pattern with NO_FAIL leaves the bin unchanged', async function () {
       const key = await putKey({ s: 'abc' })

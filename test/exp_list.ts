@@ -81,7 +81,7 @@ describe('Aerospike.exp_operations', function () {
     })
 
     describe('list join', function () {
-      helper.skipUnlessVersion('>= 8.1.3', this)
+      helper.skipUnlessVersion('>= 8.2.0', this)
 
       it('joins string items without a separator', async function () {
         const key: Key = await createRecord({ tags: ['a', 'b', 'c'] })
