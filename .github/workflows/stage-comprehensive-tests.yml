@@ -35,12 +35,12 @@ on:
       server-tag:
         required: false
         type: string
-        default: '8.2.0.0-rc4'
-        description: 'Server docker image tag (EE and CE)'
+        default: '8.1.2.5'
+        description: 'Server docker image tag (EE and CE). Newest public GA is 8.1.2.5; pass an RC tag with use-server-rc.'
       use-server-rc:
         required: false
         type: boolean
-        default: true
+        default: false
         description: 'Pull Docker Hub *-rc images (aerospike-server-rc / aerospike-server-enterprise-rc)'
     secrets:
       soup_hat:

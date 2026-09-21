@@ -19,11 +19,11 @@ on:
       server-tag:
         type: string
         required: false
-        default: '8.2.0.0-rc4'
+        default: '8.1.2.5'
       use-server-rc:
         type: boolean
         required: false
-        default: true
+        default: false
   workflow_call:
     inputs:
       run_tests:
@@ -41,11 +41,11 @@ on:
       server-tag:
         type: string
         required: false
-        default: '8.2.0.0-rc4'
+        default: '8.1.2.5'
       use-server-rc:
         type: boolean
         required: false
-        default: true
+        default: false
     secrets:
       soup_hat:
         required: true
