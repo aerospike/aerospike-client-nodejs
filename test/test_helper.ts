@@ -251,6 +251,22 @@ import * as url from "node:url"
     })
   }
 
+  function skipUnlessInBeforeAll (ctx: Suite, condition: () => boolean, message: string) {
+    ctx.beforeAll(function (this: any) {
+      if (!condition()) {
+        this.skip(message)
+      }
+    })
+  }
+
+  /** Server/client reject of an op the cluster or addon does not implement. */
+  export function isMissingServerOpError (error: any): boolean {
+    const code = error?.code
+    return code === Aerospike.status.ERR_REQUEST_INVALID ||
+      code === Aerospike.status.ERR_OP_NOT_APPLICABLE ||
+      code === Aerospike.status.ERR_PARAM
+  }
+
   export function skip(this: any, ctx: Suite, message: string) {
     ctx.beforeEach(function (this: any) {
       this.skip(message)
@@ -286,20 +302,19 @@ import * as url from "node:url"
   }
 
   export function skipUnlessVersion(this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
+    const cluster = this.cluster
+    skipUnlessInBeforeAll(ctx, () => cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
   }
 
 
   export function skipUnlessVersionAndEnterprise (this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => {
-      return (this.cluster.isVersionInRange(versionRange) && (this.cluster.isEnterprise())) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+    const cluster = this.cluster
+    skipUnlessInBeforeAll(ctx, () => cluster.isVersionInRange(versionRange) && cluster.isEnterprise(), `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
   }
 
   export function skipUnlessVersionAndCommunity (this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => {
-      return (this.cluster.isVersionInRange(versionRange) && (!this.cluster.isEnterprise())) 
-
-    }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+    const cluster = this.cluster
+    skipUnlessInBeforeAll(ctx, () => cluster.isVersionInRange(versionRange) && !cluster.isEnterprise(), `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
   }
 
   export function skipUnlessSupportsTtl(this: any, ctx: Suite) {

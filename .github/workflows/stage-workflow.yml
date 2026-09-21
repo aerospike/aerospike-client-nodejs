@@ -2,6 +2,22 @@ name: Stage workflow
 
 on:
   workflow_dispatch:
+    inputs:
+      server-tag:
+        description: 'Aerospike Docker image tag for EE and CE tests. Default is 8.2.0 RC4.'
+        required: false
+        type: string
+        default: '8.2.0.0-rc4'
+      use-server-rc:
+        description: 'Pull from Docker Hub *-rc repos (aerospike-server-rc / aerospike-server-enterprise-rc)'
+        required: false
+        type: boolean
+        default: true
+      run_tests:
+        description: 'Run comprehensive tests against the selected server tag'
+        required: false
+        type: boolean
+        default: true
 
 
 jobs:
@@ -13,7 +29,9 @@ jobs:
     with:
       version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
       bundle-version: ${{ needs.stage-get-jfrog-version.outputs.tag_version }}
-      run_tests: true
+      run_tests: ${{ inputs.run_tests }}
+      server-tag: ${{ inputs.server-tag }}
+      use-server-rc: ${{ inputs.use-server-rc }}
     needs: [
       stage-get-jfrog-version,
     ]

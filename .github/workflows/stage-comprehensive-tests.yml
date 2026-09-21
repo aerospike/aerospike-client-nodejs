@@ -35,8 +35,13 @@ on:
       server-tag:
         required: false
         type: string
-        default: '8.1.1.0'
-        description: 'Server docker image tag'
+        default: '8.2.0.0-rc4'
+        description: 'Server docker image tag (EE and CE)'
+      use-server-rc:
+        required: false
+        type: boolean
+        default: true
+        description: 'Pull Docker Hub *-rc images (aerospike-server-rc / aerospike-server-enterprise-rc)'
     secrets:
       soup_hat:
         required: true
@@ -51,6 +56,7 @@ env:
   JF_PROJECT: ${{ vars.JFROG_PROJECT != '' && vars.JFROG_PROJECT || 'database' }}
   JF_OIDC_PROVIDER: ${{ vars.JFROG_OIDC_PROVIDER != '' && vars.JFROG_OIDC_PROVIDER || 'database-gh-aerospike' }}
   JF_OIDC_AUDIENCE: ${{ vars.JFROG_OIDC_AUDIENCE != '' && vars.JFROG_OIDC_AUDIENCE || 'database-gh-aerospike' }}
+  CE_SERVER_IMAGE: aerospike/aerospike-server${{ inputs.use-server-rc && '-rc' || '' }}:${{ inputs.server-tag }}
 
 jobs:
   get-runner-os:
@@ -160,7 +166,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: false
+        use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -179,7 +185,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: false
+        use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -283,7 +289,14 @@ jobs:
 
     - name: Run CE Aerospike server for package manager smoke test
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
-      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.soup_hat }}
+        DOCKERHUB_PASSWORD: ${{ secrets.cell_girl }}
+      run: |
+        if [[ "${{ inputs.use-server-rc }}" == "true" ]]; then
+          echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+        docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
@@ -372,7 +385,14 @@ jobs:
 
     - name: Run CE Aerospike server for package manager smoke test
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
-      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.soup_hat }}
+        DOCKERHUB_PASSWORD: ${{ secrets.cell_girl }}
+      run: |
+        if [[ "${{ inputs.use-server-rc }}" == "true" ]]; then
+          echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+        docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
@@ -468,7 +488,14 @@ jobs:
 
     - name: Run CE Aerospike server for package manager smoke test
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
-      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.soup_hat }}
+        DOCKERHUB_PASSWORD: ${{ secrets.cell_girl }}
+      run: |
+        if [[ "${{ inputs.use-server-rc }}" == "true" ]]; then
+          echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+        docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
@@ -571,7 +598,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: false
+        use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -589,7 +616,7 @@ jobs:
       if: ${{ inputs.platform-tag == 'linux_x86_64' || inputs.platform-tag == 'linux_aarch64' }}
       uses: ./.github/actions/run-ee-server-for-ext-container
       with:
-        use-server-rc: false
+        use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.soup_hat }}
         docker-hub-password: ${{ secrets.cell_girl }}
@@ -768,7 +795,14 @@ jobs:
 
     - name: Run CE Aerospike server for metrics tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
-      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.soup_hat }}
+        DOCKERHUB_PASSWORD: ${{ secrets.cell_girl }}
+      run: |
+        if [[ "${{ inputs.use-server-rc }}" == "true" ]]; then
+          echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+        docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
@@ -804,7 +838,7 @@ jobs:
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
       run: |
         node scripts/verify-prebuild-smoke.js
-        docker pull aerospike/aerospike-server:latest;
+        docker pull "$CE_SERVER_IMAGE"
         PREBUILDS_ONLY=1 npm run test-ci-single -- test/metrics_node_close.ts --testMetrics true --h localhost --port 3000 --t 50000;
         PREBUILDS_ONLY=1 npm run test-ci-single -- test/metrics_cluster_name.ts --testMetrics true --h localhost --port 3000 --t 50000;
 
@@ -822,7 +856,7 @@ jobs:
       matrix:
         nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
-    if: ${{ inputs.run_tests && (inputs.platform-tag != 'win32_x64' && inputs.platform-tag != 'darwin_x86_64') }}
+    if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
     runs-on: ${{ fromJson(needs.get-runner-os.outputs.runner-os) }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.nodejs-tag[0] }}-${{ inputs.platform-tag }}"
@@ -856,7 +890,14 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
-      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.soup_hat }}
+        DOCKERHUB_PASSWORD: ${{ secrets.cell_girl }}
+      run: |
+        if [[ "${{ inputs.use-server-rc }}" == "true" ]]; then
+          echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+        docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
@@ -937,7 +978,14 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
-      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.soup_hat }}
+        DOCKERHUB_PASSWORD: ${{ secrets.cell_girl }}
+      run: |
+        if [[ "${{ inputs.use-server-rc }}" == "true" ]]; then
+          echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+        docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
 
     - name: Add 10ms latency to Docker traffic
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
@@ -1103,7 +1151,14 @@ jobs:
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
-      run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 aerospike/aerospike-server:8.1.1.0
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.soup_hat }}
+        DOCKERHUB_PASSWORD: ${{ secrets.cell_girl }}
+      run: |
+        if [[ "${{ inputs.use-server-rc }}" == "true" ]]; then
+          echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+        fi
+        docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
 
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:

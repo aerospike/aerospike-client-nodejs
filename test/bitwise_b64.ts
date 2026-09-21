@@ -43,7 +43,7 @@ describe('bitwise.b64Encode()', function () {
       await client.operate(key, [bits.b64Encode('blob')])
       b64EncodeSupported = true
     } catch (error: any) {
-      if (error.code !== status.ERR_REQUEST_INVALID) {
+      if (!helper.isMissingServerOpError(error)) {
         throw error
       }
     }

@@ -19,7 +19,11 @@ on:
       server-tag:
         type: string
         required: false
-        default: '8.1.1.0'
+        default: '8.2.0.0-rc4'
+      use-server-rc:
+        type: boolean
+        required: false
+        default: true
   workflow_call:
     inputs:
       run_tests:
@@ -37,7 +41,11 @@ on:
       server-tag:
         type: string
         required: false
-        default: '8.1.2.0'
+        default: '8.2.0.0-rc4'
+      use-server-rc:
+        type: boolean
+        required: false
+        default: true
     secrets:
       soup_hat:
         required: true
@@ -65,6 +73,7 @@ jobs:
       platform-tag: ${{ matrix.platform-tag }}
       run_tests: ${{ inputs.run_tests }}
       server-tag: ${{ inputs.server-tag }}
+      use-server-rc: ${{ inputs.use-server-rc }}
       version: ${{ inputs.version }}
       bundle-version: ${{ inputs.bundle-version }}
     secrets:

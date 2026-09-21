@@ -968,8 +968,7 @@ describe('Aerospike.exp', function () {
             ])
             expRegexReplaceSupported = true
           } catch (error: any) {
-            if (error.code !== Aerospike.status.ERR_OP_NOT_APPLICABLE &&
-                error.code !== Aerospike.status.ERR_REQUEST_INVALID) {
+            if (!helper.isMissingServerOpError(error)) {
               throw error
             }
           }
