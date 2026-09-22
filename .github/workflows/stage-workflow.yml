@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       server-tag:
-        description: 'Docker Hub tag for aerospike/aerospike-server and aerospike/aerospike-server-enterprise. Default is the newest public GA (8.1.2.5). Docker Hub *-rc repos are unused; RCs come from JFrog (#dev-announcements).'
+        description: 'Image tag. Default 8.1.2.5 is public Docker Hub GA. For 8.2 RC set 8.2.0.0 (or a Slack timestamp tag) and enable use-server-rc.'
         required: false
         type: string
         default: '8.1.2.5'
       use-server-rc:
-        description: 'Unused. Docker Hub aerospike-server*-rc repos are retired; leave false. RCs are pulled from JFrog, not Docker Hub.'
+        description: 'Pull from artifact.aerospike.io/database-docker-virtual (same as Python). Required for 8.2.0.0 RCs. Do not use Docker Hub aerospike-server*-rc.'
         required: false
         type: boolean
         default: false

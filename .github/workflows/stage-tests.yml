@@ -20,10 +20,12 @@ on:
         type: string
         required: false
         default: '8.1.2.5'
+        description: 'Image tag. Docker Hub when use-server-rc is false; JFrog database-docker-virtual when true.'
       use-server-rc:
         type: boolean
         required: false
         default: false
+        description: 'Pull server images from JFrog database-docker-virtual (Python Stage path).'
   workflow_call:
     inputs:
       run_tests:
@@ -42,10 +44,12 @@ on:
         type: string
         required: false
         default: '8.1.2.5'
+        description: 'Image tag. Docker Hub when use-server-rc is false; JFrog database-docker-virtual when true.'
       use-server-rc:
         type: boolean
         required: false
         default: false
+        description: 'Pull server images from JFrog database-docker-virtual (Python Stage path).'
     secrets:
       soup_hat:
         required: true

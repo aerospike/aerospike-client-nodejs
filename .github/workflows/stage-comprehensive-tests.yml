@@ -36,12 +36,12 @@ on:
         required: false
         type: string
         default: '8.1.2.5'
-        description: 'Docker Hub tag for aerospike/aerospike-server and aerospike/aerospike-server-enterprise. Newest public GA is 8.1.2.5. Docker Hub *-rc repos are unused; RCs come from JFrog.'
+        description: 'Image tag. Docker Hub GA when use-server-rc is false (default 8.1.2.5). JFrog RC when use-server-rc is true (e.g. 8.2.0.0).'
       use-server-rc:
         required: false
         type: boolean
         default: false
-        description: 'Unused. Docker Hub aerospike-server*-rc repos are retired; leave false. RCs are pulled from JFrog (#dev-announcements).'
+        description: 'Pull CE/EE from JFrog database-docker-virtual (Python Stage path). Do not use Docker Hub *-rc.'
     secrets:
       soup_hat:
         required: true
@@ -56,8 +56,9 @@ env:
   JF_PROJECT: ${{ vars.JFROG_PROJECT != '' && vars.JFROG_PROJECT || 'database' }}
   JF_OIDC_PROVIDER: ${{ vars.JFROG_OIDC_PROVIDER != '' && vars.JFROG_OIDC_PROVIDER || 'database-gh-aerospike' }}
   JF_OIDC_AUDIENCE: ${{ vars.JFROG_OIDC_AUDIENCE != '' && vars.JFROG_OIDC_AUDIENCE || 'database-gh-aerospike' }}
-  # Docker Hub aerospike-server*-rc repos are unused. RCs come from JFrog.
-  CE_SERVER_IMAGE: aerospike/aerospike-server:${{ inputs.server-tag }}
+  JF_DOCKER_REGISTRY: ${{ vars.JFROG_DOCKER_REGISTRY != '' && vars.JFROG_DOCKER_REGISTRY || 'artifact.aerospike.io' }}
+  # use-server-rc: JFrog virtual (GA + TEST RCs). Off: public Docker Hub. Never aerospike-server*-rc.
+  CE_SERVER_IMAGE: ${{ inputs.use-server-rc && format('{0}/database-docker-virtual/aerospike-server:{1}', vars.JFROG_DOCKER_REGISTRY != '' && vars.JFROG_DOCKER_REGISTRY || 'artifact.aerospike.io', inputs.server-tag) || format('aerospike/aerospike-server:{0}', inputs.server-tag) }}
 
 jobs:
   get-runner-os:
@@ -288,6 +289,9 @@ jobs:
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
+    - uses: ./.github/actions/login-jfrog-docker
+      if: ${{ inputs.use-server-rc && inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
+
     - name: Run CE Aerospike server for package manager smoke test
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
       run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
@@ -376,6 +380,9 @@ jobs:
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
+
+    - uses: ./.github/actions/login-jfrog-docker
+      if: ${{ inputs.use-server-rc && inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
 
     - name: Run CE Aerospike server for package manager smoke test
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
@@ -472,6 +479,9 @@ jobs:
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.platform-tag == 'darwin_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
+
+    - uses: ./.github/actions/login-jfrog-docker
+      if: ${{ inputs.use-server-rc && inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
 
     - name: Run CE Aerospike server for package manager smoke test
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_x86_64') }}
@@ -773,6 +783,9 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
+    - uses: ./.github/actions/login-jfrog-docker
+      if: ${{ inputs.use-server-rc && inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
+
     - name: Run CE Aerospike server for metrics tests
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
       run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
@@ -861,6 +874,9 @@ jobs:
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
 
+    - uses: ./.github/actions/login-jfrog-docker
+      if: ${{ inputs.use-server-rc && inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64') }}
+
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'linux_') || inputs.platform-tag == 'darwin_arm64') }}
       run: docker run --ulimit nofile=15000:15000 -d --name aerospike -e DEFAULT_TTL=2592000 -p 3000-3002:3000-3002 "$CE_SERVER_IMAGE"
@@ -942,6 +958,9 @@ jobs:
     - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
+
+    - uses: ./.github/actions/login-jfrog-docker
+      if: ${{ inputs.use-server-rc && inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
@@ -1108,6 +1127,9 @@ jobs:
     - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
       with:
         node-version: ${{ matrix.nodejs-tag[1] }}
+
+    - uses: ./.github/actions/login-jfrog-docker
+      if: ${{ inputs.use-server-rc && inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
 
     - name: Run latest Community edition Aerospike server
       if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'linux_') }}
