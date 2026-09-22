@@ -13,11 +13,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - name: 'macOS: install timeout command'
-    if: ${{ runner.os == 'macOS' }}
-    run: brew install coreutils
-    shell: bash
-
   # Composite actions doesn't support step-level timeout-minutes
   # Use timeout command and store polling logic in file to make it easier to read
   # Call bash shell explicitly since timeout uses "sh" shell by default, for some reason
