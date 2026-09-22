@@ -185,9 +185,7 @@ describe('strings operate()', function () {
         ])
         nestedStringCtxSupported = true
       } catch (error: any) {
-        if (!helper.isMissingServerOpError(error)) {
-          throw error
-        }
+        helper.throwUnlessMissingOpOnOlderServer(error)
       }
     })
 
@@ -285,9 +283,7 @@ describe('strings operate()', function () {
         ])
         regexReplaceSupported = true
       } catch (error: any) {
-        if (!helper.isMissingServerOpError(error)) {
-          throw error
-        }
+        helper.throwUnlessMissingOpOnOlderServer(error)
       }
     })
 

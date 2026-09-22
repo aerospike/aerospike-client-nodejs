@@ -4,12 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       server-tag:
-        description: 'Aerospike Docker image tag for EE and CE tests. Default is the newest public GA (8.1.2.5). For 8.2 RC, set this (e.g. 8.2.0.0-rc4) and enable use-server-rc.'
+        description: 'Docker Hub tag for aerospike/aerospike-server and aerospike/aerospike-server-enterprise. Default is the newest public GA (8.1.2.5). Docker Hub *-rc repos are unused; RCs come from JFrog (#dev-announcements).'
         required: false
         type: string
         default: '8.1.2.5'
       use-server-rc:
-        description: 'Pull from Docker Hub *-rc repos (aerospike-server-rc / aerospike-server-enterprise-rc). Leave off unless server-tag is an RC.'
+        description: 'Unused. Docker Hub aerospike-server*-rc repos are retired; leave false. RCs are pulled from JFrog, not Docker Hub.'
         required: false
         type: boolean
         default: false

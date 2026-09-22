@@ -6,7 +6,7 @@ inputs:
   # All inputs in composite actions are strings
   use-server-rc:
     required: true
-    description: Deploy server release candidate?
+    description: Unused. Docker Hub aerospike-server*-rc repos are retired; RCs come from JFrog.
     default: 'false'
   server-tag:
     required: true
@@ -45,7 +45,8 @@ runs:
     working-directory: .github/workflows
     shell: bash
 
-  - run: echo IMAGE_NAME=aerospike/aerospike-server${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+  # Docker Hub aerospike-server-rc is unused; RCs come from JFrog.
+  - run: echo IMAGE_NAME=aerospike/aerospike-server:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
   
   # FLAG THIS

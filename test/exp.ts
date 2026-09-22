@@ -968,9 +968,7 @@ describe('Aerospike.exp', function () {
             ])
             expRegexReplaceSupported = true
           } catch (error: any) {
-            if (!helper.isMissingServerOpError(error)) {
-              throw error
-            }
+            helper.throwUnlessMissingOpOnOlderServer(error)
           }
         })
 
