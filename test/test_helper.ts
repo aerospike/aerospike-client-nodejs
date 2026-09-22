@@ -259,25 +259,6 @@ import * as url from "node:url"
     })
   }
 
-  /** Server/client reject of an op the cluster or addon does not implement. */
-  export function isMissingServerOpError (error: any): boolean {
-    const code = error?.code
-    return code === Aerospike.status.ERR_REQUEST_INVALID ||
-      code === Aerospike.status.ERR_OP_NOT_APPLICABLE ||
-      code === Aerospike.status.ERR_PARAM
-  }
-
-  /**
-   * Probe catch helper. On servers that already meet minVersion (default 8.2.0),
-   * missing-op status codes are real failures. Older servers may still run
-   * nested `before` hooks after skipUnlessVersion beforeAll, so those stay skippable.
-   */
-  export function throwUnlessMissingOpOnOlderServer (error: any, minVersion = '>= 8.2.0') {
-    if (cluster.isVersionInRange(minVersion) || !isMissingServerOpError(error)) {
-      throw error
-    }
-  }
-
   export function skip(this: any, ctx: Suite, message: string) {
     ctx.beforeEach(function (this: any) {
       this.skip(message)
@@ -363,42 +344,6 @@ import * as url from "node:url"
 
   export function skipUnlessTimeoutDelay(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testTimeoutDelay, 'timeout delay test disabled')
-  }
-
-  let stringAppendPrependSupported: boolean | null = null
-
-  /**
-   * Probe whether STRING_MODIFY append/prepend is accepted. On server >= 8.2.0
-   * a reject is a real failure; older servers may still hit this after
-   * skipUnlessVersion beforeAll if nested hooks still run.
-   */
-  export async function supportsStringAppendPrepend (): Promise<boolean> {
-    if (stringAppendPrependSupported !== null) {
-      return stringAppendPrependSupported
-    }
-    const strings = Aerospike.strings
-    const op = Aerospike.operations
-    const key = keygen.string(namespace, set, { prefix: 'test/string-append-probe' })()
-    try {
-      await client.put(key, { s: 'x' })
-      await client.operate(key, [strings.append('s', 'y'), op.read('s')])
-      stringAppendPrependSupported = true
-    } catch (error: any) {
-      throwUnlessMissingOpOnOlderServer(error)
-      stringAppendPrependSupported = false
-    } finally {
-      try {
-        await client.remove(key)
-      } catch (_) { /* probe key may not exist */ }
-    }
-    return stringAppendPrependSupported
-  }
-
-  /** Call at the start of an `it()` that requires strings.append / prepend. */
-  export async function skipUnlessStringAppendPrepend (this: Mocha.Context) {
-    if (!(await supportsStringAppendPrepend())) {
-      this.skip('server rejects strings.append / strings.prepend on this build')
-    }
   }
 
   if (process.env.GLOBAL_CLIENT !== 'false') {

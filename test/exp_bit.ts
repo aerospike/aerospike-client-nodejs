@@ -69,25 +69,6 @@ describe('Aerospike.exp_operations', function () {
     describe('bit b64 encode', function () {
       helper.skipUnlessVersion('>= 8.2.0', this)
 
-      let b64EncodeSupported = false
-
-      before(async function () {
-        const blob = Buffer.from([1, 1, 1, 1, 1])
-        const key: Key = await createRecord({ blob })
-        try {
-          await client.operate(key, [
-            exp.operations.read(tempBin,
-              exp.bit.b64Encode(exp.binBlob('blob')),
-              0)
-          ])
-          b64EncodeSupported = true
-        } catch (error: any) {
-          helper.throwUnlessMissingOpOnOlderServer(error)
-        }
-      })
-
-      helper.skipUnless(this, () => b64EncodeSupported, 'exp bit b64Encode requires 8.2.0+')
-
       it('encodes the whole blob', async function () {
         const blob = Buffer.from([1, 1, 1, 1, 1])
         const key: Key = await createRecord({ blob })
