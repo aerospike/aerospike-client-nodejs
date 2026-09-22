@@ -134,12 +134,11 @@ describe('Metrics node close test', async function () {
                     await new Promise(r => setTimeout(r, 2000));
 
                     console.log("Running server container...");
-                    const SERVER_PORT_NUMBER = 3000;
-
-
+                    const SERVER_PORT_NUMBER = 3000
+                    const serverImage = process.env.CE_SERVER_IMAGE || 'aerospike/aerospike-server'
 
                     const container = await docker.createContainer({
-                        Image: 'aerospike/aerospike-server',
+                        Image: serverImage,
                         HostConfig: {
                             NetworkMode: "host",
                             PortBindings: {

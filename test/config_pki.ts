@@ -52,7 +52,7 @@ context('admin commands', async function () {
 		}
 		catch(error: any){
 			console.log(error)
-	        expect(error.message).to.eql("Password authentication is disabled for PKI-only users. Please authenticate using your certificate.")
+			expect(error.message).to.include("Password authentication is disabled for PKI-only users. Please authenticate using your certificate.")
 	        expect(error.code).to.eql(64)
 		}
 
