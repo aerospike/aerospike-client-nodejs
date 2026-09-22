@@ -358,7 +358,11 @@ import * as url from "node:url"
         await serverInfoHelper.fetchNamespaceInfo(options.namespace)
       } catch (error: any) {
         console.error('ERROR:', error)
-        console.error('CONFIG:', client.config)
+        console.error('CONFIG:', {
+          hosts: client?.config?.hosts,
+          port: client?.config?.port,
+          clusterName: client?.config?.clusterName
+        })
         console.error('Client connection failed, tests cannot be executed. Tests failed, exiting with error.')
         process.exit(1)
       }
