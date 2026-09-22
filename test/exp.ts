@@ -753,7 +753,6 @@ describe('Aerospike.exp', function () {
       })
 
       it('append vs concat literal wire', async function () {
-        await helper.skipUnlessStringAppendPrepend.call(this)
         const key = await createRecord({ text: 'x' })
         const opsAppend = [
           exp.operations.read(tempBin,
@@ -790,7 +789,6 @@ describe('Aerospike.exp', function () {
       })
 
       it('prepend local result', async function () {
-        await helper.skipUnlessStringAppendPrepend.call(this)
         const key = await createRecord({ text: 'end' })
         const ops = [
           exp.operations.read(tempBin,
@@ -956,27 +954,6 @@ describe('Aerospike.exp', function () {
       })
 
       describe('regexReplace', function () {
-        let expRegexReplaceSupported = false
-
-        before(async function () {
-          const key = await createRecord({ text: 'axa' })
-          try {
-            await client.operate(key, [
-              exp.operations.read(tempBin,
-                exp.string.regexReplace(null, 'a', 'b', strings.regexFlags.NONE, exp.binStr('text')),
-                exp.expWriteFlags.DEFAULT)
-            ])
-            expRegexReplaceSupported = true
-          } catch (error: any) {
-            if (error.code !== Aerospike.status.ERR_OP_NOT_APPLICABLE &&
-                error.code !== Aerospike.status.ERR_REQUEST_INVALID) {
-              throw error
-            }
-          }
-        })
-
-        helper.skipUnless(this, () => expRegexReplaceSupported, 'exp regexReplace requires 8.2.0+')
-
         it('regexReplace local (wire per C macro)', async function () {
         const key = await createRecord({ text: 'axa' })
         const ops = [

@@ -224,10 +224,26 @@
             'aerospike-client-c/src/include',
             'src/include',
             "<!(node -e \"require('nan')\")",
-          ],          
+          ],
+          'library_dirs': [
+            '/opt/homebrew/lib',
+            '/opt/homebrew/opt/libyaml/lib',
+            '/opt/homebrew/opt/openssl@3/lib',
+            '/usr/local/lib',
+            '/usr/local/opt/libyaml/lib',
+            '/usr/local/opt/openssl@3/lib'
+          ],
           'cflags': [ '-Wall', '-g', '-Warray-bounds', '-fpermissive', '-fno-strict-aliasing', '-fPIC'],
           'xcode_settings': {
-            'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)'
+            'MACOSX_DEPLOYMENT_TARGET': '<!(sw_vers -productVersion | cut -d. -f1-2)',
+            'OTHER_LDFLAGS': [
+              '-L/opt/homebrew/lib',
+              '-L/opt/homebrew/opt/libyaml/lib',
+              '-L/opt/homebrew/opt/openssl@3/lib',
+              '-L/usr/local/lib',
+              '-L/usr/local/opt/libyaml/lib',
+              '-L/usr/local/opt/openssl@3/lib'
+            ],
           },
         }],
         ['OS=="win"', {

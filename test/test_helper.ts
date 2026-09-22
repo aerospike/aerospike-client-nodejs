@@ -251,6 +251,14 @@ import * as url from "node:url"
     })
   }
 
+  function skipUnlessInBeforeAll (ctx: Suite, condition: () => boolean, message: string) {
+    ctx.beforeAll(function (this: any) {
+      if (!condition()) {
+        this.skip(message)
+      }
+    })
+  }
+
   export function skip(this: any, ctx: Suite, message: string) {
     ctx.beforeEach(function (this: any) {
       this.skip(message)
@@ -286,20 +294,19 @@ import * as url from "node:url"
   }
 
   export function skipUnlessVersion(this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => this.cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
+    const cluster = this.cluster
+    skipUnlessInBeforeAll(ctx, () => cluster.isVersionInRange(versionRange), `cluster version does not meet requirements: "${versionRange}"`)
   }
 
 
   export function skipUnlessVersionAndEnterprise (this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => {
-      return (this.cluster.isVersionInRange(versionRange) && (this.cluster.isEnterprise())) }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+    const cluster = this.cluster
+    skipUnlessInBeforeAll(ctx, () => cluster.isVersionInRange(versionRange) && cluster.isEnterprise(), `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
   }
 
   export function skipUnlessVersionAndCommunity (this: any, versionRange: any, ctx: Suite) {
-    skipUnless(ctx, () => {
-      return (this.cluster.isVersionInRange(versionRange) && (!this.cluster.isEnterprise())) 
-
-    }, `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
+    const cluster = this.cluster
+    skipUnlessInBeforeAll(ctx, () => cluster.isVersionInRange(versionRange) && !cluster.isEnterprise(), `cluster version does not meet requirements: "${versionRange} and/or requires enterprise"`)
   }
 
   export function skipUnlessSupportsTtl(this: any, ctx: Suite) {
@@ -337,46 +344,6 @@ import * as url from "node:url"
 
   export function skipUnlessTimeoutDelay(this: any, ctx: Suite) {
     skipUnless(ctx, () => options.testTimeoutDelay, 'timeout delay test disabled')
-  }
-
-  let stringAppendPrependSupported: boolean | null = null
-
-  /**
-   * Probe whether STRING_MODIFY append/prepend wire is accepted (some 8.2.0 lab
-   * builds return ERR_OP_NOT_APPLICABLE or ERR_REQUEST_INVALID).
-   */
-  export async function supportsStringAppendPrepend (): Promise<boolean> {
-    if (stringAppendPrependSupported !== null) {
-      return stringAppendPrependSupported
-    }
-    const strings = Aerospike.strings
-    const op = Aerospike.operations
-    const key = keygen.string(namespace, set, { prefix: 'test/string-append-probe' })()
-    try {
-      await client.put(key, { s: 'x' })
-      await client.operate(key, [strings.append('s', 'y'), op.read('s')])
-      stringAppendPrependSupported = true
-    } catch (error: any) {
-      const code = error.code
-      if (code === Aerospike.status.ERR_OP_NOT_APPLICABLE ||
-          code === Aerospike.status.ERR_REQUEST_INVALID) {
-        stringAppendPrependSupported = false
-      } else {
-        throw error
-      }
-    } finally {
-      try {
-        await client.remove(key)
-      } catch (_) { /* probe key may not exist */ }
-    }
-    return stringAppendPrependSupported
-  }
-
-  /** Call at the start of an `it()` that requires strings.append / prepend. */
-  export async function skipUnlessStringAppendPrepend (this: Mocha.Context) {
-    if (!(await supportsStringAppendPrepend())) {
-      this.skip('server rejects strings.append / strings.prepend on this build')
-    }
   }
 
   if (process.env.GLOBAL_CLIENT !== 'false') {

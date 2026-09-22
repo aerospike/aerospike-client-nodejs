@@ -53,7 +53,6 @@ describe('strings operate()', function () {
   }
 
   it('append and prepend apply in order', async function () {
-    await helper.skipUnlessStringAppendPrepend.call(this)
     const key = await putKey({ s: 'mid' })
     const result: AerospikeRecord = await client.operate(key, [
       strings.append('s', '!'),
@@ -98,7 +97,6 @@ describe('strings operate()', function () {
   })
 
   it('chains multiple string mutates on the same bin', async function () {
-    await helper.skipUnlessStringAppendPrepend.call(this)
     const key = await putKey({ s: 'x' })
     const result: AerospikeRecord = await client.operate(key, [
       strings.append('s', 'A'),
@@ -115,7 +113,6 @@ describe('strings operate()', function () {
     })
 
     it('CREATE_ONLY on a missing bin creates it', async function () {
-      await helper.skipUnlessStringAppendPrepend.call(this)
       const key = await putKey({ marker: 1 })
       const result: AerospikeRecord = await client.operate(key, [
         strings.append('s', 'hi').withPolicy({ writeFlags: strings.writeFlags.CREATE_ONLY }),
@@ -125,7 +122,6 @@ describe('strings operate()', function () {
     })
 
     it('CREATE_ONLY on a live bin returns BIN_EXISTS', async function () {
-      await helper.skipUnlessStringAppendPrepend.call(this)
       const key = await putKey({ s: 'x' })
       await expectOperateError(key, [
         strings.append('s', 'y').withPolicy({ writeFlags: strings.writeFlags.CREATE_ONLY })
@@ -133,7 +129,6 @@ describe('strings operate()', function () {
     })
 
     it('CREATE_ONLY | NO_FAIL on a live bin is a silent no-op', async function () {
-      await helper.skipUnlessStringAppendPrepend.call(this)
       const key = await putKey({ s: 'x' })
       await client.operate(key, [
         strings.append('s', 'y').withPolicy({
@@ -145,7 +140,6 @@ describe('strings operate()', function () {
     })
 
     it('UPDATE_ONLY on a missing bin does not create the bin', async function () {
-      await helper.skipUnlessStringAppendPrepend.call(this)
       const key = await putKey({ marker: 1 })
       await client.operate(key, [
         strings.append('s', 'hi').withPolicy({ writeFlags: strings.writeFlags.UPDATE_ONLY })
@@ -155,7 +149,6 @@ describe('strings operate()', function () {
     })
 
     it('CREATE_ONLY | UPDATE_ONLY is PARAM', async function () {
-      await helper.skipUnlessStringAppendPrepend.call(this)
       const key = await putKey({ marker: 1 })
       await expectOperateError(key, [
         strings.append('s', 'hi').withPolicy({
@@ -165,7 +158,6 @@ describe('strings operate()', function () {
     })
 
     it('CREATE_ONLY with context is PARAM', async function () {
-      await helper.skipUnlessStringAppendPrepend.call(this)
       const key = await putKey({ items: ['hello'] })
       await expectOperateError(key, [
         strings.append('items', '!').withPolicy({ writeFlags: strings.writeFlags.CREATE_ONLY })
@@ -175,24 +167,6 @@ describe('strings operate()', function () {
   })
 
   describe('nested CTX', function () {
-    let nestedStringCtxSupported = false
-
-    before(async function () {
-      const key = await putKey({ items: ['hello'] })
-      try {
-        await client.operate(key, [
-          strings.upper('items').withContext((ctx) => ctx.addListIndex(0))
-        ])
-        nestedStringCtxSupported = true
-      } catch (error: any) {
-        if (error.code !== status.ERR_REQUEST_INVALID) {
-          throw error
-        }
-      }
-    })
-
-    helper.skipUnless(this, () => nestedStringCtxSupported, 'nested string CTX requires 8.2.0+')
-
     it('uppers a string nested at a list index', async function () {
       const key = await putKey({ items: ['hello', 'world'] })
       await client.operate(key, [
@@ -274,25 +248,6 @@ describe('strings operate()', function () {
   })
 
   describe('regexReplace NO_FAIL', function () {
-    let regexReplaceSupported = false
-
-    before(async function () {
-      const key = await putKey({ s: 'abc' })
-      try {
-        await client.operate(key, [
-          strings.regexReplace('s', '[unclosed', 'x', strings.regexFlags.NONE)
-            .withPolicy({ writeFlags: strings.writeFlags.NO_FAIL })
-        ])
-        regexReplaceSupported = true
-      } catch (error: any) {
-        if (error.code !== status.ERR_REQUEST_INVALID) {
-          throw error
-        }
-      }
-    })
-
-    helper.skipUnless(this, () => regexReplaceSupported, 'regexReplace requires 8.2.0+')
-
     it('invalid pattern with NO_FAIL leaves the bin unchanged', async function () {
       const key = await putKey({ s: 'abc' })
       await client.operate(key, [

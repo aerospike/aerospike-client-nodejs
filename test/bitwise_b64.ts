@@ -34,23 +34,6 @@ describe('bitwise.b64Encode()', function () {
 
   helper.skipUnlessVersion('>= 8.2.0', this)
 
-  let b64EncodeSupported = false
-
-  before(async function () {
-    const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/bitwise_b64_probe' })()
-    await client.put(key, { blob: Buffer.from([1, 1, 1, 1, 1]) })
-    try {
-      await client.operate(key, [bits.b64Encode('blob')])
-      b64EncodeSupported = true
-    } catch (error: any) {
-      if (error.code !== status.ERR_REQUEST_INVALID) {
-        throw error
-      }
-    }
-  })
-
-  helper.skipUnless(this, () => b64EncodeSupported, 'bit b64Encode requires 8.2.0+')
-
   async function putKey (bins: AerospikeBins): Promise<KeyOptions> {
     const key = keygen.string(helper.namespace, helper.set, { prefix: 'test/bitwise_b64' })()
     await client.put(key, bins)

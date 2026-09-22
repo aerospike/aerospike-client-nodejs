@@ -1,0 +1,17 @@
+name: 'Login to JFrog Docker'
+description: 'OIDC login so docker can pull database-docker-virtual server images (same repo as Python Stage)'
+
+runs:
+  using: composite
+  steps:
+  - uses: step-security/setup-jfrog-cli@a6b41f8338bea0983ddff6bd4ede7d2dcd81e1fa # v4.8.1
+    env:
+      JF_URL: ${{ env.JF_URL }}
+      JF_PROJECT: ${{ env.JF_PROJECT }}
+    with:
+      oidc-provider-name: ${{ env.JF_OIDC_PROVIDER }}
+      oidc-audience: ${{ env.JF_OIDC_AUDIENCE }}
+
+  - name: jf docker login
+    run: jf docker login "${JF_DOCKER_REGISTRY:-artifact.aerospike.io}"
+    shell: bash

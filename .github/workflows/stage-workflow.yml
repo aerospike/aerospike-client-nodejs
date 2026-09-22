@@ -2,6 +2,22 @@ name: Stage workflow
 
 on:
   workflow_dispatch:
+    inputs:
+      server-tag:
+        description: 'Image tag. Default 8.1.2.5 is public Docker Hub GA. For 8.2 RC set 8.2.0.0 (or a Slack timestamp tag) and enable use-server-rc.'
+        required: false
+        type: string
+        default: '8.1.2.5'
+      use-server-rc:
+        description: 'Pull from artifact.aerospike.io/database-docker-virtual (same as Python). Required for 8.2.0.0 RCs. Do not use Docker Hub aerospike-server*-rc.'
+        required: false
+        type: boolean
+        default: false
+      run_tests:
+        description: 'Run comprehensive tests against the selected server tag'
+        required: false
+        type: boolean
+        default: true
 
 
 jobs:
@@ -13,7 +29,9 @@ jobs:
     with:
       version: ${{ needs.stage-get-jfrog-version.outputs.dev_version }}
       bundle-version: ${{ needs.stage-get-jfrog-version.outputs.tag_version }}
-      run_tests: true
+      run_tests: ${{ inputs.run_tests }}
+      server-tag: ${{ inputs.server-tag }}
+      use-server-rc: ${{ inputs.use-server-rc }}
     needs: [
       stage-get-jfrog-version,
     ]

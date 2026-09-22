@@ -42,10 +42,51 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
   AEROSPIKE_LIBRARY=${AEROSPIKE_LIB_HOME}/lib/libaerospike.a
   AEROSPIKE_INCLUDE=${AEROSPIKE_LIB_HOME}/include
 
-  LIBUV_DIR=/usr/local/opt/libuv
+  # Node ships libuv. Compiling the C client against Homebrew libuv built for a
+  # different CPU (Intel keg on Apple Silicon) ABI-mismatches Node and segfaults
+  # in uv_async_init on connect(). Prefer Node's uv.h; use Homebrew only when
+  # that library includes a slice for this host architecture.
+  libuv_matches_host_arch() {
+    local lib="$1"
+    [ -f "$lib" ] || return 1
+    local archs
+    archs=$(lipo -archs "$lib" 2>/dev/null || true)
+    [ -n "$archs" ] || return 1
+    case " ${archs} " in
+      *" ${build_arch} "*) return 0 ;;
+    esac
+    return 1
+  }
+
+  native_brew_libuv_include() {
+    local prefix="$1"
+    [ -n "$prefix" ] && [ -f "$prefix/include/uv.h" ] || return 1
+    if libuv_matches_host_arch "$prefix/lib/libuv.dylib" || libuv_matches_host_arch "$prefix/lib/libuv.a"; then
+      printf '%s\n' "$prefix/include"
+      return 0
+    fi
+    echo "Skipping Homebrew libuv at ${prefix} (no ${build_arch} slice)" >&2
+    return 1
+  }
+
+  NODE_UV_INCLUDE="$(node -p "require('path').join(require('path').dirname(process.execPath), '..', 'include', 'node')" 2>/dev/null || true)"
+  BREW_LIBUV_INCLUDE=""
+  if command -v brew >/dev/null 2>&1; then
+    BREW_LIBUV_INCLUDE="$(native_brew_libuv_include "$(brew --prefix libuv 2>/dev/null || true)" || true)"
+  fi
+  if [ -f "${NODE_UV_INCLUDE}/uv.h" ]; then
+    LIBUV_INCLUDE_DIR=${NODE_UV_INCLUDE}
+  elif [ -n "${BREW_LIBUV_INCLUDE}" ]; then
+    LIBUV_INCLUDE_DIR=${BREW_LIBUV_INCLUDE}
+  elif [ -f /usr/local/opt/libuv/include/uv.h ] && { libuv_matches_host_arch /usr/local/opt/libuv/lib/libuv.dylib || libuv_matches_host_arch /usr/local/opt/libuv/lib/libuv.a; }; then
+    LIBUV_INCLUDE_DIR=/usr/local/opt/libuv/include
+  else
+    echo "ERROR: no ${build_arch} libuv headers (Node include/node or native-arch Homebrew libuv)" >&2
+    exit 1
+  fi
+  LIBUV_DIR=$(dirname "${LIBUV_INCLUDE_DIR}")
   LIBUV_ABS_DIR=${LIBUV_DIR}
   LIBUV_LIBRARY_DIR=${LIBUV_DIR}/lib
-  LIBUV_INCLUDE_DIR=${LIBUV_DIR}/include
   LIBUV_LIBRARY=${LIBUV_LIBRARY_DIR}/libuv.a
   OS_FLAVOR=darwin
 elif [[ "$OSTYPE" == "linux"* ]]; then
@@ -118,7 +159,7 @@ rebuild_c_client() {
   # if [ ! -f ${AEROSPIKE_LIBRARY} ]; then
     cd ${AEROSPIKE_C_HOME}
     make clean
-    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include" 2>&1 | tee ${CWD}/${0}-cclient-output.log
+    make V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_INCLUDE_DIR}" 2>&1 | tee ${CWD}/${0}-cclient-output.log
     # make O=0 V=1 VERBOSE=1 EVENT_LIB=libuv EXT_CFLAGS="-I${LIBUV_ABS_DIR}/include -DDEBUG" 2>&1 | tee ${CWD}/${0}-output.log
   # fi
 }
