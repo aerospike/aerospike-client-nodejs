@@ -57,17 +57,18 @@ describe('Test metrics cluster name', async function () {
 
   function disableListener(cluster: any) {
     disableTriggered = false
-    expect(cluster.clusterName).to.eql("pass_test")
+    expect(cluster.clusterName).to.eql("docker")
     return
   }
 
   it('Test metrics cluster name retrival', async function () {
 
     console.log("Running server container...");
-    const SERVER_PORT_NUMBER = 3000;
+    const SERVER_PORT_NUMBER = 3000
+    const serverImage = process.env.CE_SERVER_IMAGE || 'aerospike/aerospike-server'
 
     const container = await docker.createContainer({
-        Image: 'aerospike/aerospike-server',
+        Image: serverImage,
         HostConfig: {
             NetworkMode: "host",
             PortBindings: {

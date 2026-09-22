@@ -1122,9 +1122,8 @@ describe('Aerospike.exp', function () {
           assert.fail("An error should have been caught!")
         }
         catch(error: any){
-          const trimmed = error.message.split(" ").slice(1).join(" ");
-          expect(trimmed).to.eql("The command was not performed because the filter expression was false.")
           expect(error.code).to.eql(Aerospike.status.AEROSPIKE_FILTERED_OUT)
+          expect(error.message).to.include(Aerospike.status.getMessage(Aerospike.status.FILTERED_OUT))
         }
       })
 

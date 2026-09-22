@@ -308,9 +308,15 @@ describe('Queries', function () {
         const query: Query = client.query(helper.namespace, testSet)
         const stream = query.foreach({ expectedDuration: Aerospike.policy.queryDuration.LONG_RELAX_AP })
         const results: AerospikeBins[] = []
-        stream.on('error', (error: ASError) => { 
-          expect(error.message).to.eql('Request protocol invalid, or invalid protocol field.') 
-          done()
+        stream.on('error', (error: ASError) => {
+          try {
+            // C enhanced error details prefix the node (e.g. "127.0.0.1:3000 ").
+            expect(error.code).to.equal(Aerospike.status.ERR_REQUEST_INVALID)
+            expect(error.message).to.include(Aerospike.status.getMessage(Aerospike.status.ERR_REQUEST_INVALID))
+            done()
+          } catch (err) {
+            done(err)
+          }
         })
         stream.on('data', (record: AerospikeRecord) => results.push(record.bins))
         stream.on('end', () => {
