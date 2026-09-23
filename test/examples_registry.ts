@@ -30,7 +30,7 @@ const {
 } = require('../examples/harness/expectedRegistry.js')
 const { verifyRegistry } = require('../examples/harness/verifyRegistry.js')
 
-describe('examples harness registry #noserver', function () {
+describe('examples registry check #noserver', function () {
   it('matches the canonical example list and size', function () {
     expect(examples).to.have.lengthOf(EXPECTED_REGISTRY_SIZE)
     expect(names).to.have.lengthOf(EXPECTED_REGISTRY_SIZE)

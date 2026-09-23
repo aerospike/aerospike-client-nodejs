@@ -22,28 +22,32 @@ function key (args, userKey) {
 }
 
 async function deleteKeys (client, args, userKeys) {
-  const writePolicy = { ...client.config.policies.write }
-  for (const userKey of userKeys) {
-    try {
-      await client.remove(key(args, userKey), writePolicy)
-    } catch (err) {
-      if (err.code !== Aerospike.status.ERR_RECORD_NOT_FOUND) {
-        throw err
-      }
+  if (userKeys.length === 0) {
+    return
+  }
+  const results = await client.batchRemove(userKeys.map((userKey) => key(args, userKey)))
+  for (const result of results) {
+    if (result.status !== Aerospike.status.OK &&
+        result.status !== Aerospike.status.ERR_RECORD_NOT_FOUND) {
+      throw new Error(`batchRemove failed status=${result.status}`)
     }
   }
 }
 
 async function deleteRange (client, args, keyPrefix, begin, end) {
+  const userKeys = []
   for (let i = begin; i <= end; i++) {
-    await deleteKeys(client, args, [`${keyPrefix}${i}`])
+    userKeys.push(`${keyPrefix}${i}`)
   }
+  await deleteKeys(client, args, userKeys)
 }
 
 async function deleteIntegerRange (client, args, begin, end) {
+  const userKeys = []
   for (let i = begin; i <= end; i++) {
-    await deleteKeys(client, args, [i])
+    userKeys.push(i)
   }
+  await deleteKeys(client, args, userKeys)
 }
 
 async function putBins (client, args, userKey, bins) {

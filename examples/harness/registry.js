@@ -60,7 +60,7 @@ const examples = [
   { name: 'PutGet', runExample: putGet.runExample, fixture: validateAndCleanup(validation.putGet, 'putgetkey') },
   { name: 'Put', runExample: put.runExample, fixture: validateAndCleanup(validation.putValidate, 'putkey') },
   { name: 'Get', runExample: getDocExample.runExample, fixture: fixture(validation.getSetup, validation.getValidate, validation.getCleanup) },
-  { name: 'Exists', runExample: existsExample.runExample, fixture: validateAndCleanup(validation.exists, 'existskey') },
+  { name: 'Exists', runExample: existsExample.runExample, fixture: validateAndCleanup(validation.existsValidate, 'existskey') },
   { name: 'Add', runExample: add.runExample, fixture: validateAndCleanup(validation.add, 'addkey') },
   { name: 'Append', runExample: append.runExample, fixture: validateAndCleanup(validation.append, 'appendkey') },
   { name: 'Prepend', runExample: prepend.runExample, fixture: validateAndCleanup(validation.prepend, 'prependkey') },
