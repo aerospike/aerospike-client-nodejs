@@ -37,7 +37,7 @@ async function putGet (client, args) {
   }
 }
 
-async function exists (client, args) {
+async function existsValidate (client, args) {
   await support.assertNotExists(client, args, 'existskey')
 }
 
@@ -369,7 +369,7 @@ async function cleanupGeospatialMonteCarlo (client, args) {
 
 module.exports = {
   putGet,
-  exists,
+  existsValidate,
   getSetup,
   getValidate,
   getCleanup,

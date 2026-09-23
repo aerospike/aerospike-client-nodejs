@@ -11,7 +11,7 @@ Breaking changes below require a **major** version bump; they are intended to sh
   * `exp.string.regexReplace` takes **`policy` first** for API symmetry with other string modify expressions; **regex flags** and **string policy flags** are both packed on the wire (C client `stage`, CLIENT-4824).
   * `strings.snip(bin, start, end)` now requires the **exclusive end** index (half-open range); the one-argument `snip(bin, start)` form is removed.
   * `strings.substrRange(bin, start, end)` — the third parameter is the **exclusive end** index (not a length).
-  * [AER-6957] CVE-2026-63662: C client 7.6.1 **bounds-checks msgpack deserialization** and **rejects nested list/map (CDT) values deeper than 64** (`MSGPACK_MAX_DEPTH`). This matches the server stored-value bound. Reads of deeper nesting now fail instead of unpacking.
+  * [AER-6957] CVE-2026-63662: C client 7.6.1 **bounds-checks msgpack deserialization** and **rejects nested list/map (CDT) values deeper than 64** (`MSGPACK_MAX_DEPTH`). This matches the server stored-value bound. Reads and writes of deeper nesting now fail instead of unpacking.
 
 * **Improvements**
   * [CLIENT-4358] Added `Aerospike.indexDataType.INTEGER` for integer secondary indexes (server >= 8.2.0). The Aerospike C client maps `INTEGER` <-> `NUMERIC` by server version in `aerospike_index_create_private()`; Node exposes `INTEGER` and deprecates `NUMERIC`. `Client#createIntegerIndex` and `Client#createExpIntegerIndex` now use `INTEGER`.

@@ -18,10 +18,10 @@ const Aerospike = require('../harness/aerospikeClient')
 
 const INDEX_NAME = 'sindexdemo'
 
-async function runExample ({ client, args, console }) {
+async function runExample ({ client, ns, set, console }) {
   const job = await client.createIndex({
-    ns: args.namespace,
-    set: args.set,
+    ns,
+    set,
     bin: 'sindexbin',
     index: INDEX_NAME,
     datatype: Aerospike.indexDataType.STRING,
