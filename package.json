@@ -33,6 +33,7 @@
   "scripts": {
     "build": "node scripts/build-native.js",
     "verify:slim-layout": "node scripts/verify-slim-package-layout.js",
+    "lock:prebuilds": "node scripts/ci/sync-prebuild-lock-stubs.js",
     "examples:all": "node examples/harness/run.js --settings examples/.settings.json all",
     "examples": "node examples/harness/run.js --settings examples/.settings.json",
     "examples:verify-registry": "node examples/harness/verifyRegistry.js",
