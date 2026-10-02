@@ -3,12 +3,13 @@
 
 /**
  * Verify platform-scoped optional prebuild layout:
- * - main package tarball must not ship prebuilds/
+ * - main package tarball must not ship prebuilds/ or binding.gyp
+ * - packed package.json has gypfile: false and no install lifecycle scripts
  * - optional package for this platform loads via resolvePrebuildRoot + smoke
  */
 const fs = require('fs')
 const path = require('path')
-const { execSync } = require('child_process')
+const { execFileSync, execSync } = require('child_process')
 const { resolvePrebuildRoot } = require('./resolve-prebuild-root')
 
 const root = path.join(__dirname, '..')
@@ -19,10 +20,58 @@ function run (cmd, opts = {}) {
   execSync(cmd, { stdio: 'inherit', cwd: root, ...opts })
 }
 
+function packMain () {
+  const mainTgz = execSync('npm pack --silent', { cwd: root, encoding: 'utf8' }).trim()
+  return path.join(root, mainTgz)
+}
+
+function assertPackedMainTarball (mainPath) {
+  const listed = execFileSync('tar', ['-tzf', mainPath], { encoding: 'utf8' })
+  const entries = listed.split(/\r?\n/)
+
+  if (listed.includes('package/prebuilds/')) {
+    console.error('slim verify failed: main tarball still contains prebuilds/')
+    process.exit(1)
+  }
+  if (entries.includes('package/binding.gyp')) {
+    console.error('slim verify failed: main tarball contains package/binding.gyp')
+    process.exit(1)
+  }
+
+  const packedPkg = JSON.parse(
+    execFileSync('tar', ['-xOf', mainPath, 'package/package.json'], { encoding: 'utf8' })
+  )
+  if (packedPkg.gypfile !== false) {
+    console.error('slim verify failed: packed package.json must set gypfile: false')
+    process.exit(1)
+  }
+  for (const name of ['preinstall', 'install', 'postinstall']) {
+    if (packedPkg.scripts && packedPkg.scripts[name]) {
+      console.error(`slim verify failed: packed package.json has ${name} script: ${packedPkg.scripts[name]}`)
+      process.exit(1)
+    }
+  }
+  const optional = packedPkg.optionalDependencies || {}
+  const prebuildDeps = Object.keys(optional).filter((name) => name.startsWith('@aerospike/prebuild-'))
+  if (prebuildDeps.length === 0) {
+    console.error('slim verify failed: packed package.json missing @aerospike/prebuild-* optionalDependencies')
+    process.exit(1)
+  }
+}
+
 function main () {
+  const mainPath = packMain()
+  try {
+    assertPackedMainTarball(mainPath)
+  } catch (err) {
+    try { fs.unlinkSync(mainPath) } catch (_) {}
+    throw err
+  }
+
   const embedded = path.join(root, 'prebuilds', tag)
   if (!fs.existsSync(embedded)) {
-    console.log(`skip slim layout verify: no prebuilds/${tag}`)
+    fs.unlinkSync(mainPath)
+    console.log(`verify-slim-package-layout: tarball layout ok; skip install/smoke (no prebuilds/${tag})`)
     return
   }
 
@@ -33,8 +82,6 @@ function main () {
     env: { ...process.env, PREBUILD_SPLIT_PLATFORMS: tag }
   })
 
-  const mainTgz = execSync('npm pack --silent', { cwd: root, encoding: 'utf8' }).trim()
-  const mainPath = path.join(root, mainTgz)
   const optPath = path.join(
     root,
     'packages',
@@ -53,7 +100,7 @@ function main () {
   )
 
   run(
-    `npm install --ignore-scripts --no-save file:${mainPath} file:${optPath}`,
+    `npm install --no-save file:${mainPath} file:${optPath}`,
     { cwd: installDir }
   )
 
@@ -68,14 +115,6 @@ function main () {
   const entries = fs.readdirSync(prebuildDir)
   if (!entries.some((n) => n.endsWith('.node'))) {
     console.error('slim verify failed: no .node in', prebuildDir)
-    process.exit(1)
-  }
-
-  const listed = execSync(`tar -tzf ${JSON.stringify(mainPath).slice(1, -1)}`, {
-    encoding: 'utf8'
-  })
-  if (listed.includes('package/prebuilds/')) {
-    console.error('slim verify failed: main tarball still contains prebuilds/')
     process.exit(1)
   }
 
