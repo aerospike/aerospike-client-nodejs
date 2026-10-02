@@ -645,7 +645,7 @@ jobs:
         set -ex
         sudo apt-get update
         sudo apt-get install -y unzip
-        curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.8.0/aerolab-linux-amd64-7.8.0.zip
+        curl -L -o aerolab.zip https://github.com/aerospike/aerolab/releases/download/7.10.3-2e8249a/aerolab-linux-amd64-7.10.3.zip
         unzip aerolab.zip
         chmod +x aerolab
         sudo mv aerolab /usr/local/bin/
