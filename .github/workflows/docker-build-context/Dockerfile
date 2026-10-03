@@ -36,7 +36,7 @@ COPY $ROSTER_FILE_NAME .
 
 # There's no tag for the latest major version to prevent breaking changes in jq
 # This is the next best thing
-FROM ghcr.io/jqlang/jq:1.7 as get-jq
+FROM ghcr.io/jqlang/jq:1.7@sha256:12f998e5a6f3f6916f744ba6f01549f156f624b42f7564e67ec6dd4733973146 as get-jq
 # jq docker image doesn't have a shell
 # We need a shell to fetch and pass the node id to the next build stage
 FROM busybox as get-node-id
