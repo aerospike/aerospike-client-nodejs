@@ -19,6 +19,7 @@
 
 extern "C" {
 #include <aerospike/as_policy.h>
+#include <aerospike/as_latency.h>
 }
 
 using namespace v8;
@@ -107,6 +108,15 @@ Local<Object> commit_level_policy_values()
 	return scope.Escape(obj);
 }
 
+Local<Object> latency_unit_values()
+{
+	Nan::EscapableHandleScope scope;
+	Local<Object> obj = Nan::New<Object>();
+	set(obj, "MILLISECONDS", AS_METRICS_LATENCY_MILLISECONDS);
+	set(obj, "MICROSECONDS", AS_METRICS_LATENCY_MICROSECONDS);
+	return scope.Escape(obj);
+}
+
 Local<Object> policy()
 {
 	Nan::EscapableHandleScope scope;
@@ -124,6 +134,8 @@ Local<Object> policy()
 			 read_mode_sc_policy_values());
 	Nan::Set(obj, Nan::New("commitLevel").ToLocalChecked(),
 			 commit_level_policy_values());
+	Nan::Set(obj, Nan::New("latencyUnit").ToLocalChecked(),
+			 latency_unit_values());
 
 	return scope.Escape(obj);
 }

@@ -356,6 +356,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "infoNode", InfoNode);
 	Nan::SetPrototypeMethod(tpl, "isConnected", IsConnected);
 	Nan::SetPrototypeMethod(tpl, "jobInfo", JobInfo);
+	Nan::SetPrototypeMethod(tpl, "metricsSnapshot", MetricsSnapshot);
 	Nan::SetPrototypeMethod(tpl, "operateAsync", OperateAsync);
 	Nan::SetPrototypeMethod(tpl, "privilegeGrant", PrivilegeGrant);
 	Nan::SetPrototypeMethod(tpl, "privilegeRevoke", PrivilegeRevoke);

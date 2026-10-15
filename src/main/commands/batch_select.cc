@@ -29,6 +29,7 @@ extern "C" {
 #include <aerospike/as_record.h>
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_metrics_internal.h>
 }
 
 using namespace v8;
@@ -136,7 +137,8 @@ static void execute(uv_work_t *req)
 
 	as_v8_debug(log, "Executing BatchSelect command for %d keys",
 				cmd->batch.keys.size);
-	if (aerospike_batch_get_bins(cmd->as, &cmd->err, cmd->policy, &cmd->batch,
+	as_metrics_add_api_deferred(cmd->as);
+	if (aerospike_batch_get_bins_internal(cmd->as, &cmd->err, cmd->policy, &cmd->batch,
 								 (const char **)cmd->bins, cmd->bins_len,
 								 batch_select_callback, cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;

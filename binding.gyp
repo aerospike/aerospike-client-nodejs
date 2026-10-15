@@ -111,6 +111,7 @@
         'src/main/commands/info_host.cc',
         'src/main/commands/info_node.cc',
         'src/main/commands/job_info.cc',
+        'src/main/commands/metrics_snapshot.cc',
         'src/main/commands/operate_async.cc',
         'src/main/commands/privilege_grant.cc',
         'src/main/commands/privilege_revoke.cc',

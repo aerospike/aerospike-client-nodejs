@@ -28,6 +28,7 @@ extern "C" {
 #include <aerospike/as_policy.h>
 #include <aerospike/as_query.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_metrics_internal.h>
 }
 
 using namespace v8;
@@ -102,7 +103,8 @@ static void execute(uv_work_t *req)
 	}
 
 	as_v8_debug(log, "Sending query command with stream UDF");
-	aerospike_query_foreach(cmd->as, &cmd->err, cmd->policy, &cmd->query,
+	as_metrics_add_api_deferred(cmd->as);
+	aerospike_query_foreach_internal(cmd->as, &cmd->err, cmd->policy, &cmd->query,
 							query_foreach_callback, cmd);
 
 	if (cmd->policy && cmd->policy->base.filter_exp) {
