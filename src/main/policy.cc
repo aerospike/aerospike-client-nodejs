@@ -872,6 +872,28 @@ int metricspolicy_from_jsobject(as_metrics_policy *policy, Local<Object> obj, ch
 		AS_NODE_PARAM_OK) {
 		return rc;
 	}
+	if ((rc = get_optional_bool_property(&policy->operational_enabled, NULL, obj,
+										   "operationalEnabled", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if ((rc = get_optional_bool_property(&policy->usage_enabled, NULL, obj,
+										   "usageEnabled", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	uint32_t latency_unit = policy->latency_unit;
+	if ((rc = get_optional_uint32_property(&latency_unit, NULL, obj,
+										   "latencyUnit", log)) !=
+		AS_NODE_PARAM_OK) {
+		return rc;
+	}
+	if (latency_unit != AS_METRICS_LATENCY_MILLISECONDS &&
+		latency_unit != AS_METRICS_LATENCY_MICROSECONDS) {
+		as_v8_error(log, "latencyUnit must be a latencyUnit value");
+		return AS_NODE_PARAM_ERR;
+	}
+	policy->latency_unit = (as_metrics_latency_unit)latency_unit;
 	as_v8_detail(log, "Parsing info policy: success");
 	return AS_NODE_PARAM_OK;
 }

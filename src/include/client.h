@@ -108,6 +108,7 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(InfoNode);
 	static NAN_METHOD(IsConnected);
 	static NAN_METHOD(JobInfo);
+	static NAN_METHOD(MetricsSnapshot);
 	static NAN_METHOD(OperateAsync);
 	static NAN_METHOD(PrivilegeGrant);
 	static NAN_METHOD(PrivilegeRevoke);

@@ -2818,6 +2818,20 @@ export namespace policy {
          * Object containing name/value labels applied when exporting metrics.
          */ 
         public labels?: { [key: string]: string };
+        /**
+         * Collect operational metrics (latency, namespace errors and bytes, command counts).
+         */
+        public operationalEnabled?: boolean;
+        /**
+         * Collect usage metrics (API usage counters).
+         */
+        public usageEnabled?: boolean;
+        /**
+         * Unit of the latency histograms.
+         *
+         * @default {@link policy.latencyUnit.MILLISECONDS}
+         */
+        public latencyUnit?: policy.latencyUnit;
 
         /**
          * Initializes a new MapPolicy from the provided policy values.
@@ -3282,6 +3296,13 @@ export namespace policy {
          * Return success after successfully committing the master replica.
          */
         MASTER
+    }
+    /**
+     * Unit of the metrics latency histograms.
+     */
+    export enum latencyUnit {
+        MILLISECONDS,
+        MICROSECONDS
     }
     /**
      * Specifies the behavior for writing the record depending whether or not it
@@ -5257,6 +5278,14 @@ export class Client extends EventEmitter {
      * result returned by the disableMetrics call.
      */
     public disableMetrics(callback: Function): void;
+    /**
+     * Returns a point-in-time snapshot of the client metrics.
+     */
+    public metricsSnapshot(): Promise<MetricsSnapshot>;
+    /**
+     * @param callback - Called with the metrics snapshot.
+     */
+    public metricsSnapshot(callback: TypedCallback<MetricsSnapshot>): void;
     /**
      *
      * Enable extended periodic cluster and node latency metrics.
@@ -11037,6 +11066,81 @@ export interface MapPolicyOptions extends BasePolicyOptions {
 /**
  * Option specification for {@link MetricsPolicy} class values.
  */
+/**
+ * Connection pool counters of a node, from {@link Client#metricsSnapshot}.
+ */
+export interface ConnectionMetricsSnapshot {
+    inUse: number;
+    inPool: number;
+    opened: number;
+    closed: number;
+    recovered: number;
+    aborted: number;
+}
+
+/**
+ * Namespace counters of a node, from {@link Client#metricsSnapshot}.
+ */
+export interface NamespaceMetricsSnapshot {
+    name: string;
+    errors: number;
+    clientTimeouts: number;
+    serverTimeouts: number;
+    keyBusy: number;
+    recordTooBig: number;
+    deviceOverload: number;
+    bytesIn: number;
+    bytesOut: number;
+}
+
+/**
+ * Node metrics, from {@link Client#metricsSnapshot}.
+ */
+export interface NodeMetricsSnapshot {
+    name: string;
+    address: string;
+    port: number;
+    syncConnections: ConnectionMetricsSnapshot;
+    asyncConnections: ConnectionMetricsSnapshot;
+    connectionOpenFailures: number;
+    connectionTlsHandshakeFailures: number;
+    connectionAuthFailures: number;
+    namespaces: NamespaceMetricsSnapshot[];
+}
+
+/**
+ * Point-in-time client metrics returned by {@link Client#metricsSnapshot}.
+ * Counters are cumulative.
+ */
+export interface MetricsSnapshot {
+    timestamp: string;
+    metricsEnabled: boolean;
+    operationalMetricsEnabled: boolean;
+    usageMetricsEnabled: boolean;
+    clusterName: string;
+    clientType: string;
+    clientVersion: string;
+    appId: string;
+    labels: { [key: string]: string };
+    recoverQueueSize: number;
+    invalidNodeCount: number;
+    delayQueueTimeoutCount: number;
+    commandCount: number;
+    commandRetries: number;
+    validationOpenFailures: number;
+    validationTlsHandshakeFailures: number;
+    validationAuthFailures: number;
+    usage: { blocking: number; deferred: number; background: number };
+    cpuPercent: number;
+    memoryBytes: number;
+    eventLoops: { processSize: number; queueSize: number }[];
+    nodes: NodeMetricsSnapshot[];
+    nodesDeparted: NodeMetricsSnapshot[];
+    latencyUnit: policy.latencyUnit;
+    latencyColumns: number;
+    latencyShift: number;
+}
+
 export interface MetricsPolicyOptions {
     /**
      * Listeners that handles metrics notification events. If set to None, the default listener implementation
@@ -11073,6 +11177,18 @@ export interface MetricsPolicyOptions {
      *
      */
     labels?: { [key: string]: string };
+    /**
+     * Collect operational metrics (latency, namespace errors and bytes, command counts).
+     */
+    operationalEnabled?: boolean;
+    /**
+     * Collect usage metrics (API usage counters).
+     */
+    usageEnabled?: boolean;
+    /**
+     * Unit of the latency histograms.
+     */
+    latencyUnit?: policy.latencyUnit;
 }
 
 /**

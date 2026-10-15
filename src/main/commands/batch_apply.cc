@@ -28,6 +28,7 @@ extern "C" {
 #include <aerospike/as_key.h>
 #include <aerospike/as_record.h>
 #include <aerospike/aerospike_batch.h>
+#include <aerospike/as_metrics_internal.h>
 }
 
 using namespace v8;
@@ -191,7 +192,8 @@ static void execute(uv_work_t *req)
 
 	as_v8_debug(log, "Executing BatchApply command for %d keys",
 				cmd->batch.keys.size);
-	if (aerospike_batch_apply(cmd->as, &cmd->err, cmd->policy,
+	as_metrics_add_api_deferred(cmd->as);
+	if (aerospike_batch_apply_internal(cmd->as, &cmd->err, cmd->policy,
 							  cmd->policy_apply, &cmd->batch, cmd->module,
 							  cmd->function, cmd->arglist, batch_apply_callback,
 							  cmd) != AEROSPIKE_OK) {

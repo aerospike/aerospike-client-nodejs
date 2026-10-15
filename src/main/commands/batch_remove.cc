@@ -29,6 +29,7 @@ extern "C" {
 #include <aerospike/as_record.h>
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_metrics_internal.h>
 }
 
 
@@ -155,7 +156,8 @@ static void execute(uv_work_t *req)
 
 	as_v8_debug(log, "Executing BatchRemove command for %d keys",
 				cmd->batch.keys.size);
-	if (aerospike_batch_remove(cmd->as, &cmd->err, cmd->policy,
+	as_metrics_add_api_deferred(cmd->as);
+	if (aerospike_batch_remove_internal(cmd->as, &cmd->err, cmd->policy,
 							   cmd->policy_remove, &cmd->batch,
 							   batch_remove_callback, cmd) != AEROSPIKE_OK) {
 		cmd->results = NULL;
