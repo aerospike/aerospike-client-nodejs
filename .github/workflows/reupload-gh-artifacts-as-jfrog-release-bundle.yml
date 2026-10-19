@@ -67,16 +67,21 @@ jobs:
           echo 'main tarball must not ship prebuilds/'
           exit 1
         fi
+        if tar -tzf "${MAIN_TGZ[0]}" | grep -qx 'package/binding.gyp'; then
+          echo 'main tarball must not contain binding.gyp'
+          exit 1
+        fi
         rm -rf /tmp/slim-ci-verify
         mkdir -p /tmp/slim-ci-verify
         cd /tmp/slim-ci-verify
         echo '{"name":"slim-ci","private":true}' > package.json
-        npm install --no-save --ignore-scripts \
+        npm install --no-save \
           "file:${{ github.workspace }}/${MAIN_TGZ[0]}" \
           "file:${{ github.workspace }}/${OPT_TGZ[0]}"
         node node_modules/aerospike/scripts/verify-prebuild-smoke.js
         node -e "
           const p = require('./node_modules/aerospike/package.json');
+          if (p.gypfile !== false) { console.error('gypfile must be false'); process.exit(1); }
           for (const s of ['preinstall','install','postinstall']) {
             if (p.scripts?.[s]) { console.error('unexpected', s); process.exit(1); }
           }
