@@ -79,6 +79,42 @@ describe('AerospikeError #noserver', function () {
     })
   })
 
+  // https://github.com/aerospike/aerospike-client-nodejs/issues/1076
+  // https://github.com/aerospike/aerospike-client-nodejs/issues/415
+  describe('serialization', function () {
+    const client = Aerospike.client({ hosts: '127.0.0.1:3000', user: 'app', password: 'client-password' })
+    const key = new Aerospike.Key('test', 'demo', 'key')
+    const value = 'record-payload'
+
+    it("does not serialize the command's arguments or client", async function () {
+      const records = [{
+        type: Aerospike.batchType.BATCH_WRITE,
+        key,
+        ops: [Aerospike.operations.write('bin', value)]
+      }]
+      const error: any = await client.batchWrite(records).catch((err: any) => err)
+
+      expect(error).to.be.instanceof(ASError)
+      expect(error.command.args[0]).to.equal(records)
+      expect(error.client).to.equal(client)
+
+      const json = JSON.stringify(error)
+      expect(json).to.not.include(value)
+      expect(json).to.not.include('client-password')
+      expect(JSON.parse(json)).to.include({ code: status.ERR_CLIENT, inDoubt: false, subcode: 0 })
+      expect(JSON.parse(json).command).to.eql({})
+    })
+
+    it('serializes the record key of a single-key command', async function () {
+      const error: any = await client.put(key, { bin: value }).catch((err: any) => err)
+
+      const json = JSON.stringify(error)
+      expect(json).to.not.include(value)
+      expect(json).to.not.include('client-password')
+      expect(JSON.parse(json).command).to.eql({ key: JSON.parse(JSON.stringify(key)) })
+    })
+  })
+
   describe('.fromASError', function () {
     it('copies the info from a AerospikeClient error instance', function () {
       const error: any = {
