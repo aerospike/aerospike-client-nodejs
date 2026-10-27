@@ -1253,9 +1253,18 @@ export class Query {
      */
     public queryState?: number[];
     /**
-     * Order keys of a Top-K query, in order of precedence.
+     * Order keys of a Top-K query, in order of precedence: the first entry is the main
+     * order key, the second breaks ties on the first.
      *
-     * Use {@link Query#orderBy} and {@link Query#thenOrderBy} to set the order keys.
+     * At most two entries are allowed. Each entry's <code>bin</code> must be a bin name of
+     * at most 15 characters and, if the query selects bins, one of them.
+     *
+     * Set the order keys with {@link Query#orderBy} and {@link Query#thenOrderBy}, which
+     * check the arguments. Entries assigned directly are checked when the query runs:
+     * {@link Query#foreach}, {@link Query#results}, {@link Query#apply},
+     * {@link Query#background} and {@link Query#operate} throw before sending anything, a
+     * <code>TypeError</code> for an entry of the wrong type or an {@link AerospikeError} with
+     * code <code>ERR_PARAM</code> for more than two entries or a bin name that is too long.
      */
     public orderByKeys: OrderByKey[];
     /**
@@ -1309,31 +1318,36 @@ export class Query {
     /**
      * Sets the first order key of a Top-K query.
      *
-     * A Top-K query returns only the {@link Query#topK|k} best records, ranked by up to
-     * two order keys. Each server node ranks its own records and returns its best k; the
-     * client then merges the nodes' results and returns the global top k in rank order.
+     * A Top-K query returns only the {@link Query#topK|k} best records, ranked by up to two
+     * order keys. Calling <code>orderBy</code> again replaces both order keys and keeps k.
      *
-     * Calling <code>orderBy</code> again replaces both order keys and keeps k.
+     * Requires server 8.2.1 or later on every node in the cluster.
      *
-     * Top-K requires server version 8.2.1 or later on every node in the cluster. It applies
-     * only to foreground queries ({@link Query#foreach} and {@link Query#results}):
-     * background queries, aggregation queries, paginated queries, queries that set
-     * {@link Query#maxRecords} or {@link Query#nobins}, and order keys that aren't among the
-     * projected bins fail with a parameter error.
+     * Top-K works when the query runs with {@link Query#foreach} or {@link Query#results}.
+     * It fails with a parameter error when the query runs with {@link Query#apply},
+     * {@link Query#background} or {@link Query#operate}; when {@link Query#paginate},
+     * {@link Query#maxRecords} or {@link Query#nobins} is set; or when the query selects
+     * bins and the order key isn't one of them.
      *
-     * No record is returned until every node has finished its scan and the merge is done,
-     * so a Top-K query doesn't stream. Over a large set, a node can take longer than the
-     * socket timeout to reply; raise the query policy's <code>socketTimeout</code>, or set
-     * it to 0, and let <code>totalTimeout</code> bound the query.
+     * Records arrive only after the query has checked every matching record, not as they're
+     * found. For queries over many records, raise the query policy's <code>socketTimeout</code>,
+     * or set it to 0, and let <code>totalTimeout</code> bound the query.
      *
-     * Records whose order key is missing, or holds a value of a different type than
-     * declared, rank last in either direction, and still count towards k.
+     * Records whose order key is missing, or holds a value of a different type than declared,
+     * rank last and still count toward k.
      *
-     * @param bin - Name of the bin to order by, as it appears in the returned record. If the
-     * query projects bins, it must be one of the projected names. At most 15 characters.
+     * @param bin - Name of the bin to order by, as it appears in the returned record. At most
+     * 15 characters.
      * @param type - Type of the bin's value.
      * @param direction - Sort direction.
-     * @param flags - Comparison flags; defaults to {@link orderByFlags.DEFAULT}.
+     * @param flags - Comparison flags; a combination of {@link orderByFlags}. Defaults to
+     * {@link orderByFlags.DEFAULT}. {@link orderByFlags.CASE_INSENSITIVE} is only valid when
+     * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
+     * parameter error when the query runs.
+     *
+     * @throws {TypeError} If an argument has the wrong type.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
+     * 15 characters.
      *
      * @example <caption>Return the 10 records with the highest score</caption>
      *
@@ -1353,24 +1367,33 @@ export class Query {
      * Adds an order key to a Top-K query, after the keys already set.
      *
      * The second order key ranks records that tie on the first. A query can have at most
-     * two order keys; a third fails with a parameter error when the query executes. Called
-     * before {@link Query#orderBy}, it sets the first order key.
+     * two order keys. Called before {@link Query#orderBy}, it sets the first order key. As with
+     * {@link Query#orderBy}, if the query selects bins, the order key must be one of them.
      *
      * @param bin - Name of the bin to order by, as it appears in the returned record. At
      * most 15 characters.
      * @param type - Type of the bin's value.
      * @param direction - Sort direction.
-     * @param flags - Comparison flags; defaults to {@link orderByFlags.DEFAULT}.
+     * @param flags - Comparison flags; a combination of {@link orderByFlags}. Defaults to
+     * {@link orderByFlags.DEFAULT}. {@link orderByFlags.CASE_INSENSITIVE} is only valid when
+     * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
+     * parameter error when the query runs.
+     *
+     * @throws {TypeError} If an argument has the wrong type.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
+     * 15 characters, or the query already has two order keys.
      */
     public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
     /**
      * Sets the number of records a Top-K query returns.
      *
      * k must be from 1 to 1,000, and requires an order key set with {@link Query#orderBy}.
-     * An out-of-range k fails with a parameter error when the query executes. Calling
+     * An out-of-range k fails with a parameter error when the query runs. Calling
      * <code>topK</code> again replaces k.
      *
      * @param k - Number of records to return, from 1 to 1,000.
+     *
+     * @throws {TypeError} If k isn't an integer.
      */
     public topK(k: number): void;
     /**
@@ -12325,7 +12348,8 @@ export enum indexType {
  */
 export interface OrderByKey {
     /**
-     * Name of the bin to order by.
+     * Name of the bin to order by, as it appears in the returned record. At most 15
+     * characters; if the query selects bins, it must be one of them.
      */
     bin: string;
     /**
@@ -12337,7 +12361,10 @@ export interface OrderByKey {
      */
     direction: order;
     /**
-     * Comparison flags.
+     * Comparison flags; a combination of {@link orderByFlags}. Use
+     * {@link orderByFlags.DEFAULT} for none. {@link orderByFlags.CASE_INSENSITIVE}
+     * is only valid when <code>type</code> is {@link orderByType.STRING}; any other
+     * combination fails with a parameter error when the query runs.
      */
     flags: orderByFlags | number;
 }

@@ -77,6 +77,12 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 		goto Cleanup;
 	}
 
+	if (info[2]->IsObject() &&
+		topk_from_jsobject(&query, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
+		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Top-K settings invalid");
+		goto Cleanup;
+	}
+
 	if (pf_defined) {
 		as_v8_debug(log, "Sending async query partitions command");
 		status = aerospike_query_partitions_async(

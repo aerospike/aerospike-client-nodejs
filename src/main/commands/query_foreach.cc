@@ -171,6 +171,13 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 	uv_async_init(uv_default_loop(), &cmd->async_handle, async_callback);
 	cmd->async_handle.data = (void *)cmd;
 
+	// After uv_async_init(): respond() closes the handle even on error.
+	if (info[2]->IsObject() &&
+		topk_from_jsobject(&cmd->query, info[2].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
+		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Top-K settings invalid");
+	}
+
 	return cmd;
 }
 
