@@ -22,7 +22,6 @@ import type { Query as Q } from '../lib/aerospike.js';
 
 import { expect } from 'chai';
 import * as Aerospike from '../lib/aerospike.js';
-import * as helper from './test_helper.ts';
 
 const { orderByType, order, orderByFlags, AerospikeError, status } = Aerospike
 
@@ -108,6 +107,14 @@ describe('Query Top-K settings #noserver', function () {
       expect(() => query.orderBy(1 as any, orderByType.INTEGER, order.ASC)).to.throw(TypeError)
     })
 
+    it('throws a parameter error if type, direction or flags is negative', function () {
+      const query = newQuery()
+
+      expect(() => query.orderBy('a', -1, order.ASC)).to.throw(AerospikeError).with.property('code', status.ERR_PARAM)
+      expect(() => query.orderBy('a', orderByType.INTEGER, -1)).to.throw(AerospikeError).with.property('code', status.ERR_PARAM)
+      expect(() => query.orderBy('a', orderByType.INTEGER, order.ASC, -1)).to.throw(AerospikeError).with.property('code', status.ERR_PARAM)
+    })
+
     it('throws if type, direction or flags is not an integer', function () {
       const query = newQuery()
 
@@ -162,6 +169,12 @@ describe('Query Top-K settings #noserver', function () {
       expect(query.topKLimit).to.equal(20)
     })
 
+    it('throws a parameter error if k is negative', function () {
+      const query = newQuery()
+
+      expect(() => query.topK(-1)).to.throw(AerospikeError).with.property('code', status.ERR_PARAM)
+    })
+
     it('throws if k is not an integer', function () {
       const query = newQuery()
 
@@ -209,6 +222,13 @@ describe('Query Top-K settings #noserver', function () {
           expect(() => run(query)).to.throw(TypeError)
         })
 
+        it('throws a parameter error for a negative topKLimit assigned directly', function () {
+          const query = newQuery()
+          query.topKLimit = -1
+
+          expect(() => run(query)).to.throw(AerospikeError).with.property('code', status.ERR_PARAM)
+        })
+
         it('throws a TypeError for a non-integer topKLimit assigned directly', function () {
           const query = newQuery()
           query.topKLimit = 2.5
@@ -237,32 +257,5 @@ describe('Query Top-K settings #noserver', function () {
         expect(error).to.be.instanceof(TypeError)
       })
     })
-  })
-})
-
-describe('Query Top-K settings in native code', function () {
-  // A negative topKLimit passes the JS integer check and is rejected when the
-  // native layer reads the query; the error must reach the caller.
-  function negativeK (): Q {
-    const query = helper.client.query(helper.namespace, helper.set)
-    query.orderBy('a', orderByType.INTEGER, order.DESC)
-    query.topKLimit = -1
-    return query
-  }
-
-  it('reports invalid settings as a parameter error from query.results()', async function () {
-    const error = await negativeK().results().then(() => null, error => error)
-
-    expect(error).to.be.instanceof(AerospikeError)
-    expect(error.code).to.equal(status.ERR_PARAM)
-    expect(error.message).to.include('Top-K settings invalid')
-  })
-
-  it('reports invalid settings as a parameter error from query.background()', async function () {
-    const error = await negativeK().background('udf', 'fn').then(() => null, error => error)
-
-    expect(error).to.be.instanceof(AerospikeError)
-    expect(error.code).to.equal(status.ERR_PARAM)
-    expect(error.message).to.include('Top-K settings invalid')
   })
 })

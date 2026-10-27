@@ -40,7 +40,4 @@ void setup_options(as_query *query, v8::Local<v8::Object> options, as_cdt_ctx* c
 void setup_query_pages(as_query ** query, v8::Local<v8::Value> ns, v8::Local<v8::Value> set,
                        v8::Local<v8::Value>maybe_options, uint8_t* bytes, uint32_t bytes_size,
                        as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log);
-// Copies the Top-K settings (orderByKeys, topKLimit) of a JS Query onto query.
-// Returns AS_NODE_PARAM_ERR, without throwing, if they are malformed.
-int topk_from_jsobject(as_query *query, v8::Local<v8::Object> options, LogInfo *log);
 void free_query(as_query *query, as_policy_query *policy, as_exp *exp);

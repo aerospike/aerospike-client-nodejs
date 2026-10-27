@@ -106,12 +106,6 @@ NAN_METHOD(AerospikeClient::QueryPages)
 		goto Cleanup;
 	}
 
-	if (info[2]->IsObject() &&
-		topk_from_jsobject(qu->query, info[2].As<Object>(), log) != AS_NODE_PARAM_OK) {
-		CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Top-K settings invalid");
-		goto Cleanup;
-	}
-
 	if(info[5]->IsNumber()){
 		qu->max_records = Nan::To<int32_t>(info[5]).FromJust();
 		qu->query->max_records = 0;
