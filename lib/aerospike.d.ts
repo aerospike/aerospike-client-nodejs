@@ -1347,7 +1347,7 @@ export class Query {
      *
      * @throws {TypeError} If an argument has the wrong type.
      * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
-     * 15 characters, or type, direction or flags is negative.
+     * 15 characters or contains NUL, or type, direction or flags is negative.
      *
      * @example <caption>Return the 10 records with the highest score</caption>
      *
@@ -1381,8 +1381,8 @@ export class Query {
      *
      * @throws {TypeError} If an argument has the wrong type.
      * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
-     * 15 characters, type, direction or flags is negative, or the query already has two
-     * order keys.
+     * 15 characters or contains NUL, type, direction or flags is negative, or the query
+     * already has two order keys.
      */
     public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
     /**
