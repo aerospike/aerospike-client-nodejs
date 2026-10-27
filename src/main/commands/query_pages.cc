@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2023 Aerospike, Inc.
+ * Copyright 2023-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,15 +61,15 @@ NAN_METHOD(AerospikeClient::QueryPages)
 	as_exp *exp = NULL;
 
 	struct query_udata* qu = (query_udata*) cf_malloc(sizeof(struct query_udata));
+	qu->query = NULL;
 	qu->cmd = cmd;
 	qu->count = 0;
-	qu->exp = exp;
 
 	if (info[6]->IsObject()) {
 		if (get_optional_cdt_context(&context, &with_context, info[6].As<Object>(), "context", log) !=
 			AS_NODE_PARAM_OK) {
-			as_v8_error(log, "Parsing context arguments for query index filter failed");
-			Nan::ThrowTypeError("Error in filter context");
+			CmdErrorCallback(cmd, AEROSPIKE_ERR_PARAM, "Error in filter context");
+			goto Cleanup;
 		}
 	}
 
@@ -78,12 +78,17 @@ NAN_METHOD(AerospikeClient::QueryPages)
 		load_bytes_size(info[4].As<Object>(), &bytes_size, log);
 		uint8_t* bytes = new uint8_t[bytes_size];
 		load_bytes(info[4].As<Object>(), bytes, bytes_size, log);
-		setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, &context, &with_context, &exp, log);
+		status = setup_query_pages(&qu->query, info[0], info[1], Nan::Null(), bytes, bytes_size, &context, &with_context, &exp, &cmd->err, log);
 		delete [] bytes;
 	}
 	else{
-		setup_query_pages(&qu->query, info[0], info[1], info[2], NULL, 0, &context, &with_context, &exp, log);
+		status = setup_query_pages(&qu->query, info[0], info[1], info[2], NULL, 0, &context, &with_context, &exp, &cmd->err, log);
 	}
+	if (status != AEROSPIKE_OK) {
+		cmd->ErrorCallback();
+		goto Cleanup;
+	}
+	qu->exp = exp;
 
 	if(with_context) {
 		qu->query->where.entries[0].ctx = &context;
@@ -133,6 +138,10 @@ NAN_METHOD(AerospikeClient::QueryPages)
 	}
 
 Cleanup:
+	if (cmd) {
+		free_query(qu->query, NULL, exp);
+		cf_free(qu);
+	}
 	delete cmd;
 	if (p_policy && policy.base.filter_exp) {
 		as_exp_destroy(policy.base.filter_exp);

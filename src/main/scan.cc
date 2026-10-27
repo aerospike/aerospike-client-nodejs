@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ extern "C" {
 
 using namespace v8;
 
-void setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
-				Local<Value> maybe_options, LogInfo *log)
+as_status setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
+				Local<Value> maybe_options, as_error *err, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -55,16 +55,16 @@ void setup_scan(as_scan *scan, Local<Value> ns, Local<Value> set,
 	as_scan_init(scan, as_ns, as_set);
 
 	if (!maybe_options->IsObject()) {
-		return;
+		return AEROSPIKE_OK;
 	}
-	setup_options(scan, maybe_options.As<Object>(), log);
+	return setup_options(scan, maybe_options.As<Object>(), err, log);
 }
 
-void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
+as_status setup_options(as_scan *scan, Local<Object> options, as_error *err, LogInfo *log)
 {
 	Local<Value> selected =
 		Nan::Get(options, Nan::New("selected").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
+	TYPE_CHECK_OPT_ERR(err, selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
 		int size = bins->Length();
@@ -74,7 +74,7 @@ void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
 			Local<Value> bin = Nan::Get(bins, i).ToLocalChecked();
 			if (!bin->IsString()) {
 				as_v8_error(log, "Bin value passed must be string");
-				return Nan::ThrowError("Bin name passed is not a string");
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name passed is not a string");
 			}
 			as_scan_select(scan, *Nan::Utf8String(bin));
 			as_v8_detail(log, "bin %d = %s", i, *Nan::Utf8String(bin));
@@ -83,7 +83,7 @@ void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
 
 	Local<Value> nobins =
 		Nan::Get(options, Nan::New("nobins").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
+	TYPE_CHECK_OPT_ERR(err, nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
 		as_scan_set_nobins(scan, Nan::To<bool>(nobins).FromJust());
 	}
@@ -91,21 +91,21 @@ void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
 	Local<Value> concurrent =
 		Nan::Get(options, Nan::New("concurrent").ToLocalChecked())
 			.ToLocalChecked();
-	TYPE_CHECK_OPT(concurrent, IsBoolean, "concurrent must be a boolean");
+	TYPE_CHECK_OPT_ERR(err, concurrent, IsBoolean, "concurrent must be a boolean");
 	if (concurrent->IsBoolean()) {
 		as_scan_set_concurrent(scan, Nan::To<bool>(concurrent).FromJust());
 	}
 
 	Local<Value> ttl =
 		Nan::Get(options, Nan::New("ttl").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(ttl, IsNumber, "ttl must be a number");
+	TYPE_CHECK_OPT_ERR(err, ttl, IsNumber, "ttl must be a number");
 	if (ttl->IsNumber()) {
 		scan->ttl = (uint64_t) Nan::To<uint32_t>(ttl).FromJust();
 	}
 
 	Local<Value> udf =
 		Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");
+	TYPE_CHECK_OPT_ERR(err, udf, IsObject, "udf must be an object");
 	if (udf->IsObject()) {
 		char module[255];
 		char func[255];
@@ -116,27 +116,29 @@ void setup_options(as_scan *scan, Local<Object> options, LogInfo *log)
 										   udf.As<Object>(), log);
 		if (status != 0) {
 			as_v8_error(log, "Parsing UDF arguments for scan object failed");
-			Nan::ThrowTypeError("Error in parsing the UDF parameters");
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Error in parsing the UDF parameters");
 		}
 		as_scan_apply_each(scan, filename, funcname, arglist);
 	}
 
 	Local<Value> maybeOps =
 		Nan::Get(options, Nan::New("ops").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(maybeOps, IsArray, "ops must be an array");
+	TYPE_CHECK_OPT_ERR(err, maybeOps, IsArray, "ops must be an array");
 	if (maybeOps->IsArray()) {
 		Local<Array> ops = maybeOps.As<Array>();
 		as_v8_debug(log, "Adding operations to background scan");
 		scan->ops = as_operations_new(ops->Length());
 		if (operations_from_jsarray(scan->ops, ops, log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing ops arguments for scan object failed");
-			Nan::ThrowTypeError("Error in parsing the operations");
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Error in parsing the operations");
 		}
 	}
+
+	return AEROSPIKE_OK;
 }
 
-void setup_scan_pages(as_scan **scan, Local<Value> ns, Local<Value> set,
-				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, LogInfo *log)
+as_status setup_scan_pages(as_scan **scan, Local<Value> ns, Local<Value> set,
+				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, as_error *err, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -160,16 +162,14 @@ void setup_scan_pages(as_scan **scan, Local<Value> ns, Local<Value> set,
 
 	if(bytes_size){
 		*scan = as_scan_from_bytes_new(bytes, bytes_size);
-		return;
+		return AEROSPIKE_OK;
 	}
 	as_scan_set_paginate(*scan, true);
 	
 	if (!maybe_options->IsObject()) {
-		return;
+		return AEROSPIKE_OK;
 	}
 	
-	setup_options(*scan, maybe_options.As<Object>(), log);
-
-
+	return setup_options(*scan, maybe_options.As<Object>(), err, log);
 }
 

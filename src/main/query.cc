@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <node.h>
+#include <string>
 
 #include "async.h"
 #include "client.h"
@@ -32,8 +33,8 @@ extern "C" {
 
 using namespace v8;
 
-void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
-				 Local<Value> maybe_options, as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log)
+as_status setup_query(as_query *query, Local<Value> ns, Local<Value> set,
+				 Local<Value> maybe_options, as_cdt_ctx* context, bool* with_context, as_exp **exp, as_error *err, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -55,21 +56,19 @@ void setup_query(as_query *query, Local<Value> ns, Local<Value> set,
 	as_query_init(query, as_ns, as_set);
 
 	if (!maybe_options->IsObject()) {
-		return;
+		return AEROSPIKE_OK;
 	}
 
-	setup_options(query, maybe_options.As<Object>(), context, with_context, exp, log);
-
-
+	return setup_options(query, maybe_options.As<Object>(), context, with_context, exp, err, log);
 }
 
-void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log)
+as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, bool* with_context, as_exp **exp, as_error *err, LogInfo *log)
 {
 
 	Local<Value> filters_val =
 		Nan::Get(options, Nan::New("filters").ToLocalChecked())
 			.ToLocalChecked();
-	TYPE_CHECK_OPT(filters_val, IsArray, "filters must be an array");
+	TYPE_CHECK_OPT_ERR(err, filters_val, IsArray, "filters must be an array");
 	if (filters_val->IsArray()) {
 		Local<Array> filters = Local<Array>::Cast(filters_val);
 		int size = filters->Length();
@@ -82,12 +81,12 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 				if (get_optional_cdt_context(context, with_context, filter, "context", log) !=
 					AS_NODE_PARAM_OK) {
 					as_v8_error(log, "Parsing context arguments for query index filter failed");
-					Nan::ThrowTypeError("Error in filter context");
-				}				
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "Error in filter context");
+				}
 			}
 
-			char *bin_name = NULL;
-			char *index_name = NULL;
+			std::string bin_name;
+			std::string index_name;
 
 			Local<Value> v8_bin =
 				Nan::Get(filter, Nan::New("bin").ToLocalChecked())
@@ -105,17 +104,17 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 
 				if (v8_index_name->IsString()) {
 					as_v8_error(log, "Index name must not be defined if expression is defined");
-					Nan::ThrowError("Index name must not be defined if expression is defined");
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "Index name must not be defined if expression is defined");
 				}
 
 				if (v8_bin->IsString()) {
 					as_v8_error(log, "Bin name must not be defined if expression is defined");
-					Nan::ThrowError("Bin name must not be defined if expression is defined");
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name must not be defined if expression is defined");
 				}
 
 				Local<Array> exp_ary = Local<Array>::Cast(v8_exp);
 				if (compile_expression(exp_ary, exp, log) != AS_NODE_PARAM_OK) {
-					Nan::ThrowError("Expressions could not be compiled");
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "Expressions could not be compiled");
 				}
 
 			}
@@ -123,12 +122,12 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 
 				if (v8_index_name->IsString()) {
 					as_v8_error(log, "Index name must not be defined if expression is defined");
-					Nan::ThrowError("Index name must not be defined if expression is defined");
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "Index name must not be defined if expression is defined");
 				}
 
 				if (v8_bin->IsString()) {
 					as_v8_error(log, "Bin name must not be defined if expression is defined");
-					Nan::ThrowError("Bin name must not be defined if expression is defined");
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name must not be defined if expression is defined");
 				}
 
 				Nan::Utf8String exp_b64(v8_exp.As<String>());
@@ -137,17 +136,16 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 			else if (v8_index_name->IsString()) {
 				if (v8_bin->IsString()) {
 					as_v8_error(log, "Bin name must not be defined if index name is defined");
-					Nan::ThrowError("Bin name must not be defined if index name is defined");
+					return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name must not be defined if index name is defined");
 				}
-				index_name = strdup(*Nan::Utf8String(v8_index_name));
+				index_name = *Nan::Utf8String(v8_index_name);
 			}
 			else if (v8_bin->IsString()) {
-				bin_name = strdup(*Nan::Utf8String(v8_bin));
+				bin_name = *Nan::Utf8String(v8_bin);
 			}
 			else {
 				as_v8_error(log, "Bin, Index Name, or Expression must have valid type");
-				Nan::ThrowError("Bin, Index Name, or Expression must have valid type");
-				
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin, Index Name, or Expression must have valid type");
 			}
 			
 
@@ -169,7 +167,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 			as_v8_debug(log,
 						"Building filter on predicate type %d, index type %d, "
 						"data type %d, bin name '%s'",
-						predicate, type, datatype, bin_name);
+						predicate, type, datatype, bin_name.c_str());
 			switch (predicate) {
 				case AS_PREDICATE_RANGE: {
 					if (datatype == AS_INDEX_NUMERIC) {
@@ -186,12 +184,12 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 								as_query_where_with_exp(query, *exp, predicate, type,
 											   datatype, min, max);
 							}
-							else if (index_name) {
-								as_query_where_with_index_name(query, index_name, predicate, type,
+							else if (!index_name.empty()) {
+								as_query_where_with_index_name(query, index_name.c_str(), predicate, type,
 											   datatype, min, max);
 							}
 							else {
-								as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+								as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 										   datatype, min, max);
 							
 							}
@@ -202,9 +200,9 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						else {
 							as_v8_error(log, "The min/max of the range value "
 											 "passed must both be integers.");
-							Nan::ThrowError("The min/max of the range value passed "
-											"must both be integers.");
-							
+							return as_error_update(err, AEROSPIKE_ERR_PARAM,
+												   "The min/max of the range value passed "
+												   "must both be integers.");
 						}
 					}
 					else if (datatype == AS_INDEX_GEO2DSPHERE) {
@@ -215,10 +213,8 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 							as_v8_error(
 								log,
 								"The region value passed must be a GeoJSON string");
-							Nan::ThrowError(
+							return as_error_update(err, AEROSPIKE_ERR_PARAM,
 								"The region value passed is not a GeoJSON string");
-
-							
 						}
 						const char *bin_val = strdup(*Nan::Utf8String(value));
 
@@ -226,12 +222,12 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 							as_query_where_with_exp(query, *exp, predicate, type,
 										   datatype, bin_val);
 						}
-						else if (index_name) {
-							as_query_where_with_index_name(query, index_name, predicate, type,
+						else if (!index_name.empty()) {
+							as_query_where_with_index_name(query, index_name.c_str(), predicate, type,
 										   datatype, bin_val);
 						}
 						else {
-							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+							as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 									   	   datatype, bin_val);
 							
 						}
@@ -255,12 +251,12 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 								as_query_where_with_exp(query, *exp, predicate, type,
 											   datatype, val);
 							}
-							else if (index_name) {
-								as_query_where_with_index_name(query, index_name, predicate, type,
+							else if (!index_name.empty()) {
+								as_query_where_with_index_name(query, index_name.c_str(), predicate, type,
 											   datatype, val);
 							}
 							else {
-								as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+								as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 										   	   datatype, val);							
 							}
 
@@ -269,8 +265,9 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						else {
 							as_v8_error(log, "querying a numeric index with equal "
 											 "predicate - value must be a number");
-							Nan::ThrowError("Querying an numeric index with equal "
-											"predicate - value is not a number");
+							return as_error_update(err, AEROSPIKE_ERR_PARAM,
+												   "Querying an numeric index with equal "
+												   "predicate - value is not a number");
 						}
 					}
 					else if (datatype == AS_INDEX_STRING) {
@@ -280,8 +277,9 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 						if (!value->IsString()) {
 							as_v8_error(log, "querying a string index with equal "
 											 "predicate - value must be a string");
-							Nan::ThrowError("Querying a string index with equal "
-											"predicate - value is not a string");
+							return as_error_update(err, AEROSPIKE_ERR_PARAM,
+												   "Querying a string index with equal "
+												   "predicate - value is not a string");
 						}
 						const char *bin_val = strdup(*Nan::Utf8String(value));
 
@@ -289,12 +287,12 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 							as_query_where_with_exp(query, *exp, predicate, type,
 										   datatype, bin_val);
 						}
-						else if (index_name) {
-							as_query_where_with_index_name(query, index_name, predicate, type,
+						else if (!index_name.empty()) {
+							as_query_where_with_index_name(query, index_name.c_str(), predicate, type,
 										   datatype, bin_val);
 						}
 						else {
-							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+							as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 									   	   datatype, bin_val);
 							
 						}
@@ -309,7 +307,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 							as_v8_error(
 								log,
 								"The region value passed must be a Buffer");
-							Nan::ThrowError(
+							return as_error_update(err, AEROSPIKE_ERR_PARAM,
 								"The region value passed is not a buffer");
 						}
 						uint8_t *bytes;
@@ -320,12 +318,12 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 							as_query_where_with_exp(query, *exp, predicate, type,
 										   datatype, bytes, size, true);
 						}
-						else if (index_name) {
-							as_query_where_with_index_name(query, index_name, predicate, type,
+						else if (!index_name.empty()) {
+							as_query_where_with_index_name(query, index_name.c_str(), predicate, type,
 										   datatype, bytes, size, true);
 						}
 						else {
-							as_query_where_with_ctx(query, bin_name, *with_context ? context : NULL, predicate, type,
+							as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 									   	   datatype, bytes, size, true);
 							
 						}
@@ -334,14 +332,6 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 					}
 					break;
 				}
-
-				if (bin_name)
-				{
-					free((void *) bin_name);
-				}
-				if (index_name) {
-					free((void *) index_name);
-				}
 			}
 		}
 	}
@@ -349,7 +339,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 	Local<Value> selected =
 		Nan::Get(options, Nan::New("selected").ToLocalChecked())
 			.ToLocalChecked();
-	TYPE_CHECK_OPT(selected, IsArray, "selected must be an array");
+	TYPE_CHECK_OPT_ERR(err, selected, IsArray, "selected must be an array");
 	if (selected->IsArray()) {
 		Local<Array> bins = Local<Array>::Cast(selected);
 		int size = bins->Length();
@@ -359,7 +349,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 			Local<Value> bin = Nan::Get(bins, i).ToLocalChecked();
 			if (!bin->IsString()) {
 				as_v8_error(log, "Bin value passed must be string");
-				return Nan::ThrowError("Bin name passed is not a string");
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin name passed is not a string");
 			}
 			as_query_select(query, *Nan::Utf8String(bin));
 			as_v8_detail(log, "bin %d = %s", i, *Nan::Utf8String(bin));
@@ -368,21 +358,21 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 
 	Local<Value> nobins =
 		Nan::Get(options, Nan::New("nobins").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(nobins, IsBoolean, "nobins must be a boolean");
+	TYPE_CHECK_OPT_ERR(err, nobins, IsBoolean, "nobins must be a boolean");
 	if (nobins->IsBoolean()) {
 		query->no_bins = Nan::To<bool>(nobins).FromJust();
 	}
 
 	Local<Value> max_records =
 		Nan::Get(options, Nan::New("maxRecords").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(max_records, IsNumber, "max_records must be a number");
+	TYPE_CHECK_OPT_ERR(err, max_records, IsNumber, "max_records must be a number");
 	if (max_records->IsNumber()) {
 		query->max_records = (uint64_t) Nan::To<uint32_t>(max_records).FromJust();
 	}
 
 	Local<Value> ttl =
 		Nan::Get(options, Nan::New("ttl").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(ttl, IsNumber, "ttl must be a number");
+	TYPE_CHECK_OPT_ERR(err, ttl, IsNumber, "ttl must be a number");
 	if (ttl->IsNumber()) {
 		query->ttl = (uint64_t) Nan::To<uint32_t>(ttl).FromJust();
 	}
@@ -390,7 +380,7 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 
 	Local<Value> udf =
 		Nan::Get(options, Nan::New("udf").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(udf, IsObject, "udf must be an object");
+	TYPE_CHECK_OPT_ERR(err, udf, IsObject, "udf must be an object");
 	if (udf->IsObject()) {
 		char module[255];
 		char func[255];
@@ -401,28 +391,30 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 										   udf.As<Object>(), log);
 		if (status != 0) {
 			as_v8_error(log, "Parsing UDF arguments for query object failed");
-			Nan::ThrowTypeError("Error in parsing the UDF parameters");
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Error in parsing the UDF parameters");
 		}
 		as_query_apply(query, filename, funcname, arglist);
 	}
 
 	Local<Value> maybeOps =
 		Nan::Get(options, Nan::New("ops").ToLocalChecked()).ToLocalChecked();
-	TYPE_CHECK_OPT(maybeOps, IsArray, "ops must be an array");
+	TYPE_CHECK_OPT_ERR(err, maybeOps, IsArray, "ops must be an array");
 	if (maybeOps->IsArray()) {
 		Local<Array> ops = maybeOps.As<Array>();
 		as_v8_debug(log, "Adding operations to background query");
 		query->ops = as_operations_new(ops->Length());
 		if (operations_from_jsarray(query->ops, ops, log) != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Parsing ops arguments for query object failed");
-			Nan::ThrowTypeError("Error in parsing the operations");
+			return as_error_update(err, AEROSPIKE_ERR_PARAM, "Error in parsing the operations");
 		}
 	}
+
+	return AEROSPIKE_OK;
 }
 
-void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
+as_status setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 				Local<Value> maybe_options, uint8_t* bytes, uint32_t bytes_size,
-				as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log)
+				as_cdt_ctx* context, bool* with_context, as_exp **exp, as_error *err, LogInfo *log)
 {
 	as_namespace as_ns = {'\0'};
 	as_set as_set = {'\0'};
@@ -446,16 +438,15 @@ void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 
 	if(bytes_size){
 		*query = as_query_from_bytes_new(bytes, bytes_size);
-		return;
+		return AEROSPIKE_OK;
 	}
 	as_query_set_paginate(*query, true);
 
 	if (!maybe_options->IsObject()) {
-		return;
+		return AEROSPIKE_OK;
 	}
 
-	setup_options(*query, maybe_options.As<Object>(), context, with_context, exp, log);
-
+	return setup_options(*query, maybe_options.As<Object>(), context, with_context, exp, err, log);
 }
 
 

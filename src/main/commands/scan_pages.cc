@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2023 Aerospike, Inc.
+ * Copyright 2023-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -67,14 +67,16 @@ NAN_METHOD(AerospikeClient::ScanPages)
 		load_bytes_size(info[5].As<Object>(), &bytes_size, log);
 		uint8_t* bytes = new uint8_t[bytes_size];
 		load_bytes(info[5].As<Object>(), bytes, bytes_size, log);
-		setup_scan_pages(&su->scan, info[0], info[1], Nan::Null(), bytes, bytes_size, log);
+		status = setup_scan_pages(&su->scan, info[0], info[1], Nan::Null(), bytes, bytes_size, &cmd->err, log);
 		delete [] bytes;
 	}
 	else{
-		setup_scan_pages(&su->scan, info[0], info[1], info[2], NULL, 0, log);
+		status = setup_scan_pages(&su->scan, info[0], info[1], info[2], NULL, 0, &cmd->err, log);
 	}
-
-
+	if (status != AEROSPIKE_OK) {
+		cmd->ErrorCallback();
+		goto Cleanup;
+	}
 
 	if (info[3]->IsObject()) {
 		if (scanpolicy_from_jsobject(&policy, info[3].As<Object>(), log) !=
@@ -120,6 +122,10 @@ NAN_METHOD(AerospikeClient::ScanPages)
 	}
 
 Cleanup:
+	if (cmd) {
+		as_scan_destroy(su->scan);
+		cf_free(su);
+	}
 	delete cmd;
 	if (p_policy && policy.base.filter_exp) {
 		as_exp_destroy(policy.base.filter_exp);

@@ -1,5 +1,5 @@
 /***************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,9 @@ extern "C" {
 #define TYPE_CHECK_OPT(val, type, msg)                                         \
 	if (!(val->IsNull() || val->IsUndefined() || val->type()))                 \
 	return Nan::ThrowTypeError(msg)
+#define TYPE_CHECK_OPT_ERR(err, val, type, msg)                                \
+	if (!(val->IsNull() || val->IsUndefined() || val->type()))                 \
+	return as_error_update(err, AEROSPIKE_ERR_PARAM, msg)
 
 #define UDF_MAX_MODULE_NAME 255
 #define UDF_MAX_FUNCTION_NAME 255

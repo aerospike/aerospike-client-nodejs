@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2021-2023 Aerospike, Inc.
+// Copyright 2021-2026 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -377,6 +377,38 @@ describe('Aerospike.exp', function () {
         const bins: AerospikeBins = result.bins
         expect(bins.intVal).to.eql(2)
         expect(bins.ExpVar).to.eql(4)
+      })
+    })
+
+    describe('fixed-arity expressions', function () {
+      it('evaluates every fixed-arity expression with nested arguments', async function () {
+        const key = await createRecord({ f: 7, g: -3, fl: 2.5 })
+        const f = exp.binInt('f')
+        const g = exp.binInt('g')
+        const fl = exp.binFloat('fl')
+        const cases: Array<[string, AerospikeExp, number]> = [
+          ['abs', exp.abs(exp.sub(f, g)), 10],
+          ['mod', exp.mod(exp.add(f, g), exp.int(3)), 1],
+          ['pow', exp.pow(exp.toFloat(f), exp.float(2)), 49],
+          ['log', exp.log(exp.float(8), exp.float(2)), 3],
+          ['floor', exp.floor(fl), 2],
+          ['ceil', exp.ceil(fl), 3],
+          ['toInt', exp.toInt(fl), 2],
+          ['toFloat', exp.toFloat(f), 7],
+          ['intNot', exp.intNot(exp.sub(f, g)), -11],
+          ['intLshift', exp.intLshift(exp.add(f, g), exp.int(2)), 16],
+          ['intRshift', exp.intRshift(exp.add(f, exp.int(9)), exp.int(2)), 4],
+          ['intArshift', exp.intArshift(exp.sub(g, exp.int(5)), exp.int(1)), -4],
+          ['intCount', exp.intCount(f), 3],
+          ['intLscan', exp.intLscan(f, exp.bool(true)), 61],
+          ['intRscan', exp.intRscan(f, exp.bool(true)), 63]
+        ]
+        const ops = cases.map(([name, expression]) =>
+          exp.operations.read(name, expression, exp.expReadFlags.DEFAULT))
+        const result: AerospikeRecord = await client.operate(key, ops)
+        for (const [name, , expected] of cases) {
+          expect(result.bins[name], name).to.eql(expected)
+        }
       })
     })
 

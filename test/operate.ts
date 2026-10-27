@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2024 Aerospike, Inc.
+// Copyright 2013-2026 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -96,6 +96,12 @@ context('Operations', function () {
           })
       })
 
+      it('writes a string value containing NUL characters', async function () {
+        await client.operate(key, [op.write('string', 'd\0e')])
+        const record: AerospikeRecord = await client.get(key)
+        expect(record.bins.string).to.equal('d\0e')
+      })
+
       it('deletes a bin by writing null to it', function () {
         const ops: operations.Operation[] = [
           op.write('string', null)
@@ -177,6 +183,12 @@ context('Operations', function () {
           })
       })
 
+      it('appends a string value containing NUL characters', async function () {
+        await client.operate(key, [op.append('string', '\0d')])
+        const record: AerospikeRecord = await client.get(key)
+        expect(record.bins.string).to.equal('abc\0d')
+      })
+
       /*
       it('returns a parameter error when trying to append a numeric value', function () {
         const ops = [
@@ -201,6 +213,12 @@ context('Operations', function () {
             const bins: AerospikeBins = record.bins
             expect(bins.string).to.equal('defabc')
           })
+      })
+
+      it('prepends a string value containing NUL characters', async function () {
+        await client.operate(key, [op.prepend('string', 'd\0')])
+        const record: AerospikeRecord = await client.get(key)
+        expect(record.bins.string).to.equal('d\0abc')
       })
       /*
       it('returns a parameter error when trying to prepend a numeric value', function () {

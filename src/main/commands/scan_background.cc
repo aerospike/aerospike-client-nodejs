@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,10 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 		new ScanBackgroundCommand(client, info[5].As<Function>());
 	LogInfo *log = client->log;
 
-	setup_scan(&cmd->scan, info[0], info[1], info[2], log);
+	if (setup_scan(&cmd->scan, info[0], info[1], info[2], &cmd->err, log) !=
+		AEROSPIKE_OK) {
+		return cmd;
+	}
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_scan *)cf_malloc(sizeof(as_policy_scan));
