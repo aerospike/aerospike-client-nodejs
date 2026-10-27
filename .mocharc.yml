@@ -3,6 +3,7 @@ require:
   - mocha-clean
 spec:
   - "test/*.ts"
+  - "test/topk/*.ts"
 node-option:
   - "import=tsx"
 parallel: false
