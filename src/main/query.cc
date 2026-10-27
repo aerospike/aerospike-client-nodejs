@@ -418,6 +418,66 @@ void setup_options(as_query *query, Local<Object> options, as_cdt_ctx* context, 
 			Nan::ThrowTypeError("Error in parsing the operations");
 		}
 	}
+
+	// Top-K order keys, set by Query#orderBy and Query#thenOrderBy. The first
+	// key goes through as_query_order_by() and the rest through
+	// as_query_then_order_by(), so the C client applies its own rules: it
+	// keeps at most two keys and rejects a third when the query executes.
+	Local<Value> maybe_order_by_keys =
+		Nan::Get(options, Nan::New("orderByKeys").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(maybe_order_by_keys, IsArray, "orderByKeys must be an array");
+	if (maybe_order_by_keys->IsArray()) {
+		Local<Array> order_by_keys = maybe_order_by_keys.As<Array>();
+		for (uint32_t i = 0; i < order_by_keys->Length(); i++) {
+			Local<Value> key = Nan::Get(order_by_keys, i).ToLocalChecked();
+			if (!key->IsObject()) {
+				as_v8_error(log, "Order key must be an object");
+				return Nan::ThrowTypeError("Order key must be an object");
+			}
+			Local<Object> key_obj = key.As<Object>();
+			Local<Value> bin =
+				Nan::Get(key_obj, Nan::New("bin").ToLocalChecked()).ToLocalChecked();
+			Local<Value> type =
+				Nan::Get(key_obj, Nan::New("type").ToLocalChecked()).ToLocalChecked();
+			Local<Value> direction =
+				Nan::Get(key_obj, Nan::New("direction").ToLocalChecked()).ToLocalChecked();
+			Local<Value> flags =
+				Nan::Get(key_obj, Nan::New("flags").ToLocalChecked()).ToLocalChecked();
+			if (!bin->IsString() || !type->IsNumber() || !direction->IsNumber() ||
+				!flags->IsNumber()) {
+				as_v8_error(log, "Order key must have a string bin and numeric type, direction and flags");
+				return Nan::ThrowTypeError("Order key must have a string bin and numeric type, direction and flags");
+			}
+			Nan::Utf8String bin_name(bin);
+			if (strlen(*bin_name) >= AS_BIN_NAME_MAX_SIZE) {
+				as_v8_error(log, "Order key bin name exceeds %d characters",
+							AS_BIN_NAME_MAX_LEN);
+				return Nan::ThrowTypeError("Order key bin name is too long");
+			}
+			as_query_order_by_type order_type =
+				(as_query_order_by_type)Nan::To<int32_t>(type).FromJust();
+			as_order order_direction =
+				(as_order)Nan::To<int32_t>(direction).FromJust();
+			as_query_order_by_flags order_flags =
+				(as_query_order_by_flags)Nan::To<uint32_t>(flags).FromJust();
+			if (i == 0) {
+				as_query_order_by(query, *bin_name, order_type, order_direction,
+								  order_flags);
+			}
+			else {
+				as_query_then_order_by(query, *bin_name, order_type,
+									   order_direction, order_flags);
+			}
+			as_v8_detail(log, "order key %d = %s", i, *bin_name);
+		}
+	}
+
+	Local<Value> top_k =
+		Nan::Get(options, Nan::New("topKLimit").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT(top_k, IsNumber, "topKLimit must be a number");
+	if (top_k->IsNumber()) {
+		as_query_top_k(query, Nan::To<uint32_t>(top_k).FromJust());
+	}
 }
 
 void setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
