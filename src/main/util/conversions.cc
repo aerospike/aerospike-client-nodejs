@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -801,12 +801,15 @@ as_val *asval_clone(const as_val *val, const LogInfo *log)
 	case AS_STRING: {
 		as_string *str_val = as_string_fromval(val);
 		char *strval = as_string_get(str_val);
+		size_t len = as_string_len(str_val);
 		as_v8_detail(log, "Cloning String  value %s", strval);
-		char *clone_str = (char *)cf_strdup(strval);
+		char *clone_str = (char *)cf_malloc(len + 1);
 		if (clone_str == NULL) {
 			as_v8_error(log, "cloning string failed");
+			break;
 		}
-		as_string *clone_as = as_string_new(clone_str, true);
+		memcpy(clone_str, strval, len + 1);
+		as_string *clone_as = as_string_new_wlen(clone_str, len, true);
 		if (clone_as == NULL) {
 			as_v8_error(log, "cloning string failed");
 		}
@@ -1035,8 +1038,9 @@ Local<Value> val_to_jsvalue(as_val *val, const LogInfo *log)
 		as_string *sval = as_string_fromval(val);
 		if (sval) {
 			char *data = as_string_getorelse(sval, NULL);
+			int len = (int)as_string_len(sval);
 			as_v8_detail(log, "string value = \"%s\"", data);
-			return scope.Escape(Nan::New(data).ToLocalChecked());
+			return scope.Escape(Nan::New(data, len).ToLocalChecked());
 		}
 		break;
 	}
@@ -1276,6 +1280,22 @@ char *geojson_as_string(Local<Value> value)
 	return strdup(*Nan::Utf8String(strval));
 }
 
+char *string_from_jsvalue(Local<Value> v8value, size_t *len)
+{
+	Nan::Utf8String utf8_value(v8value);
+	*len = (size_t)utf8_value.length();
+	char *value = (char *)cf_malloc(*len + 1);
+	memcpy(value, *utf8_value, *len + 1);
+	return value;
+}
+
+as_string *asstring_from_jsvalue(Local<Value> v8value)
+{
+	size_t len = 0;
+	char *value = string_from_jsvalue(v8value, &len);
+	return as_string_new_wlen(value, len, true);
+}
+
 int list_from_jsarray(as_list **list, Local<Array> array, const LogInfo *log)
 {
 	const uint32_t capacity = array->Length();
@@ -1370,8 +1390,7 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 		*value = (as_val *)as_boolean_new(Nan::To<bool>(v8value).FromJust());
 	}
 	else if (v8value->IsString()) {
-		*value =
-			(as_val *)as_string_new(strdup(*Nan::Utf8String(v8value)), true);
+		*value = (as_val *)asstring_from_jsvalue(v8value);
 	}
 	else if (v8value->IsInt32()) {
 		*value = (as_val *)as_integer_new(Nan::To<int32_t>(v8value).FromJust());
@@ -1598,10 +1617,10 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 			continue;
 		}
 		if (value->IsString()) {
-			char* string_value = strdup(*Nan::Utf8String(value));
-			bool success = as_record_set_strp(rec, *n, string_value, true);
+			as_string *string_value = asstring_from_jsvalue(value);
+			bool success = as_record_set_string(rec, *n, string_value);
 			if (!success) {
-				cf_free(string_value);
+				as_string_destroy(string_value);
 				return throw_bin_name_error(*n, log);
 			}
 			continue;
@@ -1855,6 +1874,19 @@ as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool)
 
 
 
+static Local<Array> latency_to_jsarray(as_latency *latency)
+{
+	Nan::EscapableHandleScope scope;
+	Local<Array> v8_buckets = Nan::New<Array>();
+	as_latency *buckets = as_latency_reserve(latency);
+	for (uint8_t i = 0; i < buckets->size; i++) {
+		uint32_t count = (uint32_t)as_latency_get_bucket(buckets, i);
+		Nan::Set(v8_buckets, i, Nan::New(count));
+	}
+	as_latency_release(buckets);
+	return scope.Escape(v8_buckets);
+}
+
 void node_to_jsobject(as_node_s* node, Local<Object> v8_node, const LogInfo *log) {
 	Nan::Set(v8_node, Nan::New("name").ToLocalChecked(), Nan::New(node->name).ToLocalChecked());
 
@@ -1976,7 +2008,7 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, const LogInfo *log
 			as_v8_detail(
 				log, "Integer value outside safe range - returning BigInt");
 			v8::Isolate *isolate = v8::Isolate::GetCurrent();
-			v8_timeout_count = BigInt::New(isolate, metrics->error_count);
+			v8_timeout_count = BigInt::New(isolate, metrics->timeout_count);
 		}
 		else{
 			v8_timeout_count = Nan::New((double)metrics->timeout_count);
@@ -1986,50 +2018,17 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, const LogInfo *log
 			as_v8_detail(
 				log, "Integer value outside safe range - returning BigInt");
 			v8::Isolate *isolate = v8::Isolate::GetCurrent();
-			v8_key_busy_count = BigInt::New(isolate, metrics->error_count);
+			v8_key_busy_count = BigInt::New(isolate, metrics->key_busy_count);
 		}
 		else{
 			v8_key_busy_count = Nan::New((double)metrics->key_busy_count);
 		}
 
-		Local<Array> v8_connection = Nan::New<Array>();
-		Local<Array> v8_write = Nan::New<Array>();
-		Local<Array> v8_read = Nan::New<Array>();
-		Local<Array> v8_batch = Nan::New<Array>();
-		Local<Array> v8_query = Nan::New<Array>();
-
-		as_latency* conn_buckets = as_latency_reserve(metrics->latency[0]);
-		as_latency* write_buckets = as_latency_reserve(metrics->latency[1]);
-		as_latency* read_buckets = as_latency_reserve(metrics->latency[2]);
-		as_latency* batch_buckets = as_latency_reserve(metrics->latency[3]);
-		as_latency* query_buckets = as_latency_reserve(metrics->latency[4]);
-
-		int bucket_index;
-		for (bucket_index = 0; bucket_index < conn_buckets->size; bucket_index++) {
-			Nan::Set(v8_connection, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(conn_buckets, bucket_index)));
-		}
-
-		for (bucket_index = 0; bucket_index < write_buckets->size; bucket_index++) {
-			Nan::Set(v8_write, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(write_buckets, bucket_index)));
-		}
-
-		for (bucket_index = 0; bucket_index < read_buckets->size; bucket_index++) {
-			Nan::Set(v8_read, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(read_buckets, bucket_index)));
-		}
-
-		for (bucket_index = 0; bucket_index < batch_buckets->size; bucket_index++) {
-			Nan::Set(v8_batch, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(batch_buckets, bucket_index)));
-		}
-
-		for (bucket_index = 0; bucket_index < query_buckets->size; bucket_index++) {
-			Nan::Set(v8_query, bucket_index, Nan::New((uint32_t) as_latency_get_bucket(query_buckets, bucket_index)));
-		}
-
-	    as_latency_release(conn_buckets);
-    	as_latency_release(write_buckets);
-    	as_latency_release(read_buckets);
-    	as_latency_release(batch_buckets);
-    	as_latency_release(query_buckets);
+		Local<Array> v8_connection = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_CONN]);
+		Local<Array> v8_write = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_WRITE]);
+		Local<Array> v8_read = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_READ]);
+		Local<Array> v8_batch = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_BATCH]);
+		Local<Array> v8_query = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_QUERY]);
 
 		Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), v8_connection);
 		Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), v8_write);

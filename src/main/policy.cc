@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike Inc.
+ * Copyright 2013-2026 Aerospike Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -907,17 +907,25 @@ int partitions_from_jsobject(as_partition_filter *pf, bool *defined,
 												   log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
+			Local<Value> v8_digest =
+				Nan::Get(pf_obj.As<Object>(), Nan::New("digest").ToLocalChecked())
+					.ToLocalChecked();
+			if (node::Buffer::HasInstance(v8_digest) &&
+				node::Buffer::Length(v8_digest) != AS_DIGEST_VALUE_SIZE) {
+				as_v8_error(log, "Partition filter digest must be %d bytes",
+							AS_DIGEST_VALUE_SIZE);
+				return AS_NODE_PARAM_ERR;
+			}
+			uint8_t *digest = pf->digest.value;
 			int len = AS_DIGEST_VALUE_SIZE;
 			bool digest_defined = false;
 			if ((rc = get_optional_bytes_property(
-					 (uint8_t **)&pf->digest.value, &len, &digest_defined,
-					 pf_obj.As<Object>(), "digest", log)) != AS_NODE_PARAM_OK) {
+					 &digest, &len, &digest_defined, pf_obj.As<Object>(),
+					 "digest", log)) != AS_NODE_PARAM_OK) {
 				return rc;
 			}
-			else {
-				if (digest_defined) {
-					pf->digest.init = true;
-				}
+			if (digest_defined) {
+				pf->digest.init = true;
 			}
 		}
 		else {

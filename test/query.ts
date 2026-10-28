@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2024 Aerospike, Inc.
+// Copyright 2013-2026 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -568,6 +568,23 @@ describe('Queries', function () {
           stream.on('end', done)
         })
       })
+
+      it('resumes after the given digest', async function () {
+        const key = new Aerospike.Key(helper.namespace, testSet, 'test/query/partition_digest')
+        await client.put(key, { name: 'partition digest' })
+        const { digest } = (await client.get(key)).key
+        const query: Query = client.query(helper.namespace, testSet)
+        query.partitions(0, 1, digest)
+        const records: AerospikeRecord[] = await query.results()
+        const digests = records.map((record: AerospikeRecord) => record.key.digest)
+        expect(digests).to.not.deep.include(digest)
+      })
+
+      it('rejects a digest that is not 20 bytes', async function () {
+        const query: Query = client.query(helper.namespace, testSet)
+        query.partitions(0, 1, Buffer.from([1, 2, 3]))
+        await expect(query.results()).to.be.rejectedWith(AerospikeError, 'Partitions object invalid')
+      })
     })
 
     it('returns the key matching the expression', function (done) {
@@ -691,6 +708,20 @@ describe('Queries', function () {
       })
     })
 
+    it('returns bins computed by expression read operations', async function () {
+      const query: Query = client.query(helper.namespace, testSet)
+      query.where(filter.equal('i', 5))
+      query.ops = [exp.operations.read('dist', exp.abs(exp.sub(exp.binInt('i'), exp.int(7))), exp.expReadFlags.DEFAULT)]
+      const records: AerospikeRecord[] = await query.results()
+      expect(records.length).to.eq(1)
+      expect(records[0].bins.dist).to.eq(2)
+    })
+
+    it('rejects invalid operations instead of ignoring them', async function () {
+      const query: Query = client.query(helper.namespace, testSet)
+      query.ops = [{ op: 123456, bin: 'x' } as any]
+      await expect(query.results()).to.be.rejectedWith(AerospikeError, 'Error in parsing the operations')
+    })
 
     context('with QueryPolicy', function () {
       context('with deserialize: false', function () {
@@ -802,6 +833,14 @@ describe('Queries', function () {
           expect(job).to.be.instanceof(Job)
         })
     })
+
+    it('throws a TypeError for invalid operations without calling the callback', function () {
+      const query: Query = client.query(helper.namespace, testSet)
+      query.ops = [{ op: 123456, bin: 'x' } as any]
+      const callback = () => { throw new Error('callback must not be called') }
+      expect(() => query.background('udf', 'noop', callback)).to.throw(TypeError, 'Error in parsing the operations')
+    })
+
     describe('index with cdt context', function () {
       helper.skipUnlessVersion('>= 6.1.0', this)
       it('returns a Promise that resolves to a Job with a filter containing a CDT context', function () {

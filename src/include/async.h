@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,11 @@ class MetricsCommand;
 
 /**
  *  Setup an asynchronous invocation of a function using libuv worker threads.
+ *
+ *  prepare() may throw a JS exception, free its command and return NULL, in
+ *  which case nothing is queued and the callback is never called. Query and
+ *  scan commands do this for setup errors, which they have always thrown
+ *  synchronously as a TypeError.
  */
 v8::Local<v8::Value>
 async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,

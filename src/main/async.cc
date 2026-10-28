@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,10 @@ async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,
 	// Create an async work request and prepare the command
 	uv_work_t *req = new uv_work_t;
 	req->data = prepare(args);
+	if (!req->data) {
+		delete req;
+		return Nan::Undefined();
+	}
 
 	// Pass the work request to libuv to be run when a
 	// worker-thread is available to process it.
@@ -165,9 +169,13 @@ bool async_scan_listener(as_error *err, as_record *record, void *udata,
 	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(udata);
 	const LogInfo *log = cmd->log;
 
+	// The C client never invokes the listener again after an error, after the
+	// final NULL record, or after the listener returns false.
 	Local<Value> result;
 	if (err) {
-		result = cmd->ErrorCallback(err);
+		cmd->ErrorCallback(err);
+		delete cmd;
+		return false;
 	}
 	else if (record) {
 		Local<Value> argv[] = {Nan::Null(),
@@ -188,9 +196,13 @@ bool async_scan_listener(as_error *err, as_record *record, void *udata,
 		as_v8_debug(log, "Async scan callback returned: %s",
 					continue_scan ? "true" : "false");
 	}
+	if (!continue_scan) {
+		delete cmd;
+	}
 	return continue_scan;
 }
 
+// See async_scan_listener() for when the C client stops invoking the listener.
 bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop)
 {
@@ -202,7 +214,12 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 
 	Local<Value> result;
 	if (err) {
-		result = cmd->ErrorCallback(err);
+		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
+		cmd->ErrorCallback(err);
+		as_scan_destroy(scan);
+		delete cmd;
+		free(su);
+		return false;
 	}
 	else if (su->count >= su->max_records) {
 		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
@@ -246,9 +263,16 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 		as_v8_debug(log, "Async scan callback returned: %s",
 					continue_scan ? "true" : "false");
 	}
+	if (!continue_scan) {
+		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
+		as_scan_destroy(scan);
+		delete cmd;
+		free(su);
+	}
 	return continue_scan;
 }
 
+// See async_scan_listener() for when the C client stops invoking the listener.
 bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop)
 {
@@ -261,7 +285,13 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 
 	Local<Value> result;
 	if (err) {
-		result = cmd->ErrorCallback(err);
+		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		as_exp* exp = reinterpret_cast<as_exp *>(qu->exp);
+		cmd->ErrorCallback(err);
+		free_query(query, NULL, exp);
+		delete cmd;
+		free(qu);
+		return false;
 	}
 	else if (qu->count >= qu->max_records) {
 		as_query* query = reinterpret_cast<as_query *>(qu->query);
@@ -305,6 +335,13 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 		continue_scan = Nan::To<bool>(result).FromJust();
 		as_v8_debug(log, "Async scan callback returned: %s",
 					continue_scan ? "true" : "false");
+	}
+	if (!continue_scan) {
+		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		as_exp* exp = reinterpret_cast<as_exp *>(qu->exp);
+		free_query(query, NULL, exp);
+		delete cmd;
+		free(qu);
 	}
 	return continue_scan;
 }

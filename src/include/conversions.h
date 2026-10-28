@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -218,6 +218,10 @@ int map_from_jsmap(as_map **map, v8::Local<v8::Map> obj,
 					  const LogInfo *log);
 int asval_from_jsvalue(as_val **value, v8::Local<v8::Value> v8value,
 					   const LogInfo *log);
+// Embedded NUL characters are preserved; the returned buffer is also
+// NUL-terminated and must be freed with cf_free().
+char *string_from_jsvalue(v8::Local<v8::Value> v8value, size_t *len);
+as_string *asstring_from_jsvalue(v8::Local<v8::Value> v8value);
 int string_from_jsarray(char*** strings, int* strings_size, v8::Local<v8::Array> string_array, const LogInfo *log);
 
 int privileges_from_jsarray(as_privilege*** privileges, int* privileges_size, v8::Local<v8::Array>  privilege_array, const LogInfo *log); 

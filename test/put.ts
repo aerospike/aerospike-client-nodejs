@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2024 Aerospike, Inc.
+// Copyright 2013-2026 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -147,6 +147,12 @@ describe('client.put()', function () {
     it('writes bin with string values and reads it back', function (done) {
       const record: AerospikeBins = { string: 'hello world' }
       const expected: AerospikeBins = { string: 'hello world' }
+      putGetVerify(record, expected, done)
+    })
+
+    it('writes bin with string value containing NUL characters and reads it back', function (done) {
+      const record: AerospikeBins = { string: 'a\0b\0' }
+      const expected: AerospikeBins = { string: 'a\0b\0' }
       putGetVerify(record, expected, done)
     })
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,11 @@ struct scan_udata {
     uint32_t max_records;
 };
 
-void setup_scan(as_scan *scan, v8::Local<v8::Value> ns,
+as_status setup_scan(as_scan *scan, v8::Local<v8::Value> ns,
 				v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options,
-				LogInfo *log);
+				as_error *err, LogInfo *log);
 
-void setup_options(as_scan *scan, v8::Local<v8::Object> options, LogInfo *log);
+as_status setup_options(as_scan *scan, v8::Local<v8::Object> options, as_error *err, LogInfo *log);
 
-void setup_scan_pages(as_scan **scan, v8::Local<v8::Value> ns, v8::Local<v8::Value> set,
-                      v8::Local<v8::Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, LogInfo *log);
+as_status setup_scan_pages(as_scan **scan, v8::Local<v8::Value> ns, v8::Local<v8::Value> set,
+                      v8::Local<v8::Value> maybe_options, uint8_t* bytes, uint32_t bytes_size, as_error *err, LogInfo *log);
