@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2026 Aerospike, Inc.
+ * Copyright 2013-2023 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,14 +47,9 @@ async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,
 {
 	Nan::HandleScope scope;
 
-	void *cmd = prepare(args);
-	if (!cmd) {
-		return Nan::Undefined();
-	}
-
-	// Create an async work request for the prepared command
+	// Create an async work request and prepare the command
 	uv_work_t *req = new uv_work_t;
-	req->data = cmd;
+	req->data = prepare(args);
 
 	// Pass the work request to libuv to be run when a
 	// worker-thread is available to process it.
@@ -170,24 +165,22 @@ bool async_scan_listener(as_error *err, as_record *record, void *udata,
 	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(udata);
 	const LogInfo *log = cmd->log;
 
-	// The C client never invokes the listener again after an error, after the
-	// final NULL record, or after the listener returns false.
+	Local<Value> result;
 	if (err) {
-		cmd->ErrorCallback(err);
-		delete cmd;
-		return false;
+		result = cmd->ErrorCallback(err);
 	}
-	if (!record) {
+	else if (record) {
+		Local<Value> argv[] = {Nan::Null(),
+							   recordbins_to_jsobject(record, cmd->log),
+							   recordmeta_to_jsobject(record, cmd->log),
+							   key_to_jsobject(&record->key, cmd->log)};
+		result = cmd->Callback(4, argv);
+	}
+	else {
 		cmd->Callback(0, {});
 		delete cmd;
 		return false;
 	}
-
-	Local<Value> argv[] = {Nan::Null(),
-						   recordbins_to_jsobject(record, log),
-						   recordmeta_to_jsobject(record, log),
-						   key_to_jsobject(&record->key, log)};
-	Local<Value> result = cmd->Callback(4, argv);
 
 	bool continue_scan = true;
 	if (result->IsBoolean()) {
@@ -195,65 +188,55 @@ bool async_scan_listener(as_error *err, as_record *record, void *udata,
 		as_v8_debug(log, "Async scan callback returned: %s",
 					continue_scan ? "true" : "false");
 	}
-	if (!continue_scan) {
-		delete cmd;
-	}
 	return continue_scan;
 }
 
-static void free_scan_udata(struct scan_udata *su)
-{
-	as_scan_destroy(su->scan);
-	delete su->cmd;
-	free(su);
-}
-
-static void free_query_udata(struct query_udata *qu)
-{
-	free_query(qu->query, NULL, qu->exp);
-	delete qu->cmd;
-	free(qu);
-}
-
-// See async_scan_listener() for when the C client stops invoking the listener.
 bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop)
 {
 	Nan::HandleScope scope;
 	struct scan_udata* su = (scan_udata*) udata;
-	AsyncCommand *cmd = su->cmd;
+	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(su->cmd);
+	
 	const LogInfo *log = cmd->log;
 
+	Local<Value> result;
 	if (err) {
-		cmd->ErrorCallback(err);
-		free_scan_udata(su);
-		return false;
+		result = cmd->ErrorCallback(err);
 	}
-	if (su->count >= su->max_records) {
+	else if (su->count >= su->max_records) {
+		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
 		uint32_t bytes_size;
 		uint8_t* bytes = NULL;
-		as_scan_to_bytes(su->scan, &bytes, &bytes_size);
+
+		as_scan_to_bytes(scan, &bytes, &bytes_size);
 		Local<Value> argv[] = {Nan::Null(),
 							   Nan::Null(),
 							   query_bytes_to_jsobject(bytes, bytes_size, log),
 							   Nan::Null()};
 
 		cmd->Callback(4, argv);
+		as_scan_destroy(scan);
 		free(bytes);
-		free_scan_udata(su);
+		delete cmd;
+		free(su);
 		return false;
 	}
-	if (!record) {
+	else if (record) {
+		Local<Value> argv[] = {Nan::Null(),
+							   recordbins_to_jsobject(record, log),
+							   recordmeta_to_jsobject(record, log),
+							   key_to_jsobject(&record->key, log)};
+		result = cmd->Callback(4, argv);
+	}
+	else {
+		as_scan* scan = reinterpret_cast<as_scan *>(su->scan);
 		cmd->Callback(0, {});
-		free_scan_udata(su);
+		as_scan_destroy(scan);
+		delete cmd;
+		free(su);
 		return false;
 	}
-
-	Local<Value> argv[] = {Nan::Null(),
-						   recordbins_to_jsobject(record, log),
-						   recordmeta_to_jsobject(record, log),
-						   key_to_jsobject(&record->key, log)};
-	Local<Value> result = cmd->Callback(4, argv);
 
 	su->count += 1;
 
@@ -263,51 +246,57 @@ bool async_scan_pages_listener(as_error *err, as_record *record, void *udata,
 		as_v8_debug(log, "Async scan callback returned: %s",
 					continue_scan ? "true" : "false");
 	}
-	if (!continue_scan) {
-		free_scan_udata(su);
-	}
 	return continue_scan;
 }
 
-// See async_scan_listener() for when the C client stops invoking the listener.
 bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 						 as_event_loop *event_loop)
 {
 	Nan::HandleScope scope;
 	struct query_udata* qu = (query_udata*) udata;
-	AsyncCommand *cmd = qu->cmd;
+	AsyncCommand *cmd = reinterpret_cast<AsyncCommand *>(qu->cmd);
+	
+    
 	const LogInfo *log = cmd->log;
 
+	Local<Value> result;
 	if (err) {
-		cmd->ErrorCallback(err);
-		free_query_udata(qu);
-		return false;
+		result = cmd->ErrorCallback(err);
 	}
-	if (qu->count >= qu->max_records) {
+	else if (qu->count >= qu->max_records) {
+		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		as_exp* exp = reinterpret_cast<as_exp *>(qu->exp);
 		uint32_t bytes_size;
 		uint8_t* bytes = NULL;
-		as_query_to_bytes(qu->query, &bytes, &bytes_size);
+		as_query_to_bytes(query, &bytes, &bytes_size);
 		Local<Value> argv[] = {Nan::Null(),
 							   Nan::Null(),
 							   query_bytes_to_jsobject(bytes, bytes_size, log),
 							   Nan::Null()};
 
 		cmd->Callback(4, argv);
+		free_query(query, NULL, exp);
 		free(bytes);
-		free_query_udata(qu);
+		delete cmd;
+		free(qu);
 		return false;
 	}
-	if (!record) {
+	else if (record) {
+		Local<Value> argv[] = {Nan::Null(),
+							   recordbins_to_jsobject(record, log),
+							   recordmeta_to_jsobject(record, log),
+							   key_to_jsobject(&record->key, log)};
+		result = cmd->Callback(4, argv);
+	}
+	else {
+		as_query* query = reinterpret_cast<as_query *>(qu->query);
+		as_exp* exp = reinterpret_cast<as_exp *>(qu->exp);
 		cmd->Callback(0, {});
-		free_query_udata(qu);
+		free_query(query, NULL, exp);
+		delete cmd;
+		free(qu);
 		return false;
 	}
-
-	Local<Value> argv[] = {Nan::Null(),
-						   recordbins_to_jsobject(record, log),
-						   recordmeta_to_jsobject(record, log),
-						   key_to_jsobject(&record->key, log)};
-	Local<Value> result = cmd->Callback(4, argv);
 
 	qu->count += 1;
 
@@ -316,9 +305,6 @@ bool async_query_pages_listener(as_error *err, as_record *record, void *udata,
 		continue_scan = Nan::To<bool>(result).FromJust();
 		as_v8_debug(log, "Async scan callback returned: %s",
 					continue_scan ? "true" : "false");
-	}
-	if (!continue_scan) {
-		free_query_udata(qu);
 	}
 	return continue_scan;
 }
