@@ -11,7 +11,7 @@ npm run examples -- Get PutGet MrtCommit
 
 Settings: [`.settings.json`](.settings.json) and `AEROSPIKE_HOST`, `AEROSPIKE_PORT`, etc. See [`harness/README.md`](harness/README.md).
 
-**30 registered examples:** Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, QueryTopK, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics, MrtCommit, MrtAbort, GeospatialMonteCarlo, PathExpressions.
+**31 registered examples:** Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, QueryTopK, VectorSearch, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics, MrtCommit, MrtAbort, GeospatialMonteCarlo, PathExpressions.
 
 Default cluster: `127.0.0.1:3000`, namespace `test`, set `demo`.
 

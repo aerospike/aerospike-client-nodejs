@@ -30,6 +30,7 @@ extern "C" {
 
 #include "transaction.h"
 #include "hyperloglog.h"
+#include "vector.h"
 
 #define export(__name, __value)                                                \
 	Nan::Set(target, Nan::New(__name).ToLocalChecked(), __value)
@@ -160,6 +161,9 @@ NAN_MODULE_INIT(Aerospike)
 	NAN_EXPORT(target, release_as_event_loop);
 	NAN_EXPORT(target, ref_as_event_loop);
 	NAN_EXPORT(target, wrapHLL);
+	NAN_EXPORT(target, setVectorClass);
+	NAN_EXPORT(target, vectorEncode);
+	NAN_EXPORT(target, vectorDecode);
 	NAN_EXPORT(target, unref_as_event_loop);
 	NAN_EXPORT(target, setDefaultLogging);
 
@@ -196,6 +200,8 @@ NAN_MODULE_INIT(Aerospike)
 	export("orderByType", orderByType());
 	export("order", order());
 	export("orderByFlags", orderByFlags());
+	export("vectorElementType", vectorElementType());
+	export("vectorDistanceMetric", vectorDistanceMetric());
 	export("privilegeCode", privilegeCode());
 	export("pathModifyFlags", pathModifyFlags());
 	export("pathSelectFlags", pathSelectFlags());

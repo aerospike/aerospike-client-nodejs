@@ -39,6 +39,7 @@ const CANONICAL_EXAMPLE_NAMES = [
   'QueryInteger',
   'QueryEqual',
   'QueryTopK',
+  'VectorSearch',
   'SecondaryIndex',
   'UserDefinedFunction',
   'UdfModule',
