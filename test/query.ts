@@ -833,6 +833,14 @@ describe('Queries', function () {
           expect(job).to.be.instanceof(Job)
         })
     })
+
+    it('throws a TypeError for invalid operations without calling the callback', function () {
+      const query: Query = client.query(helper.namespace, testSet)
+      query.ops = [{ op: 123456, bin: 'x' } as any]
+      const callback = () => { throw new Error('callback must not be called') }
+      expect(() => query.background('udf', 'noop', callback)).to.throw(TypeError, 'Error in parsing the operations')
+    })
+
     describe('index with cdt context', function () {
       helper.skipUnlessVersion('>= 6.1.0', this)
       it('returns a Promise that resolves to a Job with a filter containing a CDT context', function () {

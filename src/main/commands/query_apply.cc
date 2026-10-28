@@ -80,7 +80,10 @@ static void *prepare(const Nan::FunctionCallbackInfo<v8::Value> &info)
 
 	if (setup_query(&cmd->query, info[0], info[1], info[2], &cmd->context,
 					&cmd->with_context, &cmd->exp, &cmd->err, log) != AEROSPIKE_OK) {
-		return cmd;
+		// See async_invoke() for why setup errors are thrown.
+		Nan::ThrowTypeError(cmd->err.message);
+		delete cmd;
+		return NULL;
 	}
 
 	if (info[3]->IsObject()) {

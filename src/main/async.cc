@@ -47,9 +47,14 @@ async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,
 {
 	Nan::HandleScope scope;
 
-	// Create an async work request and prepare the command
+	void *cmd = prepare(args);
+	if (!cmd) {
+		return Nan::Undefined();
+	}
+
+	// Create an async work request for the prepared command
 	uv_work_t *req = new uv_work_t;
-	req->data = prepare(args);
+	req->data = cmd;
 
 	// Pass the work request to libuv to be run when a
 	// worker-thread is available to process it.

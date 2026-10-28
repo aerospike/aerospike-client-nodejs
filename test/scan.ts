@@ -399,6 +399,13 @@ context('Scans', function () {
           expect(job).to.be.instanceof(Job)
         })
     })
+
+    it('throws a TypeError for invalid operations without calling the callback', function () {
+      const backgroundScan: ScanType = client.scan(helper.namespace, testSet)
+      backgroundScan.ops = [{ op: 123456, bin: 'x' } as any]
+      const callback = () => { throw new Error('callback must not be called') }
+      expect(() => backgroundScan.background('udf', 'noop', callback)).to.throw(TypeError, 'Error in parsing the operations')
+    })
   })
 
   describe('scan.operate()', function () {

@@ -157,15 +157,18 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		new QueryForeachCommand(client, info[4].As<Function>());
 	LogInfo *log = client->log;
 
-	// respond() always closes the handle, so it must be initialized before any
-	// early return.
-	uv_async_init(uv_default_loop(), &cmd->async_handle, async_callback);
-	cmd->async_handle.data = (void *)cmd;
-
 	if (setup_query(&cmd->query, info[0], info[1], info[2], &cmd->context,
 					&cmd->with_context, &cmd->exp, &cmd->err, log) != AEROSPIKE_OK) {
-		return cmd;
+		// See async_invoke() for why setup errors are thrown.
+		Nan::ThrowTypeError(cmd->err.message);
+		delete cmd;
+		return NULL;
 	}
+
+	// respond() always closes the handle, so it must be initialized before any
+	// later return.
+	uv_async_init(uv_default_loop(), &cmd->async_handle, async_callback);
+	cmd->async_handle.data = (void *)cmd;
 
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_query *)cf_malloc(sizeof(as_policy_query));
