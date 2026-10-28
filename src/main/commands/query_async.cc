@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,11 @@ NAN_METHOD(AerospikeClient::QueryAsync)
 
 	as_exp *exp = NULL;
 
-	setup_query(&query, info[0], info[1], info[2], &context, &with_context, &exp, log);
+	if (setup_query(&query, info[0], info[1], info[2], &context, &with_context,
+					&exp, &cmd->err, log) != AEROSPIKE_OK) {
+		cmd->ErrorCallback();
+		goto Cleanup;
+	}
 
 	if (info[3]->IsObject()) {
 		if (querypolicy_from_jsobject(&policy, info[3].As<Object>(), log) !=

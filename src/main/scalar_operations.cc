@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,14 @@ extern "C" {
 
 using namespace v8;
 
+// as_operations_add_{append,prepend}_strp() take no length, so the length is
+// set afterwards to keep embedded NUL characters.
+static void set_last_string_len(as_operations *ops, size_t len)
+{
+	as_binop *binop = &ops->binops.entries[ops->binops.size - 1];
+	((as_string *)binop->bin.valuep)->len = len;
+}
+
 bool add_write_op(as_operations *ops, const char *bin, Local<Object> obj,
 				  LogInfo *log)
 {
@@ -49,9 +57,14 @@ bool add_write_op(as_operations *ops, const char *bin, Local<Object> obj,
 			ops, bin, (as_bin_value *)(val ? &as_true : &as_false));
 	}
 	else if (v8val->IsString()) {
-		char *val = strdup(*Nan::Utf8String(v8val));
-		as_v8_debug(log, "value=%s", val);
-		return as_operations_add_write_strp(ops, bin, val, true);
+		as_string *val = asstring_from_jsvalue(v8val);
+		char *str = as_string_get(val);
+		as_v8_debug(log, "value=%s", str);
+		bool success = as_operations_add_write(ops, bin, (as_bin_value *)val);
+		if (!success) {
+			as_string_destroy(val);
+		}
+		return success;
 	}
 	else if (node::Buffer::HasInstance(v8val)) {
 		int len = 0;
@@ -137,9 +150,15 @@ bool add_prepend_op(as_operations *ops, const char *bin, Local<Object> obj,
 	Local<Value> v8val =
 		Nan::Get(obj, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 	if (v8val->IsString()) {
-		char *binVal = strdup(*Nan::Utf8String(v8val));
+		size_t len = 0;
+		char *binVal = string_from_jsvalue(v8val, &len);
 		as_v8_debug(log, "value=%s", binVal);
-		return as_operations_add_prepend_strp(ops, bin, binVal, true);
+		if (!as_operations_add_prepend_strp(ops, bin, binVal, true)) {
+			cf_free(binVal);
+			return false;
+		}
+		set_last_string_len(ops, len);
+		return true;
 	}
 	else if (v8val->IsObject()) {
 		Local<Object> binObj = v8val.As<Object>();
@@ -164,9 +183,15 @@ bool add_append_op(as_operations *ops, const char *bin, Local<Object> obj,
 	Local<Value> v8val =
 		Nan::Get(obj, Nan::New("value").ToLocalChecked()).ToLocalChecked();
 	if (v8val->IsString()) {
-		char *binVal = strdup(*Nan::Utf8String(v8val));
+		size_t len = 0;
+		char *binVal = string_from_jsvalue(v8val, &len);
 		as_v8_debug(log, "value=%s", binVal);
-		return as_operations_add_append_strp(ops, bin, binVal, true);
+		if (!as_operations_add_append_strp(ops, bin, binVal, true)) {
+			cf_free(binVal);
+			return false;
+		}
+		set_last_string_len(ops, len);
+		return true;
 	}
 	else if (v8val->IsObject()) {
 		Local<Object> binObj = v8val.As<Object>();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2023 Aerospike, Inc.
+ * Copyright 2013-2026 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,11 +33,11 @@ struct query_udata {
     as_exp* exp;
 };
 
-void setup_query(as_query *query, v8::Local<v8::Value> ns,
+as_status setup_query(as_query *query, v8::Local<v8::Value> ns,
 				 v8::Local<v8::Value> set, v8::Local<v8::Value> maybe_options,
-				 as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log);
-void setup_options(as_query *query, v8::Local<v8::Object> options, as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log);
-void setup_query_pages(as_query ** query, v8::Local<v8::Value> ns, v8::Local<v8::Value> set,
+				 as_cdt_ctx* context, bool* with_context, as_exp **exp, as_error *err, LogInfo *log);
+as_status setup_options(as_query *query, v8::Local<v8::Object> options, as_cdt_ctx* context, bool* with_context, as_exp **exp, as_error *err, LogInfo *log);
+as_status setup_query_pages(as_query ** query, v8::Local<v8::Value> ns, v8::Local<v8::Value> set,
                        v8::Local<v8::Value>maybe_options, uint8_t* bytes, uint32_t bytes_size,
-                       as_cdt_ctx* context, bool* with_context, as_exp **exp, LogInfo *log);
+                       as_cdt_ctx* context, bool* with_context, as_exp **exp, as_error *err, LogInfo *log);
 void free_query(as_query *query, as_policy_query *policy, as_exp *exp);

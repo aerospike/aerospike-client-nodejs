@@ -1,5 +1,5 @@
 // *****************************************************************************
-// Copyright 2013-2024 Aerospike, Inc.
+// Copyright 2013-2026 Aerospike, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License")
 // you may not use this file except in compliance with the License.
@@ -233,6 +233,28 @@ context('Scans', function () {
       })
     })
 
+    it('resumes after the given digest', async function () {
+      const { digest } = (await client.get(keys[0])).key
+      const scan: ScanType = client.scan(helper.namespace, testSet)
+      scan.partitions(0, 1, digest)
+      const records: AerospikeRecord[] = await scan.results()
+      const digests = records.map((record: AerospikeRecord) => record.key.digest)
+      expect(digests).to.not.deep.include(digest)
+    })
+
+    it('rejects invalid operations instead of ignoring them', async function () {
+      const scan: ScanType = client.scan(helper.namespace, testSet)
+      scan.ops = [{ op: 123456, bin: 'x' } as any]
+      let error: any = null
+      try {
+        await scan.results()
+      } catch (err) {
+        error = err
+      }
+      expect(error).to.be.instanceof(Aerospike.AerospikeError)
+      expect(error.message).to.eq('Error in parsing the operations')
+    })
+
     it('returns the key if it is stored on the server', function (done) {
       this.timeout(10000) // 10 second timeout
       // requires { key: Aerospike.policy.key.SEND } when creating the record
@@ -376,6 +398,13 @@ context('Scans', function () {
         .then((job: any) => {
           expect(job).to.be.instanceof(Job)
         })
+    })
+
+    it('throws a TypeError for invalid operations without calling the callback', function () {
+      const backgroundScan: ScanType = client.scan(helper.namespace, testSet)
+      backgroundScan.ops = [{ op: 123456, bin: 'x' } as any]
+      const callback = () => { throw new Error('callback must not be called') }
+      expect(() => backgroundScan.background('udf', 'noop', callback)).to.throw(TypeError, 'Error in parsing the operations')
     })
   })
 
