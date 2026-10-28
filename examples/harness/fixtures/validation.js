@@ -238,6 +238,69 @@ async function cleanupQueryEqual (client, args) {
   await support.deleteKeys(client, args, ['queryeq1', 'queryeq2'])
 }
 
+const TOPK_PLAYERS = [
+  ['topk1', 'carol', 90],
+  ['topk2', 'alice', 75],
+  ['topk3', 'bob', 90],
+  ['topk4', 'dave', 60],
+  ['topk5', 'erin', 75],
+  ['topk6', 'frank', 95],
+  ['topk7', 'grace', 88],
+  ['topk8', 'heidi', 72],
+  ['topk9', 'ivan', 85],
+  ['topk10', 'judy', 95],
+  ['topk11', 'ken', 88],
+  ['topk12', 'liam', 55],
+  ['topk13', 'mia', 81],
+  ['topk14', 'nora', 72],
+  ['topk15', 'oscar', 40],
+  ['topk16', 'paul', 85],
+  ['topk17', 'quinn', 67],
+  ['topk18', 'rita', 79],
+  ['topk19', 'sam', 88],
+  ['topk20', 'tina', 50],
+  ['topk21', 'uma', 73],
+  ['topk22', 'victor', 85],
+  ['topk23', 'wendy', 64],
+  ['topk24', 'xavier', 58],
+  ['topk25', 'yara', 81],
+  ['topk26', 'zoe', 90],
+  ['topk27', 'adam', 70],
+  ['topk28', 'beth', 77],
+  ['topk29', 'chris', 62],
+  ['topk30', 'dana', 86],
+  ['topk31', 'eli', 45],
+  ['topk32', 'fay', 79],
+  ['topk33', 'gus', 53],
+  ['topk34', 'hana', 68],
+  ['topk35', 'igor', 74]
+]
+
+async function setupQueryTopK (client, args) {
+  for (const [userKey, topkname, topkscore] of TOPK_PLAYERS) {
+    await support.putBins(client, args, userKey, { topkname, topkscore })
+  }
+}
+
+// Re-runs the example's query: frank leads with 95; bob, carol and zoe tie on 90
+// and are ordered by name, so zoe misses the top 3.
+async function queryTopKValidate (client, args) {
+  const query = client.query(args.namespace, args.set)
+  query.orderBy('topkscore', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
+  query.thenOrderBy('topkname', Aerospike.orderByType.STRING, Aerospike.order.ASC)
+  query.topK(3)
+  const policy = new Aerospike.QueryPolicy({ filterExpression: Aerospike.exp.binExists('topkscore') })
+  const ranked = (await query.results(policy)).map(record => `${record.bins.topkname} ${record.bins.topkscore}`)
+  const expected = ['frank 95', 'bob 90', 'carol 90']
+  if (JSON.stringify(ranked) !== JSON.stringify(expected)) {
+    throw new Error(`Expected top 3 ${JSON.stringify(expected)}, got ${JSON.stringify(ranked)}`)
+  }
+}
+
+async function cleanupQueryTopK (client, args) {
+  await support.deleteKeys(client, args, TOPK_PLAYERS.map(([userKey]) => userKey))
+}
+
 const SINDEX_NAME = 'sindexdemo'
 
 async function setupSecondaryIndex (client, args) {
@@ -402,6 +465,9 @@ module.exports = {
   setupQueryEqual,
   queryEqualValidate,
   cleanupQueryEqual,
+  setupQueryTopK,
+  queryTopKValidate,
+  cleanupQueryTopK,
   setupSecondaryIndex,
   secondaryIndexValidate,
   cleanupSecondaryIndex,
