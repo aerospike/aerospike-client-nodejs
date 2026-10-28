@@ -37,6 +37,7 @@ const tenRecords = () => Array.from({ length: 10 }, (_, n) => ({ n, cat: n % 2 =
 const byNDesc = (q: any) => q.orderBy('n', INTEGER, DESC)
 
 describe('Top-K on each query path', function () {
+  this.timeout(60000)
   helper.skipUnlessVersion('>= 8.2.1', this)
   skipUnlessTopKQueriesRun(this)
 

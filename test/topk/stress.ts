@@ -44,12 +44,12 @@ function runQuery (set: string, k: number, policy: object | null = null) {
 }
 
 describe('Top-K under stress', function () {
+  this.timeout(600000)
   helper.skipUnlessVersion('>= 8.2.1', this)
   before(function () {
     if (process.env.AEROSPIKE_STRESS !== '1') this.skip()
   })
   skipUnlessTopKQueriesRun(this)
-  this.timeout(600000)
 
   let set: string
   let expected: string[]

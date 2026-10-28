@@ -48,10 +48,10 @@ const hexDigests = (records: ModelRecord[]) => records.map(record => record.dige
 const randomInt = (random: () => number, max: number) => Math.floor(random() * max)
 
 describe('Top-K combinations against the reference order', function () {
+  this.timeout(300000)
   helper.skipUnlessVersion('>= 8.2.1', this)
   skipUnlessTopKQueriesRun(this)
   afterEach(removeLoadedSets)
-  this.timeout(300000)
 
   it('every first and second key setting at every k, over mixed data', async function () {
     // 60 records whose a and b bins hold any type, or nothing.

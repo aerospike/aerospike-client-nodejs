@@ -51,11 +51,11 @@ function scoredRecords (count: number, scores: number, seed: number) {
 }
 
 describe('Top-K across several nodes', function () {
+  this.timeout(600000)
   helper.skipUnlessVersion('>= 8.2.1', this)
   skipUnlessMultiNode(this, 2)
   skipUnlessTopKQueriesRun(this)
   afterEach(removeLoadedSets)
-  this.timeout(600000)
 
   it('merges every node\'s best k into the true global top k', async function () {
     const { set, model } = await loadModel(scoredRecords(3000, 1000, 1))
