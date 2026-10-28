@@ -891,12 +891,12 @@ export class Vector {
     public constructor(bytes: Buffer);
     /**
      * Creates a vector of half-precision floats from their raw IEEE 754 bit
-     * patterns, as every Aerospike client does.
+     * patterns, as every Aerospike client does. The server rejects NaN and
+     * infinite elements.
      *
-     * @param bits - At most 131,072 bit patterns, each an integer from 0 to
-     * 65,535 that encodes a finite number.
+     * @param bits - From 1 to 131,072 bit patterns, each an integer from 0 to 65,535.
      * @throws {TypeError} If `bits` is not an array or a typed array of numbers.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `bits` is empty, too long, or holds an invalid pattern.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `bits` is empty, too long, or holds a value that isn't an integer from 0 to 65,535.
      */
     public static ofFloat16(bits: Uint16Array | ArrayLike<number>): Vector;
     /**
@@ -909,18 +909,20 @@ export class Vector {
     public static ofInt32(elements: Int32Array | ArrayLike<number>): Vector;
     /**
      * Creates a vector of 32-bit floats. Values are rounded to 32-bit precision.
+     * The server rejects NaN and infinite elements.
      *
-     * @param elements - From 1 to 65,536 finite numbers.
+     * @param elements - From 1 to 65,536 numbers.
      * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty, too long, or holds a value that isn't finite at 32-bit precision.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty or too long.
      */
     public static ofFloat32(elements: Float32Array | ArrayLike<number>): Vector;
     /**
-     * Creates a vector of 64-bit floats.
+     * Creates a vector of 64-bit floats. The server rejects NaN and infinite
+     * elements.
      *
-     * @param elements - From 1 to 32,768 finite numbers.
+     * @param elements - From 1 to 32,768 numbers.
      * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty, too long, or holds a value that isn't finite.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty or too long.
      */
     public static ofFloat64(elements: Float64Array | ArrayLike<number>): Vector;
     /**
