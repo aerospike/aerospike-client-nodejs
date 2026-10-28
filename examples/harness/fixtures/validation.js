@@ -301,6 +301,26 @@ async function cleanupQueryTopK (client, args) {
   await support.deleteKeys(client, args, TOPK_PLAYERS.map(([userKey]) => userKey))
 }
 
+// The example's embeddings round-trip as vectors, and its query ranks vector1
+// (closest in direction to the query) ahead of vector2; vector3 is orthogonal.
+async function vectorSearchValidate (client, args) {
+  const record = await client.get(support.key(args, 'vector1'))
+  if (!(record.bins.vecembedding instanceof Aerospike.Vector)) {
+    throw new Error(`Expected vecembedding to read back as a Vector, got ${typeof record.bins.vecembedding}`)
+  }
+  const query = client.query(args.namespace, args.set)
+  const similarity = Aerospike.exp.vectorDistance(Aerospike.vectorDistanceMetric.COSINE_SIMILARITY,
+    Aerospike.Vector.ofFloat32([1, 0.1, 0]), Aerospike.exp.binVector('vecembedding'))
+  query.ops = [Aerospike.operations.read('vecname'), Aerospike.exp.operations.read('vecscore', similarity, 0)]
+  query.orderBy('vecscore', Aerospike.orderByType.DOUBLE, Aerospike.order.DESC)
+  query.topK(2)
+  const ranked = (await query.results({ filterExpression: Aerospike.exp.binExists('vecembedding') }))
+    .map(record => record.bins.vecname)
+  if (JSON.stringify(ranked) !== JSON.stringify(['vector1', 'vector2'])) {
+    throw new Error(`Expected ["vector1","vector2"], got ${JSON.stringify(ranked)}`)
+  }
+}
+
 const SINDEX_NAME = 'sindexdemo'
 
 async function setupSecondaryIndex (client, args) {
@@ -468,6 +488,7 @@ module.exports = {
   setupQueryTopK,
   queryTopKValidate,
   cleanupQueryTopK,
+  vectorSearchValidate,
   setupSecondaryIndex,
   secondaryIndexValidate,
   cleanupSecondaryIndex,

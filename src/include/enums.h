@@ -49,6 +49,8 @@ v8::Local<v8::Object> queryDuration();
 v8::Local<v8::Object> orderByType();
 v8::Local<v8::Object> order();
 v8::Local<v8::Object> orderByFlags();
+v8::Local<v8::Object> vectorElementType();
+v8::Local<v8::Object> vectorDistanceMetric();
 v8::Local<v8::Object> pathModifyFlags();
 v8::Local<v8::Object> pathSelectFlags();
 v8::Local<v8::Object> privilegeCode();

@@ -19,6 +19,7 @@
 #include "conversions.h"
 #include "log.h"
 #include "operations.h"
+#include "vector.h"
 
 extern "C" {
 #include <aerospike/as_nil.h>
@@ -71,6 +72,14 @@ bool add_write_op(as_operations *ops, const char *bin, Local<Object> obj,
 		char *jsonstr = geojson_as_string(v8val);
 		as_v8_debug(log, "value=%s", jsonstr);
 		return as_operations_add_write_geojson_strp(ops, bin, jsonstr, true);
+	}
+	else if (is_vector_value(v8val)) {
+		as_bytes *bytes = NULL;
+		if (vector_bytes_from_jsvalue(&bytes, v8val, log) != AS_NODE_PARAM_OK) {
+			return false;
+		}
+		as_v8_debug(log, "value=<vector>, len=%u", as_bytes_size(bytes));
+		return as_operations_add_write(ops, bin, (as_bin_value *)bytes);
 	}
 	else if (v8val->IsArray()) {
 		as_list *list = NULL;

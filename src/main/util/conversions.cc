@@ -59,6 +59,7 @@ extern "C" {
 #include "string.h"
 #include "transaction.h"
 #include "hyperloglog.h"
+#include "vector.h"
 
 using namespace node;
 using namespace v8;
@@ -1061,6 +1062,9 @@ Local<Value> val_to_jsvalue(as_val *val, const LogInfo *log)
 			// this constructor actually copies data into the new Buffer
 			Local<Object> buff =
 				Nan::CopyBuffer((char *)data, size).ToLocalChecked();
+			if (as_bytes_get_type(bval) == AS_BYTES_VECTOR) {
+				return scope.Escape(vector_to_jsvalue(buff));
+			}
 			if(g_wrap_hll){
 				as_bytes_type btype = as_bytes_get_type(bval);
 				if(btype == AS_BYTES_HLL){
@@ -1426,6 +1430,12 @@ int asval_from_jsvalue(as_val **value, Local<Value> v8value, const LogInfo *log)
 		*value = (as_val *)bytes;
 		bytes->type = AS_BYTES_HLL;
 	}
+	else if (is_vector_value(v8value)) {
+		if (vector_bytes_from_jsvalue((as_bytes **)value, v8value, log) !=
+			AS_NODE_PARAM_OK) {
+			return AS_NODE_PARAM_ERR;
+		}
+	}
 	else if (node::Buffer::HasInstance(v8value)) {
 		int size = 0;
 		uint8_t *data = NULL;
@@ -1679,6 +1689,19 @@ int recordbins_from_jsobject(as_record *rec, Local<Object> obj,
 			bool success = as_record_set_raw_typep(rec, *n, data, size, AS_BYTES_HLL ,true);
 			if (!success) {
 				cf_free(data);
+				return throw_bin_name_error(*n, log);
+			}
+			continue;
+		}
+		if (is_vector_value(value)) {
+			as_bytes *bytes = NULL;
+			if (vector_bytes_from_jsvalue(&bytes, value, log) !=
+				AS_NODE_PARAM_OK) {
+				return AS_NODE_PARAM_ERR;
+			}
+			bool success = as_record_set_bytes(rec, *n, bytes);
+			if (!success) {
+				as_bytes_destroy(bytes);
 				return throw_bin_name_error(*n, log);
 			}
 			continue;
