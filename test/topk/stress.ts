@@ -18,8 +18,8 @@
 
 /* global describe, it, before, after */
 
-// Local only: run with AEROSPIKE_STRESS=1. Pushes the native Top-K path (the C
-// client's async collector and Node's query command) harder than one query at a time.
+// Local only: run with AEROSPIKE_STRESS=1. Pushes the native Top-K path harder
+// than one query at a time.
 
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';

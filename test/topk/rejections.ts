@@ -38,13 +38,13 @@ function topKQuery (): Q {
   return query
 }
 
-// Either setting alone makes a query a Top-K query, so each must reach the C client on its own.
+// Either setting alone makes a query a Top-K query, so each must be checked on its own.
 const EACH_SETTING: Array<[string, () => Q]> = [
   ['an order key alone', () => { const query = newQuery(); query.orderBy('score', INTEGER, DESC); return query }],
   ['k alone', () => { const query = newQuery(); query.topK(10); return query }]
 ]
 
-// Rules the C client checks: the error is a parameter error with C's message.
+// Top-K rules checked before sending: the error is a parameter error with the rule's message.
 function expectRejected (error: any, message: string, label = '') {
   expect(error, `${label} expected an error`).to.not.be.null
   expect(error.code, label).to.equal(status.ERR_PARAM)
@@ -53,7 +53,7 @@ function expectRejected (error: any, message: string, label = '') {
 
 type OrderKeyCase = [name: string, bin: string, type: number, direction: number, flags: number, message: string]
 
-// Runs a Top-K query with each order key and checks C's message.
+// Runs a Top-K query with each order key and checks the error message.
 async function expectOrderKeysRejected (cases: OrderKeyCase[]) {
   for (const [name, bin, type, direction, flags, message] of cases) {
     const query = newQuery()
@@ -63,7 +63,7 @@ async function expectOrderKeysRejected (cases: OrderKeyCase[]) {
   }
 }
 
-describe('Top-K rejections by the C client', function () {
+describe('Top-K rejections', function () {
   helper.skipUnlessVersion('>= 8.2.1', this)
 
   describe('on queries that are not foreground queries', function () {
@@ -111,7 +111,7 @@ describe('Top-K rejections by the C client', function () {
       expectRejected(await errorFrom(() => query.results()), 'topK requires orderBy to be set')
     })
 
-    it('rejects an order key the C client does not accept', async function () {
+    it('rejects an invalid order key', async function () {
       const flagsMessage = 'orderBy flags are only valid with type STRING'
       const binMessage = 'Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL'
       await expectOrderKeysRejected([
@@ -127,9 +127,9 @@ describe('Top-K rejections by the C client', function () {
       ])
     })
 
-    // On hold: the C client now rejects STRING and BYTES order keys before any other
-    // order-key rule (C PR #283, d4791738), and their support is still changing.
-    it.skip('rejects flags the C client does not accept on STRING and BYTES keys', async function () {
+    // On hold: STRING and BYTES order keys are rejected before any other order-key
+    // rule for now, and their support is still changing.
+    it.skip('rejects invalid flags on STRING and BYTES keys', async function () {
       const unknownFlagMessage = 'orderBy has unknown flag bits set'
       await expectOrderKeysRejected([
         ['unknown flag 2', 'score', STRING, DESC, 2, unknownFlagMessage],
