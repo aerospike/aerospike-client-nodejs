@@ -51,6 +51,18 @@ function expectRejected (error: any, message: string, label = '') {
   expect(error.message, label).to.equal(message)
 }
 
+type OrderKeyCase = [name: string, bin: string, type: number, direction: number, flags: number, message: string]
+
+// Runs a Top-K query with each order key and checks C's message.
+async function expectOrderKeysRejected (cases: OrderKeyCase[]) {
+  for (const [name, bin, type, direction, flags, message] of cases) {
+    const query = newQuery()
+    query.orderBy(bin, type, direction, flags)
+    query.topK(10)
+    expectRejected(await errorFrom(() => query.results()), message, `${name}:`)
+  }
+}
+
 describe('Top-K rejections by the C client', function () {
   helper.skipUnlessVersion('>= 8.2.1', this)
 
@@ -87,10 +99,7 @@ describe('Top-K rejections by the C client', function () {
       }
     })
 
-    // R28 says the client rejects k = 0 before sending, but the C client stores k = 0 as
-    // "no k" and sends an order key without k, which the server rejects (code 4).
-    // Pending the decision on who checks it (raised with Julian on C PR #283).
-    it.skip('rejects k = 0 before sending (R28)', async function () {
+    it('rejects k = 0 before sending (R28)', async function () {
       const query = topKQuery()
       query.topK(0)
       expectRejected(await errorFrom(() => query.results()), 'topK must be in [1, 1000]; got 0')
@@ -99,35 +108,38 @@ describe('Top-K rejections by the C client', function () {
     it('rejects topK without orderBy', async function () {
       const query = newQuery()
       query.topK(10)
-      expectRejected(await errorFrom(() => query.results()), 'top_k requires order_by to be set')
+      expectRejected(await errorFrom(() => query.results()), 'topK requires orderBy to be set')
     })
 
     it('rejects an order key the C client does not accept', async function () {
       const flagsMessage = 'orderBy flags are only valid with type STRING'
-      const unknownFlagMessage = 'order_by has unknown flag bits set'
       const binMessage = 'Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL'
-      const cases: Array<[string, string, number, number, number, string]> = [
+      await expectOrderKeysRejected([
         ['type 0', 'score', 0, DESC, 0,
-          'orderBy requires a type declaration (INTEGER, DOUBLE, STRING, or BYTES); Aerospike has no schema'],
-        ['type 5', 'score', 5, DESC, 0, 'orderBy type must be one of INTEGER, DOUBLE, STRING, BYTES; got 5'],
+          'orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema'],
+        ['type 5', 'score', 5, DESC, 0, 'orderBy type must be INTEGER or DOUBLE; got 5'],
         ['direction 2', 'score', INTEGER, 2, 0, 'orderBy direction must be ASC or DESC'],
         ['empty bin name', '', INTEGER, DESC, 0, binMessage],
-        ['unknown flag 2', 'score', STRING, DESC, 2, unknownFlagMessage],
-        ['unknown flag 4', 'score', STRING, DESC, 4, unknownFlagMessage],
+        ['bin name of 16 bytes', 'a'.repeat(16), INTEGER, DESC, 0, binMessage],
         ['CASE_INSENSITIVE on INTEGER', 'score', INTEGER, DESC, CASE_INSENSITIVE, flagsMessage],
         ['CASE_INSENSITIVE on DOUBLE', 'score', DOUBLE, DESC, CASE_INSENSITIVE, flagsMessage],
-        ['CASE_INSENSITIVE on BYTES', 'score', BYTES, DESC, CASE_INSENSITIVE, flagsMessage]
-      ]
-      for (const [name, bin, type, direction, flags, message] of cases) {
-        const query = newQuery()
-        query.orderBy(bin, type, direction, flags)
-        query.topK(10)
-        expectRejected(await errorFrom(() => query.results()), message, `${name}:`)
-      }
+        ['unknown flag 2 on INTEGER', 'score', INTEGER, DESC, 2, flagsMessage]
+      ])
+    })
+
+    // On hold: the C client now rejects STRING and BYTES order keys before any other
+    // order-key rule (C PR #283, d4791738), and their support is still changing.
+    it.skip('rejects flags the C client does not accept on STRING and BYTES keys', async function () {
+      const unknownFlagMessage = 'orderBy has unknown flag bits set'
+      await expectOrderKeysRejected([
+        ['unknown flag 2', 'score', STRING, DESC, 2, unknownFlagMessage],
+        ['unknown flag 4', 'score', STRING, DESC, 4, unknownFlagMessage],
+        ['CASE_INSENSITIVE on BYTES', 'score', BYTES, DESC, CASE_INSENSITIVE, 'orderBy flags are only valid with type STRING']
+      ])
     })
 
     it('rejects an order key the query does not return exactly once', async function () {
-      const notProjected = "orderBy bin 'score' is not in projection; add it to setOperations or remove projection"
+      const notProjected = "orderBy bin 'score' is not in projection; add it to the projection or remove the projection"
 
       const selectsOther = newQuery()
       selectsOther.select('other')
@@ -149,7 +161,7 @@ describe('Top-K rejections by the C client', function () {
       const noBins = topKQuery()
       noBins.nobins = true
       expectRejected(await errorFrom(() => noBins.results()),
-        'order_by/top_k cannot be combined with a metadata-only (no-bins) query', 'nobins:')
+        'orderBy/topK cannot be combined with a metadata-only (no-bins) query', 'nobins:')
 
       const maxRecords = topKQuery()
       maxRecords.maxRecords = 10
@@ -158,13 +170,10 @@ describe('Top-K rejections by the C client', function () {
       const paginated = topKQuery()
       paginated.paginate = true
       expectRejected(await streamErrorFrom(paginated),
-        'order_by/top_k does not support pagination in this client version', 'paginate:')
+        'orderBy/topK does not support pagination in this client version', 'paginate:')
     })
 
-    // Pending: query.partitions() with a digest crashes Node before the query reaches the
-    // C client (policy.cc partitions_from_jsobject() passes the digest array as a pointer),
-    // with or without Top-K. Enable once that existing bug is fixed.
-    it.skip('rejects a partition filter that resumes an earlier query', async function () {
+    it('rejects a partition filter that resumes an earlier query', async function () {
       const resumed = topKQuery()
       resumed.partitions(0, 4096, Buffer.alloc(20, 1))
       expectRejected(await errorFrom(() => resumed.results()),

@@ -1259,12 +1259,9 @@ export class Query {
      * At most two entries are allowed. Each entry's <code>bin</code> must be a bin name of
      * at most 15 characters and, if the query selects bins, one of them.
      *
-     * Set the order keys with {@link Query#orderBy} and {@link Query#thenOrderBy}, which
-     * check the arguments. Entries assigned directly are checked when the query runs:
-     * {@link Query#foreach}, {@link Query#results}, {@link Query#apply},
-     * {@link Query#background} and {@link Query#operate} throw before sending anything, a
-     * <code>TypeError</code> for an entry of the wrong type or an {@link AerospikeError} with
-     * code <code>ERR_PARAM</code> for more than two entries or a value out of range.
+     * Set the order keys with {@link Query#orderBy} and {@link Query#thenOrderBy}. The order
+     * keys are checked when the query runs, before anything is sent: an invalid entry fails
+     * with a parameter error, like any other invalid query setting.
      */
     public orderByKeys: OrderByKey[];
     /**
@@ -1345,9 +1342,8 @@ export class Query {
      * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
      * parameter error when the query runs.
      *
-     * @throws {TypeError} If an argument has the wrong type.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
-     * 15 characters or contains NUL, or type, direction or flags is negative.
+     * Invalid settings, such as a bin name longer than 15 characters or containing NUL, or an
+     * unknown type, direction or flags, fail with a parameter error when the query runs.
      *
      * @example <caption>Return the 10 records with the highest score</caption>
      *
@@ -1367,7 +1363,7 @@ export class Query {
      * Adds an order key to a Top-K query, after the keys already set.
      *
      * The second order key ranks records that tie on the first. A query can have at most
-     * two order keys. Called before {@link Query#orderBy}, it sets the first order key. As with
+     * two order keys; a third fails with a parameter error when the query runs. Called before {@link Query#orderBy}, it sets the first order key. As with
      * {@link Query#orderBy}, if the query selects bins, the order key must be one of them.
      *
      * @param bin - Name of the bin to order by, as it appears in the returned record. At
@@ -1378,11 +1374,6 @@ export class Query {
      * {@link orderByFlags.DEFAULT}. {@link orderByFlags.CASE_INSENSITIVE} is only valid when
      * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
      * parameter error when the query runs.
-     *
-     * @throws {TypeError} If an argument has the wrong type.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
-     * 15 characters or contains NUL, type, direction or flags is negative, or the query
-     * already has two order keys.
      */
     public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
     /**
@@ -1393,9 +1384,6 @@ export class Query {
      * <code>topK</code> again replaces k.
      *
      * @param k - Number of records to return, from 1 to 1,000.
-     *
-     * @throws {TypeError} If k isn't an integer.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if k is negative.
      */
     public topK(k: number): void;
     /**

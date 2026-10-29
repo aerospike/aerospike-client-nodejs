@@ -409,23 +409,43 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 		}
 	}
 
-	// Top-K settings are fully validated by assertValidTopK() in lib/query.js
-	// before any query command runs, so they are copied here without checks.
+	// Top-K: the C client checks the Top-K rules before sending. These checks
+	// cover what it can't see: the JS value types, and a NUL that would cut a
+	// bin name short so the query orders by a different bin.
 	Local<Value> maybe_order_by_keys =
 		Nan::Get(options, Nan::New("orderByKeys").ToLocalChecked()).ToLocalChecked();
+	TYPE_CHECK_OPT_ERR(err, maybe_order_by_keys, IsArray, "orderByKeys must be an array");
 	if (maybe_order_by_keys->IsArray()) {
 		Local<Array> order_by_keys = maybe_order_by_keys.As<Array>();
 		for (uint32_t i = 0; i < order_by_keys->Length(); i++) {
-			Local<Object> key =
-				Nan::Get(order_by_keys, i).ToLocalChecked().As<Object>();
-			Nan::Utf8String bin(
-				Nan::Get(key, Nan::New("bin").ToLocalChecked()).ToLocalChecked());
-			as_query_order_by_type type = (as_query_order_by_type)Nan::To<uint32_t>(
-				Nan::Get(key, Nan::New("type").ToLocalChecked()).ToLocalChecked()).FromJust();
-			as_order direction = (as_order)Nan::To<uint32_t>(
-				Nan::Get(key, Nan::New("direction").ToLocalChecked()).ToLocalChecked()).FromJust();
-			as_query_order_by_flags flags = Nan::To<uint32_t>(
-				Nan::Get(key, Nan::New("flags").ToLocalChecked()).ToLocalChecked()).FromJust();
+			Local<Value> maybe_key = Nan::Get(order_by_keys, i).ToLocalChecked();
+			if (!maybe_key->IsObject()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Each order key must be an object");
+			}
+			Local<Object> key = maybe_key.As<Object>();
+			Local<Value> v8_bin = Nan::Get(key, Nan::New("bin").ToLocalChecked()).ToLocalChecked();
+			Local<Value> v8_type = Nan::Get(key, Nan::New("type").ToLocalChecked()).ToLocalChecked();
+			Local<Value> v8_direction = Nan::Get(key, Nan::New("direction").ToLocalChecked()).ToLocalChecked();
+			Local<Value> v8_flags = Nan::Get(key, Nan::New("flags").ToLocalChecked()).ToLocalChecked();
+			if (!v8_bin->IsString()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key bin must be a string");
+			}
+			if (!v8_type->IsUint32()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key type must be one of Aerospike.orderByType");
+			}
+			if (!v8_direction->IsUint32()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key direction must be one of Aerospike.order");
+			}
+			if (!v8_flags->IsUint32()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key flags must be a combination of Aerospike.orderByFlags");
+			}
+			Nan::Utf8String bin(v8_bin);
+			if (strlen(*bin) != (size_t)bin.length()) {
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key bin name must not contain NUL");
+			}
+			as_query_order_by_type type = (as_query_order_by_type)Nan::To<uint32_t>(v8_type).FromJust();
+			as_order direction = (as_order)Nan::To<uint32_t>(v8_direction).FromJust();
+			as_query_order_by_flags flags = Nan::To<uint32_t>(v8_flags).FromJust();
 			if (i == 0) {
 				as_query_order_by(query, *bin, type, direction, flags);
 			}
@@ -437,7 +457,8 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 
 	Local<Value> top_k =
 		Nan::Get(options, Nan::New("topKLimit").ToLocalChecked()).ToLocalChecked();
-	if (top_k->IsNumber()) {
+	TYPE_CHECK_OPT_ERR(err, top_k, IsUint32, "topK must be an integer from 1 to 1000");
+	if (top_k->IsUint32()) {
 		as_query_top_k(query, Nan::To<uint32_t>(top_k).FromJust());
 	}
 
