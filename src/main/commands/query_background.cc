@@ -73,6 +73,12 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		return NULL;
 	}
 
+	if (info[2]->IsObject() &&
+		topk_from_jsobject(&cmd->query, info[2].As<Object>(), log) !=
+			AS_NODE_PARAM_OK) {
+		return CmdSetError(cmd, AEROSPIKE_ERR_PARAM, "Top-K settings invalid");
+	}
+
 	if (info[3]->IsObject()) {
 		cmd->policy = (as_policy_write *)cf_malloc(sizeof(as_policy_write));
 		if (writepolicy_from_jsobject(cmd->policy, info[3].As<Object>(), log) !=
