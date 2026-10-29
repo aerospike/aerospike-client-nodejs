@@ -63,7 +63,7 @@ async function expectRejectedEverywhere (configure: (query: Q) => void, message:
 }
 
 describe('Top-K settings #noserver', function () {
-  it('exports the order-by enums with the C client values', function () {
+  it('exports the order-by enums with their wire values', function () {
     expect(orderByType).to.eql({ INTEGER: 1, DOUBLE: 2, STRING: 3, BYTES: 4 })
     expect(order).to.eql({ ASC: 0, DESC: 1 })
     expect(orderByFlags).to.eql({ DEFAULT: 0, CASE_INSENSITIVE: 1 })
@@ -110,9 +110,9 @@ describe('Top-K settings #noserver', function () {
   })
 })
 
-// Checks the Node client makes itself, in setup_options(), before the C client
-// sees the query: JS value types, and a NUL that would cut a bin name short.
-// Every Top-K rule beyond these is the C client's (see rejections.ts).
+// Checks on the JS values, made in setup_options() before any Top-K rule:
+// value types, and a NUL that would cut a bin name short. The Top-K rules
+// themselves are tested in rejections.ts.
 describe('Top-K settings checked by the Node client when the query runs', function () {
   const keyWith = (changes: object) => (query: Q) => {
     query.orderByKeys = [{ bin: 'a', type: INTEGER, direction: ASC, flags: orderByFlags.DEFAULT, ...changes }]

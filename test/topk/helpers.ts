@@ -53,9 +53,9 @@ export function streamErrorFrom (query: Q): Promise<any> {
   })
 }
 
-// foreach() and results() run asynchronous queries. A C client without async
-// Top-K (before C PR #283, e.g. the committed pin #280) rejects them with this
-// message, so tests that need a Top-K query to run are skipped.
+// foreach() and results() run asynchronous queries. A client build that can't
+// run Top-K on them fails with this message, so tests that need a Top-K query
+// to run are skipped.
 const ASYNC_REJECTION = 'order_by/top_k is not supported on asynchronous queries'
 
 async function topKQueriesRun (): Promise<boolean> {
@@ -125,7 +125,7 @@ export async function removeLoadedSets () {
 
 // Runs a Top-K query three ways and checks they return the same records in the
 // same order: results(), foreach(), and results() over all partitions, which
-// uses a different C client call. configure adds the order keys; k is the limit;
+// runs as a partition query. configure adds the order keys; k is the limit;
 // policy is an optional query policy, e.g. { filterExpression }.
 export async function topK (set: string, configure: (query: Q) => void, k: number,
   policy: object | null = null): Promise<AerospikeRecord[]> {
@@ -189,7 +189,7 @@ export function partitionId (record: AerospikeRecord): number {
 }
 
 // ---------------------------------------------------------------------------
-// The reference: the spec's ranking rules, written independently of the C
+// The reference: the spec's ranking rules, written independently of the
 // client, applied to the data as written (so it knows each value's real type).
 // ---------------------------------------------------------------------------
 
@@ -317,8 +317,8 @@ export function skipUnlessMultiNode (ctx: Suite, minNodes: number) {
 }
 
 // The partitions each node is master for, from the node's "replicas" info:
-// "<ns>:<regime>,<replica count>,<master bitmap, base64>,...". Bit order as in
-// the C client (as_partition.c): partition i is bit (0x80 >> (i % 8)) of byte i / 8.
+// "<ns>:<regime>,<replica count>,<master bitmap, base64>,...". In the bitmap,
+// partition i is bit (0x80 >> (i % 8)) of byte i / 8.
 export async function masterPartitions (): Promise<Map<string, Set<number>>> {
   const masters = new Map<string, Set<number>>()
   for (const node of helper.client.getNodes()) {
