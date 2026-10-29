@@ -16,13 +16,13 @@
 
 const Aerospike = require('../harness/aerospikeClient')
 
-// Returns the 3 best players: highest topkscore first, ties broken by topkname A to Z.
+// Returns the 3 best players: highest topkscore first, ties broken by fewest topkgames.
 async function runExample ({ client, ns, set, console, requireMinServerVersion }) {
   requireMinServerVersion('8.2.1')
 
   const query = client.query(ns, set)
   query.orderBy('topkscore', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
-  query.thenOrderBy('topkname', Aerospike.orderByType.STRING, Aerospike.order.ASC)
+  query.thenOrderBy('topkgames', Aerospike.orderByType.INTEGER, Aerospike.order.ASC)
   query.topK(3)
 
   // Only rank this example's records; others in the set have no topkscore.
@@ -31,7 +31,7 @@ async function runExample ({ client, ns, set, console, requireMinServerVersion }
   })
   const records = await query.results(policy)
   records.forEach((record, i) => {
-    console.info(`QueryTopK #${i + 1}: ${record.bins.topkname} ${record.bins.topkscore}`)
+    console.info(`QueryTopK #${i + 1}: ${record.bins.topkname} ${record.bins.topkscore} (${record.bins.topkgames} games)`)
   })
 }
 

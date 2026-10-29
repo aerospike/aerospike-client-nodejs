@@ -238,60 +238,61 @@ async function cleanupQueryEqual (client, args) {
   await support.deleteKeys(client, args, ['queryeq1', 'queryeq2'])
 }
 
+// [userKey, topkname, topkscore, topkgames]
 const TOPK_PLAYERS = [
-  ['topk1', 'carol', 90],
-  ['topk2', 'alice', 75],
-  ['topk3', 'bob', 90],
-  ['topk4', 'dave', 60],
-  ['topk5', 'erin', 75],
-  ['topk6', 'frank', 95],
-  ['topk7', 'grace', 88],
-  ['topk8', 'heidi', 72],
-  ['topk9', 'ivan', 85],
-  ['topk10', 'judy', 95],
-  ['topk11', 'ken', 88],
-  ['topk12', 'liam', 55],
-  ['topk13', 'mia', 81],
-  ['topk14', 'nora', 72],
-  ['topk15', 'oscar', 40],
-  ['topk16', 'paul', 85],
-  ['topk17', 'quinn', 67],
-  ['topk18', 'rita', 79],
-  ['topk19', 'sam', 88],
-  ['topk20', 'tina', 50],
-  ['topk21', 'uma', 73],
-  ['topk22', 'victor', 85],
-  ['topk23', 'wendy', 64],
-  ['topk24', 'xavier', 58],
-  ['topk25', 'yara', 81],
-  ['topk26', 'zoe', 90],
-  ['topk27', 'adam', 70],
-  ['topk28', 'beth', 77],
-  ['topk29', 'chris', 62],
-  ['topk30', 'dana', 86],
-  ['topk31', 'eli', 45],
-  ['topk32', 'fay', 79],
-  ['topk33', 'gus', 53],
-  ['topk34', 'hana', 68],
-  ['topk35', 'igor', 74]
+  ['topk1', 'carol', 90, 18],
+  ['topk2', 'alice', 75, 30],
+  ['topk3', 'bob', 90, 15],
+  ['topk4', 'dave', 60, 25],
+  ['topk5', 'erin', 75, 21],
+  ['topk6', 'frank', 95, 20],
+  ['topk7', 'grace', 88, 16],
+  ['topk8', 'heidi', 72, 27],
+  ['topk9', 'ivan', 85, 19],
+  ['topk10', 'judy', 95, 12],
+  ['topk11', 'ken', 88, 23],
+  ['topk12', 'liam', 55, 28],
+  ['topk13', 'mia', 81, 17],
+  ['topk14', 'nora', 72, 24],
+  ['topk15', 'oscar', 40, 31],
+  ['topk16', 'paul', 85, 26],
+  ['topk17', 'quinn', 67, 22],
+  ['topk18', 'rita', 79, 14],
+  ['topk19', 'sam', 88, 29],
+  ['topk20', 'tina', 50, 33],
+  ['topk21', 'uma', 73, 11],
+  ['topk22', 'victor', 85, 13],
+  ['topk23', 'wendy', 64, 32],
+  ['topk24', 'xavier', 58, 34],
+  ['topk25', 'yara', 81, 35],
+  ['topk26', 'zoe', 90, 22],
+  ['topk27', 'adam', 70, 36],
+  ['topk28', 'beth', 77, 37],
+  ['topk29', 'chris', 62, 38],
+  ['topk30', 'dana', 86, 39],
+  ['topk31', 'eli', 45, 40],
+  ['topk32', 'fay', 79, 41],
+  ['topk33', 'gus', 53, 42],
+  ['topk34', 'hana', 68, 43],
+  ['topk35', 'igor', 74, 44]
 ]
 
 async function setupQueryTopK (client, args) {
-  for (const [userKey, topkname, topkscore] of TOPK_PLAYERS) {
-    await support.putBins(client, args, userKey, { topkname, topkscore })
+  for (const [userKey, topkname, topkscore, topkgames] of TOPK_PLAYERS) {
+    await support.putBins(client, args, userKey, { topkname, topkscore, topkgames })
   }
 }
 
-// Re-runs the example's query: frank leads with 95; bob, carol and zoe tie on 90
-// and are ordered by name, so zoe misses the top 3.
+// Re-runs the example's query: judy and frank tie on 95 and judy played fewer
+// games; bob, carol and zoe tie on 90 and bob played fewest, so he is third.
 async function queryTopKValidate (client, args) {
   const query = client.query(args.namespace, args.set)
   query.orderBy('topkscore', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
-  query.thenOrderBy('topkname', Aerospike.orderByType.STRING, Aerospike.order.ASC)
+  query.thenOrderBy('topkgames', Aerospike.orderByType.INTEGER, Aerospike.order.ASC)
   query.topK(3)
   const policy = new Aerospike.QueryPolicy({ filterExpression: Aerospike.exp.binExists('topkscore') })
   const ranked = (await query.results(policy)).map(record => `${record.bins.topkname} ${record.bins.topkscore}`)
-  const expected = ['frank 95', 'bob 90', 'carol 90']
+  const expected = ['judy 95', 'frank 95', 'bob 90']
   if (JSON.stringify(ranked) !== JSON.stringify(expected)) {
     throw new Error(`Expected top 3 ${JSON.stringify(expected)}, got ${JSON.stringify(ranked)}`)
   }
