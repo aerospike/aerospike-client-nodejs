@@ -181,7 +181,7 @@ describe('Top-K across several nodes', function () {
       const error = await errorFrom(() => query.results())
       expect(error, 'expected an error').to.not.be.null
       expect(error.code).to.equal(status.ERR_PARAM)
-      expect(error.message).to.equal('order_by/top_k is not supported by all nodes in the cluster')
+      expect(error.message).to.equal('orderBy/topK is not supported by all nodes in the cluster')
     })
 
     it('still runs ordinary queries', async function () {
