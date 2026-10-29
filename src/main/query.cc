@@ -147,7 +147,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 				as_v8_error(log, "Bin, Index Name, or Expression must have valid type");
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin, Index Name, or Expression must have valid type");
 			}
-
+			
 
 			as_predicate_type predicate =
 				(as_predicate_type)Nan::To<int>(
@@ -191,7 +191,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 							else {
 								as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 										   datatype, min, max);
-
+							
 							}
 							as_v8_debug(log,
 										"Integer range predicate from %llu to %llu",
@@ -229,7 +229,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 						else {
 							as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 									   	   datatype, bin_val);
-
+							
 						}
 
 						as_v8_debug(log, "Geo range predicate %s", bin_val);
@@ -245,7 +245,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 							const int64_t val = Nan::To<int64_t>(value).FromJust();
 
 
-
+							
 
 							if(*exp){
 								as_query_where_with_exp(query, *exp, predicate, type,
@@ -257,7 +257,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 							}
 							else {
 								as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
-										   	   datatype, val);
+										   	   datatype, val);							
 							}
 
 							as_v8_debug(log, "Integer equality predicate %d", val);
@@ -294,7 +294,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 						else {
 							as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 									   	   datatype, bin_val);
-
+							
 						}
 
 						as_v8_debug(log, "String equality predicate %s", bin_val);
@@ -325,7 +325,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 						else {
 							as_query_where_with_ctx(query, bin_name.c_str(), *with_context ? context : NULL, predicate, type,
 									   	   datatype, bytes, size, true);
-
+							
 						}
 
 						as_v8_debug(log, "Blob equality predicate");

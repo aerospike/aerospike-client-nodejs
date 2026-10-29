@@ -179,9 +179,6 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		}
 	}
 
-	uv_async_init(uv_default_loop(), &cmd->async_handle, async_callback);
-	cmd->async_handle.data = (void *)cmd;
-
 	return cmd;
 }
 
