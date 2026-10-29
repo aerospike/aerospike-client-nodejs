@@ -43,6 +43,7 @@ const scan = require('../doc/scan')
 const scanParallel = require('../doc/scanParallel')
 const queryInteger = require('../doc/queryInteger')
 const queryEqual = require('../doc/queryEqual')
+const queryTopK = require('../doc/queryTopK')
 const secondaryIndex = require('../doc/secondaryIndex')
 const userDefinedFunction = require('../doc/userDefinedFunction')
 const udfModule = require('../doc/udfModule')
@@ -155,6 +156,15 @@ const examples = [
       validation.setupQueryEqual,
       validation.queryEqualValidate,
       validation.cleanupQueryEqual
+    )
+  },
+  {
+    name: 'QueryTopK',
+    runExample: queryTopK.runExample,
+    fixture: queryCleanup(
+      validation.setupQueryTopK,
+      validation.queryTopKValidate,
+      validation.cleanupQueryTopK
     )
   },
   {

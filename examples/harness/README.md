@@ -6,7 +6,7 @@ Example code lives in [`../doc/`](../doc/). Each file exports a `runExample(cont
 
 ## Registered examples (29)
 
-Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics, MrtCommit, MrtAbort, GeospatialMonteCarlo, PathExpressions.
+Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, QueryTopK, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics, MrtCommit, MrtAbort, GeospatialMonteCarlo, PathExpressions.
 
 Run all registered examples:
 
@@ -49,6 +49,7 @@ Context helpers (throw `ExampleSkipError` → **Skipped**, not Failed):
 |---------|----------------|
 | **Delete** | Durable delete: `requireEnterprise()` |
 | **MrtCommit**, **MrtAbort** | EE + SC + server `>= 8.0.0` (skipped on CE smoke) |
+| **QueryTopK** | Server `>= 8.2.1`: `requireMinServerVersion('8.2.1')` |
 | **GeospatialMonteCarlo** | Runs on CE; uses set `montecarlo`, 500 darts by default (`EXAMPLES_GEO_DARTS` to override) |
 | **PathExpressions** | Standard namespace/set fixtures |
 
