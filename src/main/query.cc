@@ -15,7 +15,6 @@
  ******************************************************************************/
 
 #include <cstdint>
-#include <cstring>
 #include <node.h>
 #include <string>
 
@@ -412,6 +411,37 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 
 	return AEROSPIKE_OK;
 
+	// Top-K settings are fully validated by assertValidTopK() in lib/query.js
+	// before any query command runs, so they are copied here without checks.
+	Local<Value> maybe_order_by_keys =
+		Nan::Get(options, Nan::New("orderByKeys").ToLocalChecked()).ToLocalChecked();
+	if (maybe_order_by_keys->IsArray()) {
+		Local<Array> order_by_keys = maybe_order_by_keys.As<Array>();
+		for (uint32_t i = 0; i < order_by_keys->Length(); i++) {
+			Local<Object> key =
+				Nan::Get(order_by_keys, i).ToLocalChecked().As<Object>();
+			Nan::Utf8String bin(
+				Nan::Get(key, Nan::New("bin").ToLocalChecked()).ToLocalChecked());
+			as_query_order_by_type type = (as_query_order_by_type)Nan::To<uint32_t>(
+				Nan::Get(key, Nan::New("type").ToLocalChecked()).ToLocalChecked()).FromJust();
+			as_order direction = (as_order)Nan::To<uint32_t>(
+				Nan::Get(key, Nan::New("direction").ToLocalChecked()).ToLocalChecked()).FromJust();
+			as_query_order_by_flags flags = Nan::To<uint32_t>(
+				Nan::Get(key, Nan::New("flags").ToLocalChecked()).ToLocalChecked()).FromJust();
+			if (i == 0) {
+				as_query_order_by(query, *bin, type, direction, flags);
+			}
+			else {
+				as_query_then_order_by(query, *bin, type, direction, flags);
+			}
+		}
+	}
+
+	Local<Value> top_k =
+		Nan::Get(options, Nan::New("topKLimit").ToLocalChecked()).ToLocalChecked();
+	if (top_k->IsNumber()) {
+		as_query_top_k(query, Nan::To<uint32_t>(top_k).FromJust());
+	}
 }
 
 as_status setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
@@ -451,76 +481,6 @@ as_status setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
 	return setup_options(*query, maybe_options.As<Object>(), context, with_context, exp, err, log);
 }
 
-
-int topk_from_jsobject(as_query *query, Local<Object> options, LogInfo *log)
-{
-	Local<Value> maybe_keys =
-		Nan::Get(options, Nan::New("orderByKeys").ToLocalChecked()).ToLocalChecked();
-	if (maybe_keys->IsArray()) {
-		Local<Array> keys = maybe_keys.As<Array>();
-		for (uint32_t i = 0; i < keys->Length(); i++) {
-			Local<Value> key = Nan::Get(keys, i).ToLocalChecked();
-			if (!key->IsObject()) {
-				as_v8_error(log, "Order key %u must be an object", i);
-				return AS_NODE_PARAM_ERR;
-			}
-			Local<Object> key_obj = key.As<Object>();
-			Local<Value> bin =
-				Nan::Get(key_obj, Nan::New("bin").ToLocalChecked()).ToLocalChecked();
-			Local<Value> type =
-				Nan::Get(key_obj, Nan::New("type").ToLocalChecked()).ToLocalChecked();
-			Local<Value> direction =
-				Nan::Get(key_obj, Nan::New("direction").ToLocalChecked()).ToLocalChecked();
-			Local<Value> flags =
-				Nan::Get(key_obj, Nan::New("flags").ToLocalChecked()).ToLocalChecked();
-			if (!bin->IsString() || !type->IsUint32() || !direction->IsUint32() ||
-				!flags->IsUint32()) {
-				as_v8_error(log, "Order key %u must have a string bin and integer type, direction and flags", i);
-				return AS_NODE_PARAM_ERR;
-			}
-			Nan::Utf8String bin_name(bin);
-			// as_query_order_by() ignores a bin name that doesn't fit.
-			if (strlen(*bin_name) > AS_BIN_NAME_MAX_LEN) {
-				as_v8_error(log, "Order key %u bin name exceeds %d characters", i,
-							AS_BIN_NAME_MAX_LEN);
-				return AS_NODE_PARAM_ERR;
-			}
-			as_query_order_by_type key_type =
-				(as_query_order_by_type)Nan::To<uint32_t>(type).FromJust();
-			as_order key_direction =
-				(as_order)Nan::To<uint32_t>(direction).FromJust();
-			as_query_order_by_flags key_flags =
-				(as_query_order_by_flags)Nan::To<uint32_t>(flags).FromJust();
-			// The C client keeps at most two keys and rejects the query if
-			// more are added.
-			if (i == 0) {
-				as_query_order_by(query, *bin_name, key_type, key_direction,
-								  key_flags);
-			}
-			else {
-				as_query_then_order_by(query, *bin_name, key_type, key_direction,
-									   key_flags);
-			}
-			as_v8_detail(log, "Order key %u: %s", i, *bin_name);
-		}
-	}
-	else if (!maybe_keys->IsNull() && !maybe_keys->IsUndefined()) {
-		as_v8_error(log, "orderByKeys must be an array");
-		return AS_NODE_PARAM_ERR;
-	}
-
-	Local<Value> k =
-		Nan::Get(options, Nan::New("topKLimit").ToLocalChecked()).ToLocalChecked();
-	if (k->IsUint32()) {
-		as_query_top_k(query, Nan::To<uint32_t>(k).FromJust());
-	}
-	else if (!k->IsNull() && !k->IsUndefined()) {
-		as_v8_error(log, "topKLimit must be a non-negative integer");
-		return AS_NODE_PARAM_ERR;
-	}
-
-	return AS_NODE_PARAM_OK;
-}
 
 void free_query(as_query *query, as_policy_query *policy, as_exp *exp)
 {

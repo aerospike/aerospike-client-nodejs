@@ -1264,7 +1264,7 @@ export class Query {
      * {@link Query#foreach}, {@link Query#results}, {@link Query#apply},
      * {@link Query#background} and {@link Query#operate} throw before sending anything, a
      * <code>TypeError</code> for an entry of the wrong type or an {@link AerospikeError} with
-     * code <code>ERR_PARAM</code> for more than two entries or a bin name that is too long.
+     * code <code>ERR_PARAM</code> for more than two entries or a value out of range.
      */
     public orderByKeys: OrderByKey[];
     /**
@@ -1347,7 +1347,7 @@ export class Query {
      *
      * @throws {TypeError} If an argument has the wrong type.
      * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
-     * 15 characters.
+     * 15 characters, or type, direction or flags is negative.
      *
      * @example <caption>Return the 10 records with the highest score</caption>
      *
@@ -1381,7 +1381,8 @@ export class Query {
      *
      * @throws {TypeError} If an argument has the wrong type.
      * @throws {AerospikeError} With code <code>ERR_PARAM</code> if the bin name is longer than
-     * 15 characters, or the query already has two order keys.
+     * 15 characters, type, direction or flags is negative, or the query already has two
+     * order keys.
      */
     public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
     /**
@@ -1394,6 +1395,7 @@ export class Query {
      * @param k - Number of records to return, from 1 to 1,000.
      *
      * @throws {TypeError} If k isn't an integer.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if k is negative.
      */
     public topK(k: number): void;
     /**
