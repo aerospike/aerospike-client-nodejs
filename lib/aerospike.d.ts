@@ -1253,6 +1253,18 @@ export class Query {
      */
     public queryState?: number[];
     /**
+     * Order keys of a Top-K query, in order of precedence.
+     *
+     * Use {@link Query#orderBy} and {@link Query#thenOrderBy} to set the order keys.
+     */
+    public orderByKeys: OrderByKey[];
+    /**
+     * Number of records a Top-K query returns.
+     *
+     * Use {@link Query#topK} to set the limit.
+     */
+    public topKLimit?: number;
+    /**
      * Construct a Query instance.
      *
      * @param client - A client instance.
@@ -1294,6 +1306,73 @@ export class Query {
      * @param digest - Start from this digest if it is specified.
      */
     public partitions(begin: number, count: number, digest?: Buffer | null): void;
+    /**
+     * Sets the first order key of a Top-K query.
+     *
+     * A Top-K query returns only the {@link Query#topK|k} best records, ranked by up to
+     * two order keys. Each server node ranks its own records and returns its best k; the
+     * client then merges the nodes' results and returns the global top k in rank order.
+     *
+     * Calling <code>orderBy</code> again replaces both order keys and keeps k.
+     *
+     * Top-K requires server version 8.2.1 or later on every node in the cluster. It applies
+     * only to foreground queries ({@link Query#foreach} and {@link Query#results}):
+     * background queries, aggregation queries, paginated queries, queries that set
+     * {@link Query#maxRecords} or {@link Query#nobins}, and order keys that aren't among the
+     * projected bins fail with a parameter error.
+     *
+     * No record is returned until every node has finished its scan and the merge is done,
+     * so a Top-K query doesn't stream. Over a large set, a node can take longer than the
+     * socket timeout to reply; raise the query policy's <code>socketTimeout</code>, or set
+     * it to 0, and let <code>totalTimeout</code> bound the query.
+     *
+     * Records whose order key is missing, or holds a value of a different type than
+     * declared, rank last in either direction, and still count towards k.
+     *
+     * @param bin - Name of the bin to order by, as it appears in the returned record. If the
+     * query projects bins, it must be one of the projected names. At most 15 characters.
+     * @param type - Type of the bin's value.
+     * @param direction - Sort direction.
+     * @param flags - Comparison flags; defaults to {@link orderByFlags.DEFAULT}.
+     *
+     * @example <caption>Return the 10 records with the highest score</caption>
+     *
+     * const Aerospike = require('aerospike')
+     *
+     * Aerospike.connect().then(async client => {
+     *   const query = client.query('test', 'demo')
+     *   query.orderBy('score', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
+     *   query.topK(10)
+     *   const records = await query.results()
+     *   records.forEach(record => console.info(record.bins.score))
+     *   client.close()
+     * })
+     */
+    public orderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
+    /**
+     * Adds an order key to a Top-K query, after the keys already set.
+     *
+     * The second order key ranks records that tie on the first. A query can have at most
+     * two order keys; a third fails with a parameter error when the query executes. Called
+     * before {@link Query#orderBy}, it sets the first order key.
+     *
+     * @param bin - Name of the bin to order by, as it appears in the returned record. At
+     * most 15 characters.
+     * @param type - Type of the bin's value.
+     * @param direction - Sort direction.
+     * @param flags - Comparison flags; defaults to {@link orderByFlags.DEFAULT}.
+     */
+    public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
+    /**
+     * Sets the number of records a Top-K query returns.
+     *
+     * k must be from 1 to 1,000, and requires an order key set with {@link Query#orderBy}.
+     * An out-of-range k fails with a parameter error when the query executes. Calling
+     * <code>topK</code> again replaces k.
+     *
+     * @param k - Number of records to return, from 1 to 1,000.
+     */
+    public topK(k: number): void;
     /**
      * Specify the names of bins to be selected by the query.
      *
@@ -12239,6 +12318,80 @@ export enum indexType {
      * Set index inside a namespace.
      */
     SET
+}
+
+/**
+ * An order key of a Top-K query. See {@link Query#orderBy}.
+ */
+export interface OrderByKey {
+    /**
+     * Name of the bin to order by.
+     */
+    bin: string;
+    /**
+     * Type of the bin's value.
+     */
+    type: orderByType;
+    /**
+     * Sort direction.
+     */
+    direction: order;
+    /**
+     * Comparison flags.
+     */
+    flags: orderByFlags | number;
+}
+
+/**
+ * Order key types for Top-K queries. Aerospike has no schema, so each order key declares
+ * the type of its value. A record whose order key holds a value of a different type ranks
+ * last.
+ */
+export enum orderByType {
+    /**
+     * The order key is an integer.
+     */
+    INTEGER = 1,
+    /**
+     * The order key is a double.
+     */
+    DOUBLE = 2,
+    /**
+     * The order key is a string.
+     */
+    STRING = 3,
+    /**
+     * The order key is a byte array (Buffer in Node.js).
+     */
+    BYTES = 4
+}
+
+/**
+ * Sort directions for Top-K queries.
+ */
+export enum order {
+    /**
+     * Ascending: the smallest values rank first.
+     */
+    ASC = 0,
+    /**
+     * Descending: the largest values rank first.
+     */
+    DESC = 1
+}
+
+/**
+ * Order key flags for Top-K queries.
+ */
+export enum orderByFlags {
+    /**
+     * No flags.
+     */
+    DEFAULT = 0,
+    /**
+     * Compare strings without regard to case. Only valid with {@link orderByType.STRING}.
+     */
+    CASE_INSENSITIVE = 1
 }
 
 /**
