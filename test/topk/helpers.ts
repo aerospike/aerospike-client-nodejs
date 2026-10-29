@@ -53,9 +53,9 @@ export function streamErrorFrom (query: Q): Promise<any> {
   })
 }
 
-// The C client rejects Top-K on asynchronous queries, which is how foreach()
-// and results() run. Until that changes, tests that need a Top-K query to run
-// are skipped with this reason.
+// foreach() and results() run asynchronous queries. A C client without async
+// Top-K (before C PR #283, e.g. the committed pin #280) rejects them with this
+// message, so tests that need a Top-K query to run are skipped.
 const ASYNC_REJECTION = 'order_by/top_k is not supported on asynchronous queries'
 
 async function topKQueriesRun (): Promise<boolean> {

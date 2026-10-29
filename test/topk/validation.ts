@@ -22,206 +22,140 @@ import type { Query as Q } from '../../lib/aerospike.js';
 
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
+import { newQuery, errorFrom, streamErrorFrom } from './helpers.ts';
 
 const { orderByType, order, orderByFlags, AerospikeError, status } = Aerospike
 const { INTEGER, STRING } = orderByType
 const { ASC, DESC } = order
 
-// A query that is never sent: these tests only check what happens before sending.
-function newQuery (): Q {
+// A query that is never sent: the setters only store what they're given.
+function unsentQuery (): Q {
   return new Aerospike.Query(null as any, 'test', 'demo')
 }
 
-// Runs fn and returns what it threw or rejected with, or null.
-async function errorFrom (fn: () => unknown): Promise<any> {
-  try {
-    await fn()
-    return null
-  } catch (error) {
-    return error
-  }
-}
-
-// 'type' = TypeError (wrong JS type); 'param' = AerospikeError with ERR_PARAM (broken rule).
-function expectError (error: any, kind: 'type' | 'param', message: string) {
-  expect(error, 'expected an error').to.not.be.null
-  if (kind === 'type') {
-    expect(error).to.be.instanceof(TypeError)
-  } else {
-    expect(error).to.be.instanceof(AerospikeError)
-    expect(error.code).to.equal(status.ERR_PARAM)
-  }
-  expect(error.message).to.equal(message)
-}
-
-const BIN_MESSAGE = 'Order key bin name must be at most 15 characters'
-const NUL_MESSAGE = 'Order key bin name must not contain NUL'
-const TWO_KEYS_MESSAGE = 'A query can have at most 2 order keys'
-
-// Every method that sends a query checks the Top-K settings first.
-const METHODS: Array<[string, (query: Q) => unknown]> = [
-  ['foreach', query => query.foreach()],
-  ['results', query => query.results()],
-  ['apply', query => query.apply('module', 'fn')],
-  ['background', query => query.background('module', 'fn')],
-  ['operate', query => query.operate([])]
+// Every method that runs a query, with how it reports a bad Top-K setting:
+// results() and foreach() report an AerospikeError with ERR_PARAM; apply(),
+// background() and operate() throw a TypeError, as for any other bad query setting.
+const METHODS: Array<[string, 'param' | 'type', (query: Q) => Promise<any>]> = [
+  ['results', 'param', query => errorFrom(() => query.results())],
+  ['foreach', 'param', query => streamErrorFrom(query)],
+  ['apply', 'type', query => errorFrom(() => query.apply('module', 'fn'))],
+  ['background', 'type', query => errorFrom(() => query.background('module', 'fn'))],
+  ['operate', 'type', query => errorFrom(() => query.operate([Aerospike.operations.write('x', 1)]))]
 ]
 
-describe('Top-K validation #noserver', function () {
+// Sets up a query with configure, runs it every way, and checks each reports message.
+async function expectRejectedEverywhere (configure: (query: Q) => void, message: string, label: string) {
+  for (const [method, kind, run] of METHODS) {
+    const query = newQuery()
+    configure(query)
+    const error = await run(query)
+    const where = `${label}, ${method}()`
+    expect(error, `${where}: expected an error`).to.not.be.null
+    if (kind === 'type') {
+      expect(error, where).to.be.instanceof(TypeError)
+    } else {
+      expect(error, where).to.be.instanceof(AerospikeError)
+      expect(error.code, where).to.equal(status.ERR_PARAM)
+    }
+    expect(error.message, where).to.equal(message)
+  }
+}
+
+describe('Top-K settings #noserver', function () {
   it('exports the order-by enums with the C client values', function () {
     expect(orderByType).to.eql({ INTEGER: 1, DOUBLE: 2, STRING: 3, BYTES: 4 })
     expect(order).to.eql({ ASC: 0, DESC: 1 })
     expect(orderByFlags).to.eql({ DEFAULT: 0, CASE_INSENSITIVE: 1 })
   })
 
-  describe('setters', function () {
-    it('orderBy sets the first key, with flags defaulting to DEFAULT', function () {
-      const query = newQuery()
-      query.orderBy('score', INTEGER, DESC)
+  it('orderBy sets the first key, with flags defaulting to DEFAULT', function () {
+    const query = unsentQuery()
+    query.orderBy('score', INTEGER, DESC)
 
-      expect(query.orderByKeys).to.eql([{ bin: 'score', type: INTEGER, direction: DESC, flags: orderByFlags.DEFAULT }])
-      expect(query.topKLimit).to.be.undefined
-    })
-
-    it('thenOrderBy adds a second key, or the first if none is set', function () {
-      const query = newQuery()
-      query.thenOrderBy('a', INTEGER, ASC)
-      query.thenOrderBy('b', STRING, DESC, orderByFlags.CASE_INSENSITIVE)
-
-      expect(query.orderByKeys).to.eql([
-        { bin: 'a', type: INTEGER, direction: ASC, flags: orderByFlags.DEFAULT },
-        { bin: 'b', type: STRING, direction: DESC, flags: orderByFlags.CASE_INSENSITIVE }
-      ])
-    })
-
-    it('orderBy again replaces both keys and keeps k; topK again replaces k', function () {
-      const query = newQuery()
-      query.orderBy('a', INTEGER, ASC)
-      query.thenOrderBy('b', INTEGER, ASC)
-      query.topK(5)
-      query.orderBy('c', STRING, DESC)
-      query.topK(7)
-
-      expect(query.orderByKeys.map(key => key.bin)).to.eql(['c'])
-      expect(query.topKLimit).to.equal(7)
-    })
-
-    it('thenOrderBy rejects a third key and keeps the first two', function () {
-      const query = newQuery()
-      query.orderBy('a', INTEGER, ASC)
-      query.thenOrderBy('b', INTEGER, ASC)
-
-      let error: any = null
-      try { query.thenOrderBy('c', INTEGER, ASC) } catch (e) { error = e }
-
-      expectError(error, 'param', TWO_KEYS_MESSAGE)
-      expect(query.orderByKeys.map(key => key.bin)).to.eql(['a', 'b'])
-    })
+    expect(query.orderByKeys).to.eql([{ bin: 'score', type: INTEGER, direction: DESC, flags: orderByFlags.DEFAULT }])
+    expect(query.topKLimit).to.be.undefined
   })
 
-  describe('setter arguments', function () {
-    it('bin must be a string of at most 15 bytes, without NUL', async function () {
-      const cases: Array<[unknown, 'type' | 'param', string]> = [
-        [undefined, 'type', 'bin must be a string'],
-        [null, 'type', 'bin must be a string'],
-        [1, 'type', 'bin must be a string'],
-        [['a'], 'type', 'bin must be a string'],
-        ['a'.repeat(16), 'param', BIN_MESSAGE],
-        ['é'.repeat(8), 'param', BIN_MESSAGE], // 8 characters, but 16 bytes
-        ['sc\0re', 'param', NUL_MESSAGE],
-        ['\0', 'param', NUL_MESSAGE]
-      ]
-      for (const [bin, kind, message] of cases) {
-        expectError(await errorFrom(() => newQuery().orderBy(bin as any, INTEGER, ASC)), kind, message)
-        expectError(await errorFrom(() => newQuery().thenOrderBy(bin as any, INTEGER, ASC)), kind, message)
-      }
+  it('thenOrderBy adds keys after the first, or the first if none is set', function () {
+    const query = unsentQuery()
+    query.thenOrderBy('a', INTEGER, ASC)
+    query.thenOrderBy('b', STRING, DESC, orderByFlags.CASE_INSENSITIVE)
+    query.thenOrderBy('c', INTEGER, ASC) // a third key is stored; the query rejects it when it runs
 
-      for (const bin of ['', 'a'.repeat(15), 'é'.repeat(7)]) { // 'é' x 7 is 14 bytes
-        expect(() => newQuery().orderBy(bin, INTEGER, ASC), `bin '${bin}'`).to.not.throw()
-      }
-    })
-
-    it('type, direction and flags must be unsigned 32-bit integers', async function () {
-      const messages = {
-        type: 'type must be one of Aerospike.orderByType',
-        direction: 'direction must be one of Aerospike.order',
-        flags: 'flags must be a combination of Aerospike.orderByFlags'
-      }
-      const badValues: Array<[unknown, 'type' | 'param']> = [
-        [undefined, 'type'], [null, 'type'], ['1', 'type'], [1.5, 'type'], [NaN, 'type'],
-        [Infinity, 'type'], [1n, 'type'], [-1, 'param'], [2 ** 32, 'param']
-      ]
-      for (const [value, kind] of badValues) {
-        const v = value as any
-        expectError(await errorFrom(() => newQuery().orderBy('a', v, ASC)), kind, messages.type)
-        expectError(await errorFrom(() => newQuery().orderBy('a', INTEGER, v)), kind, messages.direction)
-        if (value !== undefined) { // undefined flags means DEFAULT
-          expectError(await errorFrom(() => newQuery().orderBy('a', INTEGER, ASC, v)), kind, messages.flags)
-        }
-      }
-
-      // Values outside the enums are left to the C client, which rejects them when the query runs.
-      for (const value of [0, 5, 2 ** 32 - 1]) {
-        expect(() => newQuery().orderBy('a', value, value, value), `value ${value}`).to.not.throw()
-      }
-    })
-
-    it('k must be an unsigned 32-bit integer', async function () {
-      const message = 'k must be a non-negative integer'
-      const badValues: Array<[unknown, 'type' | 'param']> = [
-        [undefined, 'type'], [null, 'type'], ['10', 'type'], [1.5, 'type'], [NaN, 'type'],
-        [Infinity, 'type'], [10n, 'type'], [-1, 'param'], [2 ** 32, 'param']
-      ]
-      for (const [k, kind] of badValues) {
-        expectError(await errorFrom(() => newQuery().topK(k as any)), kind, message)
-      }
-
-      // The 1 to 1,000 range is left to the C client, which rejects it when the query runs.
-      for (const k of [0, 1, 1000, 1001, 2 ** 32 - 1]) {
-        expect(() => newQuery().topK(k), `k ${k}`).to.not.throw()
-      }
-    })
+    expect(query.orderByKeys).to.eql([
+      { bin: 'a', type: INTEGER, direction: ASC, flags: orderByFlags.DEFAULT },
+      { bin: 'b', type: STRING, direction: DESC, flags: orderByFlags.CASE_INSENSITIVE },
+      { bin: 'c', type: INTEGER, direction: ASC, flags: orderByFlags.DEFAULT }
+    ])
   })
 
-  describe('settings assigned directly, checked by every method before sending', function () {
-    const key = { bin: 'a', type: INTEGER, direction: ASC, flags: orderByFlags.DEFAULT }
+  it('orderBy again replaces all keys and keeps k; topK again replaces k', function () {
+    const query = unsentQuery()
+    query.orderBy('a', INTEGER, ASC)
+    query.thenOrderBy('b', INTEGER, ASC)
+    query.topK(5)
+    query.orderBy('c', STRING, DESC)
+    query.topK(7)
 
-    it('rejects bad orderByKeys', async function () {
-      const cases: Array<[string, unknown, 'type' | 'param', string]> = [
-        ['not an array', key, 'type', 'orderByKeys must be an array'],
-        ['an entry that is not an object', ['a'], 'type', 'Each order key must be an object'],
-        ['a null entry', [null], 'type', 'Each order key must be an object'],
-        ['an entry without flags', [{ bin: 'a', type: INTEGER, direction: ASC }], 'type', 'flags must be a combination of Aerospike.orderByFlags'],
-        ['a bin that is too long', [{ ...key, bin: 'a'.repeat(16) }], 'param', BIN_MESSAGE],
-        ['a bin with NUL', [{ ...key, bin: 'sc\0re' }], 'param', NUL_MESSAGE],
-        ['a negative type', [{ ...key, type: -1 }], 'param', 'type must be one of Aerospike.orderByType'],
-        ['three keys', [key, key, key], 'param', TWO_KEYS_MESSAGE]
-      ]
-      for (const [method, run] of METHODS) {
-        for (const [name, orderByKeys, kind, message] of cases) {
-          const query = newQuery()
-          query.orderByKeys = orderByKeys as any
-          const error = await errorFrom(() => run(query))
-          expect(error, `${method}() with ${name}`).to.not.be.null
-          expectError(error, kind, message)
-        }
-      }
-    })
+    expect(query.orderByKeys.map(key => key.bin)).to.eql(['c'])
+    expect(query.topKLimit).to.equal(7)
+  })
 
-    it('rejects a bad topKLimit', async function () {
-      const message = 'topKLimit must be a non-negative integer'
-      const cases: Array<[unknown, 'type' | 'param']> = [
-        ['10', 'type'], [1.5, 'type'], [NaN, 'type'], [-1, 'param'], [2 ** 32, 'param']
-      ]
-      for (const [method, run] of METHODS) {
-        for (const [topKLimit, kind] of cases) {
-          const query = newQuery()
-          query.topKLimit = topKLimit as any
-          const error = await errorFrom(() => run(query))
-          expect(error, `${method}() with topKLimit ${String(topKLimit)}`).to.not.be.null
-          expectError(error, kind, message)
-        }
+  it('setters store any value and never throw; values are checked when the query runs', function () {
+    const query = unsentQuery()
+    expect(() => query.orderBy(1 as any, 'x' as any, -1 as any, 1.5 as any)).to.not.throw()
+    expect(() => query.thenOrderBy('sc\0re', INTEGER, ASC)).to.not.throw()
+    expect(() => query.topK('10' as any)).to.not.throw()
+  })
+})
+
+// Checks the Node client makes itself, in setup_options(), before the C client
+// sees the query: JS value types, and a NUL that would cut a bin name short.
+// Every Top-K rule beyond these is the C client's (see rejections.ts).
+describe('Top-K settings checked by the Node client when the query runs', function () {
+  const keyWith = (changes: object) => (query: Q) => {
+    query.orderByKeys = [{ bin: 'a', type: INTEGER, direction: ASC, flags: orderByFlags.DEFAULT, ...changes }]
+    query.topK(10)
+  }
+
+  it('bin must be a string without NUL', async function () {
+    for (const bin of [undefined, null, 1, ['a']]) {
+      await expectRejectedEverywhere(keyWith({ bin }), 'Order key bin must be a string', `bin ${String(bin)}`)
+    }
+    for (const bin of ['sc\0re', '\0']) {
+      await expectRejectedEverywhere(keyWith({ bin }), 'Order key bin name must not contain NUL', `bin ${JSON.stringify(bin)}`)
+    }
+  })
+
+  it('type, direction and flags must be unsigned 32-bit integers', async function () {
+    const messages = {
+      type: 'Order key type must be one of Aerospike.orderByType',
+      direction: 'Order key direction must be one of Aerospike.order',
+      flags: 'Order key flags must be a combination of Aerospike.orderByFlags'
+    }
+    for (const value of [undefined, null, '1', 1.5, NaN, Infinity, -1, 2 ** 32]) {
+      for (const [field, message] of Object.entries(messages)) {
+        await expectRejectedEverywhere(keyWith({ [field]: value }), message, `${field} ${String(value)}`)
       }
-    })
+    }
+  })
+
+  it('orderByKeys must be an array of objects', async function () {
+    const cases: Array<[string, unknown, string]> = [
+      ['not an array', { bin: 'a' }, 'orderByKeys must be an array'],
+      ['an entry that is not an object', ['a'], 'Each order key must be an object'],
+      ['a null entry', [null], 'Each order key must be an object']
+    ]
+    for (const [name, orderByKeys, message] of cases) {
+      await expectRejectedEverywhere(query => { query.orderByKeys = orderByKeys as any; query.topK(10) }, message, name)
+    }
+  })
+
+  it('k must be an unsigned 32-bit integer', async function () {
+    for (const k of ['10', 1.5, NaN, -1, 2 ** 32]) {
+      await expectRejectedEverywhere(query => { query.orderBy('a', INTEGER, ASC); query.topK(k as any) },
+        'topK must be an integer from 1 to 1000', `k ${String(k)}`)
+    }
   })
 })
