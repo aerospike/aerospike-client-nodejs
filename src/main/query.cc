@@ -409,8 +409,6 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 		}
 	}
 
-	return AEROSPIKE_OK;
-
 	// Top-K settings are fully validated by assertValidTopK() in lib/query.js
 	// before any query command runs, so they are copied here without checks.
 	Local<Value> maybe_order_by_keys =
@@ -442,6 +440,8 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 	if (top_k->IsNumber()) {
 		as_query_top_k(query, Nan::To<uint32_t>(top_k).FromJust());
 	}
+
+	return AEROSPIKE_OK;
 }
 
 as_status setup_query_pages(as_query** query, Local<Value> ns, Local<Value> set,
