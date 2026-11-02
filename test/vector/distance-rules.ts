@@ -183,13 +183,16 @@ describe('Vector distance rules', function () {
     expect(error.code).to.equal(status.ERR_REQUEST_INVALID)
   })
 
-  it('throws a TypeError for an unknown metric or a query that is not a Vector #noserver', function () {
+  it('throws a TypeError for an unknown metric, a query that is not a Vector or a bin that is not an expression #noserver', function () {
     const bin = exp.binVector('v')
-    for (const metric of [99, -1, 3, undefined, null, 'COSINE_SIMILARITY']) {
+    for (const metric of [99, -1, 3, 1.5, undefined, null, 'COSINE_SIMILARITY', '1', [1], true]) {
       expectTypeError(() => exp.vectorDistance(metric as any, QUERY, bin), 'metric must be one of Aerospike.vectorDistanceMetric', String(metric))
     }
     for (const query of [undefined, null, [1, 0], new Float32Array([1, 0]), QUERY.toBytes(), { elementType: 3 }]) {
       expectTypeError(() => exp.vectorDistance(DOT_PRODUCT, query as any, bin), 'query must be a Vector', String(query))
+    }
+    for (const notExpression of ['v', 5, undefined, null, { bin: 'v' }, Buffer.from('v')]) {
+      expectTypeError(() => exp.vectorDistance(DOT_PRODUCT, QUERY, notExpression as any), 'bin must be an expression, such as exp.binVector(name)', String(notExpression))
     }
   })
 })

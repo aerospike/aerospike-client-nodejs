@@ -17845,7 +17845,8 @@ export namespace exp {
      * @param query - The vector to compare with.
      * @param bin - The vector bin, usually {@link exp.binVector}.
      * @return float value
-     * @throws {TypeError} If `metric` is unknown or `query` is not a {@link Vector}.
+     * @throws {TypeError} If `metric` is unknown, `query` is not a {@link Vector},
+     * or `bin` is not an expression.
      *
      * @example <caption>The distance as a computed bin, ready to rank with Top-K</caption>
      * const query = Aerospike.Vector.ofFloat32([0.1, 0.2, 0.3])
