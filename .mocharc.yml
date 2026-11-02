@@ -4,6 +4,7 @@ require:
 spec:
   - "test/*.ts"
   - "test/topk/*.ts"
+  - "test/vector/*.ts"
 node-option:
   - "import=tsx"
 parallel: false
