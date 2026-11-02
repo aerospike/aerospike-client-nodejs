@@ -823,7 +823,12 @@ as_val *asval_clone(const as_val *val, const LogInfo *log)
 		uint8_t *bytes = (uint8_t *)cf_malloc(size);
 		memcpy(bytes, as_bytes_get(bytes_val), size);
 		as_v8_detail(log, "Cloning Blob value %u ", bytes);
-		clone_val = as_bytes_toval(as_bytes_new_wrap(bytes, size, true));
+		as_bytes *clone_bytes = as_bytes_new_wrap(bytes, size, true);
+		// Keep the vector subtype, so the copy is read back as a Vector.
+		if (as_bytes_get_type(bytes_val) == AS_BYTES_VECTOR) {
+			as_bytes_set_type(clone_bytes, AS_BYTES_VECTOR);
+		}
+		clone_val = as_bytes_toval(clone_bytes);
 		break;
 	}
 	case AS_LIST: {
