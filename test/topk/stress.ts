@@ -18,8 +18,7 @@
 
 /* global describe, it, before, after */
 
-// Local only: run with AEROSPIKE_STRESS=1. Pushes the native Top-K path harder
-// than one query at a time.
+// Local only, not run on CI: set AEROSPIKE_STRESS=1.
 
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';

@@ -18,9 +18,8 @@
 
 /* global describe, it, afterEach */
 
-// Local only: needs a multi-node cluster and AEROSPIKE_MULTI_NODE=1. Run it twice,
-// on a cluster with replication factor 1 and on one with replication factor 2.
-// Setup scripts: .vectordocs/topk-test-server/ (not in the repo).
+// Local only, not run on CI: needs a multi-node cluster and AEROSPIKE_MULTI_NODE=1.
+// Run it on replication factor 1 and 2.
 
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
