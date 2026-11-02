@@ -26,7 +26,7 @@ import * as helper from '../test_helper.ts';
 import { topK, skipUnlessTopKQueriesRun } from '../topk/helpers.ts';
 import {
   ELEMENT_TYPES, METRICS, makeVector, referenceDistance, roundoff, distancePrecision, loadVectors,
-  removeLoadedSets, seededRandom, expectBestK
+  removeLoadedSets, seededRandom, expectBestK, loadGridSet, expectSearchGrid
 } from './helpers.ts';
 
 const { exp, operations } = Aerospike
@@ -146,6 +146,14 @@ describe('Vector search combinations against the reference', function () {
           await runSearch(search, ++seed, precision).catch(e => { e.message = `${describeSearch(search, seed)}: ${e.message}`; throw e })
         }
       }
+    }
+  })
+
+  it('every metric, both directions and every projection, for every element type, against brute force (2,000 x 128)', async function () {
+    for (const { name, type } of ELEMENT_TYPES) {
+      const grid = await loadGridSet(type, 2000, 128, 400 + type)
+      await expectSearchGrid(grid, type, [1, 10, 1000]).catch(e => { e.message = `${name}: ${e.message}`; throw e })
+      await removeLoadedSets()
     }
   })
 

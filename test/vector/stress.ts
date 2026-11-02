@@ -26,7 +26,7 @@ import * as helper from '../test_helper.ts';
 import { topK, digests, skipUnlessTopKQueriesRun } from '../topk/helpers.ts';
 import {
   ELEMENT_TYPES, makeVector, referenceDistance, roundoff, distancePrecision, loadVectors, removeLoadedSets,
-  removeLater, seededRandom, expectBestK
+  removeLater, seededRandom, expectBestK, loadGridSet, expectSearchGrid, expectFilterGrid
 } from './helpers.ts';
 
 const { exp, operations, status } = Aerospike
@@ -74,6 +74,16 @@ describe('Vectors under stress', function () {
     console.log(`      3 searches over 50,000 vectors: ${Date.now() - started} ms`)
     const references = stored.map(s => referenceDistance(COSINE_SIMILARITY, s.values, query.values))
     expectBestK(records, references, 1000, false, 768, roundoff(FLOAT32, precision))
+  })
+
+  it('every metric, both directions and every projection over 50,000 768-dimension vectors, against brute force', async function () {
+    const grid = await loadGridSet(FLOAT32, 50000, 768, 54)
+    await expectSearchGrid(grid, FLOAT32, [100, 1000])
+  })
+
+  it('filters and computes distances without Top-K over 50,000 768-dimension vectors', async function () {
+    const grid = await loadGridSet(FLOAT32, 50000, 768, 55)
+    await expectFilterGrid(grid, FLOAT32)
   })
 
   it('returns 1,000 of the largest vectors with their bins, using memory near k times their size', async function () {

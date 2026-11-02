@@ -23,7 +23,8 @@ import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import { topK, skipUnlessTopKQueriesRun } from '../topk/helpers.ts';
 import {
-  METRICS, makeVector, referenceDistance, loadVectors, removeLoadedSets, distanceOf, seededRandom, expectTypeError
+  ELEMENT_TYPES, METRICS, makeVector, referenceDistance, loadVectors, removeLoadedSets, distanceOf, seededRandom, expectTypeError,
+  loadGridSet, expectFilterGrid
 } from './helpers.ts';
 
 const { Vector, exp, operations, status } = Aerospike
@@ -94,6 +95,14 @@ describe('Vector distance rules', function () {
     }
   })
 
+  it('filters and computes distances without Top-K for every element type, metric and projection (2,000 x 128)', async function () {
+    for (const { name, type } of ELEMENT_TYPES) {
+      const grid = await loadGridSet(type, 2000, 128, 500 + type)
+      await expectFilterGrid(grid, type).catch(e => { e.message = `${name}: ${e.message}`; throw e })
+      await removeLoadedSets()
+    }
+  })
+
   it('treats a distance equal to the threshold as > false and >= true', async function () {
     // (1, 2) and (3, 4): dot 11 and squared L2 8, exactly; a vector with itself: cosine 1.
     const set = await loadVectors([Vector.ofFloat32([1, 2]), Vector.ofFloat32([3, 4])], [{ id: 0 }, { id: 1 }])
@@ -128,6 +137,27 @@ describe('Vector distance rules', function () {
 
       expect(batch.map(r => r.record.bins.d), `${name} batchRead`).to.eql(single)
       expect(fromQuery, `${name} query`).to.eql(single)
+    }
+  })
+
+  it('counts every distance it computes, per metric, in the server statistics', async function () {
+    const counters = async () => {
+      const stats = await helper.client.infoAny('statistics')
+      const read = (name: string) => Number(new RegExp(`vector_distance_calculations_${name}=(\\d+)`).exec(stats)![1])
+      return { [DOT_PRODUCT]: read('dot_product'), [EUCLIDEAN_SQUARED]: read('euclidean_squared'), [COSINE_SIMILARITY]: read('cosine') }
+    }
+    const values = [Vector.ofFloat32([1, 2]), Vector.ofFloat32([3, 4]), Vector.ofFloat32([5, 6])]
+    const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
+    for (const { name, metric } of METRICS) {
+      const before = await counters()
+      for (let i = 0; i < 3; i++) await distanceOf(set, i, metric, QUERY)
+      const q = helper.client.query(helper.namespace, set)
+      q.ops = [exp.operations.read('d', exp.vectorDistance(metric, QUERY, exp.binVector('v')), 0)]
+      await q.results()
+      const after = await counters()
+      for (const { metric: other } of METRICS) {
+        expect(after[other] - before[other], `${name}: counter of metric ${other}`).to.equal(other === metric ? 6 : 0)
+      }
     }
   })
 

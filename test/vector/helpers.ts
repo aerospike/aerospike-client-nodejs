@@ -19,10 +19,11 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
+import { topK } from '../topk/helpers.ts';
 
 const { FLOAT16, INT32, FLOAT32, FLOAT64 } = Aerospike.vectorElementType
 const { EUCLIDEAN_SQUARED, DOT_PRODUCT, COSINE_SIMILARITY } = Aerospike.vectorDistanceMetric
-const { AerospikeError, status, exp } = Aerospike
+const { AerospikeError, status, exp, operations } = Aerospike
 
 // Shared plumbing for the vector tests, so the test files stay short.
 
@@ -171,6 +172,11 @@ export async function distancePrecision (): Promise<string> {
   return match ? match[1] : 'float'
 }
 
+// Sets vector-distance-precision on the node the client talks to (a single-node server).
+export async function setPrecision (value: string) {
+  await helper.client.infoAny(`set-config:context=service;vector-distance-precision=${value}`)
+}
+
 // Each call writes the values into a new set (keys 0, 1, 2, ...) in bin v, with
 // any other bins given, and returns the set name; an undefined value leaves bin v
 // out. removeLoadedSets() deletes them.
@@ -196,7 +202,11 @@ export function removeLater (set: string, count: number) {
 
 export async function removeLoadedSets () {
   const policy = { socketTimeout: 30000, totalTimeout: 30000 }
-  const removeIfThere = (key: Aerospike.Key) => helper.client.remove(key, policy as any).catch(error => {
+  // A strong consistency namespace allows only durable deletes (otherwise error 22).
+  const removeIfThere = (key: Aerospike.Key): Promise<unknown> => helper.client.remove(key, policy as any).catch(error => {
+    if (error.code === status.ERR_FAIL_FORBIDDEN) return helper.client.remove(key, { ...policy, durableDelete: true } as any)
+    if (error.code !== status.ERR_RECORD_NOT_FOUND) throw error
+  }).catch(error => {
     if (error.code !== status.ERR_RECORD_NOT_FOUND) throw error
   })
   for (const { set, count } of loaded.splice(0)) {
@@ -258,5 +268,126 @@ export function expectBestK (records: Aerospike.AerospikeRecord[], references: A
     const wanted = best[j]
     expect(Math.abs(reference!.value - wanted.reference.value) <= tolerance(id) + tolerance(wanted.id),
       `position ${j}: record ${id} (${reference!.value}) instead of record ${wanted.id} (${wanted.reference.value})`).to.be.true
+  }
+}
+
+// Payload bins stored next to each vector by loadGridSet(), to check that a search
+// returns every bin asked for, unchanged.
+export function payloadOf (i: number) {
+  return { name: `item ${i}`, price: (i * 37) % 1000, tags: [i % 3, `t${i % 5}`], blob: Buffer.from([i % 256, (i >> 8) % 256]) }
+}
+
+// Stores count random vectors of one type (bin v) with bins id and payloadOf(i), and
+// returns the set, the stored element values and a query vector.
+export async function loadGridSet (elementType: number, count: number, dimensions: number, seed: number) {
+  const random = seededRandom(seed)
+  const scale = elementType === INT32 ? 1000 : 1
+  const stored: number[][] = []
+  const vectors: Aerospike.Vector[] = []
+  for (let i = 0; i < count; i++) {
+    const { vector, values } = makeVector(elementType, dimensions, () => (random() * 2 - 1) * scale)
+    stored.push(values)
+    vectors.push(vector)
+  }
+  const query = makeVector(elementType, dimensions, () => (random() * 2 - 1) * scale)
+  const set = await loadVectors(vectors, vectors.map((_, i) => ({ id: i, ...payloadOf(i) })))
+  return { set, stored, vectors, query }
+}
+
+export const PROJECTIONS: Record<string, string[]> = {
+  'no other bins': [],
+  'the vector bin': ['v'],
+  'all bins': ['v', 'name', 'price', 'tags', 'blob']
+}
+
+// Runs every metric, in both directions, with every projection and each k, as a Top-K
+// search (results(), foreach() and partitions, see topK()), and checks each result
+// against brute force, and the bins it returns.
+export async function expectSearchGrid (grid: Awaited<ReturnType<typeof loadGridSet>>, elementType: number, ks: number[]) {
+  const { set, stored, vectors, query } = grid
+  const unit = roundoff(elementType, await distancePrecision())
+  const dimensions = query.values.length
+  for (const { name, metric } of METRICS) {
+    const references = stored.map(values => referenceDistance(metric, values, query.values))
+    for (const ascending of [true, false]) {
+      for (const [projection, bins] of Object.entries(PROJECTIONS)) {
+        for (const k of ks) {
+          const label = `${name} ${ascending ? 'ASC' : 'DESC'}, ${projection}, k = ${k}`
+          const records = await topK(set, q => {
+            q.ops = [
+              operations.read('id'),
+              exp.operations.read('d', exp.vectorDistance(metric, query.vector, exp.binVector('v')), 0),
+              ...bins.map(bin => operations.read(bin))
+            ]
+            q.orderBy('d', Aerospike.orderByType.DOUBLE, ascending ? Aerospike.order.ASC : Aerospike.order.DESC)
+          }, k, { socketTimeout: 0, totalTimeout: 0 })
+          try {
+            expectBestK(records, references, k, ascending, dimensions, unit)
+          } catch (error: any) {
+            error.message = `${label}: ${error.message}`
+            throw error
+          }
+          for (const record of records) {
+            const id = record.bins.id as number
+            expect(Object.keys(record.bins).sort(), label).to.eql(['d', 'id', ...bins].sort())
+            if (bins.includes('v')) expect((record.bins.v as Aerospike.Vector).toBytes(), label).to.eql(vectors[id].toBytes())
+            if (bins.includes('name')) {
+              const { v, d, id: _, ...payload } = record.bins
+              expect(payload, label).to.eql(payloadOf(id))
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// A threshold between two neighbouring reference distances, near the middle, with a
+// gap wider than both roundings, so no record can land on the wrong side of it.
+export function safeThreshold (references: Array<{ value: number, scale: number }>, dimensions: number, unit: number) {
+  const sorted = [...references].sort((a, b) => a.value - b.value)
+  for (let offset = 0; offset < sorted.length / 2; offset++) {
+    for (const j of [Math.floor(sorted.length / 2) + offset, Math.floor(sorted.length / 2) - offset]) {
+      const [low, high] = [sorted[j], sorted[j + 1]]
+      if (low && high && high.value - low.value > 2 * (toleranceOf(low, dimensions, unit) + toleranceOf(high, dimensions, unit))) {
+        return (low.value + high.value) / 2
+      }
+    }
+  }
+  throw new Error('no safe threshold')
+}
+
+// Checks a search without Top-K: a query that filters on the distance returns exactly
+// the records the reference puts past the threshold (both directions), and a query
+// that only computes the distance returns every record with it, and the bins asked for.
+export async function expectFilterGrid (grid: Awaited<ReturnType<typeof loadGridSet>>, elementType: number) {
+  const { set, stored, vectors, query } = grid
+  const unit = roundoff(elementType, await distancePrecision())
+  const dimensions = query.values.length
+  const idsOf = (records: Aerospike.AerospikeRecord[]) => records.map(r => r.bins.id as number).sort((a, b) => a - b)
+  for (const { name, metric } of METRICS) {
+    const references = stored.map(values => referenceDistance(metric, values, query.values))
+    const distance = exp.vectorDistance(metric, query.vector, exp.binVector('v'))
+    const threshold = safeThreshold(references, dimensions, unit)
+    const policy = { socketTimeout: 0, totalTimeout: 0 }
+
+    const above = await helper.client.query(helper.namespace, set).results({ ...policy, filterExpression: exp.gt(distance, exp.float(threshold)) } as any)
+    const below = await helper.client.query(helper.namespace, set).results({ ...policy, filterExpression: exp.lt(distance, exp.float(threshold)) } as any)
+    const expectedAbove = references.flatMap((r, i) => (r.value > threshold ? [i] : []))
+    expect(idsOf(above), `${name} > ${threshold}`).to.eql(expectedAbove)
+    expect(idsOf(below), `${name} < ${threshold}`).to.eql(references.flatMap((r, i) => (r.value < threshold ? [i] : [])))
+
+    for (const [projection, bins] of Object.entries(PROJECTIONS)) {
+      const q = helper.client.query(helper.namespace, set)
+      q.ops = [operations.read('id'), exp.operations.read('d', distance, 0), ...bins.map(bin => operations.read(bin))]
+      const records = await q.results(policy as any)
+      expect(records.length, `${name}, ${projection}`).to.equal(stored.length)
+      for (const record of records) {
+        const id = record.bins.id as number
+        expectNear(record.bins.d as number, references[id], dimensions, unit, `${name}, ${projection}, record ${id}`)
+        expect(Object.keys(record.bins).sort()).to.eql(['d', 'id', ...bins].sort())
+        if (bins.includes('v')) expect((record.bins.v as Aerospike.Vector).toBytes()).to.eql(vectors[id].toBytes())
+      }
+    }
   }
 }

@@ -100,7 +100,9 @@ describe('Vector write and read paths', function () {
       ['select()', async i => (await helper.client.select(keyOf(set, i), ['v'])).bins.v],
       ['operate() read', async i => (await helper.client.operate(keyOf(set, i), [operations.read('v')])).bins.v],
       ['batchRead() all bins', async i => (await helper.client.batchRead([{ key: keyOf(set, i), readAllBins: true }]))[0].record.bins.v],
-      ['batchRead() one bin', async i => (await helper.client.batchRead([{ key: keyOf(set, i), bins: ['v'] }]))[0].record.bins.v]
+      ['batchRead() one bin', async i => (await helper.client.batchRead([{ key: keyOf(set, i), bins: ['v'] }]))[0].record.bins.v],
+      ['batchGet()', async i => (await helper.client.batchGet([keyOf(set, i)]))[0].record.bins.v],
+      ['batchSelect()', async i => (await helper.client.batchSelect([keyOf(set, i)], ['v']))[0].record.bins.v]
     ]
     for (const [path, read] of reads) {
       for (let i = 0; i < vectors.length; i++) {
@@ -146,6 +148,72 @@ describe('Vector write and read paths', function () {
     for (const [bin, vector] of Object.entries(bins)) {
       expectSameVector(record.bins[bin], vector, bin)
     }
+  })
+
+  it('copies a vector bin with a write expression, as a vector', async function () {
+    const vector = Vector.ofFloat32([1, 2, 3])
+    const set = await loadVectors([vector])
+    await helper.client.operate(keyOf(set, 0), [exp.operations.write('copy', exp.binVector('v'), 0)])
+    const { bins } = await helper.client.get(keyOf(set, 0))
+    expectSameVector(bins.copy, vector)
+    const types = await helper.client.operate(keyOf(set, 0), [exp.operations.read('t', exp.binType('copy'), 0)])
+    expect(types.bins.t).to.equal(VECTOR_TYPE)
+  })
+
+  it('writes, reads and computes a distance on a vector in one operate()', async function () {
+    const set = await loadVectors([undefined], [{ n: 1 }])
+    const record = await helper.client.operate(keyOf(set, 0), [
+      operations.write('v', Vector.ofInt32([3, 4])),
+      operations.read('v'),
+      exp.operations.read('d', exp.vectorDistance(Aerospike.vectorDistanceMetric.DOT_PRODUCT, Vector.ofInt32([2, 1]), exp.binVector('v')), 0)
+    ])
+    expectSameVector(record.bins.v, Vector.ofInt32([3, 4]))
+    expect(record.bins.d).to.equal(10)
+  })
+
+  it('returns Vectors page by page from paginated queries and scans', async function () {
+    const vectors = Array.from({ length: 50 }, (_, i) => Vector.ofFloat32([i, -i]))
+    const set = await loadVectors(vectors, vectors.map((_, i) => ({ id: i })))
+    const seen: number[] = []
+    const query = helper.client.query(helper.namespace, set, { paginate: true, maxRecords: 20 } as any)
+    for (let page = 0; page < 10; page++) {
+      for (const record of await query.results()) {
+        expectSameVector(record.bins.v, vectors[record.bins.id as number])
+        seen.push(record.bins.id as number)
+      }
+      if (!query.hasNextPage()) break
+    }
+    expect(seen.sort((a, b) => a - b)).to.eql(vectors.map((_, i) => i))
+
+    const scan = helper.client.scan(helper.namespace, set, { paginate: true } as any)
+    const scanned = await scan.results({ maxRecords: 30 } as any)
+    expect(scanned.length).to.equal(30)
+    for (const record of scanned) expectSameVector(record.bins.v, vectors[record.bins.id as number])
+  })
+
+  it('keeps a vector through replace, generation checks, touch, a stored key and batch remove', async function () {
+    const vector = Vector.ofFloat64([0.25, -8])
+    const set = await loadVectors([Vector.ofFloat32([1]), Vector.ofFloat32([2])], [{ n: 1 }, { n: 2 }])
+    const key = keyOf(set, 0)
+
+    await helper.client.put(key, { v: vector }, null, { exists: Aerospike.policy.exists.REPLACE, key: Aerospike.policy.key.SEND } as any)
+    let record = await helper.client.get(key)
+    expect(Object.keys(record.bins)).to.eql(['v'])
+    expect(record.key.key).to.equal(0)
+    expectSameVector(record.bins.v, vector)
+
+    await helper.client.put(key, { v: vector }, { gen: record.gen }, { gen: Aerospike.policy.gen.EQ } as any)
+    const stale = await helper.client.put(key, { v: vector }, { gen: record.gen }, { gen: Aerospike.policy.gen.EQ } as any).then(() => null, e => e)
+    expect(stale?.code).to.equal(status.ERR_RECORD_GENERATION)
+
+    await helper.client.operate(key, [operations.touch(5000)])
+    record = await helper.client.get(key)
+    expect(record.ttl).to.be.within(4990, 5000)
+    expectSameVector(record.bins.v, vector)
+
+    const removed = await helper.client.batchRemove([key, keyOf(set, 1)])
+    expect(removed.map(r => r.status)).to.eql([status.OK, status.OK])
+    expect(await helper.client.exists(key)).to.be.false
   })
 
   it('removes a vector bin written as null, and the record when deleted (R11)', async function () {

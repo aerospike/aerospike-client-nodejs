@@ -87,14 +87,51 @@ describe('Vectors in UDFs', function () {
     expect(error.message).to.match(/vector: elements must be finite \(no NaN or infinity\)$/)
   })
 
-  it('passes a vector through a stream UDF as identical bytes (R72)', async function () {
+  it('writes vectors with batchWrite() UDF calls, as vectors', async function () {
+    const set = await loadVectors(VECTORS.map(() => undefined), VECTORS.map(() => ({ n: 1 })))
+    const results = await helper.client.batchWrite(VECTORS.map(([, vector], i) => ({
+      type: Aerospike.batchType.BATCH_APPLY,
+      key: new Aerospike.Key(helper.namespace, set, i),
+      udf: { module: MODULE, funcname: 'write_v', args: [vector] }
+    } as any)))
+    expect(results.map(r => r.status)).to.eql(VECTORS.map(() => status.OK))
+    for (let i = 0; i < VECTORS.length; i++) {
+      const stored = (await helper.client.get(new Aerospike.Key(helper.namespace, set, i))).bins.v as Aerospike.Vector
+      expect(stored.toBytes(), VECTORS[i][0]).to.eql(VECTORS[i][1].toBytes())
+    }
+  })
+
+  it('returns a vector from batchApply() as the same Vector (R76)', async function () {
+    const set = await loadVectors([undefined], [{ n: 1 }])
+    const keys = [new Aerospike.Key(helper.namespace, set, 0)]
+    for (const [name, vector] of VECTORS) {
+      const results = await helper.client.batchApply(keys, { module: MODULE, funcname: 'echo', args: [vector] } as any)
+      expect(results[0].record.bins.SUCCESS, name).to.be.instanceof(Vector)
+      expect((results[0].record.bins.SUCCESS as Aerospike.Vector).toBytes(), name).to.eql(vector.toBytes())
+    }
+  })
+
+  it('passes a vector through a stream UDF as identical bytes, returned as a Vector (R72)', async function () {
     for (const [name, vector] of VECTORS) {
       const set = await loadVectors([vector])
       const query = () => helper.client.query(helper.namespace, set)
       expect(await query().apply(MODULE, 'stream_describe_v'), name).to.equal(`userdata:${vector.toBytes().length}`)
-      const result = await query().apply(MODULE, 'stream_v')
-      expect(Buffer.isBuffer(result), `${name}: expected bytes`).to.be.true
-      expect(result, name).to.eql(vector.toBytes())
+
+      const applied = await query().apply(MODULE, 'stream_v')
+      expect(applied, `${name}: apply()`).to.be.instanceof(Vector)
+      expect((applied as Aerospike.Vector).toBytes(), name).to.eql(vector.toBytes())
+
+      const streamed = await new Promise<unknown[]>((resolve, reject) => {
+        const values: unknown[] = []
+        const q = query()
+        q.setUdf(MODULE, 'stream_v')
+        const stream = q.foreach()
+        stream.on('data', (record: any) => values.push(record.bins))
+        stream.on('error', reject)
+        stream.on('end', () => resolve(values))
+      })
+      expect(streamed.length, `${name}: foreach()`).to.equal(1)
+      expect((streamed[0] as Aerospike.Vector).toBytes(), `${name}: foreach()`).to.eql(vector.toBytes())
     }
   })
 })
