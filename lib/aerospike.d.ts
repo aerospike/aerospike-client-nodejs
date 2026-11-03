@@ -1383,7 +1383,26 @@ export class Query {
      * An out-of-range k fails with a parameter error when the query runs. Calling
      * <code>topK</code> again replaces k.
      *
+     * While it merges the nodes' results, the client keeps about k records in memory, each
+     * with the bins the query returns. For records with large bins, such as vectors, rank with
+     * only the order bins selected, then read the winners with {@link Client#batchRead}.
+     *
+     * Each node replies only after scanning all its matching records, and the results arrive
+     * only after every node has replied. Give the query a generous <code>socketTimeout</code>:
+     * a node that times out is retried and scans again from the start. Bound the whole query
+     * with <code>totalTimeout</code>; {@link RecordStream#abort} ends the stream for the
+     * application but doesn't stop the nodes' work.
+     *
      * @param k - Number of records to return, from 1 to 1,000.
+     *
+     * @example <caption>Rank on the order bin only, then read the winners' records</caption>
+     *
+     * const query = client.query('test', 'products')
+     * query.select('score')
+     * query.orderBy('score', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
+     * query.topK(100)
+     * const top = await query.results({ socketTimeout: 0, totalTimeout: 30000 })
+     * const records = await client.batchRead(top.map(r => ({ key: r.key, readAllBins: true })))
      */
     public topK(k: number): void;
     /**
