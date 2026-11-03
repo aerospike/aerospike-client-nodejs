@@ -24,7 +24,7 @@ import * as helper from '../test_helper.ts';
 import type { OrderKey, ModelRecord } from './helpers.ts';
 import {
   loadModel, removeLoadedSets, indexBin, topK, digests, referenceTopK, orderBy, describeKeys,
-  partitionOf, seededRandom, pick, randomValue, skipUnlessTopKQueriesRun
+  partitionOf, seededRandom, pick, randomValue, skipUnlessTopKQueriesRun, checkUnlessString
 } from './helpers.ts';
 
 const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.orderByType
@@ -62,8 +62,10 @@ describe('Top-K combinations against the reference order', function () {
       for (const second of [null, ...everyKey('b')]) {
         const keys = second ? [first, second] : [first]
         for (const k of [1, 7, 60, 100]) {
-          const actual = await topK(set, orderBy(keys), k)
-          expect(digests(actual), `${describeKeys(keys)}, k = ${k}`).to.eql(hexDigests(referenceTopK(model, keys, k)))
+          await checkUnlessString(keys, async () => {
+            const actual = await topK(set, orderBy(keys), k)
+            expect(digests(actual), `${describeKeys(keys)}, k = ${k}`).to.eql(hexDigests(referenceTopK(model, keys, k)))
+          })
         }
       }
     }
@@ -99,15 +101,16 @@ describe('Top-K combinations against the reference order', function () {
         kept = model.filter(record => partitionOf(record.digest) < 2048)
       }
 
-      const actual = await topK(set, q => {
-        if (path === 'index filter') q.where(filter.equal('f', f))
-        if (path === 'partitions') q.partitions(0, 2048)
-        if (path === 'select') q.select('a', 'b', 'f')
-        orderBy(keys)(q)
-      }, k, policy)
-
       const label = `seed ${seed}: ${count} records, ${path} (f = ${f}), ${describeKeys(keys)}, k = ${k}`
-      expect(digests(actual), label).to.eql(hexDigests(referenceTopK(kept, keys, k)))
+      await checkUnlessString(keys, async () => {
+        const actual = await topK(set, q => {
+          if (path === 'index filter') q.where(filter.equal('f', f))
+          if (path === 'partitions') q.partitions(0, 2048)
+          if (path === 'select') q.select('a', 'b', 'f')
+          orderBy(keys)(q)
+        }, k, policy)
+        expect(digests(actual), label).to.eql(hexDigests(referenceTopK(kept, keys, k)))
+      })
       await removeLoadedSets()
     }
   })
@@ -185,30 +188,39 @@ describe('Top-K combinations against the reference order', function () {
       if (random() < 0.5) keys.push(pick(random, computedKeys.filter(key => key.bin !== keys[0].bin)))
       const k = pick(random, [1, 1 + randomInt(random, count), count + 5])
 
-      const actual = await topK(set, q => {
-        q.ops = ops
-        orderBy(keys)(q)
-      }, k)
-
       const label = `seed ${seed}: ${count} records, ${describeKeys(keys)}, k = ${k}`
-      expect(digests(actual), label).to.eql(hexDigests(referenceTopK(computed, keys, k)))
+      await checkUnlessString(keys, async () => {
+        const actual = await topK(set, q => {
+          q.ops = ops
+          orderBy(keys)(q)
+        }, k)
+        expect(digests(actual), label).to.eql(hexDigests(referenceTopK(computed, keys, k)))
+      })
       await removeLoadedSets()
     }
   })
 
   it('k = 1,000 over 1,500 records with many ties', async function () {
     const random = seededRandom(2026)
-    const { set, model } = await loadModel(Array.from({ length: 1500 }, () => ({
-      score: { type: INTEGER, value: randomInt(random, 50) },
-      name: { type: STRING, value: pick(random, ['a', 'b', 'c', 'd', 'e']) }
-    })))
-    const keys: OrderKey[] = [
-      { bin: 'score', type: INTEGER, direction: DESC, flags: DEFAULT },
-      { bin: 'name', type: STRING, direction: ASC, flags: DEFAULT }
-    ]
-
-    const actual = await topK(set, orderBy(keys), 1000)
-    expect(actual).to.have.length(1000)
-    expect(digests(actual)).to.eql(hexDigests(referenceTopK(model, keys, 1000)))
+    const { set, model } = await loadModel(Array.from({ length: 1500 }, () => {
+      const name = pick(random, ['a', 'b', 'c', 'd', 'e'])
+      return {
+        score: { type: INTEGER, value: randomInt(random, 50) },
+        name: { type: STRING, value: name },
+        tag: { type: BYTES, value: Buffer.from(name) }
+      }
+    }))
+    // The same ties broken by a STRING key and by a BYTES key.
+    for (const [bin, type] of [['name', STRING], ['tag', BYTES]] as const) {
+      const keys: OrderKey[] = [
+        { bin: 'score', type: INTEGER, direction: DESC, flags: DEFAULT },
+        { bin, type, direction: ASC, flags: DEFAULT }
+      ]
+      await checkUnlessString(keys, async () => {
+        const actual = await topK(set, orderBy(keys), 1000)
+        expect(actual, bin).to.have.length(1000)
+        expect(digests(actual), bin).to.eql(hexDigests(referenceTopK(model, keys, 1000)))
+      })
+    }
   })
 })

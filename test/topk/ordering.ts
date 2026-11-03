@@ -21,7 +21,7 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { loadSet, removeLoadedSets, topK, values, digests, inDigestOrder, skipUnlessTopKQueriesRun } from './helpers.ts';
+import { loadSet, removeLoadedSets, topK, values, digests, inDigestOrder, skipUnlessTopKQueriesRun, untilStringSupported } from './helpers.ts';
 
 const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.orderByType
 const { ASC, DESC } = Aerospike.order
@@ -57,8 +57,10 @@ describe('Top-K ordering', function () {
   it('ranks strings by byte order in both directions', async function () {
     const set = await loadSet(['b', 'a', 'ab', '', 'B', 'abc'].map(s => ({ s })))
 
-    expect(values(await topK(set, q => q.orderBy('s', STRING, ASC), 6), 's')).to.eql(['', 'B', 'a', 'ab', 'abc', 'b'])
-    expect(values(await topK(set, q => q.orderBy('s', STRING, DESC), 6), 's')).to.eql(['b', 'abc', 'ab', 'a', 'B', ''])
+    await untilStringSupported(async () =>
+      expect(values(await topK(set, q => q.orderBy('s', STRING, ASC), 6), 's')).to.eql(['', 'B', 'a', 'ab', 'abc', 'b']))
+    await untilStringSupported(async () =>
+      expect(values(await topK(set, q => q.orderBy('s', STRING, DESC), 6), 's')).to.eql(['b', 'abc', 'ab', 'a', 'B', '']))
   })
 
   it('ranks byte arrays by byte order, then by length', async function () {
@@ -97,37 +99,43 @@ describe('Top-K ordering', function () {
 
   it('uses the second key only to break ties on the first', async function () {
     const set = await loadSet([{ score: 2, name: 'b' }, { score: 1, name: 'a' }, { score: 2, name: 'a' }, { score: 3, name: 'z' }])
-    const records = await topK(set, q => {
-      q.orderBy('score', INTEGER, DESC)
-      q.thenOrderBy('name', STRING, ASC)
-    }, 4)
-
-    expect(records.map(r => `${r.bins.score}${r.bins.name}`)).to.eql(['3z', '2a', '2b', '1a'])
+    await untilStringSupported(async () => {
+      const records = await topK(set, q => {
+        q.orderBy('score', INTEGER, DESC)
+        q.thenOrderBy('name', STRING, ASC)
+      }, 4)
+      expect(records.map(r => `${r.bins.score}${r.bins.name}`)).to.eql(['3z', '2a', '2b', '1a'])
+    })
   })
 
   it("applies each key's own type and direction", async function () {
     // Built so that a swapped, dropped or ignored setting gives a different order.
     const rows = ['1d', '1b', '1a', '1c', '2c', '2a', '2d', '2b']
     const set = await loadSet(rows.map(row => ({ score: Number(row[0]), name: row[1] })))
-    const records = await topK(set, q => {
-      q.orderBy('score', INTEGER, DESC)
-      q.thenOrderBy('name', STRING, ASC)
-    }, 8)
-
-    expect(records.map(r => `${r.bins.score}${r.bins.name}`)).to.eql(['2a', '2b', '2c', '2d', '1a', '1b', '1c', '1d'])
+    await untilStringSupported(async () => {
+      const records = await topK(set, q => {
+        q.orderBy('score', INTEGER, DESC)
+        q.thenOrderBy('name', STRING, ASC)
+      }, 8)
+      expect(records.map(r => `${r.bins.score}${r.bins.name}`)).to.eql(['2a', '2b', '2c', '2d', '1a', '1b', '1c', '1d'])
+    })
   })
 
   it('compares strings without case only when asked', async function () {
     const set = await loadSet(['banana', 'Apple', 'cherry', 'apple', 'Banana'].map(name => ({ name })))
 
-    const byBytes = await topK(set, q => q.orderBy('name', STRING, ASC), 5)
-    expect(values(byBytes, 'name')).to.eql(['Apple', 'Banana', 'apple', 'banana', 'cherry'])
+    await untilStringSupported(async () => {
+      const byBytes = await topK(set, q => q.orderBy('name', STRING, ASC), 5)
+      expect(values(byBytes, 'name')).to.eql(['Apple', 'Banana', 'apple', 'banana', 'cherry'])
+    })
 
-    const ignoringCase = await topK(set, q => q.orderBy('name', STRING, ASC, CASE_INSENSITIVE), 5)
-    expect(values(ignoringCase, 'name').map(name => (name as string).toLowerCase()))
-      .to.eql(['apple', 'apple', 'banana', 'banana', 'cherry'])
-    expect(inDigestOrder(ignoringCase.slice(0, 2)), 'Apple and apple tie').to.be.true
-    expect(inDigestOrder(ignoringCase.slice(2, 4)), 'banana and Banana tie').to.be.true
+    await untilStringSupported(async () => {
+      const ignoringCase = await topK(set, q => q.orderBy('name', STRING, ASC, CASE_INSENSITIVE), 5)
+      expect(values(ignoringCase, 'name').map(name => (name as string).toLowerCase()))
+        .to.eql(['apple', 'apple', 'banana', 'banana', 'cherry'])
+      expect(inDigestOrder(ignoringCase.slice(0, 2)), 'Apple and apple tie').to.be.true
+      expect(inDigestOrder(ignoringCase.slice(2, 4)), 'banana and Banana tie').to.be.true
+    })
   })
 
   it('when k cuts through tied records, the lowest digests make the cut', async function () {
@@ -155,10 +163,12 @@ describe('Top-K ordering', function () {
     expect(hex(await topK(bytes, thenBy('b', BYTES, ASC), 3), 'b')).to.eql(['01', '0100', '02'])
 
     const missing = await loadSet([{ score: 1, name: 'b' }, { score: 1 }, { score: 1, name: 'a' }])
-    expect(values(await topK(missing, thenBy('name', STRING, ASC), 3), 'name')).to.eql(['a', 'b', undefined])
+    await untilStringSupported(async () =>
+      expect(values(await topK(missing, thenBy('name', STRING, ASC), 3), 'name')).to.eql(['a', 'b', undefined]))
 
     const sameOnBoth = await loadSet([1, 2, 3].map(() => ({ score: 1, name: 'a' })))
-    expect(inDigestOrder(await topK(sameOnBoth, thenBy('name', STRING, ASC), 3))).to.be.true
+    await untilStringSupported(async () =>
+      expect(inDigestOrder(await topK(sameOnBoth, thenBy('name', STRING, ASC), 3))).to.be.true)
   })
 
   it('handles an empty set, a set without the key, and values of the other number type', async function () {
@@ -186,8 +196,9 @@ describe('Top-K ordering', function () {
     // Byte order of the UTF-8: 'z' is 7a, 'é' is c3 a9, 'ü' is c3 bc.
     const longA = 'a'.repeat(1000)
     const strings = await loadSet(['ü', longA + 'b', 'z', 'é', longA + 'a'].map(s => ({ s })))
-    expect(values(await topK(strings, q => q.orderBy('s', STRING, ASC), 5), 's'))
-      .to.eql([longA + 'a', longA + 'b', 'z', 'é', 'ü'])
+    await untilStringSupported(async () =>
+      expect(values(await topK(strings, q => q.orderBy('s', STRING, ASC), 5), 's'))
+        .to.eql([longA + 'a', longA + 'b', 'z', 'é', 'ü']))
 
     const longBytes = Buffer.alloc(1000, 7)
     const longBytesLastHigher = Buffer.concat([Buffer.alloc(999, 7), Buffer.from([8])])
@@ -200,13 +211,13 @@ describe('Top-K ordering', function () {
   it('orders by bins whose names are exactly 15 bytes', async function () {
     const ascii = 'a'.repeat(15)
     const utf8 = 'é'.repeat(7) + 'a' // 14 bytes of 'é' plus one
-    const set = await loadSet([[2, 'x'], [1, 'y'], [2, 'w']].map(([n, s]) => ({ [ascii]: n, [utf8]: s })))
+    const set = await loadSet([[2, 'x'], [1, 'y'], [2, 'w']].map(([n, s]) => ({ [ascii]: n, [utf8]: Buffer.from(s as string) })))
     const records = await topK(set, q => {
       q.orderBy(ascii, INTEGER, DESC)
-      q.thenOrderBy(utf8, STRING, ASC)
+      q.thenOrderBy(utf8, BYTES, ASC)
     }, 3)
 
-    expect(records.map(r => `${r.bins[ascii]}${r.bins[utf8]}`)).to.eql(['2w', '2x', '1y'])
+    expect(records.map(r => `${r.bins[ascii]}${(r.bins[utf8] as Buffer).toString()}`)).to.eql(['2w', '2x', '1y'])
   })
 
   it('returns at most k records', async function () {

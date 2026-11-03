@@ -23,7 +23,7 @@ import type { Query as Q } from '../../lib/aerospike.js';
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { newQuery, errorFrom, streamErrorFrom, skipUnlessTopKQueriesRun } from './helpers.ts';
+import { newQuery, errorFrom, streamErrorFrom, skipUnlessTopKQueriesRun, untilStringSupported } from './helpers.ts';
 
 const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.orderByType
 const { DESC } = Aerospike.order
@@ -116,26 +116,28 @@ describe('Top-K rejections', function () {
       const binMessage = 'Top-K order-by bin name must be 1-15 UTF-8 bytes without NUL'
       await expectOrderKeysRejected([
         ['type 0', 'score', 0, DESC, 0,
-          'orderBy requires a type declaration (INTEGER or DOUBLE); Aerospike has no schema'],
-        ['type 5', 'score', 5, DESC, 0, 'orderBy type must be INTEGER or DOUBLE; got 5'],
+          'orderBy requires a type declaration (INTEGER, DOUBLE, or BYTES); Aerospike has no schema'],
+        ['type 5', 'score', 5, DESC, 0, 'orderBy type must be INTEGER, DOUBLE, or BYTES; got 5'],
         ['direction 2', 'score', INTEGER, 2, 0, 'orderBy direction must be ASC or DESC'],
         ['empty bin name', '', INTEGER, DESC, 0, binMessage],
         ['bin name of 16 bytes', 'a'.repeat(16), INTEGER, DESC, 0, binMessage],
         ['CASE_INSENSITIVE on INTEGER', 'score', INTEGER, DESC, CASE_INSENSITIVE, flagsMessage],
         ['CASE_INSENSITIVE on DOUBLE', 'score', DOUBLE, DESC, CASE_INSENSITIVE, flagsMessage],
-        ['unknown flag 2 on INTEGER', 'score', INTEGER, DESC, 2, flagsMessage]
+        ['CASE_INSENSITIVE on BYTES', 'score', BYTES, DESC, CASE_INSENSITIVE, flagsMessage],
+        ['unknown flag 2 on INTEGER', 'score', INTEGER, DESC, 2, flagsMessage],
+        ['unknown flag 2 on BYTES', 'score', BYTES, DESC, 2, flagsMessage]
       ])
     })
 
-    // On hold: STRING and BYTES order keys are rejected before any other order-key
-    // rule for now, and their support is still changing.
-    it.skip('rejects invalid flags on STRING and BYTES keys', async function () {
-      const unknownFlagMessage = 'orderBy has unknown flag bits set'
-      await expectOrderKeysRejected([
-        ['unknown flag 2', 'score', STRING, DESC, 2, unknownFlagMessage],
-        ['unknown flag 4', 'score', STRING, DESC, 4, unknownFlagMessage],
-        ['CASE_INSENSITIVE on BYTES', 'score', BYTES, DESC, CASE_INSENSITIVE, 'orderBy flags are only valid with type STRING']
-      ])
+    // Once STRING keys are supported, unknown flags on them should be rejected with
+    // 'orderBy has unknown flag bits set'; until then STRING itself is rejected first.
+    it('rejects STRING keys with unknown flags', async function () {
+      for (const flags of [2, 4]) {
+        const query = newQuery()
+        query.orderBy('score', STRING, DESC, flags)
+        query.topK(10)
+        await untilStringSupported(() => query.results())
+      }
     })
 
     it('rejects an order key the query does not return exactly once', async function () {

@@ -29,6 +29,31 @@ const { CASE_INSENSITIVE } = Aerospike.orderByFlags
 
 // Shared plumbing for the Top-K tests, so the test files stay short.
 
+// This release rejects STRING order keys. A STRING check runs through
+// untilStringSupported(): it passes while the query is rejected with exactly this
+// message, and fails once STRING works, so the check can be switched back on.
+export const STRING_REJECTION = 'orderBy type STRING is not supported yet; use INTEGER, DOUBLE, or BYTES'
+
+export async function untilStringSupported (check: () => Promise<unknown>) {
+  let error: any = null
+  try {
+    await check()
+  } catch (e) {
+    error = e
+  }
+  if (error === null) {
+    throw new Error('STRING order keys are now supported: remove untilStringSupported() so this test checks the result')
+  }
+  if (!(error instanceof Aerospike.AerospikeError) || error.code !== Aerospike.status.ERR_PARAM || error.message !== STRING_REJECTION) {
+    throw error
+  }
+}
+
+// Runs check, through untilStringSupported() when keys include a STRING key.
+export function checkUnlessString (keys: OrderKey[], check: () => Promise<unknown>) {
+  return keys.some(key => key.type === STRING) ? untilStringSupported(check) : check()
+}
+
 // A query on the shared test namespace and set.
 export function newQuery (): Q {
   return helper.client.query(helper.namespace, helper.set)

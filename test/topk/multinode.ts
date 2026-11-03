@@ -28,25 +28,31 @@ import type { OrderKey, ModelRecord } from './helpers.ts';
 import {
   loadModel, loadSet, removeLoadedSets, topK, digests, referenceTopK, orderBy, masterPartitions, ownerOf, setBin,
   partitionOf, seededRandom, pick, newQuery, errorFrom, allRecords, waitForMigrations,
-  skipUnlessTopKQueriesRun, skipUnlessMultiNode
+  skipUnlessTopKQueriesRun, skipUnlessMultiNode, checkUnlessString, describeKeys
 } from './helpers.ts';
 
-const { INTEGER, STRING } = Aerospike.orderByType
+const { INTEGER, STRING, BYTES } = Aerospike.orderByType
 const { ASC, DESC } = Aerospike.order
 const { DEFAULT } = Aerospike.orderByFlags
 const { exp, status } = Aerospike
 
 const byScore: OrderKey[] = [{ bin: 'score', type: INTEGER, direction: DESC, flags: DEFAULT }]
 const byScoreThenName: OrderKey[] = [...byScore, { bin: 'name', type: STRING, direction: ASC, flags: DEFAULT }]
+// The same tie-break as a BYTES key, which this release supports.
+const byScoreThenTag: OrderKey[] = [...byScore, { bin: 'tag', type: BYTES, direction: ASC, flags: DEFAULT }]
 const hexDigests = (records: ModelRecord[]) => records.map(record => record.digest.toString('hex'))
 
-// count records with a random score in [0, scores) and a random name.
+// count records with a random score in [0, scores) and a random name, also as bytes (tag).
 function scoredRecords (count: number, scores: number, seed: number) {
   const random = seededRandom(seed)
-  return Array.from({ length: count }, () => ({
-    score: { type: INTEGER, value: Math.floor(random() * scores) },
-    name: { type: STRING, value: pick(random, ['a', 'b', 'c', 'd']) }
-  }))
+  return Array.from({ length: count }, () => {
+    const name = pick(random, ['a', 'b', 'c', 'd'])
+    return {
+      score: { type: INTEGER, value: Math.floor(random() * scores) },
+      name: { type: STRING, value: name },
+      tag: { type: BYTES, value: Buffer.from(name) }
+    }
+  })
 }
 
 describe('Top-K across several nodes', function () {
@@ -62,17 +68,18 @@ describe('Top-K across several nodes', function () {
     const owners = new Set(referenceTopK(model, byScore, 100).map(r => ownerOf(masters, r.digest)))
     expect(owners.size, 'the top 100 must come from more than one node').to.be.above(1)
 
-    for (const keys of [byScore, byScoreThenName]) {
+    for (const keys of [byScore, byScoreThenTag, byScoreThenName]) {
       for (const k of [1, 10, 100, 1000]) {
-        expect(digests(await topK(set, orderBy(keys), k)), `${keys.length} key(s), k = ${k}`)
-          .to.eql(hexDigests(referenceTopK(model, keys, k)))
+        await checkUnlessString(keys, async () =>
+          expect(digests(await topK(set, orderBy(keys), k)), `${describeKeys(keys)}, k = ${k}`)
+            .to.eql(hexDigests(referenceTopK(model, keys, k))))
       }
     }
 
     // With a filter expression: each node ranks only the records it keeps.
     const filtered = model.filter(record => (record.bins.score!.value as number) >= 500)
-    expect(digests(await topK(set, orderBy(byScoreThenName), 100, { filterExpression: exp.ge(exp.binInt('score'), exp.int(500)) })),
-      'with a filter expression').to.eql(hexDigests(referenceTopK(filtered, byScoreThenName, 100)))
+    expect(digests(await topK(set, orderBy(byScoreThenTag), 100, { filterExpression: exp.ge(exp.binInt('score'), exp.int(500)) })),
+      'with a filter expression').to.eql(hexDigests(referenceTopK(filtered, byScoreThenTag, 100)))
 
     // With a computed key, nearest to 500 first: each node computes it, then the client merges.
     const distance = model.map(record => ({
@@ -122,12 +129,12 @@ describe('Top-K across several nodes', function () {
     const { set, model } = await loadModel(scoredRecords(3000, 1000, 4))
     const masters = await masterPartitions()
     const inSubset = model.filter(record => partitionOf(record.digest) < 2048)
-    const expected = referenceTopK(inSubset, byScoreThenName, 100)
+    const expected = referenceTopK(inSubset, byScoreThenTag, 100)
     expect(new Set(expected.map(r => ownerOf(masters, r.digest))).size, 'the subset must span nodes').to.be.above(1)
 
     const top = await topK(set, q => {
       q.partitions(0, 2048)
-      orderBy(byScoreThenName)(q)
+      orderBy(byScoreThenTag)(q)
     }, 100)
     expect(digests(top)).to.eql(hexDigests(expected))
   })
@@ -140,7 +147,7 @@ describe('Top-K across several nodes', function () {
       // A node replies only after scanning all its records, so allow a long socket wait.
       const patient = { socketTimeout: 0, totalTimeout: 300000 }
 
-      for (const keys of [byScore, byScoreThenName]) {
+      for (const keys of [byScore, byScoreThenTag]) {
         const top = await topK(set, orderBy(keys), 1000, patient)
         expect(top).to.have.length(1000)
         expect(digests(top), `${keys.length} key(s)`).to.eql(hexDigests(referenceTopK(model, keys, 1000)))
@@ -149,13 +156,13 @@ describe('Top-K across several nodes', function () {
 
     it('with a short socket timeout, returns the right top k or a timeout, never a wrong result', async function () {
       const { set, model } = await loadModel(scoredRecords(300000, 10000, 7))
-      const expected = hexDigests(referenceTopK(model, byScoreThenName, 1000))
+      const expected = hexDigests(referenceTopK(model, byScoreThenTag, 1000))
 
       // Short socket timeouts make nodes time out mid-scan, so the client retries and the node rescans.
       for (const socketTimeout of [20, 100, 500]) {
         for (let attempt = 0; attempt < 5; attempt++) {
           const query = helper.client.query(helper.namespace, set)
-          orderBy(byScoreThenName)(query)
+          orderBy(byScoreThenTag)(query)
           query.topK(1000)
           const policy = { socketTimeout, totalTimeout: 60000, maxRetries: 3 }
           const label = `socketTimeout ${socketTimeout} ms, attempt ${attempt}`
