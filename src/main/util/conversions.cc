@@ -2024,7 +2024,14 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, const LogInfo *log
 			v8_key_busy_count = Nan::New((double)metrics->key_busy_count);
 		}
 
-		Local<Array> v8_connection = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_CONN]);
+		// The C client records connection latency once per node and leaves the
+		// namespace slot empty, so each namespace reports the node's histogram, as
+		// the C client's metrics file does. The node's histogram exists only after
+		// its first connection; until then the empty namespace slot is used.
+		as_latency *conn_latency =
+			(as_latency *)as_load_ptr((void *const *)&node->conn_latency);
+		Local<Array> v8_connection = latency_to_jsarray(
+			conn_latency ? conn_latency : metrics->latency[AS_LATENCY_TYPE_CONN]);
 		Local<Array> v8_write = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_WRITE]);
 		Local<Array> v8_read = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_READ]);
 		Local<Array> v8_batch = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_BATCH]);
