@@ -1362,8 +1362,10 @@ export class Query {
     /**
      * Adds an order key to a Top-K query, after the keys already set.
      *
-     * The second order key ranks records that tie on the first. A query can have at most
-     * two order keys; a third fails with a parameter error when the query runs. Called before {@link Query#orderBy}, it sets the first order key. As with
+     * The second order key ranks records that tie on the first. Call {@link Query#orderBy}
+     * first; calling <code>thenOrderBy</code> before it throws a parameter error.
+     * {@link Query#orderBy} again removes this key. A query can have at most two order keys;
+     * a third fails with a parameter error when the query runs. As with
      * {@link Query#orderBy}, if the query selects bins, the order key must be one of them.
      *
      * @param bin - Name of the bin to order by, as it appears in the returned record. At
@@ -1374,6 +1376,9 @@ export class Query {
      * {@link orderByFlags.DEFAULT}. {@link orderByFlags.CASE_INSENSITIVE} is only valid when
      * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
      * parameter error when the query runs.
+     *
+     * @throws {@link AerospikeError} With code {@link status.ERR_PARAM} if
+     * {@link Query#orderBy} has not been called.
      */
     public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
     /**

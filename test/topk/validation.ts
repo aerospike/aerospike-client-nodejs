@@ -77,9 +77,28 @@ describe('Top-K settings #noserver', function () {
     expect(query.topKLimit).to.be.undefined
   })
 
-  it('thenOrderBy adds keys after the first, or the first if none is set', function () {
+  it('thenOrderBy before orderBy throws a parameter error', function () {
     const query = unsentQuery()
-    query.thenOrderBy('a', INTEGER, ASC)
+    expect(() => query.thenOrderBy('a', INTEGER, ASC))
+      .to.throw(AerospikeError, 'thenOrderBy requires orderBy to be called first')
+      .with.property('code', status.ERR_PARAM)
+    expect(query.orderByKeys).to.eql([])
+  })
+
+  it('orderBy again drops keys added by thenOrderBy, which can then add new ones', function () {
+    const query = unsentQuery()
+    query.orderBy('score', INTEGER, DESC)
+    query.thenOrderBy('ts', INTEGER, DESC)
+    query.orderBy('price', INTEGER, ASC)
+    expect(query.orderByKeys.map(key => key.bin)).to.eql(['price'])
+
+    query.thenOrderBy('ts', INTEGER, DESC)
+    expect(query.orderByKeys.map(key => key.bin)).to.eql(['price', 'ts'])
+  })
+
+  it('thenOrderBy adds keys after the first', function () {
+    const query = unsentQuery()
+    query.orderBy('a', INTEGER, ASC)
     query.thenOrderBy('b', STRING, DESC, orderByFlags.CASE_INSENSITIVE)
     query.thenOrderBy('c', INTEGER, ASC) // a third key is stored; the query rejects it when it runs
 
@@ -105,7 +124,7 @@ describe('Top-K settings #noserver', function () {
   it('setters store any value and never throw; values are checked when the query runs', function () {
     const query = unsentQuery()
     expect(() => query.orderBy(1 as any, 'x' as any, -1 as any, 1.5 as any)).to.not.throw()
-    expect(() => query.thenOrderBy('sc\0re', INTEGER, ASC)).to.not.throw()
+    expect(() => query.thenOrderBy('sc\0re', INTEGER, ASC)).to.not.throw() // after orderBy above
     expect(() => query.topK('10' as any)).to.not.throw()
   })
 })

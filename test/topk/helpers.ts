@@ -313,9 +313,10 @@ function toStored (bins: Record<string, Typed | undefined>): Record<string, unkn
 }
 
 // Applies order keys to a query the same way the reference reads them.
-export function orderBy (keys: OrderKey[]) {
+export function orderBy ([first, ...rest]: OrderKey[]) {
   return (query: Q) => {
-    for (const key of keys) {
+    query.orderBy(first.bin, first.type, first.direction, first.flags)
+    for (const key of rest) {
       query.thenOrderBy(key.bin, key.type, key.direction, key.flags)
     }
   }
