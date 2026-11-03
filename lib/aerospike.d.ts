@@ -909,7 +909,8 @@ export class Vector {
     public static ofInt32(elements: Int32Array | ArrayLike<number>): Vector;
     /**
      * Creates a vector of 32-bit floats. Values are rounded to 32-bit precision.
-     * The server rejects NaN and infinite elements.
+     * The server rejects NaN and infinite elements, including values too large
+     * for 32 bits (beyond about ±3.4e38), which round to infinity.
      *
      * @param elements - From 1 to 65,536 numbers.
      * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
@@ -17840,6 +17841,17 @@ export namespace exp {
      *
      * For `EUCLIDEAN_SQUARED` a smaller value is closer; for `DOT_PRODUCT` and
      * `COSINE_SIMILARITY` a larger value is closer.
+     *
+     * Precision: by default the server sums `FLOAT16`, `INT32` and `FLOAT32` vectors in
+     * 32-bit floats, so a distance has 32-bit float precision (for example, an `INT32`
+     * dot product of 16,777,217 by 1 comes out as 16,777,216). The server's
+     * `vector-distance-precision` setting set to `double` sums them in doubles.
+     * `FLOAT64` vectors are always summed in doubles.
+     *
+     * An unknown distance makes a single-record read fail with `ERR_OP_NOT_APPLICABLE`
+     * (26), and a query leaves the record out, without an error. To get `null` instead,
+     * read the distance with `exp.expReadFlags.EVAL_NO_FAIL`; in a Top-K query those
+     * records then rank last.
      *
      * @param metric - The distance metric.
      * @param query - The vector to compare with.
