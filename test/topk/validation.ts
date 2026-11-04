@@ -77,12 +77,15 @@ describe('Top-K settings #noserver', function () {
     expect(query.topKLimit).to.be.undefined
   })
 
-  it('thenOrderBy before orderBy throws a parameter error', function () {
+  it('thenOrderBy before orderBy stores no key and marks the query; a later orderBy keeps the mark', function () {
     const query = unsentQuery()
-    expect(() => query.thenOrderBy('a', INTEGER, ASC))
-      .to.throw(AerospikeError, 'thenOrderBy requires orderBy to be called first')
-      .with.property('code', status.ERR_PARAM)
+    expect(() => query.thenOrderBy('a', INTEGER, ASC)).to.not.throw()
     expect(query.orderByKeys).to.eql([])
+    expect((query as any).thenOrderByFirst).to.be.true
+
+    query.orderBy('b', INTEGER, ASC)
+    expect(query.orderByKeys.map(key => key.bin)).to.eql(['b'])
+    expect((query as any).thenOrderByFirst).to.be.true
   })
 
   it('orderBy again drops keys added by thenOrderBy, which can then add new ones', function () {

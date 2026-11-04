@@ -415,6 +415,14 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 	Local<Value> maybe_order_by_keys =
 		Nan::Get(options, Nan::New("orderByKeys").ToLocalChecked()).ToLocalChecked();
 	TYPE_CHECK_OPT_ERR(err, maybe_order_by_keys, IsArray, "orderByKeys must be an array");
+	// thenOrderBy() came before orderBy(): replay that order so the C client
+	// rejects the query. It ignores the key in this case.
+	Local<Value> then_order_by_first =
+		Nan::Get(options, Nan::New("thenOrderByFirst").ToLocalChecked()).ToLocalChecked();
+	if (then_order_by_first->IsTrue()) {
+		as_query_then_order_by(query, "", AS_QUERY_ORDER_BY_INTEGER, AS_ORDER_ASCENDING, AS_QUERY_ORDER_BY_FLAGS_DEFAULT);
+	}
+
 	if (maybe_order_by_keys->IsArray()) {
 		Local<Array> order_by_keys = maybe_order_by_keys.As<Array>();
 		for (uint32_t i = 0; i < order_by_keys->Length(); i++) {

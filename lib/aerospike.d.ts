@@ -1263,13 +1263,13 @@ export class Query {
      * keys are checked when the query runs, before anything is sent: an invalid entry fails
      * with a parameter error, like any other invalid query setting.
      */
-    public orderByKeys: OrderByKey[];
+    public readonly orderByKeys: OrderByKey[];
     /**
      * Number of records a Top-K query returns.
      *
      * Use {@link Query#topK} to set the limit.
      */
-    public topKLimit?: number;
+    public readonly topKLimit?: number;
     /**
      * Construct a Query instance.
      *
@@ -1358,13 +1358,14 @@ export class Query {
      *   client.close()
      * })
      */
-    public orderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
+    public orderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags): void;
     /**
-     * Adds an order key to a Top-K query, after the keys already set.
+     * Adds an order key to a Top-K query, after the first key already set.
      *
      * The second order key ranks records that tie on the first. Call {@link Query#orderBy}
-     * first; calling <code>thenOrderBy</code> before it throws a parameter error.
-     * {@link Query#orderBy} again removes this key. A query can have at most two order keys;
+     * first: if <code>thenOrderBy</code> comes first, the query fails with a parameter error
+     * when it runs, even if {@link Query#orderBy} is called later. {@link Query#orderBy}
+     * again removes this key. A query can have at most two order keys;
      * a third fails with a parameter error when the query runs. As with
      * {@link Query#orderBy}, if the query selects bins, the order key must be one of them.
      *
@@ -1376,11 +1377,8 @@ export class Query {
      * {@link orderByFlags.DEFAULT}. {@link orderByFlags.CASE_INSENSITIVE} is only valid when
      * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
      * parameter error when the query runs.
-     *
-     * @throws {@link AerospikeError} With code {@link status.ERR_PARAM} if
-     * {@link Query#orderBy} has not been called.
      */
-    public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags | number): void;
+    public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags): void;
     /**
      * Sets the number of records a Top-K query returns.
      *
@@ -1391,6 +1389,8 @@ export class Query {
      * While it merges the nodes' results, the client keeps about k records in memory, each
      * with the bins the query returns. For records with large bins, such as vectors, rank with
      * only the order bins selected, then read the winners with {@link Client#batchRead}.
+     * <code>batchRead</code> doesn't sort: it returns records in the order of the keys
+     * passed, so pass the keys in the order the Top-K query returned them.
      *
      * Each node replies only after scanning all its matching records, and the results arrive
      * only after every node has replied. Give the query a generous <code>socketTimeout</code>:
@@ -12380,7 +12380,7 @@ export interface OrderByKey {
      * is only valid when <code>type</code> is {@link orderByType.STRING}; any other
      * combination fails with a parameter error when the query runs.
      */
-    flags: orderByFlags | number;
+    flags: orderByFlags;
 }
 
 /**
@@ -12398,7 +12398,8 @@ export enum orderByType {
      */
     DOUBLE = 2,
     /**
-     * The order key is a string.
+     * The order key is a string. Not supported by this client version: a query with a
+     * STRING order key fails with a parameter error when it runs.
      */
     STRING = 3,
     /**

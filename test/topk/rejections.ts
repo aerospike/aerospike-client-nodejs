@@ -105,6 +105,25 @@ describe('Top-K rejections', function () {
       expectRejected(await errorFrom(() => query.results()), 'topK must be in [1, 1000]; got 0')
     })
 
+    it('rejects thenOrderBy called before orderBy, even if orderBy follows', async function () {
+      const message = "thenOrderBy can't be called before orderBy"
+
+      const alone = newQuery()
+      alone.thenOrderBy('score', INTEGER, DESC)
+      expectRejected(await errorFrom(() => alone.results()), message, 'thenOrderBy alone:')
+
+      const withK = newQuery()
+      withK.thenOrderBy('score', INTEGER, DESC)
+      withK.topK(10)
+      expectRejected(await errorFrom(() => withK.results()), message, 'thenOrderBy + topK:')
+
+      const thenOrderByFirst = newQuery()
+      thenOrderByFirst.thenOrderBy('ts', INTEGER, DESC)
+      thenOrderByFirst.orderBy('score', INTEGER, DESC)
+      thenOrderByFirst.topK(10)
+      expectRejected(await errorFrom(() => thenOrderByFirst.results()), message, 'thenOrderBy, then orderBy:')
+    })
+
     it('rejects topK without orderBy', async function () {
       const query = newQuery()
       query.topK(10)
