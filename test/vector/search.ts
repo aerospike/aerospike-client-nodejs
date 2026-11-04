@@ -181,6 +181,20 @@ describe('Vector search with Top-K', function () {
     expect(everything.slice(3).every(r => r.bins.d == null), 'unknown distances come last, without a value').to.be.true
   })
 
+  it('ranks a vector bin last, tied with a missing value, when the order key is a number', async function () {
+    // Records 0 and 4 hold numbers of the key's type: integers for INTEGER, doubles for DOUBLE.
+    for (const [type, high, low] of [[INTEGER, 5, 2], [DOUBLE, 5.5, 2.5]] as const) {
+      const values = [high, Vector.ofFloat32([1, 2]), Vector.ofInt32([0]), undefined, low]
+      const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
+      for (const [direction, expected] of [[DESC, [0, 4]], [ASC, [4, 0]]] as const) {
+        const records = await topK(set, q => q.orderBy('v', type, direction), 5)
+        const label = `type ${type}, direction ${direction}`
+        expect(records.slice(0, 2).map(r => r.bins.id), label).to.eql(expected)
+        expect(inDigestOrder(records.slice(2)), `${label}: the two vectors and the missing bin tie`).to.be.true
+      }
+    }
+  })
+
   it('returns the same records in the same order every time', async function () {
     const { set, query } = await loadRandom(FLOAT32, 1000, 8)
     const first = await topK(set, bySimilarity(COSINE_SIMILARITY, query.vector), 50)

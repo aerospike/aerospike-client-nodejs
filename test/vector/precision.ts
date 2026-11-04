@@ -24,14 +24,15 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
+import { topK, inDigestOrder, skipUnlessTopKQueriesRun } from '../topk/helpers.ts';
 import {
   ELEMENT_TYPES, METRICS, makeVector, referenceDistance, expectNear, distancePrecision, loadVectors,
   removeLoadedSets, distanceOf, seededRandom, setPrecision
 } from './helpers.ts';
 
-const { Vector, status } = Aerospike
+const { Vector, status, exp, operations } = Aerospike
 const { FLOAT64 } = Aerospike.vectorElementType
-const { DOT_PRODUCT } = Aerospike.vectorDistanceMetric
+const { DOT_PRODUCT, EUCLIDEAN_SQUARED } = Aerospike.vectorDistanceMetric
 
 describe('Vector distance precision setting', function () {
   this.timeout(120000)
@@ -95,6 +96,35 @@ describe('Vector distance precision setting', function () {
     for (let i = 0; i < pairs.length; i++) {
       METRICS.forEach(({ name, metric }, m) => expectNear(withFloat[i * 3 + m], referenceDistance(metric, pairs[i][0].values, pairs[i][1].values), 768, 2 ** -53, name))
     }
+  })
+
+  describe('in a vector search', function () {
+    skipUnlessTopKQueriesRun(this)
+
+    it('ranks distances that differ only beyond 32-bit precision exactly with double, and ties them with float', async function () {
+      // 64 elements of 1, except the first, 1 + n * 2^-23: squared distances to the
+      // origin of 64 + n * 2^-22, closer together than a 32-bit float near 64 can tell.
+      const order = [7, 2, 9, 0, 5, 1, 8, 3, 6, 4]
+      const vectors = order.map(n => {
+        const elements = new Float32Array(64).fill(1)
+        elements[0] = 1 + n * 2 ** -23
+        return Vector.ofFloat32(elements)
+      })
+      const set = await loadVectors(vectors, order.map(n => ({ n })))
+      const nearestFirst = (q: any) => {
+        q.ops = [operations.read('n'), exp.operations.read('d', exp.vectorDistance(EUCLIDEAN_SQUARED, Vector.ofFloat32(new Float32Array(64)), exp.binVector('v')), 0)]
+        q.orderBy('d', Aerospike.orderByType.DOUBLE, Aerospike.order.ASC)
+      }
+
+      await setPrecision('double')
+      const exact = await topK(set, nearestFirst, 10)
+      expect(exact.map(r => r.bins.n), 'double').to.eql([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+      await setPrecision('float')
+      const tied = await topK(set, nearestFirst, 10)
+      expect(tied.map(r => r.bins.d), 'float: every distance is 64').to.eql(new Array(10).fill(64))
+      expect(inDigestOrder(tied), 'float: the tie goes in digest order').to.be.true
+    })
   })
 
   it('rejects an unknown value and keeps the setting', async function () {
