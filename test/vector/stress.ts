@@ -140,6 +140,28 @@ describe('Vectors under stress', function () {
     expect(searches).to.be.above(10)
   })
 
+  it('does not keep growing in memory building float16 vectors from numbers, reading their values, or rejecting them', function () {
+    const gc = (globalThis as any).gc
+    if (!gc) this.skip() // needs node --expose-gc
+    // 16,384 elements: a leak of the C client's vector in any of the three calls
+    // would grow memory by about 64 MB a round.
+    const values = new Float32Array(16384).fill(0.5)
+    const rejected = new Float32Array(16384).fill(0.5)
+    rejected[16383] = NaN
+    const round = () => {
+      for (let i = 0; i < 2000; i++) {
+        expect(Aerospike.Vector.ofFloat16(values).values()[0]).to.equal(0.5)
+        expect(() => Aerospike.Vector.ofFloat16(rejected)).to.throw('is not finite as float16')
+      }
+      gc()
+      return process.memoryUsage().rss
+    }
+    round()
+    const first = round()
+    const last = round()
+    expect((last - first) / MB, 'memory grew between rounds').to.be.below(20)
+  })
+
   it('does not keep growing in memory over many vectors and rejected writes', async function () {
     const gc = (globalThis as any).gc
     if (!gc) this.skip() // needs node --expose-gc

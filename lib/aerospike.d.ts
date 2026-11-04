@@ -893,7 +893,8 @@ export class Vector {
      * Creates a vector of half-precision (16-bit) floats from numbers. Each number is
      * rounded to 32 bits (as by `Math.fround`), then to the nearest half-precision value,
      * ties to even. Half precision holds about three significant digits and magnitudes up
-     * to 65,504; smaller magnitudes lose precision or become zero.
+     * to 65,504; smaller magnitudes lose precision or become zero. Every typed array is read
+     * as numbers, a `Uint16Array` included; for raw bit patterns, use {@link Vector.ofFloat16Bits}.
      *
      * @param values - From 1 to 131,072 numbers.
      * @throws {TypeError} If `values` is not an array or a typed array of numbers.

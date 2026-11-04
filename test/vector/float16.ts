@@ -16,7 +16,7 @@
 
 'use strict'
 
-/* global describe, it, after */
+/* global describe, it, before, after */
 
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
@@ -107,6 +107,15 @@ describe('Vector.ofFloat16 from numbers #noserver', function () {
       `vector: 131073 dimensions exceed max 131072 for element type ${FLOAT16}`)
   })
 
+  it('reads every typed array as numbers, a Uint16Array included (bit patterns go to ofFloat16Bits)', function () {
+    expect(bitsOf(new Float32Array([0.5, -1.25]) as any)).to.eql([0x3800, 0xbd00])
+    expect(bitsOf(new Int32Array([3, -2]) as any)).to.eql([0x4200, 0xc000])
+    // 0x3c00 is the bit pattern of 1.0, but here it is the number 15,360.
+    expect(bitsOf(new Uint16Array([0x3c00]) as any)).to.eql([0x7380])
+    expect(Vector.ofFloat16(new Uint16Array([0x3c00])).values()).to.eql([15360])
+    expect(Vector.ofFloat16Bits(new Uint16Array([0x3c00])).values()).to.eql([1])
+  })
+
   it('builds the same vector as the matching bit patterns', function () {
     expect(Vector.ofFloat16([0.5, -1.25, 3]).toBytes()).to.eql(Vector.ofFloat16Bits([0x3800, 0xbd00, 0x4200]).toBytes())
   })
@@ -142,14 +151,33 @@ describe('Vector#values #noserver', function () {
 describe('Vector.ofFloat16 from numbers on the server', function () {
   this.timeout(60000)
   helper.skipUnlessVersion('>= 8.2.1', this)
-  after(removeLoadedSets)
 
-  it('reads back the rounded values', async function () {
-    const written = Vector.ofFloat16([0.1, -2.5, 65504, 2 ** -24, -0])
+  // The module is test/vector_udf.lua (see udf.ts).
+  const MODULE = 'vector_udf'
+  before(() => helper.udf.register(`${MODULE}.lua`))
+  after(async function () {
+    await removeLoadedSets()
+    await helper.udf.remove(`${MODULE}.lua`)
+  })
+
+  const written = Vector.ofFloat16([0.1, -2.5, 65504, 2 ** -24, -0])
+  const expected = [float16Value(0x2e66), -2.5, 65504, 2 ** -24, -0]
+
+  // Checks that value is the written vector, with the rounded values.
+  function expectWritten (value: unknown, label: string) {
+    expect(value, label).to.be.instanceof(Vector)
+    expect((value as Aerospike.Vector).toBytes(), label).to.eql(written.toBytes())
+    expect((value as Aerospike.Vector).values(), label).to.eql(expected)
+  }
+
+  it('reads back the rounded values through every read path', async function () {
     const set = await loadVectors([written])
+    const key = new Aerospike.Key(helper.namespace, set, 0)
 
-    const read = (await helper.client.get(new Aerospike.Key(helper.namespace, set, 0))).bins.v as Aerospike.Vector
-    expect(read.toBytes()).to.eql(written.toBytes())
-    expect(read.values()).to.eql([float16Value(0x2e66), -2.5, 65504, 2 ** -24, -0])
+    expectWritten((await helper.client.get(key)).bins.v, 'get()')
+    expectWritten((await helper.client.batchRead([{ key, readAllBins: true }]))[0].record.bins.v, 'batchRead()')
+    expectWritten((await helper.client.query(helper.namespace, set).results())[0].bins.v, 'query')
+    expectWritten(await helper.client.apply(key, { module: MODULE, funcname: 'read_v', args: [] } as any), 'record UDF')
+    expectWritten(await helper.client.apply(key, { module: MODULE, funcname: 'echo', args: [written] } as any), 'UDF argument')
   })
 })
