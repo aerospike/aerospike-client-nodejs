@@ -113,6 +113,25 @@ static as_vector_value *new_vector(as_error *err, Local<Value> elements,
 	return create(err, values, (uint32_t)data.length());
 }
 
+// Returns the serialized vector as a Buffer, or an error object if the C
+// client rejected it (vector is NULL).
+static Local<Value> encoded(as_vector_value *vector, as_error *err)
+{
+	Nan::EscapableHandleScope scope;
+	if (vector == NULL) {
+		return scope.Escape(error_to_jsobject(err, NULL));
+	}
+
+	as_bytes bytes;
+	as_vector_value_to_bytes(vector, &bytes);
+	as_vector_value_destroy(vector);
+	Local<Object> buffer = Nan::CopyBuffer((char *)as_bytes_get(&bytes),
+										   as_bytes_size(&bytes))
+							   .ToLocalChecked();
+	as_bytes_destroy(&bytes);
+	return scope.Escape(buffer);
+}
+
 // vectorEncode(elementType, elements): serializes elements, a typed array
 // matching elementType, into a Buffer. Returns an error object instead if
 // the C client rejects the vector.
@@ -145,18 +164,20 @@ NAN_METHOD(vectorEncode)
 						"vector: invalid element type %u", element_type);
 	}
 
-	if (vector == NULL) {
-		info.GetReturnValue().Set(error_to_jsobject(&err, NULL));
-		return;
-	}
+	info.GetReturnValue().Set(encoded(vector, &err));
+}
 
-	as_bytes bytes;
-	as_vector_value_to_bytes(vector, &bytes);
-	as_vector_value_destroy(vector);
-	info.GetReturnValue().Set(Nan::CopyBuffer((char *)as_bytes_get(&bytes),
-											  as_bytes_size(&bytes))
-								  .ToLocalChecked());
-	as_bytes_destroy(&bytes);
+// vectorEncodeFloat16(values): converts values, a Float32Array, to float16
+// (round half to even) and serializes them into a Buffer. Returns an error
+// object instead if the C client rejects the vector, for example a value
+// that isn't finite as float16.
+NAN_METHOD(vectorEncodeFloat16)
+{
+	as_error err;
+	as_error_init(&err);
+	as_vector_value *vector = new_vector<float>(
+		&err, info[0], as_vector_value_new_float16_from_float);
+	info.GetReturnValue().Set(encoded(vector, &err));
 }
 
 static Local<Value> typed_array(as_vector_element_type element_type,
@@ -205,4 +226,36 @@ NAN_METHOD(vectorDecode)
 			 typed_array(vector->element_type, elements, vector->dimensions));
 	as_vector_value_destroy(vector);
 	info.GetReturnValue().Set(result);
+}
+
+// vectorFloat16Values(buffer): returns a Float32Array with the values of a
+// serialized float16 vector (each one exact). Returns an error object instead
+// if the bytes aren't a valid float16 vector.
+NAN_METHOD(vectorFloat16Values)
+{
+	Local<Object> buffer = info[0].As<Object>();
+	as_bytes bytes;
+	as_bytes_init_wrap(&bytes, (uint8_t *)node::Buffer::Data(buffer),
+					   (uint32_t)node::Buffer::Length(buffer), false);
+
+	as_error err;
+	as_vector_value *vector = as_vector_value_from_bytes(&err, &bytes);
+	if (vector == NULL) {
+		info.GetReturnValue().Set(error_to_jsobject(&err, NULL));
+		return;
+	}
+
+	uint32_t count = vector->dimensions;
+	Local<Float32Array> values = Float32Array::New(
+		ArrayBuffer::New(info.GetIsolate(), (size_t)count * sizeof(float)), 0,
+		count);
+	Nan::TypedArrayContents<float> out(values);
+	as_status status =
+		as_vector_value_get_float16_as_float(&err, vector, *out, count);
+	as_vector_value_destroy(vector);
+	if (status != AEROSPIKE_OK) {
+		info.GetReturnValue().Set(error_to_jsobject(&err, NULL));
+		return;
+	}
+	info.GetReturnValue().Set(values);
 }

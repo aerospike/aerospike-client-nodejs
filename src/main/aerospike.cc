@@ -164,6 +164,8 @@ NAN_MODULE_INIT(Aerospike)
 	NAN_EXPORT(target, setVectorClass);
 	NAN_EXPORT(target, vectorEncode);
 	NAN_EXPORT(target, vectorDecode);
+	NAN_EXPORT(target, vectorEncodeFloat16);
+	NAN_EXPORT(target, vectorFloat16Values);
 	NAN_EXPORT(target, unref_as_event_loop);
 	NAN_EXPORT(target, setDefaultLogging);
 

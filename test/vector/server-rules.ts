@@ -54,8 +54,8 @@ describe('Vector rules the server enforces', function () {
   it('rejects NaN and infinite elements of every float type (R8, R10)', async function () {
     const message = 'vector: elements must be finite (no NaN or infinity)'
     const vectors: Array<[string, Aerospike.Vector]> = [
-      ['FLOAT16 NaN', Vector.ofFloat16([0x3c00, 0x7e00])],
-      ['FLOAT16 infinity', Vector.ofFloat16([0xfc00])],
+      ['FLOAT16 NaN', Vector.ofFloat16Bits([0x3c00, 0x7e00])],
+      ['FLOAT16 infinity', Vector.ofFloat16Bits([0xfc00])],
       ['FLOAT32 NaN', Vector.ofFloat32([1, NaN])],
       ['FLOAT32 infinity', Vector.ofFloat32([Infinity])],
       ['FLOAT32 too large, rounded to infinity', Vector.ofFloat32([1e40])],
@@ -112,7 +112,7 @@ describe('Vector rules the server enforces', function () {
   it('replaces a vector with a whole new vector of any type or size', async function () {
     const set = await loadVectors([ORIGINAL])
     const key = new Aerospike.Key(helper.namespace, set, 0)
-    for (const vector of [Vector.ofFloat64([1, 2, 3]), Vector.ofInt32([7]), Vector.ofFloat16(new Array(1000).fill(0x3c00))]) {
+    for (const vector of [Vector.ofFloat64([1, 2, 3]), Vector.ofInt32([7]), Vector.ofFloat16Bits(new Array(1000).fill(0x3c00))]) {
       await helper.client.operate(key, [operations.write('v', vector)])
       expect(((await helper.client.get(key)).bins.v as Aerospike.Vector).toBytes()).to.eql(vector.toBytes())
     }

@@ -116,7 +116,7 @@ describe('Vector values #noserver', function () {
       expectParamError(() => Vector.ofInt32([0, value]), 'Vector element 1 must be a 32-bit integer', `INT32 ${value}`)
     }
     for (const value of [-1, 65536, 0.5, NaN]) {
-      expectParamError(() => Vector.ofFloat16([value]), 'Vector element 0 must be an integer from 0 to 65535', `FLOAT16 ${value}`)
+      expectParamError(() => Vector.ofFloat16Bits([value]), 'Vector element 0 must be an integer from 0 to 65535', `FLOAT16 ${value}`)
     }
   })
 

@@ -42,7 +42,7 @@ function expectSameVector (value: unknown, expected: Aerospike.Vector, label = '
 function testVectors () {
   const random = seededRandom(31)
   return [
-    Vector.ofFloat16([0x0000, 0x8000, 0x0001, 0x0400, 0x3c00, 0x7bff, 0xfbff]),
+    Vector.ofFloat16Bits([0x0000, 0x8000, 0x0001, 0x0400, 0x3c00, 0x7bff, 0xfbff]),
     Vector.ofInt32([-(2 ** 31), 2 ** 31 - 1, 0, -1]),
     Vector.ofFloat32([3.4028234663852886e38, -3.4028234663852886e38, 1.1754943508222875e-38, 1.401298464324817e-45, -0, 0.1]),
     Vector.ofFloat64([Number.MAX_VALUE, -Number.MAX_VALUE, Number.MIN_VALUE, 2.2250738585072014e-308, -0, 0.1]),

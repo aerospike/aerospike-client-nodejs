@@ -30,6 +30,8 @@ extern "C" {
 NAN_METHOD(setVectorClass);
 NAN_METHOD(vectorEncode);
 NAN_METHOD(vectorDecode);
+NAN_METHOD(vectorEncodeFloat16);
+NAN_METHOD(vectorFloat16Values);
 
 bool is_vector_value(v8::Local<v8::Value> value);
 int vector_bytes_from_jsvalue(as_bytes **bytes, v8::Local<v8::Value> value,

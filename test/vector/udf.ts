@@ -30,7 +30,7 @@ const { Vector, status } = Aerospike
 const MODULE = 'vector_udf'
 
 const VECTORS: Array<[string, Aerospike.Vector]> = [
-  ['FLOAT16', Vector.ofFloat16([0x3c00, 0xc000, 0x7bff])],
+  ['FLOAT16', Vector.ofFloat16Bits([0x3c00, 0xc000, 0x7bff])],
   ['INT32', Vector.ofInt32([7, -9, 2 ** 31 - 1])],
   ['FLOAT32', Vector.ofFloat32([0.5, -1.25, 3.4028234663852886e38])],
   ['FLOAT64', Vector.ofFloat64([0.1, 0.2, Number.MIN_VALUE])]

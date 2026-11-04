@@ -30,7 +30,7 @@ const { AerospikeError, status, exp, operations } = Aerospike
 // Each element type with its builder, typed array, element size in bytes and
 // the most dimensions a vector of that type can hold (256 KiB of elements).
 export const ELEMENT_TYPES = [
-  { name: 'FLOAT16', type: FLOAT16, build: Aerospike.Vector.ofFloat16, array: Uint16Array, size: 2, maxDimensions: 131072 },
+  { name: 'FLOAT16', type: FLOAT16, build: Aerospike.Vector.ofFloat16Bits, array: Uint16Array, size: 2, maxDimensions: 131072 },
   { name: 'INT32', type: INT32, build: Aerospike.Vector.ofInt32, array: Int32Array, size: 4, maxDimensions: 65536 },
   { name: 'FLOAT32', type: FLOAT32, build: Aerospike.Vector.ofFloat32, array: Float32Array, size: 4, maxDimensions: 65536 },
   { name: 'FLOAT64', type: FLOAT64, build: Aerospike.Vector.ofFloat64, array: Float64Array, size: 8, maxDimensions: 32768 }
@@ -112,7 +112,7 @@ export function makeVector (elementType: number, dimensions: number, value: (i: 
   switch (elementType) {
     case FLOAT16: {
       const bits = wanted.map(float16Bits)
-      return { vector: Aerospike.Vector.ofFloat16(bits), values: bits.map(float16Value) }
+      return { vector: Aerospike.Vector.ofFloat16Bits(bits), values: bits.map(float16Value) }
     }
     case INT32: {
       const ints = wanted.map(Math.trunc)

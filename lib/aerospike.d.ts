@@ -868,8 +868,8 @@ export class HyperLogLog {
  * its own data type (not as a blob) so that the server can compute
  * {@link exp.vectorDistance | vector distances} on it. Requires server 8.2.1 or later.
  *
- * Create one with {@link Vector.ofFloat32} or a sibling factory. Only a
- * `Vector` is stored as a vector: a plain typed array is still stored as a
+ * Create one with {@link Vector.ofFloat32} or a sibling factory, and read its
+ * values with {@link Vector.values}. Only a `Vector` is stored as a vector: a plain typed array is still stored as a
  * blob, and a plain array as a list. Reading a vector bin returns a `Vector`.
  *
  * A vector can't be stored inside a list or a map; the server rejects it.
@@ -890,15 +890,32 @@ export class Vector {
      */
     public constructor(bytes: Buffer);
     /**
-     * Creates a vector of half-precision floats from their raw IEEE 754 bit
-     * patterns, as every Aerospike client does. The server rejects NaN and
-     * infinite elements.
+     * Creates a vector of half-precision (16-bit) floats from numbers. Each number is
+     * rounded to 32 bits (as by `Math.fround`), then to the nearest half-precision value,
+     * ties to even. Half precision holds about three significant digits and magnitudes up
+     * to 65,504; smaller magnitudes lose precision or become zero.
+     *
+     * @param values - From 1 to 131,072 numbers.
+     * @throws {TypeError} If `values` is not an array or a typed array of numbers.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `values` is empty or too
+     * long, or holds a value that isn't finite as half precision: NaN, an infinity, or a
+     * magnitude of 65,520 or more.
+     *
+     * @example
+     * const vector = Aerospike.Vector.ofFloat16([0.5, -1.25, 3.0])
+     * vector.values() // [0.5, -1.25, 3]
+     */
+    public static ofFloat16(values: Float32Array | Float64Array | ArrayLike<number>): Vector;
+    /**
+     * Creates a vector of half-precision floats from their raw IEEE 754 bit patterns, for
+     * exact interchange of existing half-precision data. The server rejects NaN and
+     * infinite elements. To create one from numbers, use {@link Vector.ofFloat16}.
      *
      * @param bits - From 1 to 131,072 bit patterns, each an integer from 0 to 65,535.
      * @throws {TypeError} If `bits` is not an array or a typed array of numbers.
      * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `bits` is empty, too long, or holds a value that isn't an integer from 0 to 65,535.
      */
-    public static ofFloat16(bits: Uint16Array | ArrayLike<number>): Vector;
+    public static ofFloat16Bits(bits: Uint16Array | ArrayLike<number>): Vector;
     /**
      * Creates a vector of 32-bit signed integers.
      *
@@ -935,8 +952,14 @@ export class Vector {
      */
     public get dimensions(): number;
     /**
+     * Returns the elements as numbers, for every element type. `FLOAT16` elements are
+     * converted from half precision; every half-precision value is exact as a number.
+     */
+    public values(): number[];
+    /**
      * Returns a copy of the elements: a `Uint16Array` of raw bit patterns for
      * `FLOAT16`, otherwise an `Int32Array`, `Float32Array` or `Float64Array`.
+     * Use {@link Vector.values} for the elements as numbers.
      */
     public elements(): Uint16Array | Int32Array | Float32Array | Float64Array;
     /**
@@ -12525,7 +12548,8 @@ export enum orderByFlags {
  */
 export enum vectorElementType {
     /**
-     * Half-precision floats, given as raw IEEE 754 bit patterns.
+     * Half-precision floats, built from numbers with {@link Vector.ofFloat16} or from raw
+     * IEEE 754 bit patterns with {@link Vector.ofFloat16Bits}.
      */
     FLOAT16 = 1,
     /**

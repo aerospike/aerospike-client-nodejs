@@ -60,7 +60,7 @@ describe('Vectors with strong consistency', function () {
     const before = [Vector.ofFloat32([1, 1]), Vector.ofFloat32([2, 2]), Vector.ofFloat32([3, 3])]
     const set = await loadVectors(before)
     const keys = before.map((_, i) => new Aerospike.Key(helper.namespace, set, i))
-    const after = [Vector.ofFloat64([9, 9]), Vector.ofInt32([8]), Vector.ofFloat16([0x3c00])]
+    const after = [Vector.ofFloat64([9, 9]), Vector.ofInt32([8]), Vector.ofFloat16Bits([0x3c00])]
 
     for (const outcome of ['abort', 'commit'] as const) {
       const txn = new Aerospike.Transaction()
