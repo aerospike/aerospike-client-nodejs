@@ -59,7 +59,7 @@ describe('Vector.ofFloat16 from numbers #noserver', function () {
 
     expect(vector.elementType).to.equal(FLOAT16)
     expect(Array.from(vector.elements())).to.eql(FINITE_BITS)
-    expect(vector.values()).to.eql(values) // -0 stays -0
+    expect(vector.toArray()).to.eql(values) // -0 stays -0
   })
 
   it('rounds a value halfway between two half-precision values to the one with an even last bit', function () {
@@ -112,8 +112,8 @@ describe('Vector.ofFloat16 from numbers #noserver', function () {
     expect(bitsOf(new Int32Array([3, -2]) as any)).to.eql([0x4200, 0xc000])
     // 0x3c00 is the bit pattern of 1.0, but here it is the number 15,360.
     expect(bitsOf(new Uint16Array([0x3c00]) as any)).to.eql([0x7380])
-    expect(Vector.ofFloat16(new Uint16Array([0x3c00])).values()).to.eql([15360])
-    expect(Vector.ofFloat16Bits(new Uint16Array([0x3c00])).values()).to.eql([1])
+    expect(Vector.ofFloat16(new Uint16Array([0x3c00])).toArray()).to.eql([15360])
+    expect(Vector.ofFloat16Bits(new Uint16Array([0x3c00])).toArray()).to.eql([1])
   })
 
   it('builds the same vector as the matching bit patterns', function () {
@@ -121,7 +121,7 @@ describe('Vector.ofFloat16 from numbers #noserver', function () {
   })
 })
 
-describe('Vector#values #noserver', function () {
+describe('Vector#toArray #noserver', function () {
   it('returns the elements of every type as plain numbers', function () {
     const cases: Array<[Aerospike.Vector, number[]]> = [
       [Vector.ofFloat16Bits([0x3c00, 0x8000, 0x0001, 0x7bff]), [1, -0, 2 ** -24, 65504]],
@@ -130,21 +130,21 @@ describe('Vector#values #noserver', function () {
       [Vector.ofFloat64([0.1, Number.MAX_VALUE]), [0.1, Number.MAX_VALUE]]
     ]
     for (const [vector, expected] of cases) {
-      const values = vector.values()
+      const values = vector.toArray()
       expect(values, `type ${vector.elementType}`).to.be.an('array').that.eql(expected)
     }
   })
 
   it('reads half-precision bit patterns the server would reject as NaN or infinity', function () {
-    const values = Vector.ofFloat16Bits([0x7e00, 0x7c00, 0xfc00]).values()
+    const values = Vector.ofFloat16Bits([0x7e00, 0x7c00, 0xfc00]).toArray()
     expect(values[0]).to.be.NaN
     expect(values.slice(1)).to.eql([Infinity, -Infinity])
   })
 
   it('returns a new array each time', function () {
     const vector = Vector.ofFloat16([1, 2])
-    vector.values()[0] = 99
-    expect(vector.values()).to.eql([1, 2])
+    vector.toArray()[0] = 99
+    expect(vector.toArray()).to.eql([1, 2])
   })
 })
 
@@ -167,7 +167,7 @@ describe('Vector.ofFloat16 from numbers on the server', function () {
   function expectWritten (value: unknown, label: string) {
     expect(value, label).to.be.instanceof(Vector)
     expect((value as Aerospike.Vector).toBytes(), label).to.eql(written.toBytes())
-    expect((value as Aerospike.Vector).values(), label).to.eql(expected)
+    expect((value as Aerospike.Vector).toArray(), label).to.eql(expected)
   }
 
   it('reads back the rounded values through every read path', async function () {

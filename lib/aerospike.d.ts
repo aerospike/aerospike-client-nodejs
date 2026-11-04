@@ -869,7 +869,7 @@ export class HyperLogLog {
  * {@link exp.vectorDistance | vector distances} on it. Requires server 8.2.1 or later.
  *
  * Create one with {@link Vector.ofFloat32} or a sibling factory, and read its
- * values with {@link Vector.values}. Only a `Vector` is stored as a vector: a plain typed array is still stored as a
+ * values with {@link Vector.toArray}. Only a `Vector` is stored as a vector: a plain typed array is still stored as a
  * blob, and a plain array as a list. Reading a vector bin returns a `Vector`.
  *
  * A vector can't be stored inside a list or a map; the server rejects it.
@@ -904,7 +904,7 @@ export class Vector {
      *
      * @example
      * const vector = Aerospike.Vector.ofFloat16([0.5, -1.25, 3.0])
-     * vector.values() // [0.5, -1.25, 3]
+     * vector.toArray() // [0.5, -1.25, 3]
      */
     public static ofFloat16(values: Float32Array | Float64Array | ArrayLike<number>): Vector;
     /**
@@ -956,11 +956,11 @@ export class Vector {
      * Returns the elements as numbers, for every element type. `FLOAT16` elements are
      * converted from half precision; every half-precision value is exact as a number.
      */
-    public values(): number[];
+    public toArray(): number[];
     /**
      * Returns a copy of the elements: a `Uint16Array` of raw bit patterns for
      * `FLOAT16`, otherwise an `Int32Array`, `Float32Array` or `Float64Array`.
-     * Use {@link Vector.values} for the elements as numbers.
+     * Use {@link Vector.toArray} for the elements as numbers.
      */
     public elements(): Uint16Array | Int32Array | Float32Array | Float64Array;
     /**

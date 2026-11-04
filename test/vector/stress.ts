@@ -150,7 +150,7 @@ describe('Vectors under stress', function () {
     rejected[16383] = NaN
     const round = () => {
       for (let i = 0; i < 2000; i++) {
-        expect(Aerospike.Vector.ofFloat16(values).values()[0]).to.equal(0.5)
+        expect(Aerospike.Vector.ofFloat16(values).toArray()[0]).to.equal(0.5)
         expect(() => Aerospike.Vector.ofFloat16(rejected)).to.throw('is not finite as float16')
       }
       gc()
