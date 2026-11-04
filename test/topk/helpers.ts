@@ -124,10 +124,11 @@ async function inBatches (count: number, task: (i: number) => Promise<unknown>) 
 }
 
 // Creates a secondary index on one bin of a loaded set (optionally on a value inside it).
-export async function indexBin (set: string, bin: string, dataType: number, context?: any) {
+export async function indexBin (set: string, bin: string, dataType: number, context?: any,
+  indexType: number = Aerospike.indexType.DEFAULT) {
   const index = `${set}_${bin}`
   indexes.push(index)
-  await helper.index.create(index, set, bin, dataType as any, Aerospike.indexType.DEFAULT, context)
+  await helper.index.create(index, set, bin, dataType as any, indexType as any, context)
   return index
 }
 
@@ -152,7 +153,7 @@ export async function removeLoadedSets () {
 // same order: results(), foreach(), and results() over all partitions, which
 // runs as a partition query. configure adds the order keys; k is the limit;
 // policy is an optional query policy, e.g. { filterExpression }.
-export async function topK (set: string, configure: (query: Q) => void, k: number,
+export async function topK (set: string | null, configure: (query: Q) => void, k: number,
   policy: object | null = null): Promise<AerospikeRecord[]> {
   const viaResults = await runTopK(set, configure, k, policy, 'results')
   const viaForeach = await runTopK(set, configure, k, policy, 'foreach')
@@ -163,7 +164,7 @@ export async function topK (set: string, configure: (query: Q) => void, k: numbe
   return viaResults
 }
 
-async function runTopK (set: string, configure: (query: Q) => void, k: number,
+async function runTopK (set: string | null, configure: (query: Q) => void, k: number,
   policy: object | null, via: 'results' | 'foreach' | 'partitions'): Promise<AerospikeRecord[]> {
   const query = helper.client.query(helper.namespace, set)
   configure(query)
@@ -218,7 +219,9 @@ export function partitionId (record: AerospikeRecord): number {
 // client, applied to the data as written (so it knows each value's real type).
 // ---------------------------------------------------------------------------
 
-export interface Typed { type: number, value: number | string | Buffer }
+// type is an orderByType, or OTHER for values no order key type matches (lists, maps).
+export interface Typed { type: number, value: unknown }
+export const OTHER = -1
 export interface OrderKey { bin: string, type: number, direction: number, flags: number }
 export interface ModelRecord { digest: Buffer, bins: Record<string, Typed | undefined> }
 
@@ -250,6 +253,9 @@ function compareValues (a: any, b: any, key: OrderKey): number {
   switch (key.type) {
     case INTEGER:
     case DOUBLE:
+      if (Number.isNaN(a) || Number.isNaN(b)) { // NaN ranks above every other number
+        return Number.isNaN(a) === Number.isNaN(b) ? 0 : (Number.isNaN(a) ? 1 : -1)
+      }
       return a < b ? -1 : a > b ? 1 : 0 // -0 equals 0
     case STRING: {
       const fold = (s: string) => (key.flags & CASE_INSENSITIVE) ? asciiLower(s) : s
@@ -281,16 +287,17 @@ export function seededRandom (seed: number): () => number {
 export const pick = <T>(random: () => number, items: readonly T[]): T => items[Math.floor(random() * items.length)]
 
 // Includes extremes and long shared prefixes, so the comparator's edges meet every combination.
-const POOLS: Record<number, ReadonlyArray<number | string | Buffer>> = {
+const POOLS: Record<number, readonly unknown[]> = {
   [INTEGER]: [-3, -1, 0, 1, 2, 3, Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER],
-  [DOUBLE]: [-1.5, -0.5, 0, 0.5, 1.5, Infinity, -Infinity],
+  [DOUBLE]: [-1.5, -0.5, 0, 0.5, 1.5, Infinity, -Infinity, NaN],
   [STRING]: ['', 'a', 'A', 'ab', 'B', 'b', 'aaaaaaaaa', 'aaaaaaaaab'],
-  [BYTES]: [[], [0], [1], [1, 0], [2], [1, 1, 1, 1], [1, 1, 1, 1, 0]].map(bytes => Buffer.from(bytes))
+  [BYTES]: [[], [0], [1], [1, 0], [2], [1, 1, 1, 1], [1, 1, 1, 1, 0]].map(bytes => Buffer.from(bytes)),
+  [OTHER]: [[1, 2], { a: 1 }]
 }
 
-// A random typed value, or undefined (a missing bin) about one time in six.
+// A random typed value, a list or map, or undefined (a missing bin).
 export function randomValue (random: () => number): Typed | undefined {
-  const type = pick(random, [INTEGER, DOUBLE, STRING, BYTES, 0])
+  const type = pick(random, [INTEGER, DOUBLE, STRING, BYTES, OTHER, 0])
   return type === 0 ? undefined : { type, value: pick(random, POOLS[type]) }
 }
 
@@ -306,7 +313,9 @@ function toStored (bins: Record<string, Typed | undefined>): Record<string, unkn
   const stored: Record<string, unknown> = {}
   for (const [bin, typed] of Object.entries(bins)) {
     if (typed) {
-      stored[bin] = typed.type === DOUBLE ? new Aerospike.Double(typed.value as number) : typed.value
+      // A plain NaN is stored as a double (Double rejects NaN).
+      const isDouble = typed.type === DOUBLE && !Number.isNaN(typed.value)
+      stored[bin] = isDouble ? new Aerospike.Double(typed.value as number) : typed.value
     }
   }
   return stored

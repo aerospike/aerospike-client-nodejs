@@ -54,6 +54,14 @@ describe('Top-K ordering', function () {
     expect(values(await topK(set, q => q.orderBy('d', DOUBLE, ASC), 3), 'd')).to.eql([-Infinity, -1.5, 0.25])
   })
 
+  it('ranks NaN above every other double, and a missing value still last', async function () {
+    // A plain NaN is stored as a double (Double rejects NaN).
+    const set = await loadSet([{ d: new Double(1.5) }, { d: NaN }, { d: new Double(Infinity) }, { d: new Double(-Infinity) }, { other: 1 }])
+
+    expect(values(await topK(set, q => q.orderBy('d', DOUBLE, DESC), 5), 'd')).to.eql([NaN, Infinity, 1.5, -Infinity, undefined])
+    expect(values(await topK(set, q => q.orderBy('d', DOUBLE, ASC), 5), 'd')).to.eql([-Infinity, 1.5, Infinity, NaN, undefined])
+  })
+
   it('ranks strings by byte order in both directions', async function () {
     const set = await loadSet(['b', 'a', 'ab', '', 'B', 'abc'].map(s => ({ s })))
 
@@ -83,6 +91,16 @@ describe('Top-K ordering', function () {
     const four = await topK(set, q => q.orderBy('score', INTEGER, DESC), 4)
     expect(values(four, 'score').slice(0, 3)).to.eql([3, 2, 1])
     expect(four).to.have.length(4)
+  })
+
+  it('puts list and map keys last, tied with a missing key', async function () {
+    const set = await loadSet([{ v: 3 }, { v: [1, 2] }, { v: { a: 1 } }, { v: 1 }, { other: 1 }])
+
+    for (const [direction, expected] of [[DESC, [3, 1]], [ASC, [1, 3]]] as const) {
+      const records = await topK(set, q => q.orderBy('v', INTEGER, direction), 5)
+      expect(values(records, 'v').slice(0, 2)).to.eql(expected)
+      expect(inDigestOrder(records.slice(2)), 'the list, the map and the missing key tie, so digest order').to.be.true
+    }
   })
 
   it('breaks ties on the only key by digest, lowest first, with -0.0 equal to 0.0', async function () {

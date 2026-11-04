@@ -45,6 +45,30 @@ describe('Top-K on each query path', function () {
 
   const indexCat = (set: string) => indexBin(set, 'cat', Aerospike.indexDataType.STRING)
 
+  it('returns a record once when it matches a list index on several values', async function () {
+    const set = await loadSet([{ tags: [5, 5, 7], s: 1 }, { tags: [5, 6], s: 2 }, { tags: [9], s: 3 }])
+    await indexBin(set, 'tags', Aerospike.indexDataType.INTEGER, undefined, Aerospike.indexType.LIST)
+
+    const records = await topK(set, q => {
+      q.where(filter.range('tags', 5, 7, Aerospike.indexType.LIST))
+      q.orderBy('s', INTEGER, DESC)
+    }, 10)
+    expect(values(records, 's')).to.eql([2, 1])
+  })
+
+  it('ranks across every set when the query names no set', async function () {
+    // A value no other test writes, so only this test's records match.
+    const token = Date.now() * 1000 + process.pid % 1000
+    const sets = [await loadSet([1, 5, 3].map(n => ({ n, token }))), await loadSet([4, 2, 6].map(n => ({ n, token })))]
+
+    const records = await topK(null, q => {
+      q.filterExpression = exp.eq(exp.binInt('token'), exp.int(token))
+      q.orderBy('n', INTEGER, DESC)
+    }, 3)
+    expect(values(records, 'n')).to.eql([6, 5, 4])
+    expect(new Set(records.map(record => record.key.set))).to.eql(new Set(sets))
+  })
+
   it('ranks only the records a secondary-index filter matches', async function () {
     const set = await loadSet(tenRecords())
     await indexCat(set)
