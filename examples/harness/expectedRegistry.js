@@ -38,6 +38,7 @@ const CANONICAL_EXAMPLE_NAMES = [
   'ScanParallel',
   'QueryInteger',
   'QueryEqual',
+  'QueryTopK',
   'SecondaryIndex',
   'UserDefinedFunction',
   'UdfModule',

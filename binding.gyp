@@ -167,6 +167,7 @@
         'src/main/enums/string_enum.cc',
         'src/main/enums/batch_type.cc',
         'src/main/enums/query_duration.cc',
+        'src/main/enums/query_order_by.cc',
         'src/main/enums/privilege_code.cc',
         'src/main/enums/exp_path_select_flags.cc',
         'src/main/enums/exp_path_modify_flags.cc',
