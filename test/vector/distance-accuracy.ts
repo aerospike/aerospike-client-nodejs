@@ -203,20 +203,26 @@ describe('Vector distance accuracy', function () {
     expect(await distanceOf(set, 1, DOT_PRODUCT, Vector.ofFloat64([1, 1, 1]))).to.equal(0)
   })
 
-  // Not in the spec: an overflowing sum makes the distance unknown, so a single
-  // read fails as it does for any unknown distance (R19). Pinned to flag a change.
-  it('makes a distance unknown when its sum overflows', async function () {
+  // Not in the spec; the server's rule (Kevin, 2026-11-05): every squared Euclidean
+  // term is >= 0, so an overflow really is farther than any finite distance and
+  // gives +Infinity; a dot product can overflow even when its true value is
+  // finite, so it stays unknown and a single read fails (R19).
+  it('gives +Infinity when a squared Euclidean distance overflows', async function () {
     const max32 = 3.4028234663852886e38
-    const set = await loadVectors([Vector.ofFloat32([max32]), Vector.ofFloat64([Number.MAX_VALUE])])
-    const cases: Array<[number, number, Aerospike.Vector]> = [
-      [0, DOT_PRODUCT, Vector.ofFloat32([max32])],
-      [0, EUCLIDEAN_SQUARED, Vector.ofFloat32([-max32])],
-      [1, DOT_PRODUCT, Vector.ofFloat64([Number.MAX_VALUE])]
-    ]
-    for (const [i, metric, query] of cases) {
-      const error = await distanceOf(set, i, metric, query).then(() => null, e => e)
-      expect(error, `record ${i} metric ${metric}`).to.be.instanceof(Aerospike.AerospikeError)
-      expect(error.code, `record ${i} metric ${metric}`).to.equal(status.ERR_OP_NOT_APPLICABLE)
+    const set = await loadVectors([Vector.ofFloat64([Number.MAX_VALUE]), Vector.ofFloat32([max32])])
+    expect(await distanceOf(set, 0, EUCLIDEAN_SQUARED, Vector.ofFloat64([-Number.MAX_VALUE])), 'FLOAT64').to.equal(Infinity)
+    // FLOAT32 sums overflow only when the server sums in 32 bits.
+    if (precision === 'float') {
+      expect(await distanceOf(set, 1, EUCLIDEAN_SQUARED, Vector.ofFloat32([-max32])), 'FLOAT32').to.equal(Infinity)
     }
+  })
+
+  it('makes a dot product unknown when its sum overflows', async function () {
+    const set = await loadVectors([Vector.ofFloat64([Number.MAX_VALUE])])
+    const error = await distanceOf(set, 0, DOT_PRODUCT, Vector.ofFloat64([Number.MAX_VALUE])).then(() => null, e => e)
+    expect(error).to.be.instanceof(Aerospike.AerospikeError)
+    expect(error.code).to.equal(status.ERR_OP_NOT_APPLICABLE)
+    // A FLOAT32 dot product that overflows 32 bits with the float setting isn't
+    // pinned here: -59 returns the double-precision value (asked Kevin, 2026-11-05).
   })
 })

@@ -21,7 +21,7 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { loadVectors, removeLoadedSets } from './helpers.ts';
+import { loadVectors, removeLoadedSets, nonFiniteVector } from './helpers.ts';
 
 const { Vector, status } = Aerospike
 
@@ -81,7 +81,7 @@ describe('Vectors in UDFs', function () {
     }
 
     const key = new Aerospike.Key(helper.namespace, set, 0)
-    const error = await call(key, 'write_v', [Vector.ofFloat32([NaN])], { errorDetailVerbosity: Aerospike.errorDetailVerbosity.MESSAGE }).then(() => null, e => e)
+    const error = await call(key, 'write_v', [nonFiniteVector(Aerospike.vectorElementType.FLOAT32, [NaN])], { errorDetailVerbosity: Aerospike.errorDetailVerbosity.MESSAGE }).then(() => null, e => e)
     expect(error).to.be.instanceof(Aerospike.AerospikeError)
     expect(error.code).to.equal(status.ERR_REQUEST_INVALID)
     expect(error.message).to.match(/vector: elements must be finite \(no NaN or infinity\)$/)

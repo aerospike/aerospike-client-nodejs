@@ -909,12 +909,12 @@ export class Vector {
     public static ofFloat16(values: Float32Array | Float64Array | ArrayLike<number>): Vector;
     /**
      * Creates a vector of half-precision floats from their raw IEEE 754 bit patterns, for
-     * exact interchange of existing half-precision data. The server rejects NaN and
-     * infinite elements. To create one from numbers, use {@link Vector.ofFloat16}.
+     * exact interchange of existing half-precision data. NaN and infinite bit patterns
+     * fail with a parameter error. To create one from numbers, use {@link Vector.ofFloat16}.
      *
      * @param bits - From 1 to 131,072 bit patterns, each an integer from 0 to 65,535.
      * @throws {TypeError} If `bits` is not an array or a typed array of numbers.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `bits` is empty, too long, or holds a value that isn't an integer from 0 to 65,535.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `bits` is empty, too long, or holds a value that isn't an integer from 0 to 65,535, or the bit pattern of NaN or an infinity.
      */
     public static ofFloat16Bits(bits: Uint16Array | ArrayLike<number>): Vector;
     /**
@@ -927,21 +927,21 @@ export class Vector {
     public static ofInt32(elements: Int32Array | ArrayLike<number>): Vector;
     /**
      * Creates a vector of 32-bit floats. Values are rounded to 32-bit precision.
-     * The server rejects NaN and infinite elements, including values too large
-     * for 32 bits (beyond about ±3.4e38), which round to infinity.
+     * NaN and infinite elements fail with a parameter error, including values too
+     * large for 32 bits (beyond about ±3.4e38), which round to infinity.
      *
      * @param elements - From 1 to 65,536 numbers.
      * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty or too long.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty, too long, or holds NaN or an infinity after rounding to 32 bits.
      */
     public static ofFloat32(elements: Float32Array | ArrayLike<number>): Vector;
     /**
-     * Creates a vector of 64-bit floats. The server rejects NaN and infinite
-     * elements.
+     * Creates a vector of 64-bit floats. NaN and infinite elements fail with a
+     * parameter error.
      *
      * @param elements - From 1 to 32,768 numbers.
      * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
-     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty or too long.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty, too long, or holds NaN or an infinity.
      */
     public static ofFloat64(elements: Float64Array | ArrayLike<number>): Vector;
     /**
@@ -17877,6 +17877,10 @@ export namespace exp {
      * (26), and a query leaves the record out, without an error. To get `null` instead,
      * read the distance with `exp.expReadFlags.EVAL_NO_FAIL`; in a Top-K query those
      * records then rank last.
+     *
+     * Overflow: a `EUCLIDEAN_SQUARED` distance too large for the sum is `Infinity`, which
+     * ranks farthest. A `DOT_PRODUCT` whose sum overflows is unknown, since its true value
+     * may still be finite.
      *
      * @param metric - The distance metric.
      * @param query - The vector to compare with.

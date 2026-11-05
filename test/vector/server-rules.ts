@@ -21,9 +21,10 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { loadVectors, removeLoadedSets } from './helpers.ts';
+import { loadVectors, removeLoadedSets, nonFiniteVector } from './helpers.ts';
 
 const { Vector, operations, lists, maps, status } = Aerospike
+const { FLOAT16, FLOAT32, FLOAT64 } = Aerospike.vectorElementType
 
 // Ask the server to explain its rejections.
 const DETAILS = { errorDetailVerbosity: Aerospike.errorDetailVerbosity.MESSAGE }
@@ -51,16 +52,16 @@ describe('Vector rules the server enforces', function () {
   helper.skipUnlessVersion('>= 8.2.1', this)
   after(removeLoadedSets)
 
+  // The builders reject these first (values.ts); vectors made from bytes reach the server.
   it('rejects NaN and infinite elements of every float type (R8, R10)', async function () {
     const message = 'vector: elements must be finite (no NaN or infinity)'
     const vectors: Array<[string, Aerospike.Vector]> = [
-      ['FLOAT16 NaN', Vector.ofFloat16Bits([0x3c00, 0x7e00])],
-      ['FLOAT16 infinity', Vector.ofFloat16Bits([0xfc00])],
-      ['FLOAT32 NaN', Vector.ofFloat32([1, NaN])],
-      ['FLOAT32 infinity', Vector.ofFloat32([Infinity])],
-      ['FLOAT32 too large, rounded to infinity', Vector.ofFloat32([1e40])],
-      ['FLOAT64 NaN', Vector.ofFloat64([NaN])],
-      ['FLOAT64 -infinity', Vector.ofFloat64([0, -Infinity])]
+      ['FLOAT16 NaN', nonFiniteVector(FLOAT16, [0x3c00, 0x7e00])],
+      ['FLOAT16 infinity', nonFiniteVector(FLOAT16, [0xfc00])],
+      ['FLOAT32 NaN', nonFiniteVector(FLOAT32, [1, NaN])],
+      ['FLOAT32 infinity', nonFiniteVector(FLOAT32, [Infinity])],
+      ['FLOAT64 NaN', nonFiniteVector(FLOAT64, [NaN])],
+      ['FLOAT64 -infinity', nonFiniteVector(FLOAT64, [0, -Infinity])]
     ]
     for (const [name, vector] of vectors) {
       await expectRejected(key => helper.client.put(key, { v: vector }, null, DETAILS), status.ERR_REQUEST_INVALID, message, `put ${name}`)
@@ -69,7 +70,7 @@ describe('Vector rules the server enforces', function () {
   })
 
   it('rejects them with code 4 when no error details are asked for', async function () {
-    await expectRejected(key => helper.client.put(key, { v: Vector.ofFloat32([NaN]) }), status.ERR_REQUEST_INVALID, '', 'no details')
+    await expectRejected(key => helper.client.put(key, { v: nonFiniteVector(FLOAT32, [NaN]) }), status.ERR_REQUEST_INVALID, '', 'no details')
   })
 
   it('rejects a vector inside a list or a map, at any depth (R71)', async function () {

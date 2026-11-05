@@ -48,6 +48,20 @@ export function header (elementType: number, dimensions: number, version = 1): B
   return bytes
 }
 
+// A vector with elements the builders reject (NaN, infinities), made from its bytes,
+// which aren't checked, so that it reaches the server and its checks. FLOAT16
+// elements are bit patterns.
+export function nonFiniteVector (elementType: number, elements: number[]): Aerospike.Vector {
+  const size = elementType === FLOAT64 ? 8 : elementType === FLOAT16 ? 2 : 4
+  const data = Buffer.alloc(elements.length * size)
+  elements.forEach((value, i) => {
+    if (elementType === FLOAT16) data.writeUInt16LE(value, i * size)
+    else if (elementType === FLOAT64) data.writeDoubleLE(value, i * size)
+    else data.writeFloatLE(value, i * size)
+  })
+  return new Aerospike.Vector(Buffer.concat([header(elementType, elements.length), data]))
+}
+
 // Runs fn and returns what it threw, or null.
 export function errorFrom (fn: () => unknown): any {
   try {

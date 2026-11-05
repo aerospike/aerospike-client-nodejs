@@ -21,7 +21,7 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { float16Value, errorFrom, expectParamError, expectTypeError, loadVectors, removeLoadedSets } from './helpers.ts';
+import { float16Value, errorFrom, expectParamError, expectTypeError, loadVectors, removeLoadedSets, nonFiniteVector } from './helpers.ts';
 
 const { Vector, status } = Aerospike
 const { FLOAT16 } = Aerospike.vectorElementType
@@ -135,8 +135,8 @@ describe('Vector#toArray #noserver', function () {
     }
   })
 
-  it('reads half-precision bit patterns the server would reject as NaN or infinity', function () {
-    const values = Vector.ofFloat16Bits([0x7e00, 0x7c00, 0xfc00]).toArray()
+  it('reads NaN and infinite half-precision bit patterns in a vector made from bytes', function () {
+    const values = nonFiniteVector(FLOAT16, [0x7e00, 0x7c00, 0xfc00]).toArray()
     expect(values[0]).to.be.NaN
     expect(values.slice(1)).to.eql([Infinity, -Infinity])
   })

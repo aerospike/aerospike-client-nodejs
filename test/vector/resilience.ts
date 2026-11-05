@@ -24,12 +24,12 @@ import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import { digests, skipUnlessTopKQueriesRun } from '../topk/helpers.ts';
-import { makeVector, loadVectors, removeLoadedSets, removeLater, seededRandom } from './helpers.ts';
+import { makeVector, loadVectors, removeLoadedSets, removeLater, seededRandom, nonFiniteVector } from './helpers.ts';
 
 const { Vector, exp, operations, batchType, status } = Aerospike
 const { DOUBLE } = Aerospike.orderByType
 const { DESC } = Aerospike.order
-const { FLOAT32 } = Aerospike.vectorElementType
+const { FLOAT32, FLOAT64 } = Aerospike.vectorElementType
 const { COSINE_SIMILARITY } = Aerospike.vectorDistanceMetric
 
 // Each failure here must end in one of three ways: an exact result, a clean
@@ -63,7 +63,7 @@ describe('Vector failures the client must survive', function () {
 
   it('writes the good vectors of a batch and rejects only the bad ones', async function () {
     const target = await loadVectors([undefined, undefined, undefined, undefined], [0, 1, 2, 3].map(id => ({ id })))
-    const writes = [Vector.ofFloat32([1, 2]), Vector.ofFloat32([NaN]), [Vector.ofFloat32([1])], Vector.ofInt32([3])]
+    const writes = [Vector.ofFloat32([1, 2]), nonFiniteVector(FLOAT32, [NaN]), [Vector.ofFloat32([1])], Vector.ofInt32([3])]
     const results = await helper.client.batchWrite(writes.map((v, i) => ({
       type: batchType.BATCH_WRITE, key: keyOf(target, i), ops: [operations.write('v', v as any)]
     })))
@@ -78,7 +78,7 @@ describe('Vector failures the client must survive', function () {
 
   it('keeps working after many rejected writes', async function () {
     const target = await loadVectors([Vector.ofFloat32([1, 2])])
-    const bad = [() => Vector.ofFloat32([NaN]), () => Vector.ofFloat64([Infinity]), () => [Vector.ofFloat32([1])]]
+    const bad = [() => nonFiniteVector(FLOAT32, [NaN]), () => nonFiniteVector(FLOAT64, [Infinity]), () => [Vector.ofFloat32([1])]]
     for (let i = 0; i < 300; i++) {
       const error = await helper.client.put(keyOf(target, 0), { v: bad[i % 3]() } as any).then(() => null, e => e)
       expect(error?.code, `write ${i}`).to.equal(status.ERR_REQUEST_INVALID)

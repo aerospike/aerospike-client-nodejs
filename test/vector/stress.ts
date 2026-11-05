@@ -26,7 +26,7 @@ import * as helper from '../test_helper.ts';
 import { topK, digests, skipUnlessTopKQueriesRun } from '../topk/helpers.ts';
 import {
   ELEMENT_TYPES, makeVector, referenceDistance, roundoff, distancePrecision, loadVectors, removeLoadedSets,
-  removeLater, seededRandom, expectBestK, loadGridSet, expectSearchGrid, expectFilterGrid
+  removeLater, seededRandom, expectBestK, loadGridSet, expectSearchGrid, expectFilterGrid, nonFiniteVector
 } from './helpers.ts';
 
 const { exp, operations, status } = Aerospike
@@ -171,7 +171,7 @@ describe('Vectors under stress', function () {
       for (let i = 0; i < 2000; i++) {
         const vector = Aerospike.Vector.ofFloat32(new Float32Array(1024).fill(i))
         vector.toBytes()
-        await helper.client.put(key, { v: Aerospike.Vector.ofFloat32([NaN]) }).catch(e => expect(e.code).to.equal(status.ERR_REQUEST_INVALID))
+        await helper.client.put(key, { v: nonFiniteVector(FLOAT32, [NaN]) }).catch(e => expect(e.code).to.equal(status.ERR_REQUEST_INVALID))
       }
       gc()
       return process.memoryUsage().rss

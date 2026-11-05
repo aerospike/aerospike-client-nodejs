@@ -20,7 +20,7 @@
 
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
-import { ELEMENT_TYPES, HEADER_SIZE, header, expectParamError, expectTypeError } from './helpers.ts';
+import { ELEMENT_TYPES, HEADER_SIZE, header, expectParamError, expectTypeError, nonFiniteVector } from './helpers.ts';
 
 const { Vector, vectorElementType, vectorDistanceMetric } = Aerospike
 const { FLOAT16, INT32, FLOAT32, FLOAT64 } = vectorElementType
@@ -120,14 +120,23 @@ describe('Vector values #noserver', function () {
     }
   })
 
-  it('leaves NaN and infinite float elements to the server', function () {
+  it('rejects NaN and infinite float elements before sending (R8, R10)', function () {
     for (const build of [Vector.ofFloat32, Vector.ofFloat64]) {
       for (const value of [NaN, Infinity, -Infinity]) {
-        expect(Object.is(build([value]).elements()[0], value), `${build.name} ${value}`).to.be.true
+        expectParamError(() => build([1, value]), 'vector: element 1 is not finite (no NaN or infinity)', `${build.name} ${value}`)
       }
     }
-    // Too large for 32 bits: rounds to infinity, which the server rejects.
-    expect(Vector.ofFloat32([1e40]).elements()[0]).to.equal(Infinity)
+    // Too large for 32 bits: rounds to infinity.
+    expectParamError(() => Vector.ofFloat32([1e40]), 'vector: element 0 is not finite (no NaN or infinity)', 'FLOAT32 1e40')
+    for (const bits of [0x7e00, 0x7c00, 0xfc00]) {
+      expectParamError(() => Vector.ofFloat16Bits([0x3c00, bits]), 'vector: element 1 is not finite (no NaN or infinity)', `FLOAT16 bits ${bits}`)
+    }
+  })
+
+  it('builds a vector from bytes without checking its elements, so the server checks them', function () {
+    const vector = nonFiniteVector(FLOAT32, [1, NaN])
+    expect(vector.dimensions).to.equal(2)
+    expect(vector.elements()[1]).to.be.NaN
   })
 
   it('reads back its own bytes, and only a Buffer', function () {

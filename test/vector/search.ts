@@ -30,7 +30,7 @@ import {
 } from './helpers.ts';
 
 const { exp, filter, operations, Vector } = Aerospike
-const { DOUBLE, INTEGER } = Aerospike.orderByType
+const { DOUBLE, INTEGER, BYTES } = Aerospike.orderByType
 const { ASC, DESC } = Aerospike.order
 const { FLOAT32, FLOAT64 } = Aerospike.vectorElementType
 const { EUCLIDEAN_SQUARED, DOT_PRODUCT, COSINE_SIMILARITY } = Aerospike.vectorDistanceMetric
@@ -193,6 +193,30 @@ describe('Vector search with Top-K', function () {
         expect(inDigestOrder(records.slice(2)), `${label}: the two vectors and the missing bin tie`).to.be.true
       }
     }
+  })
+
+  it('ranks vector and HyperLogLog bins last for a BYTES order key, after every blob', async function () {
+    // ids 0-1 blobs, 2-3 vectors, 4 an HLL. k covers every record, so the client
+    // sorts all of them, not only the ones the server ranked first.
+    const values = [Buffer.from([9]), Buffer.from([1]), Vector.ofInt32([0]), Vector.ofFloat32([1, 2]), undefined]
+    const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
+    await helper.client.operate(new Aerospike.Key(helper.namespace, set, 4), [Aerospike.hll.init('v', 8)])
+
+    for (const [direction, blobs] of [[ASC, [1, 0]], [DESC, [0, 1]]] as const) {
+      const records = await topK(set, q => q.orderBy('v', BYTES, direction), 5)
+      expect(records.slice(0, 2).map(r => r.bins.id), `direction ${direction}`).to.eql(blobs)
+      expect(records.slice(2).map(r => r.bins.id).sort(), `direction ${direction}`).to.eql([2, 3, 4])
+      expect(inDigestOrder(records.slice(2)), `direction ${direction}: the vectors and the HLL tie`).to.be.true
+    }
+  })
+
+    it('ranks an overflowing squared Euclidean distance (+Infinity) farthest, not left out', async function () {
+    // Distances to 0: 1, MAX^2 (overflows to +Infinity) and 9.
+    const values = [Vector.ofFloat64([1]), Vector.ofFloat64([Number.MAX_VALUE]), Vector.ofFloat64([3])]
+    const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
+    const nearest = await topK(set, bySimilarity(EUCLIDEAN_SQUARED, Vector.ofFloat64([0])), 10)
+    expect(nearest.map(r => r.bins.id)).to.eql([0, 2, 1])
+    expect(nearest[2].bins.d).to.equal(Infinity)
   })
 
   it('returns the same records in the same order every time', async function () {

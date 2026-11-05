@@ -25,7 +25,7 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { makeVector, loadVectors, removeLoadedSets, removeLater, seededRandom } from './helpers.ts';
+import { makeVector, loadVectors, removeLoadedSets, removeLater, seededRandom, nonFiniteVector } from './helpers.ts';
 
 const { Vector, status } = Aerospike
 const { FLOAT32 } = Aerospike.vectorElementType
@@ -85,10 +85,13 @@ describe('Vectors with strong consistency', function () {
     const set = await loadVectors([original, original])
     const keys = [0, 1].map(i => new Aerospike.Key(helper.namespace, set, i))
     const txn = new Aerospike.Transaction()
-    await helper.client.put(keys[0], { v: Vector.ofFloat32([5, 6]) }, null, { txn } as any)
-    const error = await helper.client.put(keys[1], { v: Vector.ofFloat32([NaN]) }, null, { txn } as any).then(() => null, e => e)
-    expect(error?.code).to.equal(status.ERR_REQUEST_INVALID)
-    await helper.client.abort(txn)
+    try {
+      await helper.client.put(keys[0], { v: Vector.ofFloat32([5, 6]) }, null, { txn } as any)
+      const error = await helper.client.put(keys[1], { v: nonFiniteVector(Aerospike.vectorElementType.FLOAT32, [NaN]) }, null, { txn } as any).then(() => null, e => e)
+      expect(error?.code).to.equal(status.ERR_REQUEST_INVALID)
+    } finally {
+      await helper.client.abort(txn) // also when a check above fails, so cleanup isn't blocked
+    }
     for (const key of keys) {
       expect(bytesOf(await helper.client.get(key, LINEARIZE as any))).to.eql(original.toBytes())
     }
