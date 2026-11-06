@@ -47,7 +47,7 @@ export type AerospikeMapKey = number | string | Buffer;
 /**
  * Represents a basic value in an Aerospike bin.
  */
-export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Array<PartialAerospikeBinValue> | object;
+export type PartialAerospikeBinValue = null | undefined | boolean | string | number | Double | bigint | Buffer | GeoJSON | Vector | Array<PartialAerospikeBinValue> | object;
 
 /**
  * Bin name - maximum 15 characters.
@@ -861,6 +861,112 @@ export class HyperLogLog {
      * Bytes value for HyperLogLog bin.
      */
     buffer: Buffer;
+}
+
+/**
+ * A vector value: a fixed number of elements of one numeric type, stored in
+ * its own data type (not as a blob) so that the server can compute
+ * {@link exp.vectorDistance | vector distances} on it. Requires server 8.2.1 or later.
+ *
+ * Create one with {@link Vector.ofFloat32} or a sibling factory, and read its
+ * values with {@link Vector.toArray}. Only a `Vector` is stored as a vector: a plain typed array is still stored as a
+ * blob, and a plain array as a list. Reading a vector bin returns a `Vector`.
+ *
+ * A vector can't be stored inside a list or a map; the server rejects it.
+ *
+ * @example
+ * const Aerospike = require('aerospike')
+ *
+ * const embedding = Aerospike.Vector.ofFloat32([0.12, -0.5, 0.33])
+ * await client.put(key, { embedding })
+ */
+export class Vector {
+    /**
+     * Creates a vector from its serialized bytes, as returned by {@link Vector.toBytes}.
+     *
+     * @param bytes - The serialized vector, header included.
+     * @throws {TypeError} If `bytes` is not a Buffer.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `bytes` is not a valid vector.
+     */
+    public constructor(bytes: Buffer);
+    /**
+     * Creates a vector of half-precision (16-bit) floats from numbers. Each number is
+     * rounded to 32 bits (as by `Math.fround`), then to the nearest half-precision value,
+     * ties to even. Half precision holds about three significant digits and magnitudes up
+     * to 65,504; smaller magnitudes lose precision or become zero. Every typed array is read
+     * as numbers, a `Uint16Array` included; for raw bit patterns, use {@link Vector.ofFloat16Bits}.
+     *
+     * @param values - From 1 to 131,072 numbers.
+     * @throws {TypeError} If `values` is not an array or a typed array of numbers.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `values` is empty or too
+     * long, or holds a value that isn't finite as half precision: NaN, an infinity, or a
+     * magnitude of 65,520 or more.
+     *
+     * @example
+     * const vector = Aerospike.Vector.ofFloat16([0.5, -1.25, 3.0])
+     * vector.toArray() // [0.5, -1.25, 3]
+     */
+    public static ofFloat16(values: Float32Array | Float64Array | ArrayLike<number>): Vector;
+    /**
+     * Creates a vector of half-precision floats from their raw IEEE 754 bit patterns, for
+     * exact interchange of existing half-precision data. NaN and infinite bit patterns
+     * fail with a parameter error. To create one from numbers, use {@link Vector.ofFloat16}.
+     *
+     * @param bits - From 1 to 131,072 bit patterns, each an integer from 0 to 65,535.
+     * @throws {TypeError} If `bits` is not an array or a typed array of numbers.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `bits` is empty, too long, or holds a value that isn't an integer from 0 to 65,535, or the bit pattern of NaN or an infinity.
+     */
+    public static ofFloat16Bits(bits: Uint16Array | ArrayLike<number>): Vector;
+    /**
+     * Creates a vector of 32-bit signed integers.
+     *
+     * @param elements - From 1 to 65,536 integers.
+     * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty, too long, or holds a value that isn't a 32-bit integer.
+     */
+    public static ofInt32(elements: Int32Array | ArrayLike<number>): Vector;
+    /**
+     * Creates a vector of 32-bit floats. Values are rounded to 32-bit precision.
+     * NaN and infinite elements fail with a parameter error, including values too
+     * large for 32 bits (beyond about ±3.4e38), which round to infinity.
+     *
+     * @param elements - From 1 to 65,536 numbers.
+     * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty, too long, or holds NaN or an infinity after rounding to 32 bits.
+     */
+    public static ofFloat32(elements: Float32Array | ArrayLike<number>): Vector;
+    /**
+     * Creates a vector of 64-bit floats. NaN and infinite elements fail with a
+     * parameter error.
+     *
+     * @param elements - From 1 to 32,768 numbers.
+     * @throws {TypeError} If `elements` is not an array or a typed array of numbers.
+     * @throws {AerospikeError} With code <code>ERR_PARAM</code> if `elements` is empty, too long, or holds NaN or an infinity.
+     */
+    public static ofFloat64(elements: Float64Array | ArrayLike<number>): Vector;
+    /**
+     * The element type.
+     */
+    public get elementType(): vectorElementType;
+    /**
+     * The number of elements.
+     */
+    public get dimensions(): number;
+    /**
+     * Returns the elements as numbers, for every element type. `FLOAT16` elements are
+     * converted from half precision; every half-precision value is exact as a number.
+     */
+    public toArray(): number[];
+    /**
+     * Returns a copy of the elements: a `Uint16Array` of raw bit patterns for
+     * `FLOAT16`, otherwise an `Int32Array`, `Float32Array` or `Float64Array`.
+     * Use {@link Vector.toArray} for the elements as numbers.
+     */
+    public elements(): Uint16Array | Int32Array | Float32Array | Float64Array;
+    /**
+     * Returns a copy of the serialized vector, header included.
+     */
+    public toBytes(): Buffer;
 }
 
 /**
@@ -12437,6 +12543,51 @@ export enum orderByFlags {
 }
 
 /**
+ * Vector element types.
+ *
+ * @see {@link Vector}
+ */
+export enum vectorElementType {
+    /**
+     * Half-precision floats, built from numbers with {@link Vector.ofFloat16} or from raw
+     * IEEE 754 bit patterns with {@link Vector.ofFloat16Bits}.
+     */
+    FLOAT16 = 1,
+    /**
+     * 32-bit signed integers.
+     */
+    INT32 = 2,
+    /**
+     * 32-bit floats.
+     */
+    FLOAT32 = 3,
+    /**
+     * 64-bit floats.
+     */
+    FLOAT64 = 4
+}
+
+/**
+ * Vector distance metrics.
+ *
+ * @see {@link exp.vectorDistance}
+ */
+export enum vectorDistanceMetric {
+    /**
+     * Squared Euclidean distance; smaller is closer.
+     */
+    EUCLIDEAN_SQUARED = 0,
+    /**
+     * Dot product; larger is closer.
+     */
+    DOT_PRODUCT = 1,
+    /**
+     * Cosine similarity; larger is closer.
+     */
+    COSINE_SIMILARITY = 2
+}
+
+/**
  * Enumerations represented the completion status of a Job in Aerospike.
  */
 export enum jobStatus {
@@ -17443,6 +17594,10 @@ export namespace exp {
          */
         HLL,
         /**
+         * {@link Vector} data type.
+         */
+        VECTOR,
+        /**
          * Automatically matches to the data type of the targeted data.
          */
         AUTO,
@@ -17696,6 +17851,51 @@ export namespace exp {
      * @return hll bin
      */
     export const binHll: _binTypeExp;
+    /**
+     * Create expression that returns a bin as a vector, for use with
+     * {@link exp.vectorDistance}.
+     *
+     * @param binName - Bin name.
+     * @return vector bin
+     */
+    export const binVector: _binTypeExp;
+    /**
+     * Create expression that returns the distance between a query vector and a
+     * vector bin, as a float. Returns 'unknown' if the bin is missing or not a
+     * vector, or if its element type or dimensions differ from the query's.
+     *
+     * For `EUCLIDEAN_SQUARED` a smaller value is closer; for `DOT_PRODUCT` and
+     * `COSINE_SIMILARITY` a larger value is closer.
+     *
+     * Precision: by default the server sums `FLOAT16`, `INT32` and `FLOAT32` vectors in
+     * 32-bit floats, so a distance has 32-bit float precision (for example, an `INT32`
+     * dot product of 16,777,217 by 1 comes out as 16,777,216). The server's
+     * `vector-distance-precision` setting set to `double` sums them in doubles.
+     * `FLOAT64` vectors are always summed in doubles.
+     *
+     * An unknown distance makes a single-record read fail with `ERR_OP_NOT_APPLICABLE`
+     * (26), and a query leaves the record out, without an error. To get `null` instead,
+     * read the distance with `exp.expReadFlags.EVAL_NO_FAIL`; in a Top-K query those
+     * records then rank last.
+     *
+     * Overflow: a `EUCLIDEAN_SQUARED` distance too large for the sum is `Infinity`, which
+     * ranks farthest. A `DOT_PRODUCT` whose sum overflows is unknown, since its true value
+     * may still be finite.
+     *
+     * @param metric - The distance metric.
+     * @param query - The vector to compare with.
+     * @param bin - The vector bin, usually {@link exp.binVector}.
+     * @return float value
+     * @throws {TypeError} If `metric` is unknown, `query` is not a {@link Vector},
+     * or `bin` is not an expression.
+     *
+     * @example <caption>The distance as a computed bin, ready to rank with Top-K</caption>
+     * const query = Aerospike.Vector.ofFloat32([0.1, 0.2, 0.3])
+     * const distance = exp.vectorDistance(Aerospike.vectorDistanceMetric.COSINE_SIMILARITY,
+     *   query, exp.binVector('embedding'))
+     * const ops = [exp.operations.read('score', distance, exp.expReadFlags.DEFAULT)]
+     */
+    export function vectorDistance(metric: vectorDistanceMetric, query: Vector, bin: AerospikeExp): AerospikeExp;
     /**
      * Create expression that returns the type of a bin as a integer.
      * @param binName - Bin name.

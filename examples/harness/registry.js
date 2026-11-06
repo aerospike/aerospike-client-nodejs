@@ -44,6 +44,7 @@ const scanParallel = require('../doc/scanParallel')
 const queryInteger = require('../doc/queryInteger')
 const queryEqual = require('../doc/queryEqual')
 const queryTopK = require('../doc/queryTopK')
+const vectorSearch = require('../doc/vectorSearch')
 const secondaryIndex = require('../doc/secondaryIndex')
 const userDefinedFunction = require('../doc/userDefinedFunction')
 const udfModule = require('../doc/udfModule')
@@ -166,6 +167,11 @@ const examples = [
       validation.queryTopKValidate,
       validation.cleanupQueryTopK
     )
+  },
+  {
+    name: 'VectorSearch',
+    runExample: vectorSearch.runExample,
+    fixture: validateAndCleanup(validation.vectorSearchValidate, ['vector1', 'vector2', 'vector3'])
   },
   {
     name: 'SecondaryIndex',

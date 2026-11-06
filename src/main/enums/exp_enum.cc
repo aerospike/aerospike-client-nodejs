@@ -91,6 +91,10 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "VAL_RAWSTR", as_exp_ops::_AS_EXP_CODE_VAL_RAWSTR);
 	set(exp_ops, "VAL_RTYPE", as_exp_ops::_AS_EXP_CODE_VAL_RTYPE);
 
+	set(exp_ops, "VECTOR_EUCLIDEAN_DIST", as_exp_ops::_AS_EXP_CODE_VECTOR_EUCLIDEAN_DIST);
+	set(exp_ops, "VECTOR_DOT_PRODUCT", as_exp_ops::_AS_EXP_CODE_VECTOR_DOT_PRODUCT);
+	set(exp_ops, "VECTOR_COSINE_SIM", as_exp_ops::_AS_EXP_CODE_VECTOR_COSINE_SIM);
+
 	set(exp_ops, "CALL_VOP_START", as_exp_ops::_AS_EXP_CODE_CALL_VOP_START);
 	set(exp_ops, "CDT_LIST_CRMOD", as_exp_ops::_AS_EXP_CODE_CDT_LIST_CRMOD);
 	set(exp_ops, "CDT_LIST_MOD", as_exp_ops::_AS_EXP_CODE_CDT_LIST_MOD);
@@ -160,6 +164,7 @@ Local<Object> exp_opcode_values()
 	set(exp_type, "FLOAT", as_exp_type::AS_EXP_TYPE_FLOAT);
 	set(exp_type, "GEOJSON", as_exp_type::AS_EXP_TYPE_GEOJSON);
 	set(exp_type, "HLL", as_exp_type::AS_EXP_TYPE_HLL);
+	set(exp_type, "VECTOR", as_exp_type::AS_EXP_TYPE_VECTOR);
 
 	set(exp_type, "AUTO", as_exp_type::AS_EXP_TYPE_AUTO);
 	set(exp_type, "ERROR", as_exp_type::AS_EXP_TYPE_ERROR);
