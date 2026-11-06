@@ -123,8 +123,12 @@ static Local<Value> encoded(as_vector_value *vector, as_error *err)
 	}
 
 	as_bytes bytes;
-	as_vector_value_to_bytes(vector, &bytes);
+	bool serialized = as_vector_value_to_bytes(vector, &bytes);
 	as_vector_value_destroy(vector);
+	if (!serialized) {
+		as_error_update(err, AEROSPIKE_ERR_PARAM, "vector: invalid vector");
+		return scope.Escape(error_to_jsobject(err, NULL));
+	}
 	Local<Object> buffer = Nan::CopyBuffer((char *)as_bytes_get(&bytes),
 										   as_bytes_size(&bytes))
 							   .ToLocalChecked();

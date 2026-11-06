@@ -19,7 +19,10 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { topK } from '../topk/helpers.ts';
+import { topK, inBatches, seededRandom } from '../topk/helpers.ts';
+
+// The tests import it from here.
+export { seededRandom }
 
 const { FLOAT16, INT32, FLOAT32, FLOAT64 } = Aerospike.vectorElementType
 const { EUCLIDEAN_SQUARED, DOT_PRODUCT, COSINE_SIMILARITY } = Aerospike.vectorDistanceMetric
@@ -85,16 +88,6 @@ export function expectTypeError (fn: () => unknown, message: string, label = '')
   const error = errorFrom(fn)
   expect(error, `${label} expected an error`).to.be.instanceof(TypeError)
   expect(error.message, label).to.equal(message)
-}
-
-// A seeded random number generator (mulberry32), so failures can be replayed.
-export function seededRandom (seed: number) {
-  return function () {
-    seed = (seed + 0x6d2b79f5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
 }
 
 // The value of a half-precision float from its raw bits.
@@ -225,15 +218,6 @@ export async function removeLoadedSets () {
   })
   for (const { set, count } of loaded.splice(0)) {
     await inBatches(count, i => removeIfThere(new Aerospike.Key(helper.namespace, set, i)))
-  }
-}
-
-// Runs task(0) to task(count - 1), 50 at a time.
-async function inBatches (count: number, task: (i: number) => Promise<unknown>) {
-  for (let start = 0; start < count; start += 50) {
-    const batch = []
-    for (let i = start; i < Math.min(count, start + 50); i++) batch.push(task(i))
-    await Promise.all(batch)
   }
 }
 

@@ -115,7 +115,7 @@ export async function loadSet (records: Bins[]): Promise<string> {
 
 // Runs task(0) to task(count - 1), 50 at a time: well under the client's
 // default limit of 100 async connections per node.
-async function inBatches (count: number, task: (i: number) => Promise<unknown>) {
+export async function inBatches (count: number, task: (i: number) => Promise<unknown>) {
   for (let start = 0; start < count; start += 50) {
     const batch = []
     for (let i = start; i < Math.min(count, start + 50); i++) batch.push(task(i))
