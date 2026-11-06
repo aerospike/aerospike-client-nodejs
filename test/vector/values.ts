@@ -133,6 +133,16 @@ describe('Vector values #noserver', function () {
     }
   })
 
+  it('rejects NaN and infinity in a typed array of the element type, and checks other typed arrays', function () {
+    const message = 'vector: element 1 is not finite (no NaN or infinity)'
+    expectParamError(() => Vector.ofFloat32(new Float32Array([1, NaN])), message, 'Float32Array NaN')
+    expectParamError(() => Vector.ofFloat64(new Float64Array([1, -Infinity])), message, 'Float64Array -Infinity')
+    expectParamError(() => Vector.ofFloat16(new Float32Array([1, Infinity])), 'vector: element 1 (inf) is not finite as float16', 'ofFloat16 Float32Array Infinity')
+    expectParamError(() => Vector.ofFloat16Bits(new Uint16Array([0x3c00, 0x7e00])), message, 'Uint16Array NaN bits')
+    expectParamError(() => Vector.ofInt32(new Float64Array([0, 1.5])), 'Vector element 1 must be a 32-bit integer', 'Float64Array into INT32')
+    expectTypeError(() => Vector.ofFloat32(new BigInt64Array([1n]) as any), 'Vector element 0 must be a number', 'BigInt64Array')
+  })
+
   it('builds a vector from bytes without checking its elements, so the server checks them', function () {
     const vector = nonFiniteVector(FLOAT32, [1, NaN])
     expect(vector.dimensions).to.equal(2)
