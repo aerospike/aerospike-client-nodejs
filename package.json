@@ -57,7 +57,7 @@
     "minimatch": "^10.1.1"
   },
   "optionalDependencies": {
-    "@aerospike/prebuild-darwin-arm64": "7.0.0",
+    "@aerospike/prebuild-darwin-arm64": "7.0.1",
     "@aerospike/prebuild-darwin-x64": "7.0.0",
     "@aerospike/prebuild-linux-arm64": "7.0.0",
     "@aerospike/prebuild-linux-x64": "7.0.0",
