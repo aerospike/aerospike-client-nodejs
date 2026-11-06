@@ -96,11 +96,14 @@ describe('Vector values #noserver', function () {
   })
 
   it('throws a TypeError unless the elements are an array or a typed array', function () {
-    for (const { name, build } of ELEMENT_TYPES) {
+    for (const { name, build, array } of ELEMENT_TYPES) {
       for (const elements of [undefined, null, 'abc', 3, { 0: 1, length: 1 }, new DataView(new ArrayBuffer(4))]) {
         expectTypeError(() => build(elements as any), 'Vector elements must be an array or a typed array of numbers', `${name} ${String(elements)}`)
       }
+      // Passes instanceof but isn't a typed array.
+      expectTypeError(() => build(new Proxy(new array([1]), {}) as any), 'Vector elements must be an array or a typed array of numbers', `${name} Proxy`)
     }
+    expectTypeError(() => Vector.ofFloat16(new Proxy(new Float32Array([1]), {}) as any), 'Vector elements must be an array or a typed array of numbers', 'ofFloat16 Proxy')
   })
 
   it('throws a TypeError naming the first element that is not a number', function () {
