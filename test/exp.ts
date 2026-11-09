@@ -198,6 +198,36 @@ describe('Aerospike.exp', function () {
     })
   })
 
+  // Regression: _paramsExp used to spread the list of parameter expressions instead of their
+  // nodes, so every fixed-arity builder below produced nested arrays and failed to compile.
+  describe('fixed-arity arithmetic and integer expressions', function () {
+    const cases: Array<[string, () => AerospikeExp]> = [
+      ['pow', () => exp.eq(exp.pow(exp.binFloat('f'), exp.float(3)), exp.float(15.625))],
+      ['log', () => exp.and(exp.gt(exp.log(exp.float(8), exp.float(2)), exp.float(2.99)), exp.lt(exp.log(exp.float(8), exp.float(2)), exp.float(3.01)))],
+      ['mod', () => exp.eq(exp.mod(exp.binInt('i'), exp.int(3)), exp.int(1))],
+      ['abs', () => exp.eq(exp.abs(exp.int(-7)), exp.binInt('i'))],
+      ['floor', () => exp.eq(exp.floor(exp.binFloat('f')), exp.float(2))],
+      ['ceil', () => exp.eq(exp.ceil(exp.binFloat('f')), exp.float(3))],
+      ['toInt', () => exp.eq(exp.toInt(exp.binFloat('f')), exp.int(2))],
+      ['toFloat', () => exp.eq(exp.toFloat(exp.binInt('i')), exp.float(7))],
+      ['intNot', () => exp.eq(exp.intNot(exp.int(0)), exp.int(-1))],
+      ['intLshift', () => exp.eq(exp.intLshift(exp.int(1), exp.int(3)), exp.int(8))],
+      ['intRshift', () => exp.eq(exp.intRshift(exp.int(8), exp.int(1)), exp.int(4))],
+      ['intArshift', () => exp.eq(exp.intArshift(exp.int(-8), exp.int(1)), exp.int(-4))],
+      ['intCount', () => exp.eq(exp.intCount(exp.binInt('i')), exp.int(3))],
+      ['intLscan', () => exp.eq(exp.intLscan(exp.int(1), exp.bool(true)), exp.int(63))],
+      ['intRscan', () => exp.eq(exp.intRscan(exp.int(1), exp.bool(true)), exp.int(63))]
+    ]
+
+    for (const [name, build] of cases) {
+      it(`${name} compiles and evaluates on the server`, async function () {
+        const key = await createRecord({ i: 7, f: 2.5 })
+        await testNoMatch(key, exp.not(build()))
+        await testMatch(key, build())
+      })
+    }
+  })
+
   describe('binExists', function () {
     it('evaluates to true if the bin with the given name exists', async function () {
       const key = await createRecord({ foo: 'bar' })
