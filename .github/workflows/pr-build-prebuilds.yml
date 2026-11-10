@@ -81,13 +81,37 @@ jobs:
             echo 'main tarball must not contain binding.gyp'
             exit 1
           fi
+          # The main package's optionalDependencies pin released prebuilds, so npm
+          # would also install one from the registry, and the loader would pick it
+          # over this PR's build. Strip them from a copy of the main package (as
+          # install-slim-pm-smoke.sh does), and repack it so npm installs a copy
+          # rather than a symlink.
+          rm -rf /tmp/slim-pr-main
+          mkdir -p /tmp/slim-pr-main
+          tar -xzf "${MAIN_TGZ[0]}" -C /tmp/slim-pr-main
+          node -e "
+            const fs = require('fs');
+            const f = '/tmp/slim-pr-main/package/package.json';
+            const p = JSON.parse(fs.readFileSync(f, 'utf8'));
+            delete p.optionalDependencies;
+            fs.writeFileSync(f, JSON.stringify(p, null, 2) + '\n');
+          "
+          SLIM_MAIN_TGZ=$(cd /tmp/slim-pr-main && npm pack ./package --pack-destination /tmp/slim-pr-main | tail -1)
           rm -rf /tmp/slim-pr-verify
           mkdir -p /tmp/slim-pr-verify
           cd /tmp/slim-pr-verify
           echo '{"name":"slim-pr","private":true}' > package.json
           npm install --no-save \
-            "file:${{ github.workspace }}/${MAIN_TGZ[0]}" \
+            "file:/tmp/slim-pr-main/${SLIM_MAIN_TGZ}" \
             "file:${{ github.workspace }}/${OPT_TGZ[0]}"
+          node -e "
+            const { resolveNativeBinding } = require('./node_modules/aerospike/scripts/resolve-native-binding');
+            const binding = resolveNativeBinding(require('path').resolve('node_modules/aerospike'));
+            console.log('native binding:', binding);
+            if (!binding.startsWith(require('path').resolve('node_modules/@aerospike/prebuild-${TAG}') + '/')) {
+              console.error('expected the prebuild built by this PR'); process.exit(1);
+            }
+          "
           node node_modules/aerospike/scripts/verify-prebuild-smoke.js
           node -e "
             const p = require('./node_modules/aerospike/package.json');
