@@ -30,6 +30,11 @@ Local<Object> status()
 {
 	Nan::EscapableHandleScope scope;
 	Local<Object> obj = Nan::New<Object>();
+	// Pluggable discovery codes (CLIENT-5735). Literal until the C client
+	// that defines AEROSPIKE_ERR_TRANSLATION_MISS and the others is pinned.
+	set(obj, "AEROSPIKE_ERR_SEED_DISCOVERY_FAILED", -27);
+	set(obj, "AEROSPIKE_ERR_TRANSLATION_COLLISION", -26);
+	set(obj, "AEROSPIKE_ERR_TRANSLATION_MISS", -25);
 	set(obj, "AEROSPIKE_METRICS_CONFLICT", AEROSPIKE_METRICS_CONFLICT);
 	set(obj, "AEROSPIKE_TXN_ALREADY_ABORTED", AEROSPIKE_TXN_ALREADY_ABORTED);
 	set(obj, "AEROSPIKE_TXN_ALREADY_COMMITTED", AEROSPIKE_TXN_ALREADY_COMMITTED);

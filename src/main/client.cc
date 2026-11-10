@@ -82,6 +82,7 @@ NAN_METHOD(AerospikeClient::New)
 	int result = config_from_jsobject(&config, v8Config, client, client->log);
 
 	if (result != AS_NODE_PARAM_OK) {
+		config_free_ip_map(&config);
 		if(client->as){
 			cf_free(client->as);
 		}
@@ -150,7 +151,10 @@ NAN_METHOD(AerospikeClient::Close)
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
 	events_callback_close(&client->as->config);
-	
+
+	// The cluster has its own copy of ip_map from connect.
+	config_free_ip_map(&client->as->config);
+
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
 

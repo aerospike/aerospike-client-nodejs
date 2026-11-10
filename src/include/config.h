@@ -26,3 +26,6 @@ extern "C" {
 
 int config_from_jsobject(as_config *config, v8::Local<v8::Object> obj, AerospikeClient *client,
 						 const LogInfo *log);
+
+// The C client never frees as_config.ip_map, so the client must free it.
+void config_free_ip_map(as_config *config);

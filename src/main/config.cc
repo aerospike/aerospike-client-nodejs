@@ -29,6 +29,81 @@ using namespace v8;
 
 const uint16_t DEFAULT_PORT = 3000;
 
+void config_free_ip_map(as_config *config)
+{
+	if (config->ip_map) {
+		for (uint32_t i = 0; i < config->ip_map_size; i++) {
+			cf_free(config->ip_map[i].orig);
+			cf_free(config->ip_map[i].alt);
+		}
+		cf_free(config->ip_map);
+	}
+	config->ip_map = NULL;
+	config->ip_map_size = 0;
+}
+
+/**
+ * ipMap is an object of { "advertised host": "host to use instead" }.
+ * The C client deep-copies it on connect but never frees it.
+ */
+static int get_optional_ip_map_property(as_config *config, Local<Object> obj,
+										const LogInfo *log)
+{
+	Nan::HandleScope scope;
+	Local<Value> value =
+		Nan::Get(obj, Nan::New("ipMap").ToLocalChecked()).ToLocalChecked();
+
+	if (value->IsUndefined() || value->IsNull()) {
+		as_v8_detail(log, "ipMap => undefined");
+		return AS_NODE_PARAM_OK;
+	}
+
+	if (!value->IsObject() || value->IsArray()) {
+		as_v8_error(log, "Type error: ipMap property should be an object");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	Local<Object> map = value.As<Object>();
+	Local<Array> keys = Nan::GetOwnPropertyNames(map).ToLocalChecked();
+	uint32_t size = keys->Length();
+
+	if (size == 0) {
+		as_v8_detail(log, "ipMap => {}");
+		return AS_NODE_PARAM_OK;
+	}
+
+	config->ip_map = (as_addr_map *)cf_calloc(size, sizeof(as_addr_map));
+
+	for (uint32_t i = 0; i < size; i++) {
+		Local<Value> key = Nan::Get(keys, i).ToLocalChecked();
+		Local<Value> alt = Nan::Get(map, key).ToLocalChecked();
+
+		// Count the entry first, so a partially built map frees cleanly.
+		config->ip_map_size++;
+
+		if (!alt->IsString()) {
+			as_v8_error(log, "Type error: ipMap values should be strings");
+			config_free_ip_map(config);
+			return AS_NODE_PARAM_ERR;
+		}
+
+		Nan::Utf8String orig_str(key);
+		Nan::Utf8String alt_str(alt);
+
+		if (orig_str.length() == 0 || alt_str.length() == 0) {
+			as_v8_error(log, "ipMap keys and values must be non-empty strings");
+			config_free_ip_map(config);
+			return AS_NODE_PARAM_ERR;
+		}
+
+		config->ip_map[i].orig = (char *)cf_strdup(*orig_str);
+		config->ip_map[i].alt = (char *)cf_strdup(*alt_str);
+		as_v8_detail(log, "ipMap => %s -> %s", *orig_str, *alt_str);
+	}
+
+	return AS_NODE_PARAM_OK;
+}
+
 int config_from_jsobject(as_config *config, Local<Object> configObj, AerospikeClient *client, const LogInfo *log)
 {
 	bool defined;
@@ -546,6 +621,10 @@ int config_from_jsobject(as_config *config, Local<Object> configObj, AerospikeCl
 	}
 	if ((rc = get_optional_rack_ids_property(config, NULL, configObj,
 										"rackIds", log)) != AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
+	if ((rc = get_optional_ip_map_property(config, configObj, log)) !=
+		AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
 
