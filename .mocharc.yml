@@ -5,6 +5,7 @@ spec:
   - "test/*.ts"
   - "test/topk/*.ts"
   - "test/vector/*.ts"
+  - "test/discovery/*.ts"
 node-option:
   - "import=tsx"
 parallel: false

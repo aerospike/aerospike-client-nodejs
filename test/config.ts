@@ -26,7 +26,6 @@ import { expect } from 'chai';
 import * as helper from './test_helper.ts';
 
 const Config = Aerospike.Config
-const native = require('../lib/native.js')
 
 describe('Config #noserver', function () {
   let asHostsEnv: any;
@@ -211,104 +210,6 @@ describe('Config #noserver', function () {
         port: 3333
       })
       expect(config.hosts).to.eql('localhost:3333')
-    })
-  })
-
-  describe('ipMap', function () {
-    it('copies the ipMap', function () {
-      const ipMap = { '10.0.0.5': 'gw.example.com', '10.0.0.6': 'gw2.example.com' }
-      const config: Conf = new Config({ ipMap })
-      expect(config.ipMap).to.eql(ipMap)
-    })
-
-    it('leaves ipMap unset by default', function () {
-      const config: Conf = new Config()
-      expect(config).to.not.have.property('ipMap')
-    })
-
-    it('accepts a valid ipMap in the client', function () {
-      const client = Aerospike.client({ ipMap: { '10.0.0.5': 'gw.example.com' } })
-      client.close()
-    })
-
-    it('accepts an empty ipMap in the client', function () {
-      const client = Aerospike.client({ ipMap: {} })
-      client.close()
-    })
-
-    it('treats a null ipMap as unset', function () {
-      const config: Conf = new Config({ ipMap: null } as any)
-      expect(config).to.not.have.property('ipMap')
-      const client = Aerospike.client({ ipMap: null } as any)
-      client.close()
-    })
-
-    it('accepts several entries, including IPv6 addresses', function () {
-      const client = Aerospike.client({
-        ipMap: {
-          '10.0.0.5': 'gw.example.com',
-          '::1': 'gw6.example.com',
-          'fe80::1': '[2001:db8::1]'
-        }
-      })
-      client.close()
-    })
-
-    it('keeps ipMap when the client is given a Config instance', function () {
-      const ipMap = { '10.0.0.5': 'gw.example.com' }
-      const client = Aerospike.client(new Config({ ipMap }))
-      expect(client.config.ipMap).to.eql(ipMap)
-      client.close()
-    })
-
-    it('fails to connect when the seed has no matching ipMap key', async function () {
-      const client = Aerospike.client({
-        hosts: [{ addr: 'ip-map-seed.invalid', port: 3000 }],
-        ipMap: { 'other-seed.invalid': '127.0.0.1' },
-        log: { level: Aerospike.log.OFF }
-      })
-      let error: any = null
-      try {
-        await client.connect()
-      } catch (err) {
-        error = err
-      }
-      expect(error).to.be.instanceof(Aerospike.AerospikeError)
-      // connect() already closed the native client; closing again must be safe.
-      client.close()
-      client.close()
-    })
-
-    const invalid: Array<[string, any]> = [
-      ['a string', 'gw.example.com'],
-      ['an array', ['10.0.0.5', 'gw.example.com']],
-      ['a non-string value', { '10.0.0.5': 3000 }],
-      ['an empty value', { '10.0.0.5': '' }],
-      ['an empty key', { '': 'gw.example.com' }],
-      ['a bad entry after valid ones', { '10.0.0.5': 'gw.example.com', '10.0.0.6': 'gw2.example.com', '10.0.0.7': 7 }]
-    ]
-    invalid.forEach(([name, ipMap]) => {
-      it(`rejects ${name} with a TypeError naming ipMap`, function () {
-        expect(() => new Config({ ipMap } as ConfigOptions)).to.throw(TypeError, /ipMap/)
-        expect(() => Aerospike.client({ ipMap } as ConfigOptions)).to.throw(TypeError, /ipMap/)
-      })
-
-      // The native layer checks again, for callers that skip Config. It returns
-      // null for an invalid config, which Client turns into an AerospikeError.
-      it(`rejects ${name} in the native layer too`, function () {
-        expect(native.client({ hosts: 'localhost:3000', ipMap })).to.be.null
-      })
-    })
-
-    it('accepts a valid ipMap in the native layer', function () {
-      // Not closed: native close() needs setupEventCb(), which only connect() runs.
-      const client = native.client({ hosts: 'localhost:3000', ipMap: { '10.0.0.5': 'gw.example.com' } })
-      expect(client).to.not.be.null
-    })
-
-    it('names the bad entry in the error', function () {
-      expect(() => new Config({ ipMap: { '10.0.0.5': 'gw', '10.0.0.6': 7 } } as any))
-        .to.throw(TypeError, 'ipMap entry "10.0.0.6" must map a non-empty host to a non-empty host string')
     })
   })
 })

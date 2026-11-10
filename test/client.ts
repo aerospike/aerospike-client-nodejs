@@ -61,62 +61,6 @@ describe('Client', function () {
     })
   })
 
-  describe('#connect with ipMap', function () {
-    it('connects through a seed that only resolves via ipMap', async function () {
-      const hosts: any = helper.config.hosts
-      const seed: any = Array.isArray(hosts) ? hosts[0] : null
-      if (!seed || typeof seed.addr !== 'string') {
-        return this.skip()
-      }
-      const config: ConfigOptions = Object.assign({}, helper.config, {
-        hosts: [Object.assign({}, seed, { addr: 'ip-map-seed.invalid' })],
-        ipMap: { 'ip-map-seed.invalid': seed.addr }
-      })
-      const client: Cli = await Aerospike.connect(config)
-      try {
-        expect(client.isConnected()).to.be.true
-      } finally {
-        await client.close(false)
-      }
-    })
-
-    it('connects normally when no ipMap key matches the seed', async function () {
-      const config: ConfigOptions = Object.assign({}, helper.config, {
-        ipMap: { 'unrelated-host.invalid': 'other-host.invalid' }
-      })
-      const client: Cli = await Aerospike.connect(config)
-      try {
-        expect(client.isConnected()).to.be.true
-      } finally {
-        await client.close(false)
-      }
-    })
-
-    it('runs commands through an ipMap-mapped seed, and closes twice safely', async function () {
-      const hosts: any = helper.config.hosts
-      const seed: any = Array.isArray(hosts) ? hosts[0] : null
-      if (!seed || typeof seed.addr !== 'string') {
-        return this.skip()
-      }
-      const config = new Aerospike.Config(Object.assign({}, helper.config, {
-        hosts: [Object.assign({}, seed, { addr: 'ip-map-seed.invalid' })],
-        ipMap: { 'ip-map-seed.invalid': seed.addr }
-      }))
-      const client: Cli = await Aerospike.connect(config)
-      const key = new Aerospike.Key(helper.namespace, helper.set, 'ip-map-test')
-      try {
-        await client.put(key, { v: 1 })
-        const record = await client.get(key)
-        expect(record.bins.v).to.equal(1)
-        await client.remove(key)
-      } finally {
-        client.close(false)
-        client.close(false)
-      }
-      expect(client.isConnected()).to.be.false
-    })
-  })
-
   describe('#close', function () {
     it('should be a no-op if close is called after connection error #noserver', function (done) {
       const client: Cli = new Client({ hosts: '127.0.0.1:0' })

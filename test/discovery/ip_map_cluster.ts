@@ -29,80 +29,18 @@
 // The scale-out test also needs IPMAP_CLUSTER_SCRIPT, a script taking
 // "add <i>" / "remove <i>" where node i listens on port 4000 + (i-1)*100.
 
-import type { Client as Cli, ConfigOptions } from '../lib/aerospike.js'
-import * as Aerospike from '../lib/aerospike.js'
+import type { Client as Cli, ConfigOptions } from '../../lib/aerospike.js'
+import * as Aerospike from '../../lib/aerospike.js'
 
 import { expect } from 'chai'
-import * as net from 'net'
 import { execFileSync } from 'child_process'
+import { advertisedPeers, mapTo, connectError, addresses, waitFor } from './helpers.ts'
 
 const seedEnv = process.env.IPMAP_CLUSTER_SEED
 const script = process.env.IPMAP_CLUSTER_SCRIPT
 const caFile = process.env.IPMAP_CLUSTER_CA
 const tlsName = 'ipmap-tls'
 const log = { level: Aerospike.log.OFF }
-
-// A minimal info request, so the peer list can be read without a connected client:
-// 8-byte header (version 2, type 1, 48-bit body length), then "name\n".
-function info (host: string, port: number, name: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const body = Buffer.from(name + '\n')
-    const header = Buffer.alloc(8)
-    header.writeUInt8(2, 0)
-    header.writeUInt8(1, 1)
-    header.writeUIntBE(body.length, 2, 6)
-    const socket = net.connect(port, host, () => socket.write(Buffer.concat([header, body])))
-    let response = Buffer.alloc(0)
-    socket.on('data', (data: Buffer) => {
-      response = Buffer.concat([response, data])
-      if (response.length >= 8 && response.length >= 8 + response.readUIntBE(2, 6)) {
-        socket.end()
-        const text = response.subarray(8, 8 + response.readUIntBE(2, 6)).toString()
-        resolve(text.split('\t')[1].trim())
-      }
-    })
-    socket.on('error', reject)
-  })
-}
-
-// [{ host, port }] for every peer the seed advertises in the given list
-// (peers-clear-std, peers-clear-alt, peers-tls-std or peers-tls-alt), e.g.
-// "10,3000,[[BB9..,,[10.89.0.3:4100]],[BB9..,ipmap-tls,[aero-ipmap-2:4110]]]".
-async function advertisedPeers (host: string, port: number, list = 'peers-clear-std'): Promise<Array<{ host: string, port: number }>> {
-  const peers = await info(host, port, list)
-  return [...peers.matchAll(/\[[0-9A-F]+,[^,]*,\[([^\]]*)\]\]/g)].map(m => {
-    const address = m[1].split(',')[0]
-    const colon = address.lastIndexOf(':')
-    return { host: address.slice(0, colon), port: Number(address.slice(colon + 1)) }
-  })
-}
-
-function mapTo (peers: Array<{ host: string }>, target: string): Record<string, string> {
-  return Object.fromEntries(peers.map(peer => [peer.host, target]))
-}
-
-async function connectError (config: ConfigOptions): Promise<any> {
-  try {
-    const client = await Aerospike.connect(config)
-    client.close()
-  } catch (err) {
-    return err
-  }
-  return null
-}
-
-function addresses (client: Cli): string[] {
-  return client.getNodes().map(node => node.address).sort()
-}
-
-async function waitFor (condition: () => boolean, timeoutMs: number): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs
-  while (Date.now() < deadline) {
-    if (condition()) return true
-    await new Promise(resolve => setTimeout(resolve, 100))
-  }
-  return condition()
-}
 
 describe('ipMap against a multi-node cluster', function () {
   this.timeout(60000)
@@ -120,17 +58,11 @@ describe('ipMap against a multi-node cluster', function () {
 
   before(async function () {
     peers = await advertisedPeers(seedHost, seedPort)
-    ipMap = Object.fromEntries(peers.map(peer => [peer.host, seedHost]))
+    ipMap = mapTo(peers, seedHost)
   })
 
   it('fails to connect without ipMap, because the peers are unreachable', async function () {
-    let error: any = null
-    try {
-      const client = await Aerospike.connect({ hosts, log })
-      client.close()
-    } catch (err) {
-      error = err
-    }
+    const error = await connectError({ hosts, log })
     expect(error).to.be.instanceof(Aerospike.AerospikeError)
     expect(error.message).to.match(/Peers not reachable/)
   })
