@@ -7942,6 +7942,21 @@ export class Config {
      * const client = await Aerospike.connect({ hosts })
      */
     public hosts: Host[] | string;
+    /**
+     * Map of host addresses the server reports to the addresses the client
+     * should use instead. Applies to seed hosts and to peer node addresses.
+     *
+     * Only the host is replaced; the port stays the same. Keys must match the
+     * address exactly as the server reports it.
+     *
+     * @example
+     *
+     * const config = {
+     *   hosts: '10.0.0.5:3000',
+     *   ipMap: { '10.0.0.5': 'gw.example.com' }
+     * }
+     */
+    public ipMap?: Record<string, string>;
 
     /**
      * Configuration for logging done by the client.
@@ -10497,6 +10512,21 @@ export interface ConfigOptions {
      * const client = await Aerospike.connect({ hosts })
      */
     hosts?: Host[] | string;
+    /**
+     * Map of host addresses the server reports to the addresses the client
+     * should use instead. Applies to seed hosts and to peer node addresses.
+     *
+     * Only the host is replaced; the port stays the same. Keys must match the
+     * address exactly as the server reports it.
+     *
+     * @example
+     *
+     * const config = {
+     *   hosts: '10.0.0.5:3000',
+     *   ipMap: { '10.0.0.5': 'gw.example.com' }
+     * }
+     */
+    ipMap?: Record<string, string>;
 
     /**
      * Configuration for logging done by the client.
@@ -19172,6 +19202,9 @@ export namespace filter {
  * 
  * | Status                                            | Status (without prefix)                 | Status Code |
  * |---------------------------------------------------|-----------------------------------------|-------------|
+ * | {@link AEROSPIKE_ERR_SEED_DISCOVERY_FAILED}       | {@link ERR_SEED_DISCOVERY_FAILED}       |    -27      |
+ * | {@link AEROSPIKE_ERR_TRANSLATION_COLLISION}       | {@link ERR_TRANSLATION_COLLISION}       |    -26      |
+ * | {@link AEROSPIKE_ERR_TRANSLATION_MISS}            | {@link ERR_TRANSLATION_MISS}            |    -25      |
  * | {@link AEROSPIKE_METRICS_CONFLICT}                | {@link METRICS_CONFLICT}                |    -20      |
  * | {@link AEROSPIKE_TXN_ALREADY_ABORTED}             | {@link TXN_ALREADY_ABORTED}             |    -19      |
  * | {@link AEROSPIKE_TXN_ALREADY_COMMITTED}           | {@link TXN_ALREADY_COMMITTED}           |    -18      |
@@ -19274,6 +19307,30 @@ export namespace filter {
  * | {@link AEROSPIKE_ERR_LUA_FILE_NOT_FOUND}          | {@link ERR_LUA_FILE_NOT_FOUND}          |   1302      |
  */
 declare namespace statusNamespace {
+    /**
+     * A seed discovery provider failed, and there were no usable seeds.
+     */
+    export const AEROSPIKE_ERR_SEED_DISCOVERY_FAILED = -27;
+    /**
+     * A seed discovery provider failed, and there were no usable seeds.
+     */
+    export const ERR_SEED_DISCOVERY_FAILED = -27;
+    /**
+     * Address translation mapped two nodes to the same host and port.
+     */
+    export const AEROSPIKE_ERR_TRANSLATION_COLLISION = -26;
+    /**
+     * Address translation mapped two nodes to the same host and port.
+     */
+    export const ERR_TRANSLATION_COLLISION = -26;
+    /**
+     * Address translation did not map an advertised address.
+     */
+    export const AEROSPIKE_ERR_TRANSLATION_MISS = -25;
+    /**
+     * Address translation did not map an advertised address.
+     */
+    export const ERR_TRANSLATION_MISS = -25;
     /**
      * There is a conflict between metrics enable/disable and dynamic configuration metrics.
      */

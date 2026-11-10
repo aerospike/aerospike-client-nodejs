@@ -26,7 +26,25 @@ import * as Aerospike from '../lib/aerospike.js';
 const status: typeof stat = Aerospike.status
 
 describe('Aerospike.status #noserver', function () {
-  it('AEROSPIKE_TXN_ALREADY_ABORTED', function () {
+  it('AEROSPIKE_ERR_SEED_DISCOVERY_FAILED', function () {
+    expect(status.AEROSPIKE_ERR_SEED_DISCOVERY_FAILED).to.equal(-27)
+    expect(status.ERR_SEED_DISCOVERY_FAILED).to.equal(-27)
+    expect(status.getMessage(status.ERR_SEED_DISCOVERY_FAILED)).to.equal('A seed discovery provider failed, and there were no usable seeds.')
+  })
+
+  it('AEROSPIKE_ERR_TRANSLATION_COLLISION', function () {
+    expect(status.AEROSPIKE_ERR_TRANSLATION_COLLISION).to.equal(-26)
+    expect(status.ERR_TRANSLATION_COLLISION).to.equal(-26)
+    expect(status.getMessage(status.ERR_TRANSLATION_COLLISION)).to.equal('Address translation mapped two nodes to the same host and port.')
+  })
+
+  it('AEROSPIKE_ERR_TRANSLATION_MISS', function () {
+    expect(status.AEROSPIKE_ERR_TRANSLATION_MISS).to.equal(-25)
+    expect(status.ERR_TRANSLATION_MISS).to.equal(-25)
+    expect(status.getMessage(status.ERR_TRANSLATION_MISS)).to.equal('Address translation did not map an advertised address.')
+  })
+
+  it('AEROSPIKE_METRICS_CONFLICT', function () {
     expect(status.AEROSPIKE_METRICS_CONFLICT).to.equal(-20)
     expect(status.METRICS_CONFLICT).to.equal(-20)
     expect(status.getMessage(status.METRICS_CONFLICT)).to.equal('There is a conflict between metrics enable/disable and dynamic configuration metrics.')
