@@ -44,7 +44,7 @@ class EventQueue : public Nan::AsyncResource {
 	{
 		as_queue_mt_init(&events, sizeof(as_cluster_event), 4);
 		callback.Reset(cb);
-		log = p_log;
+		log_info = *p_log;
 	}
 
 	~EventQueue()
@@ -77,7 +77,9 @@ class EventQueue : public Nan::AsyncResource {
   private:
 	as_queue_mt events;
 	Nan::Persistent<Function> callback;
-	LogInfo *log;
+	// A copy, so events can still log after the client closes.
+	LogInfo log_info;
+	LogInfo *log = &log_info;
 
 	Local<Value> convert(as_cluster_event *event)
 	{

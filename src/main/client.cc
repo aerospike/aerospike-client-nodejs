@@ -59,7 +59,6 @@ NAN_METHOD(AerospikeClient::New)
 
 	AerospikeClient *client = new AerospikeClient();
 	client->as = (aerospike *)cf_malloc(sizeof(aerospike));
-	client->log = (LogInfo *)cf_malloc(sizeof(LogInfo));
 
 	// initialize the log to default values.
 	client->log->fd = g_log_info.fd;
@@ -85,9 +84,6 @@ NAN_METHOD(AerospikeClient::New)
 		config_free_ip_map(&config);
 		if(client->as){
 			cf_free(client->as);
-		}
-		if(client->log){
-			cf_free(client->log);
 		}
 		if(client->report_dir){
 			cf_free(client->report_dir);
@@ -127,7 +123,13 @@ NAN_METHOD(AerospikeClient::Connect)
 	AerospikeCommand *cmd = new AerospikeCommand("Connect", client, callback);
 
 	as_error err;
-	if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
+	if (client->closed) {
+		// Close released the cluster, so this client can't connect again.
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+						"Client is closed. Create a new client to connect again.");
+		cmd->ErrorCallback(&err);
+	}
+	else if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
 		cmd->ErrorCallback(&err);
 	}
 	else {
@@ -148,6 +150,10 @@ NAN_METHOD(AerospikeClient::Close)
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
+	if (client->closed) {
+		return;
+	}
+
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
 	events_callback_close(&client->as->config);
@@ -165,9 +171,6 @@ NAN_METHOD(AerospikeClient::Close)
 		client->snapshot_callback.Reset();
 		client->node_close_callback.Reset();
 		client->disable_callback.Reset();
-	}
-	if(client->log){
-		cf_free(client->log);
 	}
 	if(client->report_dir){
 		cf_free(client->report_dir);
@@ -286,6 +289,11 @@ NAN_METHOD(AerospikeClient::SetupEventCb)
 	Nan::HandleScope scope;
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	if (client->closed) {
+		// Connect fails with a clear error instead.
+		return;
+	}
 
 	Local<Function> callback;
 	if (info.Length() > 0 && info[0]->IsFunction()) {

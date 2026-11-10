@@ -22,7 +22,9 @@
 import type { Client as Cli, ConfigOptions, cdt, AerospikeError, AerospikeRecord, Node, KeyOptions } from '../lib/aerospike.js';
 import * as Aerospike from '../lib/aerospike.js';
 
-import { expect } from 'chai'; 
+import { expect } from 'chai';
+import * as fs from 'fs';
+import * as os from 'os';
 import * as helper from './test_helper.ts';
 
 const keygen: any = helper.keygen
@@ -79,6 +81,54 @@ describe('Client', function () {
         client.close(false)
         done()
       })
+    })
+
+    // CLIENT-5836: commands in flight used the client's log after close() freed it.
+    it('does not crash when closed while a query is in flight', async function () {
+      const set = 'close-in-flight'
+      const keys = Array.from({ length: 1000 }, (_, i) => new Aerospike.Key(helper.namespace, set, i))
+      for (let i = 0; i < keys.length; i += 50) {
+        await Promise.all(keys.slice(i, i + 50).map(key => helper.client.put(key, { i: 1 })))
+      }
+      // Debug logging makes the commands read the log when they complete.
+      const fd = fs.openSync(os.devNull, 'w')
+      const client: Cli = await Aerospike.connect(Object.assign({}, helper.config, { log: { level: Aerospike.log.DEBUG, file: fd } }))
+      try {
+        const results = client.query(helper.namespace, set).results()
+        client.close(false)
+        const outcome = await results.then(records => records.length, (error: AerospikeError) => error)
+        if (typeof outcome === 'number') {
+          expect(outcome).to.equal(keys.length)
+        } else {
+          expect(outcome).to.be.instanceof(Aerospike.AerospikeError)
+        }
+        await new Promise(resolve => setTimeout(resolve, 100))
+      } finally {
+        fs.closeSync(fd)
+        await helper.client.batchRemove(keys).catch(() => {})
+      }
+    })
+
+    it('rejects connect() on a closed client', async function () {
+      const client: Cli = await Aerospike.connect(helper.config)
+      client.close(false)
+      let error: any = null
+      await client.connect().catch(err => { error = err })
+      expect(error).to.be.instanceof(Aerospike.AerospikeError)
+      expect(error.code).to.equal(Aerospike.status.ERR_CLIENT)
+      expect(error.message).to.match(/Client is closed/)
+    })
+
+    it('rejects a second connect() after a connection error #noserver', async function () {
+      const client: Cli = new Client({ hosts: '127.0.0.1:0', log: { level: Aerospike.log.OFF } })
+      let first: any = null
+      await client.connect().catch(err => { first = err })
+      expect(first?.message).to.match(/Failed to connect/)
+      let second: any = null
+      await client.connect().catch(err => { second = err })
+      expect(second).to.be.instanceof(Aerospike.AerospikeError)
+      expect(second.message).to.match(/Client is closed/)
+      client.close(false)
     })
     /*
     it('should allow exit when all clients are closed', async function () {

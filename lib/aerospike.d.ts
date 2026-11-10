@@ -4557,6 +4557,8 @@ export class Client extends EventEmitter {
      * a Promise resolving to the connected client.
      *
      * @throws {AerospikeError} if event loop resources have already been released.
+     * @throws {AerospikeError} if the client is closed, including after a failed
+     * connect. A closed client can't connect again; create a new client.
      *
      * @see {@link Config#connTimeoutMs} - Initial host connection timeout in milliseconds.
      * @see {@link connect} - Initial host connection timeout in milliseconds.
