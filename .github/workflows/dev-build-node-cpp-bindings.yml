@@ -95,7 +95,6 @@ jobs:
   get-runner-os:
     outputs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
-      nodejs-matrix: ${{ steps.filter-nodejs-matrix.outputs.nodejs-matrix }}
     runs-on: ubuntu-22.04
     steps:
     - name: Harden the runner (Audit all outbound calls)
@@ -107,44 +106,23 @@ jobs:
       run: |
         # CI platform-tag naming (Node.js / prebuild conventions, not Python manylinux):
         #   linux_{arch}   — GitHub-hosted Linux runners (glibc = runner image, not manylinux container)
-        #   darwin_{arch}  — matches process.platform "darwin"; _2 = macOS 15 runner (Node 25)
+        #   darwin_{arch}  — matches process.platform "darwin"; both run on macOS 15 runners
         #   win32_x64      — matches process.platform "win32" + x64 (prebuilds/ win32-x64/)
         declare -A map
         map[linux_x86_64]="ubuntu-22.04"
         map[linux_aarch64]="ubuntu-22.04-arm"
         map[win32_x64]="windows-2022"
-        map[darwin_x86_64]="macos-14-large"
-        map[darwin_x86_64_2]="macos-15-large"
-        map[darwin_arm64]="macos-14"
-        map[darwin_arm64_2]="macos-15"
+        map[darwin_x86_64]="macos-15-large"
+        map[darwin_arm64]="macos-15"
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
-      shell: bash
-
-    # Node 25 builds on macOS 15 runners only; Node 20–24 on macOS 14. Reusable workflow
-    # jobs cannot use matrix in job-level if, so filter the matrix here (Python client pattern).
-    - id: filter-nodejs-matrix
-      env:
-        NODEJS_TAGS: ${{ inputs.nodejs-tags }}
-        PLATFORM_TAG: ${{ inputs.platform-tag }}
-      run: |
-        filtered=$(echo "$NODEJS_TAGS" | jq -c --arg p "$PLATFORM_TAG" '
-          [.[] | select(
-            if .[1] == "25" then
-              ($p != "darwin_x86_64" and $p != "darwin_arm64")
-            else
-              ($p != "darwin_x86_64_2" and $p != "darwin_arm64_2")
-            end
-          )]
-        ')
-        echo "nodejs-matrix=${filtered}" >> "$GITHUB_OUTPUT"
       shell: bash
 
   build-prebuild:
     needs: get-runner-os
-    if: ${{ needs.get-runner-os.outputs.nodejs-matrix != '[]' }}
+    if: ${{ inputs.nodejs-tags != '[]' }}
     strategy:
       matrix:
-        nodejs-tag: ${{ fromJSON(needs.get-runner-os.outputs.nodejs-matrix) }}
+        nodejs-tag: ${{ fromJSON(inputs.nodejs-tags) }}
       fail-fast: false
     uses: aerospike/shared-workflows/.github/workflows/reusable_execute-build.yaml@a341c9f258175f2dded37ae4c3037962fc31fd1a
     with:

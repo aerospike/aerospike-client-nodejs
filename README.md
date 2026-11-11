@@ -18,7 +18,7 @@ It supports the following operating systems:
 - Amazon Linux 2023
 - Ubuntu 22.04/24.04 (Focal Fossa, Jammy Jellyfish, Noble Numbat)
 - Many Linux distributions compatible with one of the above OS releases.
-- macOS 14/15/26
+- macOS 15/26
 
 The client is compatible with arm64, aarch64, and x86_64 architectures.
 

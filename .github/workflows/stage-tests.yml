@@ -66,9 +66,7 @@ jobs:
           "linux_x86_64",
           "linux_aarch64",
           "darwin_x86_64",
-          #"darwin_x86_64_2",
           "darwin_arm64",
-          #"darwin_arm64_2",
           "win32_x64"
         ]
       fail-fast: false
