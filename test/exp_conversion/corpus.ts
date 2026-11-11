@@ -33,7 +33,7 @@ const ctxList = () => new Aerospike.cdt.Context().addListIndex(0)
 const ctxMap = () => new Aerospike.cdt.Context().addMapKey('a').addListIndex(-1)
 const listPolicy = () => new Aerospike.ListPolicy({ order: lists.order.ORDERED })
 const mapPolicy = () => new Aerospike.MapPolicy({ order: maps.order.KEY_ORDERED })
-const point = Aerospike.GeoJSON.Point(103.913, 1.308)
+const point = new Aerospike.GeoJSON.Point(103.913, 1.308)
 const many = (n: number, node: (i: number) => any[]) => exp.and(...Array.from({ length: n }, (_, i) => node(i)))
 
 // Every node kind lib/exp*.js emits.
@@ -88,6 +88,8 @@ const builders: Cases = {
   'list increment': () => exp.lists.increment(exp.binList('l'), exp.int(1), exp.int(0), listPolicy()),
   'list sort': () => exp.lists.sort(exp.binList('l'), lists.sortFlags.DEFAULT),
   'list removeByValueList': () => exp.lists.removeByValueList(exp.binList('l'), exp.list([1]), ctxList()),
+  'list append no policy': () => exp.lists.append(exp.binList('l'), exp.int(1)),
+  'map put no policy': () => exp.maps.put(exp.binMap('m'), exp.int(1), exp.str('k')),
   'map put policy': () => exp.maps.put(exp.binMap('m'), exp.int(1), exp.str('k'), mapPolicy()),
   'map put policy ctx': () => exp.maps.put(exp.binMap('m'), exp.int(1), exp.str('k'), mapPolicy(), ctxMap()),
   'map putItems': () => exp.maps.putItems(exp.binMap('m'), exp.map({ a: 1 }), mapPolicy()),
@@ -313,5 +315,15 @@ export const fastOnly: Cases = {
   'hole in the array': () => [, { op: OPS.VAL_INT, intVal: 1 }], // eslint-disable-line no-sparse-arrays
   'string entry after an owning node': () => [...exp.str('a'), 'x'],
   'getter that throws on op': () => [{ get op () { throw new Error('op getter') } }],
-  'getter that throws on the value kind': () => [...exp.str('a'), { op: OPS.VAL_STR, get strVal () { throw new Error('strVal getter') } }]
+  'getter that throws on the value kind': () => [...exp.str('a'), { op: OPS.VAL_STR, get strVal () { throw new Error('strVal getter') } }],
+  'getter that throws on an array element': () => {
+    const entries = [...exp.str('a'), null]
+    Object.defineProperty(entries, 1, { get () { throw new Error('element getter') } })
+    return entries
+  },
+  // every other key the fast path reads, after a node that owns memory
+  ...Object.fromEntries(['count', 'sz', 'value', 'intVal', 'uintVal', 'boolVal', 'exp', 'listPolicy', 'mapPolicy'].map(key =>
+    [`getter that throws on ${key}`, () => [...exp.str('a'), Object.defineProperty({ op: OPS.VAL_INT }, key, {
+      get () { throw new Error(`${key} getter`) }, enumerable: true
+    })]]))
 }
