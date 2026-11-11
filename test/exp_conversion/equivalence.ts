@@ -36,7 +36,7 @@ describe('Expression conversion: fast path matches the legacy path #noserver', f
   }
 
   it('compiles every node kind the exp builders emit to the same bytes', function () {
-    const fast = expectSame('builders', 62)
+    const fast = expectSame('builders', 64)
     const failed = Object.entries(fast).filter(([, result]) => result.out.startsWith('ERROR'))
     expect(failed.map(([name]) => name)).to.eql([])
   })
