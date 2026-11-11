@@ -7964,6 +7964,37 @@ export class Config {
      * }
      */
     public ipMap?: Record<string, string>;
+    /**
+     * Where the client finds its seed hosts, in addition to or instead of
+     * <code>hosts</code>. With <code>provider: 'dns'</code>, the client
+     * resolves DNS names to seed hosts at connect and refreshes them.
+     *
+     * @example
+     *
+     * const config = {
+     *   discovery: {
+     *     provider: 'dns',
+     *     dns: { names: ['_aerospike._tcp.example.com'], recordType: 'SRV' }
+     *   }
+     * }
+     */
+    public discovery?: DiscoveryConfig;
+    /**
+     * How the client translates the addresses that nodes advertise into
+     * addresses it can reach. Applies to peer addresses, never to configured
+     * seed hosts. While a translator is set, <code>ipMap</code> is ignored.
+     *
+     * @example
+     *
+     * const config = {
+     *   translation: {
+     *     provider: 'port-map',
+     *     portMap: { '10.0.0.1:3000': 'gw.example.com:31001' },
+     *     onMiss: 'strict'
+     *   }
+     * }
+     */
+    public translation?: TranslationConfig;
 
     /**
      * Configuration for logging done by the client.
@@ -10534,6 +10565,37 @@ export interface ConfigOptions {
      * }
      */
     ipMap?: Record<string, string>;
+    /**
+     * Where the client finds its seed hosts, in addition to or instead of
+     * <code>hosts</code>. With <code>provider: 'dns'</code>, the client
+     * resolves DNS names to seed hosts at connect and refreshes them.
+     *
+     * @example
+     *
+     * const config = {
+     *   discovery: {
+     *     provider: 'dns',
+     *     dns: { names: ['_aerospike._tcp.example.com'], recordType: 'SRV' }
+     *   }
+     * }
+     */
+    discovery?: DiscoveryConfig;
+    /**
+     * How the client translates the addresses that nodes advertise into
+     * addresses it can reach. Applies to peer addresses, never to configured
+     * seed hosts. While a translator is set, <code>ipMap</code> is ignored.
+     *
+     * @example
+     *
+     * const config = {
+     *   translation: {
+     *     provider: 'port-map',
+     *     portMap: { '10.0.0.1:3000': 'gw.example.com:31001' },
+     *     onMiss: 'strict'
+     *   }
+     * }
+     */
+    translation?: TranslationConfig;
 
     /**
      * Configuration for logging done by the client.
@@ -10879,6 +10941,118 @@ export interface ConfigOptions {
  *   })
  *   .catch(console.error)
  */
+/**
+ * Options for the DNS seed provider, {@link DiscoveryConfig#dns}.
+ */
+export interface DnsDiscoveryConfig {
+    /**
+     * DNS names to resolve, queried in order as absolute names. Required.
+     */
+    names: string[];
+    /**
+     * <code>'A'</code> for A and AAAA records, or <code>'SRV'</code>, which
+     * also gives each host its port.
+     *
+     * @default 'A'
+     */
+    recordType?: 'A' | 'SRV';
+    /**
+     * Port of the hosts resolved from A and AAAA records.
+     *
+     * @default 3000
+     */
+    port?: number;
+    /**
+     * TLS name set on every discovered host.
+     */
+    tlsName?: string;
+    /**
+     * Time in milliseconds for one whole refresh, across every name and
+     * resolver. It must not exceed <code>refreshTimeoutMs</code> (thread mode)
+     * or <code>tendRefreshDeadlineMs</code> (tend mode).
+     *
+     * @default 80
+     */
+    timeoutMs?: number;
+    /**
+     * Resolver IP addresses, each with an optional port, for example
+     * <code>'10.0.0.2'</code> or <code>'[2001:db8::1]:53'</code>. By default
+     * the system resolvers are used.
+     */
+    servers?: string[];
+}
+
+/**
+ * Seed discovery settings, {@link Config#discovery}.
+ */
+export interface DiscoveryConfig {
+    /**
+     * The seed provider. <code>'dns'</code> needs {@link DiscoveryConfig#dns}.
+     */
+    provider?: 'dns';
+    /**
+     * DNS seed provider options.
+     */
+    dns?: DnsDiscoveryConfig;
+    /**
+     * How discovered seeds combine with <code>hosts</code>.
+     *
+     * @default 'merge'
+     */
+    mergePolicy?: 'merge' | 'replace' | 'discoveryOnly';
+    /**
+     * Where refreshes run: a client-owned thread, or the tend thread within
+     * <code>tendRefreshDeadlineMs</code>.
+     *
+     * @default 'thread'
+     */
+    executionMode?: 'thread' | 'tend';
+    /**
+     * Time between refreshes in milliseconds.
+     *
+     * @default 30000
+     */
+    refreshIntervalMs?: number;
+    /**
+     * Longest wait for a refresh in thread mode, including the first one at
+     * connect, in milliseconds.
+     *
+     * @default 10000
+     */
+    refreshTimeoutMs?: number;
+    /**
+     * Longest time a refresh may take in tend mode, in milliseconds.
+     *
+     * @default 100
+     */
+    tendRefreshDeadlineMs?: number;
+}
+
+/**
+ * Address translation settings, {@link Config#translation}.
+ */
+export interface TranslationConfig {
+    /**
+     * <code>'port-map'</code> maps advertised addresses with
+     * {@link TranslationConfig#portMap}; <code>'pass-through'</code> uses them
+     * as they are.
+     */
+    provider?: 'port-map' | 'pass-through';
+    /**
+     * Advertised <code>host:port</code>, or node name, to the
+     * <code>host:port</code> to connect to. IPv6 hosts go in brackets.
+     */
+    portMap?: Record<string, string>;
+    /**
+     * What happens to an advertised address that isn't mapped:
+     * <code>'passThrough'</code> connects to it anyway; <code>'strict'</code>
+     * skips it and reports {@link status.ERR_TRANSLATION_MISS}.
+     *
+     * @default 'passThrough'
+     */
+    onMiss?: 'passThrough' | 'strict';
+}
+
 export interface ConfigPolicies {
     /**
      * Apply policy. For more information, see {@link policy.ApplyPolicy | ApplyPolicy}
