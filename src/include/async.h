@@ -45,7 +45,6 @@ async_invoke(const Nan::FunctionCallbackInfo<v8::Value> &args,
 			 void (*execute)(uv_work_t *req),
 			 void (*respond)(uv_work_t *req, int status));
 
-void async_invoke_metrics(MetricsCommand *cmd, void (*execute)(uv_work_t *req), void (*respond)(uv_work_t *req, int status));
 
 
 // implements the as_async_record_listener interface
