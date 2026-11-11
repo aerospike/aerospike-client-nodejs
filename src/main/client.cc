@@ -112,6 +112,34 @@ NAN_METHOD(AerospikeClient::New)
 }
 
 /**
+ * Close the client and release its cluster. A closed client can't connect again.
+ */
+static void close_client(AerospikeClient *client)
+{
+	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
+	as_error err;
+	events_callback_close(&client->as->config);
+
+	// The cluster has its own copy of ip_map from connect.
+	config_free_ip_map(&client->as->config);
+
+	aerospike_close(client->as, &err);
+	aerospike_destroy(client->as);
+
+	client->closed = true;
+
+	if(!client->enable_callback.IsEmpty()){
+		client->enable_callback.Reset();
+		client->snapshot_callback.Reset();
+		client->node_close_callback.Reset();
+		client->disable_callback.Reset();
+	}
+	if(client->report_dir){
+		cf_free(client->report_dir);
+	}
+}
+
+/**
  * Connect to an Aerospike Cluster
  */
 NAN_METHOD(AerospikeClient::Connect)
@@ -130,6 +158,16 @@ NAN_METHOD(AerospikeClient::Connect)
 		cmd->ErrorCallback(&err);
 	}
 	else if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
+		if (client->as->cluster) {
+			// The cluster was created but connect still failed, so close it.
+			close_client(client);
+		}
+		else {
+			// No cluster was created, so connect can be retried on this client.
+			// Release the event handle so it doesn't keep the process alive;
+			// the next connect sets it up again.
+			events_callback_close(&client->as->config);
+		}
 		cmd->ErrorCallback(&err);
 	}
 	else {
@@ -154,28 +192,7 @@ NAN_METHOD(AerospikeClient::Close)
 		return;
 	}
 
-	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
-	as_error err;
-	events_callback_close(&client->as->config);
-
-	// The cluster has its own copy of ip_map from connect.
-	config_free_ip_map(&client->as->config);
-
-	aerospike_close(client->as, &err);
-	aerospike_destroy(client->as);
-
-	client->closed = true;
-
-	if(!client->enable_callback.IsEmpty()){
-		client->enable_callback.Reset();
-		client->snapshot_callback.Reset();
-		client->node_close_callback.Reset();
-		client->disable_callback.Reset();
-	}
-	if(client->report_dir){
-		cf_free(client->report_dir);
-	}
-
+	close_client(client);
 }
 
 /**

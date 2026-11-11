@@ -24,10 +24,31 @@ import * as Aerospike from '../lib/aerospike.js';
 
 import { expect } from 'chai';
 import * as fs from 'fs';
+import * as net from 'net';
+import { Worker } from 'worker_threads';
 import * as os from 'os';
 import * as helper from './test_helper.ts';
 
 const keygen: any = helper.keygen
+
+// A TCP proxy for a worker thread: forwards workerData.listen to workerData.addr:port.
+const PROXY = `
+const net = require('net')
+const { workerData, parentPort } = require('worker_threads')
+const sockets = []
+const proxy = net.createServer(socket => {
+  const upstream = net.connect(workerData.port, workerData.addr)
+  sockets.push(socket, upstream)
+  socket.pipe(upstream).pipe(socket)
+  socket.on('error', () => upstream.destroy())
+  upstream.on('error', () => socket.destroy())
+})
+proxy.listen(workerData.listen, '127.0.0.1', () => parentPort.postMessage('listening'))
+parentPort.on('message', () => {
+  sockets.forEach(socket => socket.destroy())
+  proxy.close(() => process.exit(0))
+})
+`
 
 const Client: typeof Cli = Aerospike.Client
 const Context: typeof cdt.Context = Aerospike.cdt.Context
@@ -119,16 +140,54 @@ describe('Client', function () {
       expect(error.message).to.match(/Client is closed/)
     })
 
-    it('rejects a second connect() after a connection error #noserver', async function () {
+    it('retries connect() after a connection error #noserver', async function () {
       const client: Cli = new Client({ hosts: '127.0.0.1:0', log: { level: Aerospike.log.OFF } })
       let first: any = null
       await client.connect().catch(err => { first = err })
       expect(first?.message).to.match(/Failed to connect/)
+      // The retry tries the cluster again rather than failing as closed.
       let second: any = null
       await client.connect().catch(err => { second = err })
-      expect(second).to.be.instanceof(Aerospike.AerospikeError)
-      expect(second.message).to.match(/Client is closed/)
+      expect(second?.message).to.match(/Failed to connect/)
       client.close(false)
+    })
+
+    it('connects on a retry after a connection error', async function () {
+      const hosts: any = helper.config.hosts
+      const seed: any = Array.isArray(hosts) ? hosts[0] : null
+      if (!seed || typeof seed.addr !== 'string') return this.skip()
+
+      // A port with nothing listening yet, so the first connect fails.
+      const probe = net.createServer()
+      await new Promise<void>(resolve => probe.listen(0, '127.0.0.1', resolve))
+      const port = (probe.address() as net.AddressInfo).port
+      await new Promise(resolve => probe.close(resolve))
+
+      const config = Object.assign({}, helper.config, {
+        hosts: [Object.assign({}, seed, { addr: '127.0.0.1', port })],
+        log: { level: Aerospike.log.OFF }
+      })
+      const client: Cli = new Client(config)
+      let error: any = null
+      await client.connect().catch(err => { error = err })
+      expect(error).to.be.instanceof(Aerospike.AerospikeError)
+
+      // Now forward that port to the server and retry on the same client. The
+      // proxy runs on a worker thread because connect() blocks this one.
+      const proxy = new Worker(PROXY, { eval: true, workerData: { listen: port, addr: seed.addr, port: seed.port } })
+      await new Promise(resolve => proxy.once('message', resolve))
+      try {
+        await client.connect()
+        expect(client.isConnected()).to.be.true
+        const key = new Aerospike.Key(helper.namespace, helper.set, 'connect-retry')
+        await client.put(key, { v: 1 })
+        expect((await client.get(key)).bins.v).to.equal(1)
+        await client.remove(key)
+      } finally {
+        client.close(false)
+        proxy.postMessage('stop')
+        await new Promise(resolve => proxy.once('exit', resolve))
+      }
     })
     /*
     it('should allow exit when all clients are closed', async function () {

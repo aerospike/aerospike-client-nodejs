@@ -142,8 +142,13 @@ void events_callback_close(as_config *config)
 {
 	Nan::HandleScope scope;
 	uv_handle_t *handle = (uv_handle_t *)config->event_callback_udata;
+	if (!handle) {
+		// Never set up, or already released after a failed connect.
+		return;
+	}
 	// EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
 	// delete queue;
+	config->event_callback = NULL;
 	config->event_callback_udata = NULL;
 	handle->data = NULL;
 	uv_close(handle, events_async_close);
