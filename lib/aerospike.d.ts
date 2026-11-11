@@ -10995,7 +10995,14 @@ export interface DiscoveryConfig {
      */
     dns?: DnsDiscoveryConfig;
     /**
-     * How discovered seeds combine with <code>hosts</code>.
+     * How discovered seeds combine with <code>hosts</code>:
+     * <code>'merge'</code> uses <code>hosts</code> first, then the discovered
+     * seeds; <code>'replace'</code> does the same at connect, then lets each
+     * later refresh replace the list (an empty result keeps the previous
+     * list); <code>'discoveryOnly'</code> uses only the discovered seeds, and
+     * <code>hosts</code> when discovery returns none. With any policy, a
+     * discovery failure at connect falls back to <code>hosts</code>, and a
+     * failed refresh after connect keeps the previous seeds.
      *
      * @default 'merge'
      */
@@ -11046,7 +11053,9 @@ export interface TranslationConfig {
     /**
      * What happens to an advertised address that isn't mapped:
      * <code>'passThrough'</code> connects to it anyway; <code>'strict'</code>
-     * skips it and reports {@link status.ERR_TRANSLATION_MISS}.
+     * skips that node, logs a warning and checks it again on every tend.
+     * Connect fails with {@link status.ERR_TRANSLATION_MISS} only when no node
+     * can be connected because of it.
      *
      * @default 'passThrough'
      */
