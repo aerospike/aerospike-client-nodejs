@@ -6,6 +6,7 @@ spec:
   - "test/topk/*.ts"
   - "test/vector/*.ts"
   - "test/discovery/*.ts"
+  - "test/exp_conversion/equivalence.ts"
 node-option:
   - "import=tsx"
 parallel: false

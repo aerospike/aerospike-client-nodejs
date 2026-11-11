@@ -320,13 +320,19 @@ static int compile_expression_legacy(Local<Array> entries_ary,
  * This path:
  *  1. creates the property-name strings once per isolate, internalized;
  *  2. reads each node's own property names once (GetOwnPropertyNames) and
- *     matches them by identity against those keys (internalized strings are
- *     unique, so Local == is a pointer compare, no string comparison);
+ *     matches them by identity against those keys (property names are
+ *     internalized, so Local == is a pointer compare, no string comparison);
  *  3. records each entry's kind in a C array while converting, so freeing
  *     needs no V8 calls at all.
+ *
+ * Own properties answer the same as the legacy Has() lookups only for a plain
+ * object whose prototype adds none of the keys. So the fast path takes a node
+ * only if it is an object literal (prototype Object.prototype, not a Proxy), and
+ * only while Object.prototype has none of the keys. Any other node goes through
+ * convert_entry() and is freed as the legacy path frees it.
+ *
  * Semantics (precedence of value keys, type checks, errors) follow the legacy
- * path; rare kinds (bytesVal, floatVal, ctx, inf, wildcard) reuse the legacy
- * helpers.
+ * path; rare kinds (bytesVal, floatVal, ctx) reuse the legacy helpers.
  ******************************************************************************/
 
 enum exp_key {
@@ -343,7 +349,8 @@ static const char *const EXP_KEY_NAMES[K__COUNT] = {
 // what an entry owns, so it can be freed without looking at the JS object again
 enum exp_entry_kind : uint8_t {
 	EK_NONE = 0, EK_VALUE, EK_STR, EK_BYTES, EK_CTX, EK_EXP, EK_LIST_POLICY,
-	EK_MAP_POLICY
+	EK_MAP_POLICY,
+	EK_LEGACY // converted by convert_entry(): freed by probing the JS object, as legacy does
 };
 
 struct exp_keys {
@@ -351,35 +358,83 @@ struct exp_keys {
 	Eternal<String> key[K__COUNT];
 };
 
-// the keys as Locals, materialised once per compile (Eternal::Get makes a new handle per call)
-struct exp_key_locals {
-	Local<String> key[K__COUNT];
-};
-
 // one set per isolate; an isolate is used by one thread at a time (main thread or a worker)
 static thread_local exp_keys *tls_exp_keys = NULL;
+
+// runs when the Node environment (main thread or worker) that created the keys shuts down
+static void free_exp_keys(void *arg)
+{
+	exp_keys *keys = static_cast<exp_keys *>(arg);
+	if (tls_exp_keys == keys) {
+		tls_exp_keys = NULL;
+	}
+	delete keys;
+}
 
 static exp_keys *get_exp_keys(Isolate *isolate)
 {
 	if (tls_exp_keys == NULL || tls_exp_keys->isolate != isolate) {
-		exp_keys *keys = new exp_keys(); // never freed: a few strings per isolate
+		exp_keys *keys = new exp_keys();
 		keys->isolate = isolate;
 		for (int k = 0; k < K__COUNT; k++) {
 			keys->key[k].Set(isolate, String::NewFromUtf8(isolate, EXP_KEY_NAMES[k],
 														   NewStringType::kInternalized)
 										  .ToLocalChecked());
 		}
+		node::AddEnvironmentCleanupHook(isolate, free_exp_keys, keys);
 		tls_exp_keys = keys;
 	}
 	return tls_exp_keys;
 }
 
-static int free_entries_fast(as_exp_entry *entries, const uint8_t *kinds,
-							 int length)
+// what one compile needs, materialised once (Eternal::Get makes a new handle per call)
+struct exp_compile_state {
+	Local<Context> context;
+	Local<String> key[K__COUNT];
+	Local<Value> object_prototype;
+};
+
+static Local<Value> prototype_of(Local<Object> obj)
+{
+#if V8_MAJOR_VERSION >= 13
+	return obj->GetPrototypeV2();
+#else
+	return obj->GetPrototype();
+#endif
+}
+
+// The legacy free_entries() probes for one entry: what the entry owns.
+static uint8_t legacy_entry_kind(Local<Object> entry_obj)
+{
+	static const struct {
+		const char *name;
+		uint8_t kind;
+	} probes[] = {{"value", EK_VALUE},		 {"strVal", EK_STR},
+				  {"bytesVal", EK_BYTES},	 {"intVal", EK_NONE},
+				  {"uintVal", EK_NONE},		 {"floatVal", EK_NONE},
+				  {"boolVal", EK_NONE},		 {"ctx", EK_CTX},
+				  {"exp", EK_EXP},			 {"listPolicy", EK_LIST_POLICY},
+				  {"mapPolicy", EK_MAP_POLICY}};
+	for (size_t p = 0; p < sizeof(probes) / sizeof(probes[0]); p++) {
+		if (Nan::Has(entry_obj, Nan::New(probes[p].name).ToLocalChecked())
+				.FromJust()) {
+			return probes[p].kind;
+		}
+	}
+	return EK_NONE;
+}
+
+static int free_entries_fast(Local<Array> entries_ary, as_exp_entry *entries,
+							 uint8_t *kinds, int length)
 {
 	for (int i = 0; i < length; i++) {
 		as_exp_entry *entry = &entries[i];
-		switch (kinds[i]) {
+		uint8_t kind = kinds[i];
+		if (kind == EK_LEGACY) {
+			kind = legacy_entry_kind(
+				Nan::Get(entries_ary, i).ToLocalChecked().As<Object>());
+		}
+		switch (kind) {
 		case EK_STR:
 			if (entry->v.str_val)
 				free((void *)entry->v.str_val);
@@ -427,81 +482,99 @@ static int read_optional_uint32(uint32_t *out, Local<Value> value,
 	return AS_NODE_PARAM_OK;
 }
 
-static int compile_expression_fast(Local<Array> entries_ary,
+static int compile_expression_fast(const exp_compile_state *state,
+								   Local<Array> entries_ary,
 								   as_exp **filter_exp, const LogInfo *log);
 
-static int convert_entry_fast(Isolate *isolate, Local<Context> context,
-							  const exp_key_locals *keys, Local<Object> entry_obj,
-							  as_exp_entry *entry, uint8_t *kind,
-							  const LogInfo *log)
+// Converts a plain object node. Reads a property only where the legacy path
+// reads it, in the same order, so getters run the same way.
+static int convert_entry_fast(const exp_compile_state *state,
+							  Local<Object> entry_obj, as_exp_entry *entry,
+							  uint8_t *kind, const LogInfo *log)
 {
+	Local<Context> context = state->context;
 	*kind = EK_NONE;
 
 	Local<Array> names;
-	if (!entry_obj->GetOwnPropertyNames(context).ToLocal(&names)) {
+	if (!entry_obj
+			 ->GetOwnPropertyNames(context, static_cast<PropertyFilter>(
+												ALL_PROPERTIES | SKIP_SYMBOLS))
+			 .ToLocal(&names)) {
 		as_v8_error(log, "Expression entry: cannot read property names");
 		return AS_NODE_PARAM_ERR;
 	}
 
-	Local<Value> vals[K__COUNT];
 	uint32_t present = 0;
 	uint32_t n = names->Length();
-
 	for (uint32_t i = 0; i < n; i++) {
 		Local<Value> name;
 		if (!names->Get(context, i).ToLocal(&name)) {
 			return AS_NODE_PARAM_ERR;
 		}
 		for (int k = 0; k < K__COUNT; k++) {
-			if (name == keys->key[k]) { // identity: both are internalized
-				if (!entry_obj->Get(context, name).ToLocal(&vals[k])) {
-					return AS_NODE_PARAM_ERR;
-				}
+			if (name == state->key[k]) { // identity: both are internalized
 				present |= 1u << k;
 				break;
 			}
 		}
 	}
 #define HAS(k) (present & (1u << (k)))
+#define GET(k, out)                                                            \
+	if (!entry_obj->Get(context, state->key[k]).ToLocal(&(out))) {             \
+		return AS_NODE_PARAM_ERR;                                              \
+	}
+
+	Local<Value> value;
 
 	// op: required integer
-	if (!HAS(K_OP) || !vals[K_OP]->IsNumber()) {
+	if (!HAS(K_OP)) {
 		as_v8_error(log, "Type error: op property should be integer");
 		return AS_NODE_PARAM_ERR;
 	}
-	entry->op = (as_exp_ops)Nan::To<int>(vals[K_OP]).FromJust();
+	GET(K_OP, value);
+	if (!value->IsNumber()) {
+		as_v8_error(log, "Type error: op property should be integer");
+		return AS_NODE_PARAM_ERR;
+	}
+	entry->op = (as_exp_ops)Nan::To<int>(value).FromJust();
 
 	int rc;
-	if ((rc = read_optional_uint32(&entry->count,
-								   HAS(K_COUNT) ? vals[K_COUNT] : Local<Value>(),
-								   "count", log)) != AS_NODE_PARAM_OK) {
-		return rc;
+	if (HAS(K_COUNT)) {
+		GET(K_COUNT, value);
+		if ((rc = read_optional_uint32(&entry->count, value, "count", log)) !=
+			AS_NODE_PARAM_OK) {
+			return rc;
+		}
 	}
-	if ((rc = read_optional_uint32(&entry->sz,
-								   HAS(K_SZ) ? vals[K_SZ] : Local<Value>(), "sz",
-								   log)) != AS_NODE_PARAM_OK) {
-		return rc;
+	if (HAS(K_SZ)) {
+		GET(K_SZ, value);
+		if ((rc = read_optional_uint32(&entry->sz, value, "sz", log)) !=
+			AS_NODE_PARAM_OK) {
+			return rc;
+		}
 	}
 
 	// value kinds, in the legacy precedence order
 	if (HAS(K_VALUE)) {
 		*kind = EK_VALUE;
 		entry->v.val = NULL;
-		if (vals[K_VALUE]->IsUndefined()) {
+		GET(K_VALUE, value);
+		if (value->IsUndefined()) {
 			as_v8_error(log, "Type error: value property should not be undefined");
 			return AS_NODE_PARAM_ERR;
 		}
-		return asval_from_jsvalue(&entry->v.val, vals[K_VALUE], log);
+		return asval_from_jsvalue(&entry->v.val, value, log);
 	}
 
 	if (HAS(K_STRVAL)) {
 		entry->v.str_val = NULL;
-		if (!vals[K_STRVAL]->IsString()) {
+		GET(K_STRVAL, value);
+		if (!value->IsString()) {
 			as_v8_error(log, "Type error: strVal property should be string");
 			return AS_NODE_PARAM_ERR;
 		}
 		*kind = EK_STR;
-		entry->v.str_val = strdup(*Nan::Utf8String(vals[K_STRVAL]));
+		entry->v.str_val = strdup(*Nan::Utf8String(value));
 		return AS_NODE_PARAM_OK;
 	}
 
@@ -514,20 +587,22 @@ static int convert_entry_fast(Isolate *isolate, Local<Context> context,
 	}
 
 	if (HAS(K_INTVAL)) {
-		if (!vals[K_INTVAL]->IsNumber()) {
+		GET(K_INTVAL, value);
+		if (!value->IsNumber()) {
 			as_v8_error(log, "Type error: intVal property should be integer");
 			return AS_NODE_PARAM_ERR;
 		}
-		entry->v.int_val = Nan::To<int64_t>(vals[K_INTVAL]).FromJust();
+		entry->v.int_val = Nan::To<int64_t>(value).FromJust();
 		return AS_NODE_PARAM_OK;
 	}
 
 	if (HAS(K_UINTVAL)) {
-		if (!vals[K_UINTVAL]->IsNumber()) {
+		GET(K_UINTVAL, value);
+		if (!value->IsNumber()) {
 			as_v8_error(log, "Type error: uintVal property should be integer");
 			return AS_NODE_PARAM_ERR;
 		}
-		entry->v.uint_val = Nan::To<int64_t>(vals[K_UINTVAL]).FromJust();
+		entry->v.uint_val = Nan::To<int64_t>(value).FromJust();
 		return AS_NODE_PARAM_OK;
 	}
 
@@ -537,11 +612,12 @@ static int convert_entry_fast(Isolate *isolate, Local<Context> context,
 	}
 
 	if (HAS(K_BOOLVAL)) {
-		if (!vals[K_BOOLVAL]->IsBoolean()) {
+		GET(K_BOOLVAL, value);
+		if (!value->IsBoolean()) {
 			as_v8_error(log, "Type error: boolVal property should be boolean");
 			return AS_NODE_PARAM_ERR;
 		}
-		entry->v.bool_val = Nan::To<bool>(vals[K_BOOLVAL]).FromJust();
+		entry->v.bool_val = Nan::To<bool>(value).FromJust();
 		return AS_NODE_PARAM_OK;
 	}
 
@@ -554,15 +630,15 @@ static int convert_entry_fast(Isolate *isolate, Local<Context> context,
 	if (HAS(K_EXP)) {
 		*kind = EK_EXP;
 		as_exp *exp = NULL;
-		Local<Value> exp_obj = vals[K_EXP];
-		if (exp_obj->IsArray()) {
-			if (compile_expression_fast(Local<Array>::Cast(exp_obj), &exp, log) !=
+		GET(K_EXP, value);
+		if (value->IsArray()) {
+			if (compile_expression_fast(state, value.As<Array>(), &exp, log) !=
 				AS_NODE_PARAM_OK) {
 				return AS_NODE_PARAM_ERR;
 			}
 		}
-		else if (exp_obj->IsString()) {
-			Nan::Utf8String exp_b64(exp_obj.As<String>());
+		else if (value->IsString()) {
+			Nan::Utf8String exp_b64(value.As<String>());
 			exp = as_exp_from_base64(*exp_b64);
 		}
 		else {
@@ -576,10 +652,11 @@ static int convert_entry_fast(Isolate *isolate, Local<Context> context,
 	if (HAS(K_LISTPOLICY)) {
 		*kind = EK_LIST_POLICY;
 		entry->v.list_pol = NULL;
-		if (vals[K_LISTPOLICY]->IsObject()) {
+		GET(K_LISTPOLICY, value);
+		if (value->IsObject()) {
 			entry->v.list_pol = (as_list_policy *)cf_malloc(sizeof(as_list_policy));
-			get_optional_list_policy(entry->v.list_pol, NULL,
-									 vals[K_LISTPOLICY].As<Object>(), log);
+			get_optional_list_policy(entry->v.list_pol, NULL, value.As<Object>(),
+									 log);
 		}
 		return AS_NODE_PARAM_OK;
 	}
@@ -587,9 +664,10 @@ static int convert_entry_fast(Isolate *isolate, Local<Context> context,
 	if (HAS(K_MAPPOLICY)) {
 		*kind = EK_MAP_POLICY;
 		entry->v.map_pol = NULL;
-		if (vals[K_MAPPOLICY]->IsObject()) {
+		GET(K_MAPPOLICY, value);
+		if (value->IsObject()) {
 			entry->v.map_pol = (as_map_policy *)cf_malloc(sizeof(as_map_policy));
-			get_map_policy(entry->v.map_pol, vals[K_MAPPOLICY].As<Object>(), log);
+			get_map_policy(entry->v.map_pol, value.As<Object>(), log);
 		}
 		return AS_NODE_PARAM_OK;
 	}
@@ -603,44 +681,51 @@ static int convert_entry_fast(Isolate *isolate, Local<Context> context,
 		entry->v.val = NULL;
 		get_wildcard_property(&entry->v.val, log);
 	}
+#undef GET
 #undef HAS
 	return AS_NODE_PARAM_OK;
 }
 
-static int compile_expression_fast(Local<Array> entries_ary,
+static int compile_expression_fast(const exp_compile_state *state,
+								   Local<Array> entries_ary,
 								   as_exp **filter_exp, const LogInfo *log)
 {
-	Isolate *isolate = Isolate::GetCurrent();
-	Local<Context> context = isolate->GetCurrentContext();
-	exp_keys *eternal_keys = get_exp_keys(isolate);
-	exp_key_locals locals;
-	for (int k = 0; k < K__COUNT; k++) {
-		locals.key[k] = eternal_keys->key[k].Get(isolate);
-	}
-	const exp_key_locals *keys = &locals;
+	Local<Context> context = state->context;
 	int length = entries_ary->Length();
-	as_v8_debug(log, "Compiling expression, fast path (length=%i)", length);
+	as_v8_debug(log, "Compiling expression (length=%i)", length);
 
 	as_exp_entry *entries =
 		(as_exp_entry *)cf_malloc(length * sizeof(as_exp_entry));
 	uint8_t *kinds = (uint8_t *)cf_malloc(length > 0 ? length : 1);
 
 	for (int i = 0; i < length; i++) {
-		HandleScope scope(isolate); // bound the handles of one node
+		Nan::HandleScope scope; // bound the handles of one node
 		entries[i] = {};
 		kinds[i] = EK_NONE;
 		Local<Value> item;
 		if (!entries_ary->Get(context, i).ToLocal(&item) || !item->IsObject()) {
 			as_v8_error(log, "Expression entry %i is not an object", i);
-			free_entries_fast(entries, kinds, i);
+			free_entries_fast(entries_ary, entries, kinds, i);
 			cf_free(kinds);
 			return AS_NODE_PARAM_ERR;
 		}
-		int rc = convert_entry_fast(isolate, context, keys, item.As<Object>(),
-									&entries[i], &kinds[i], log);
+		Local<Object> entry_obj = item.As<Object>();
+		int rc;
+		if (!item->IsProxy() &&
+			prototype_of(entry_obj) == state->object_prototype) {
+			rc = convert_entry_fast(state, entry_obj, &entries[i], &kinds[i],
+									log);
+		}
+		else {
+			kinds[i] = EK_LEGACY;
+			rc = convert_entry(entry_obj, &entries[i], log);
+		}
 		if (rc != AS_NODE_PARAM_OK) {
 			as_v8_error(log, "Error converting expression entry: %i", i);
-			free_entries_fast(entries, kinds, i + 1);
+			// a fast entry records what it owns as it goes; a legacy one is
+			// left to leak, as the legacy path does
+			free_entries_fast(entries_ary, entries, kinds,
+							  kinds[i] == EK_LEGACY ? i : i + 1);
 			cf_free(kinds);
 			return rc;
 		}
@@ -648,20 +733,19 @@ static int compile_expression_fast(Local<Array> entries_ary,
 
 	*filter_exp = as_exp_compile(entries, length);
 
-	free_entries_fast(entries, kinds, length);
+	free_entries_fast(entries_ary, entries, kinds, length);
 	cf_free(kinds);
 	return AS_NODE_PARAM_OK;
 }
 
-// AEROSPIKE_EXP_LEGACY=1 selects the original conversion (read once per process)
+// AEROSPIKE_EXP_LEGACY=1 selects the original conversion (read once, at first use)
 static bool use_legacy_expression_path()
 {
-	static int legacy = -1;
-	if (legacy < 0) {
+	static const bool legacy = [] {
 		const char *env = getenv("AEROSPIKE_EXP_LEGACY");
-		legacy = (env != NULL && env[0] == '1') ? 1 : 0;
-	}
-	return legacy == 1;
+		return env != NULL && env[0] == '1';
+	}();
+	return legacy;
 }
 
 int compile_expression(Local<Array> entries_ary, as_exp **filter_exp,
@@ -670,5 +754,33 @@ int compile_expression(Local<Array> entries_ary, as_exp **filter_exp,
 	if (use_legacy_expression_path()) {
 		return compile_expression_legacy(entries_ary, filter_exp, log);
 	}
-	return compile_expression_fast(entries_ary, filter_exp, log);
+
+	Isolate *isolate = Isolate::GetCurrent();
+	Nan::HandleScope scope;
+	exp_compile_state state;
+	state.context = isolate->GetCurrentContext();
+	exp_keys *keys = get_exp_keys(isolate);
+	for (int k = 0; k < K__COUNT; k++) {
+		state.key[k] = keys->key[k].Get(isolate);
+	}
+	state.object_prototype = prototype_of(Object::New(isolate));
+
+	// A key on Object.prototype would make every node "have" it, as far as
+	// the legacy Has() lookups go; leave that case to the legacy path.
+	Local<Object> object_prototype = state.object_prototype.As<Object>();
+	for (int k = 0; k < K__COUNT; k++) {
+		Maybe<bool> has = object_prototype->Has(state.context, state.key[k]);
+		if (has.IsNothing() || has.FromJust()) {
+			return compile_expression_legacy(entries_ary, filter_exp, log);
+		}
+	}
+
+	// a getter that throws fails the compile, rather than leaving the exception
+	// pending for the caller
+	Nan::TryCatch try_catch;
+	int rc = compile_expression_fast(&state, entries_ary, filter_exp, log);
+	if (try_catch.HasCaught()) {
+		as_v8_error(log, "Expression entry: reading a property threw");
+	}
+	return rc;
 }
