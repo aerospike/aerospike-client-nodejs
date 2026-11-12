@@ -77,10 +77,8 @@ jobs:
         map[linux_x86_64]='"ubuntu-22.04"'
         map[linux_aarch64]='"ubuntu-22.04-arm"'
         map[win32_x64]='"windows-2022"'
-        map[darwin_x86_64]='"macos-14-large"'
-        map[darwin_x86_64_2]='"macos-15-large"'
+        map[darwin_x86_64]='"macos-15-large"'
         map[darwin_arm64]='["self-hosted", "macOS", "ARM64"]'
-        map[darwin_arm64_2]='"SMA3"'
         echo runner_os=${map[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       shell: bash
 
