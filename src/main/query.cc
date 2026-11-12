@@ -439,7 +439,7 @@ as_status setup_options(as_query *query, Local<Object> options, as_cdt_ctx* cont
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key bin must be a string");
 			}
 			if (!v8_type->IsUint32()) {
-				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key type must be one of Aerospike.orderByType");
+				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key type must be one of Aerospike.binDataType");
 			}
 			if (!v8_direction->IsUint32()) {
 				return as_error_update(err, AEROSPIKE_ERR_PARAM, "Order key direction must be one of Aerospike.order");

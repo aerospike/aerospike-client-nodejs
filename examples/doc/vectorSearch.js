@@ -31,7 +31,7 @@ async function runExample ({ client, ns, set, console, requireMinServerVersion }
     Vector.ofFloat32([1, 0.1, 0]), exp.binVector('vecembedding'))
   const query = client.query(ns, set)
   query.ops = [Aerospike.operations.read('vecname'), exp.operations.read('vecscore', similarity, exp.expReadFlags.DEFAULT)]
-  query.orderBy('vecscore', Aerospike.orderByType.DOUBLE, Aerospike.order.DESC)
+  query.orderBy('vecscore', Aerospike.binDataType.DOUBLE, Aerospike.order.DESC)
   query.topK(2)
 
   // Only rank records that hold an embedding; others in the set have none.

@@ -2188,7 +2188,8 @@ Local<Object> key_to_jsobject(const as_key *key, const LogInfo *log)
 			as_string *sval = as_string_fromval(val);
 			as_v8_detail(log, "key.key = \"%s\"", as_string_get(sval));
 			Nan::Set(obj, Nan::New("key").ToLocalChecked(),
-					 Nan::New(as_string_get(sval)).ToLocalChecked());
+					 Nan::New(as_string_get(sval), (int)as_string_len(sval))
+						 .ToLocalChecked());
 			break;
 		}
 		case AS_BYTES: {
@@ -2435,10 +2436,15 @@ int key_from_jsobject(as_key *key, Local<Object> obj, const LogInfo *log)
 	Local<Value> val_obj =
 		Nan::Get(obj, Nan::New("key").ToLocalChecked()).ToLocalChecked();
 	if (val_obj->IsString()) {
-		char *value = strdup(*Nan::Utf8String(val_obj));
-		as_key_init(key, ns, set, value);
+		// Copy the key with its length, so a key that contains a zero byte
+		// isn't cut at it.
+		Nan::Utf8String utf8_value(val_obj);
+		size_t len = (size_t)utf8_value.length();
+		char *value = (char *)cf_malloc(len + 1);
+		memcpy(value, *utf8_value, len + 1);
+		as_key_init_strp(key, ns, set, value, true);
+		as_string_init_wlen((as_string *)key->valuep, value, len, true);
 		as_v8_detail(log, "key.key = \"%s\"", value);
-		((as_string *)key->valuep)->free = true;
 		has_value = true;
 	}
 	else if (is_double_value(val_obj)) {

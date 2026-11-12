@@ -26,7 +26,7 @@ import * as helper from '../test_helper.ts';
 import type { OrderKey, ModelRecord } from './helpers.ts';
 import { loadModel, removeLoadedSets, digests, referenceTopK, orderBy, seededRandom, skipUnlessTopKQueriesRun } from './helpers.ts';
 
-const { INTEGER } = Aerospike.orderByType
+const { INTEGER } = Aerospike.binDataType
 const { DESC } = Aerospike.order
 const { DEFAULT } = Aerospike.orderByFlags
 const { status } = Aerospike

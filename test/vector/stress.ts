@@ -30,7 +30,7 @@ import {
 } from './helpers.ts';
 
 const { exp, operations, status } = Aerospike
-const { DOUBLE } = Aerospike.orderByType
+const { DOUBLE } = Aerospike.binDataType
 const { DESC } = Aerospike.order
 const { FLOAT32 } = Aerospike.vectorElementType
 const { COSINE_SIMILARITY } = Aerospike.vectorDistanceMetric

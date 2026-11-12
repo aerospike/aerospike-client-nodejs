@@ -50,6 +50,12 @@ function testVectors () {
   ]
 }
 
+// The namespace's tombstones, summed over every node.
+async function tombstones (): Promise<number> {
+  const results = await helper.client.infoAll(`namespace/${helper.namespace}`)
+  return results.reduce((sum: number, { info }: any) => sum + Number(/(?:^|;)tombstones=(\d+)/.exec(info)![1]), 0)
+}
+
 describe('Vector write and read paths', function () {
   this.timeout(60000)
   helper.skipUnlessVersion('>= 8.2.1', this)
@@ -150,7 +156,7 @@ describe('Vector write and read paths', function () {
     }
   })
 
-  it('copies a vector bin with a write expression, as a vector', async function () {
+  it('copies a vector bin with a write expression, and reads one with a read expression, as a vector', async function () {
     const vector = Vector.ofFloat32([1, 2, 3])
     const set = await loadVectors([vector])
     await helper.client.operate(keyOf(set, 0), [exp.operations.write('copy', exp.binVector('v'), 0)])
@@ -158,6 +164,23 @@ describe('Vector write and read paths', function () {
     expectSameVector(bins.copy, vector)
     const types = await helper.client.operate(keyOf(set, 0), [exp.operations.read('t', exp.binType('copy'), 0)])
     expect(types.bins.t).to.equal(VECTOR_TYPE)
+    const read = await helper.client.operate(keyOf(set, 0), [exp.operations.read('r', exp.binVector('v'), 0)])
+    expectSameVector(read.bins.r, vector)
+  })
+
+  it('writes a vector to every record with a background query and a background scan', async function () {
+    const set = await loadVectors([undefined, undefined, undefined], [{ n: 0 }, { n: 1 }, { n: 2 }])
+    const fromQuery = Vector.ofFloat32([1, 2, 3])
+    const fromScan = Vector.ofInt32([4, 5])
+
+    await (await helper.client.query(helper.namespace, set).operate([operations.write('q', fromQuery)])).waitUntilDone()
+    await (await helper.client.scan(helper.namespace, set).operate([operations.write('s', fromScan)])).waitUntilDone()
+
+    for (let i = 0; i < 3; i++) {
+      const { bins } = await helper.client.get(keyOf(set, i))
+      expectSameVector(bins.q, fromQuery, `record ${i}, query`)
+      expectSameVector(bins.s, fromScan, `record ${i}, scan`)
+    }
   })
 
   it('writes, reads and computes a distance on a vector in one operate()', async function () {
@@ -214,6 +237,21 @@ describe('Vector write and read paths', function () {
     const removed = await helper.client.batchRemove([key, keyOf(set, 1)])
     expect(removed.map(r => r.status)).to.eql([status.OK, status.OK])
     expect(await helper.client.exists(key)).to.be.false
+  })
+
+  it('leaves a tombstone when a durable write removes the last bin, as a durable remove does', async function () {
+    if (!helper.cluster.isEnterprise()) this.skip()
+    const set = await loadVectors([Vector.ofFloat32([1, 2]), Vector.ofFloat32([3, 4])])
+    const durable = { durableDelete: true }
+
+    let before = await tombstones()
+    await helper.client.operate(keyOf(set, 0), [operations.write('v', null)], null, durable as any)
+    expect(await helper.client.exists(keyOf(set, 0))).to.be.false
+    expect(await tombstones(), 'write(v, null)').to.be.above(before)
+
+    before = await tombstones()
+    await helper.client.remove(keyOf(set, 1), durable as any)
+    expect(await tombstones(), 'remove()').to.be.above(before)
   })
 
   it('removes a vector bin written as null, and the record when deleted (R11)', async function () {

@@ -46,7 +46,7 @@ v8::Local<v8::Object> subcode();
 v8::Local<v8::Object> ttl_enum_values();
 v8::Local<v8::Object> batchTypes();
 v8::Local<v8::Object> queryDuration();
-v8::Local<v8::Object> orderByType();
+v8::Local<v8::Object> binDataType();
 v8::Local<v8::Object> order();
 v8::Local<v8::Object> orderByFlags();
 v8::Local<v8::Object> vectorElementType();

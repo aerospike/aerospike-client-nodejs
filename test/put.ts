@@ -20,7 +20,8 @@
 
 import { status as statusModule, AerospikeError as ASError, Double as Doub, GeoJSON as GJ, Client as Cli, RecordMetadata, AerospikeBins, AerospikeRecord, Key, WritePolicy, Bin} from '../lib/aerospike.js';
 
-import { expect, assert } from 'chai'; 
+import { expect, assert } from 'chai';
+import { createHash } from 'node:crypto';
 import * as helper from './test_helper.ts';
 import * as Aerospike from '../lib/aerospike.js'; 
 
@@ -82,6 +83,30 @@ describe('client.put()', function () {
           done()
         })
       })
+    })
+
+    it('keeps a string key with a zero byte whole', async function () {
+      const set = `put_zero_byte_${process.pid}`
+      const keys = ['a\u0000b', 'a\u0000c', 'a'].map(value => new Aerospike.Key(helper.namespace, set, value))
+      // The digest of a string key: RIPEMD-160 of the set name, the string type (3) and the UTF-8 bytes.
+      const digestOf = (value: string) => createHash('ripemd160').update(set).update(Buffer.from([3])).update(value, 'utf8').digest()
+      const policy = new Aerospike.WritePolicy({ key: Aerospike.policy.key.SEND })
+      try {
+        for (const [i, key] of keys.entries()) {
+          await client.put(key, { i }, null, policy)
+        }
+        for (const [i, key] of keys.entries()) {
+          const record = await client.get(key)
+          expect(record.bins.i, JSON.stringify(key.key)).to.equal(i)
+          expect(record.key.digest, JSON.stringify(key.key)).to.eql(digestOf(key.key as string))
+        }
+        const stored = (await client.query(helper.namespace, set).results()).map(record => record.key.key)
+        expect(stored.sort()).to.eql(['a', 'a\u0000b', 'a\u0000c'])
+      } finally {
+        for (const key of keys) {
+          await client.remove(key).catch(() => {})
+        }
+      }
     })
 
     it('should write a record w/ integer key', function (done) {

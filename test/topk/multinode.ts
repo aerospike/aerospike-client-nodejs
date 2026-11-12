@@ -31,7 +31,7 @@ import {
   skipUnlessTopKQueriesRun, skipUnlessMultiNode, checkUnlessString, describeKeys
 } from './helpers.ts';
 
-const { INTEGER, STRING, BYTES } = Aerospike.orderByType
+const { INTEGER, STRING, BYTES } = Aerospike.binDataType
 const { ASC, DESC } = Aerospike.order
 const { DEFAULT } = Aerospike.orderByFlags
 const { exp, status } = Aerospike

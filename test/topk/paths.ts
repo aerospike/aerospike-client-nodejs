@@ -23,7 +23,7 @@ import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import { loadSet, removeLoadedSets, indexBin, indexExpression, topK, values, allRecords, partitionId, skipUnlessTopKQueriesRun } from './helpers.ts';
 
-const { INTEGER } = Aerospike.orderByType
+const { INTEGER } = Aerospike.binDataType
 const { ASC, DESC } = Aerospike.order
 const { exp, filter } = Aerospike
 const { SHORT } = Aerospike.policy.queryDuration

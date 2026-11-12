@@ -23,7 +23,7 @@ import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import { loadSet, removeLoadedSets, topK, values, digests, inDigestOrder, skipUnlessTopKQueriesRun, untilStringSupported } from './helpers.ts';
 
-const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.orderByType
+const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.binDataType
 const { ASC, DESC } = Aerospike.order
 const { CASE_INSENSITIVE } = Aerospike.orderByFlags
 const { Double } = Aerospike
@@ -124,6 +124,30 @@ describe('Top-K ordering', function () {
       }, 4)
       expect(records.map(r => `${r.bins.score}${r.bins.name}`)).to.eql(['3z', '2a', '2b', '1a'])
     })
+  })
+
+  it('ranks by the new key alone when orderBy is called again, and uses the last k', async function () {
+    const set = await loadSet([
+      { price: 0, ts: 9, score: 0 }, { price: 1, ts: 1, score: 4 }, { price: 1, ts: 2, score: 3 },
+      { price: 1, ts: 3, score: 2 }, { price: 1, ts: 4, score: 1 }
+    ])
+    // topK() sets k = 5 after these, so k = 1 here must not apply.
+    const byPriceAfterScoreAndTs = (q: any) => {
+      q.orderBy('score', INTEGER, DESC)
+      q.thenOrderBy('ts', INTEGER, DESC)
+      q.topK(1)
+      q.orderBy('price', INTEGER, ASC)
+    }
+
+    const byPrice = await topK(set, byPriceAfterScoreAndTs, 5)
+    expect(values(byPrice, 'price')).to.eql([0, 1, 1, 1, 1])
+    expect(inDigestOrder(byPrice.slice(1)), 'the dropped ts key must not break the ties').to.be.true
+
+    const byPriceThenTs = await topK(set, q => {
+      byPriceAfterScoreAndTs(q)
+      q.thenOrderBy('ts', INTEGER, DESC)
+    }, 5)
+    expect(values(byPriceThenTs, 'ts')).to.eql([9, 4, 3, 2, 1])
   })
 
   it("applies each key's own type and direction", async function () {

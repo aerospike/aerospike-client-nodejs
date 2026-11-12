@@ -23,7 +23,7 @@ import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 
-const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.orderByType
+const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.binDataType
 const { DESC } = Aerospike.order
 const { CASE_INSENSITIVE } = Aerospike.orderByFlags
 
@@ -219,7 +219,7 @@ export function partitionId (record: AerospikeRecord): number {
 // client, applied to the data as written (so it knows each value's real type).
 // ---------------------------------------------------------------------------
 
-// type is an orderByType, or OTHER for values no order key type matches (lists, maps).
+// type is an binDataType, or OTHER for values no order key type matches (lists, maps).
 export interface Typed { type: number, value: unknown }
 export const OTHER = -1
 export interface OrderKey { bin: string, type: number, direction: number, flags: number }

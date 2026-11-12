@@ -1424,7 +1424,8 @@ export class Query {
      * A Top-K query returns only the {@link Query#topK|k} best records, ranked by up to two
      * order keys. Calling <code>orderBy</code> again replaces both order keys and keeps k.
      *
-     * Requires server 8.2.1 or later on every node in the cluster.
+     * Requires server 8.2.1 or later on every node in the cluster. If any node is older, the
+     * query fails with a parameter error before anything is sent.
      *
      * Top-K works when the query runs with {@link Query#foreach} or {@link Query#results}.
      * It fails with a parameter error when the query runs with {@link Query#apply},
@@ -1437,7 +1438,13 @@ export class Query {
      * or set it to 0, and let <code>totalTimeout</code> bound the query.
      *
      * Records whose order key is missing, or holds a value of a different type than declared,
-     * rank last and still count toward k.
+     * rank last and still count toward k. Records that tie on every order key rank by digest,
+     * lowest first. For a DOUBLE key, NaN ranks above every other value, and -0.0 equals 0.0.
+     *
+     * A record whose projection fails, such as a list operation on a bin that isn't a list, is
+     * left out without an error. A query with more than 32,768 operations returns no records.
+     * A node at its Top-K memory limit refuses the query with
+     * {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN} (22); retry it later.
      *
      * @param bin - Name of the bin to order by, as it appears in the returned record. At most
      * 15 characters.
@@ -1445,7 +1452,7 @@ export class Query {
      * @param direction - Sort direction.
      * @param flags - Comparison flags; a combination of {@link orderByFlags}. Defaults to
      * {@link orderByFlags.DEFAULT}. {@link orderByFlags.CASE_INSENSITIVE} is only valid when
-     * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
+     * <code>type</code> is {@link binDataType.STRING}; any other combination fails with a
      * parameter error when the query runs.
      *
      * Invalid settings, such as a bin name longer than 15 characters or containing NUL, or an
@@ -1457,14 +1464,14 @@ export class Query {
      *
      * Aerospike.connect().then(async client => {
      *   const query = client.query('test', 'demo')
-     *   query.orderBy('score', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
+     *   query.orderBy('score', Aerospike.binDataType.INTEGER, Aerospike.order.DESC)
      *   query.topK(10)
      *   const records = await query.results()
      *   records.forEach(record => console.info(record.bins.score))
      *   client.close()
      * })
      */
-    public orderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags): void;
+    public orderBy(bin: string, type: binDataType, direction: order, flags?: orderByFlags): void;
     /**
      * Adds an order key to a Top-K query, after the first key already set.
      *
@@ -1481,10 +1488,10 @@ export class Query {
      * @param direction - Sort direction.
      * @param flags - Comparison flags; a combination of {@link orderByFlags}. Defaults to
      * {@link orderByFlags.DEFAULT}. {@link orderByFlags.CASE_INSENSITIVE} is only valid when
-     * <code>type</code> is {@link orderByType.STRING}; any other combination fails with a
+     * <code>type</code> is {@link binDataType.STRING}; any other combination fails with a
      * parameter error when the query runs.
      */
-    public thenOrderBy(bin: string, type: orderByType, direction: order, flags?: orderByFlags): void;
+    public thenOrderBy(bin: string, type: binDataType, direction: order, flags?: orderByFlags): void;
     /**
      * Sets the number of records a Top-K query returns.
      *
@@ -1510,7 +1517,7 @@ export class Query {
      *
      * const query = client.query('test', 'products')
      * query.select('score')
-     * query.orderBy('score', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
+     * query.orderBy('score', Aerospike.binDataType.INTEGER, Aerospike.order.DESC)
      * query.topK(100)
      * const top = await query.results({ socketTimeout: 0, totalTimeout: 30000 })
      * const records = await client.batchRead(top.map(r => ({ key: r.key, readAllBins: true })))
@@ -12505,7 +12512,7 @@ export interface OrderByKey {
     /**
      * Type of the bin's value.
      */
-    type: orderByType;
+    type: binDataType;
     /**
      * Sort direction.
      */
@@ -12513,7 +12520,7 @@ export interface OrderByKey {
     /**
      * Comparison flags; a combination of {@link orderByFlags}. Use
      * {@link orderByFlags.DEFAULT} for none. {@link orderByFlags.CASE_INSENSITIVE}
-     * is only valid when <code>type</code> is {@link orderByType.STRING}; any other
+     * is only valid when <code>type</code> is {@link binDataType.STRING}; any other
      * combination fails with a parameter error when the query runs.
      */
     flags: orderByFlags;
@@ -12524,7 +12531,7 @@ export interface OrderByKey {
  * the type of its value. A record whose order key holds a value of a different type ranks
  * last.
  */
-export enum orderByType {
+export enum binDataType {
     /**
      * The order key is an integer.
      */
@@ -12567,7 +12574,7 @@ export enum orderByFlags {
      */
     DEFAULT = 0,
     /**
-     * Compare strings without regard to case. Only valid with {@link orderByType.STRING}.
+     * Compare strings without regard to case. Only valid with {@link binDataType.STRING}.
      */
     CASE_INSENSITIVE = 1
 }

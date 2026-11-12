@@ -21,8 +21,8 @@ async function runExample ({ client, ns, set, console, requireMinServerVersion }
   requireMinServerVersion('8.2.1')
 
   const query = client.query(ns, set)
-  query.orderBy('topkscore', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
-  query.thenOrderBy('topkgames', Aerospike.orderByType.INTEGER, Aerospike.order.ASC)
+  query.orderBy('topkscore', Aerospike.binDataType.INTEGER, Aerospike.order.DESC)
+  query.thenOrderBy('topkgames', Aerospike.binDataType.INTEGER, Aerospike.order.ASC)
   query.topK(3)
 
   // Only rank this example's records; others in the set have no topkscore.

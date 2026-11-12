@@ -287,8 +287,8 @@ async function setupQueryTopK (client, args) {
 // games; bob, carol and zoe tie on 90 and bob played fewest, so he is third.
 async function queryTopKValidate (client, args) {
   const query = client.query(args.namespace, args.set)
-  query.orderBy('topkscore', Aerospike.orderByType.INTEGER, Aerospike.order.DESC)
-  query.thenOrderBy('topkgames', Aerospike.orderByType.INTEGER, Aerospike.order.ASC)
+  query.orderBy('topkscore', Aerospike.binDataType.INTEGER, Aerospike.order.DESC)
+  query.thenOrderBy('topkgames', Aerospike.binDataType.INTEGER, Aerospike.order.ASC)
   query.topK(3)
   const policy = new Aerospike.QueryPolicy({ filterExpression: Aerospike.exp.binExists('topkscore') })
   const ranked = (await query.results(policy)).map(record => `${record.bins.topkname} ${record.bins.topkscore}`)
@@ -313,7 +313,7 @@ async function vectorSearchValidate (client, args) {
   const similarity = Aerospike.exp.vectorDistance(Aerospike.vectorDistanceMetric.COSINE_SIMILARITY,
     Aerospike.Vector.ofFloat32([1, 0.1, 0]), Aerospike.exp.binVector('vecembedding'))
   query.ops = [Aerospike.operations.read('vecname'), Aerospike.exp.operations.read('vecscore', similarity, 0)]
-  query.orderBy('vecscore', Aerospike.orderByType.DOUBLE, Aerospike.order.DESC)
+  query.orderBy('vecscore', Aerospike.binDataType.DOUBLE, Aerospike.order.DESC)
   query.topK(2)
   const ranked = (await query.results({ filterExpression: Aerospike.exp.binExists('vecembedding') }))
     .map(record => record.bins.vecname)

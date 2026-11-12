@@ -317,7 +317,7 @@ export async function expectSearchGrid (grid: Awaited<ReturnType<typeof loadGrid
               exp.operations.read('d', exp.vectorDistance(metric, query.vector, exp.binVector('v')), 0),
               ...bins.map(bin => operations.read(bin))
             ]
-            q.orderBy('d', Aerospike.orderByType.DOUBLE, ascending ? Aerospike.order.ASC : Aerospike.order.DESC)
+            q.orderBy('d', Aerospike.binDataType.DOUBLE, ascending ? Aerospike.order.ASC : Aerospike.order.DESC)
           }, k, { socketTimeout: 0, totalTimeout: 0 })
           try {
             expectBestK(records, references, k, ascending, dimensions, unit)
