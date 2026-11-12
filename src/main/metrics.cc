@@ -21,16 +21,52 @@
 #include "conversions.h"
 
 using namespace v8;
-using MetricsInvoker = std::function<void(MetricsCommand*)>;
+
+static void metrics_async_cb(uv_async_t *handle)
+{
+	MetricsCommand *cmd = reinterpret_cast<MetricsCommand *>(handle->data);
+	if (cmd) {
+		cmd->Deliver(false);
+	}
+}
+
+static void metrics_async_close_cb(uv_handle_t *handle)
+{
+	delete reinterpret_cast<uv_async_t *>(handle);
+}
+
+static void free_event(MetricsEvent *event)
+{
+	delete event->cluster;
+	delete event->node;
+}
 
 MetricsCommand::MetricsCommand(AerospikeClient *client, v8::Local<v8::Function> callback_)
   : AerospikeCommand("Metrics", client, callback_) {
     this->client = client;
     this->client_closed = (&(client->closed));
+
+	as_queue_mt_init(&events, sizeof(MetricsEvent), 4);
+	// The C client calls the listeners on its own threads, where only
+	// uv_async_send() is safe.
+	async = new uv_async_t;
+	uv_async_init(uv_default_loop(), async, metrics_async_cb);
+	async->data = this;
+	// Metrics must not keep the process alive.
+	uv_unref(reinterpret_cast<uv_handle_t *>(async));
 }
 
 MetricsCommand::~MetricsCommand() {
   Nan::HandleScope scope;
+
+	async->data = NULL;
+	uv_close(reinterpret_cast<uv_handle_t *>(async), metrics_async_close_cb);
+
+	MetricsEvent event;
+	while (as_queue_mt_pop(&events, &event, 0)) {
+		free_event(&event);
+	}
+	as_queue_mt_destroy(&events);
 
   if (policy != NULL) {
     if (report_dir) {
@@ -46,302 +82,150 @@ MetricsCommand::~MetricsCommand() {
   disable_callback.Reset();
 }
 
-void MetricsCommand::Enable_Callback(const int argc, v8::Local<v8::Value> argv[]) {
-		Nan::HandleScope scope;
-		as_v8_debug(log, "Executing Enable callback");
-
-		Nan::TryCatch try_catch;
-		Local<Function> cb = Nan::New(enable_callback);
-
-		runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-		if (try_catch.HasCaught()) {
-			Nan::FatalException(try_catch);
-		}
-}
-
-void MetricsCommand::Enable_Callback_Config(const int argc, v8::Local<v8::Value> argv[]) {
-		Nan::HandleScope scope;
-		as_v8_debug(log, "Executing Enable callback");
-
-		Nan::TryCatch try_catch;
-		Local<Function> cb = Nan::New(client->enable_callback);
-
-		runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-		if (try_catch.HasCaught()) {
-			Nan::FatalException(try_catch);
-		}
-}
-
-void MetricsCommand::Snapshot_Callback(const int argc, v8::Local<v8::Value> argv[]) {
-		Nan::HandleScope scope;
-		as_v8_debug(log, "Executing Snapshot callback");
-
-		Nan::TryCatch try_catch;
-		Local<Function> cb = Nan::New(snapshot_callback);
-
-		runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-		if (try_catch.HasCaught()) {
-			Nan::FatalException(try_catch);
-		}
-}
-
-void MetricsCommand::Snapshot_Callback_Config(const int argc, v8::Local<v8::Value> argv[]) {
-		Nan::HandleScope scope;
-		as_v8_debug(log, "Executing Snapshot callback");
-
-		Nan::TryCatch try_catch;
-		Local<Function> cb = Nan::New(client->snapshot_callback);
-
-		runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-		if (try_catch.HasCaught()) {
-			Nan::FatalException(try_catch);
-		}
-}
-
-void MetricsCommand::Node_Close_Callback(const int argc, v8::Local<v8::Value> argv[]) {
-	Nan::HandleScope scope;
-	as_v8_debug(log, "Executing Node Close callback");
-
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New(node_close_callback);
-	
-	runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-}
-
-void MetricsCommand::Node_Close_Callback_Config(const int argc, v8::Local<v8::Value> argv[]) {
-	Nan::HandleScope scope;
-	as_v8_debug(log, "Executing Node Close callback");
-
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New(client->node_close_callback);
-	
-	runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-}
-
-void MetricsCommand::Disable_Callback(const int argc, v8::Local<v8::Value> argv[]) {
-	Nan::HandleScope scope;
-	as_v8_debug(log, "Executing Disable Callback");
-
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New(disable_callback);
-	
-	runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-}
-
-void MetricsCommand::Disable_Callback_Config(const int argc, v8::Local<v8::Value> argv[]) {
-	Nan::HandleScope scope;
-	as_v8_debug(log, "Executing Disable Callback");
-
-	Nan::TryCatch try_catch;
-	Local<Function> cb = Nan::New(client->disable_callback);
-	
-	runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
-	if (try_catch.HasCaught()) {
-		Nan::FatalException(try_catch);
-	}
-}
-
-// PREPARE CALLBACKS
-
-/*
- * Parses Aerospike C++ Cluster and Node object into V8 Object.
- */
-Local<Value> prepare_disable_cluster_arg(MetricsCommand* cmd, as_metrics_policy* policy) {
-		Nan::EscapableHandleScope scope;
-		cmd->disabled = true;
-		cmd->v8_cluster_disable = Nan::New<Object>();
-		cluster_to_jsobject(cmd->cluster, cmd->v8_cluster_disable, policy, cmd->log);
-    return scope.Escape(cmd->v8_cluster_disable);
-}
-
-Local<Value> prepare_cluster_arg(MetricsCommand* cmd, as_metrics_policy* policy) {
-		Nan::EscapableHandleScope scope;
-		cmd->v8_cluster = Nan::New<Object>();
-		cluster_to_jsobject(cmd->cluster, cmd->v8_cluster, policy, cmd->log);
-    return scope.Escape(cmd->v8_cluster);
-}
-
-Local<Value> prepare_node_arg(MetricsCommand* cmd) {
-		Nan::EscapableHandleScope scope;
-		Local<Object> v8_node = Nan::New<Object>();
-		node_to_jsobject(cmd->node, v8_node, cmd->log);
-    return scope.Escape(v8_node);
-}
-
-
-// EXECUTE CALLBACKS
-static void execute_nothing(uv_work_t *req)
+void MetricsCommand::Push(MetricsEvent *event)
 {
-
+	as_queue_mt_push(&events, event);
+	uv_async_send(async);
 }
 
+void MetricsCommand::Invoke(Nan::Persistent<v8::Function> &callback, const char *name,
+							int argc, v8::Local<v8::Value> argv[])
+{
+	Nan::HandleScope scope;
+	as_v8_debug(log, "Executing %s callback", name);
+
+	Nan::TryCatch try_catch;
+	Local<Function> cb = Nan::New(callback);
+
+	runInAsyncScope(Nan::GetCurrentContext()->Global(), cb, argc, argv);
+	if (try_catch.HasCaught()) {
+		Nan::FatalException(try_catch);
+	}
+}
+
+void MetricsCommand::Deliver(bool keep_command)
+{
+	Nan::HandleScope scope;
+	MetricsEvent event;
+
+	while (as_queue_mt_pop(&events, &event, 0)) {
+		if (event.type == METRICS_EVENT_DISABLE && keep_command) {
+			// The caller still uses this command, so leave the disable event,
+			// which deletes it, to the async callback.
+			as_queue_mt_push(&events, &event);
+			uv_async_send(async);
+			return;
+		}
+
+		// Listeners don't run once metrics are disabled or the client is closed.
+		if (!disabled && !(*client_closed)) {
+			switch (event.type) {
+			case METRICS_EVENT_ENABLE: {
+				Local<Value> argv[] = {Nan::Null()};
+				Invoke(event.is_config ? client->enable_callback : enable_callback,
+					   "Enable", 1, argv);
+				break;
+			}
+			case METRICS_EVENT_SNAPSHOT: {
+				Local<Object> v8_cluster = Nan::New<Object>();
+				cluster_snapshot_to_jsobject(event.cluster, v8_cluster, log);
+				Local<Value> argv[] = {v8_cluster};
+				Invoke(event.is_config ? client->snapshot_callback : snapshot_callback,
+					   "Snapshot", 1, argv);
+				break;
+			}
+			case METRICS_EVENT_NODE_CLOSE: {
+				Local<Object> v8_node = Nan::New<Object>();
+				node_snapshot_to_jsobject(event.node, v8_node, log);
+				Local<Value> argv[] = {v8_node};
+				Invoke(event.is_config ? client->node_close_callback : node_close_callback,
+					   "Node Close", 1, argv);
+				break;
+			}
+			case METRICS_EVENT_DISABLE: {
+				disabled = true;
+				Local<Object> v8_cluster = Nan::New<Object>();
+				cluster_snapshot_to_jsobject(event.cluster, v8_cluster, log);
+				Local<Value> argv[] = {v8_cluster};
+				Invoke(event.is_config ? client->disable_callback : disable_callback,
+					   "Disable", 1, argv);
+				break;
+			}
+			}
+		}
+
+		bool last = event.type == METRICS_EVENT_DISABLE;
+		free_event(&event);
+
+		if (last) {
+			// Metrics are off and the C client won't call the listeners again.
+			delete this;
+			return;
+		}
+	}
+}
+
+// Runs on the C client thread that calls the listener: copy what the JS
+// listener needs while the cluster and node are still valid.
+static as_status queue_metrics_event(void *udata, MetricsEventType type, bool is_config,
+									 struct as_cluster_s *cluster, struct as_node_s *node)
+{
+	MetricsCommand *cmd = reinterpret_cast<MetricsCommand *>(udata);
+	if (!cmd || cmd->disabled) {
+		return AEROSPIKE_OK;
+	}
+
+	MetricsEvent event = {type, is_config, NULL, NULL};
+
+	if (cluster) {
+		as_metrics_policy *policy = is_config
+			? &cmd->client->as->config.policies.metrics
+			: cmd->policy;
+		event.cluster = new MetricsClusterSnapshot();
+		metrics_cluster_snapshot(cluster, policy, event.cluster);
+	}
+
+	if (node) {
+		event.node = new MetricsNodeSnapshot();
+		metrics_node_snapshot(node, event.node);
+	}
+
+	cmd->Push(&event);
+	return AEROSPIKE_OK;
+}
 
 // Listeners provided through a Command-Level Policy
 
-void enable_response(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {Nan::Null()};
-    cmd->Enable_Callback(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Enable Callback", false);
+as_status enable_listener(as_error* err, void* udata) {
+	return queue_metrics_event(udata, METRICS_EVENT_ENABLE, false, NULL, NULL);
 }
 
-void snapshot_response(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {prepare_cluster_arg(cmd, cmd->policy)};
-  	cmd->Snapshot_Callback(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Snapshot Callback", false);
+as_status snapshot_listener(as_error* err, struct as_cluster_s* cluster, void* udata) {
+	return queue_metrics_event(udata, METRICS_EVENT_SNAPSHOT, false, cluster, NULL);
 }
 
-void node_close_response(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {prepare_node_arg(cmd)};
-  	cmd->Node_Close_Callback(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Node Close Callback", false);
+as_status node_close_listener(as_error* err, struct as_node_s* node, void* udata) {
+	return queue_metrics_event(udata, METRICS_EVENT_NODE_CLOSE, false, NULL, node);
 }
 
-void disable_response(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {prepare_disable_cluster_arg(cmd, cmd->policy)};
-    cmd->Disable_Callback(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Disable Snapshot", true);
+as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* udata) {
+	return queue_metrics_event(udata, METRICS_EVENT_DISABLE, false, cluster, NULL);
 }
 
 // Listeners provided through a Config-Level Policy
 
-void enable_response_config(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {Nan::Null()};
-    cmd->Enable_Callback_Config(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Enable Callback", false);
-}
-
-void snapshot_response_config(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {prepare_cluster_arg(cmd, &(cmd->client->as->config.policies.metrics))};
-    cmd->Snapshot_Callback_Config(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Snapshot Callback", false);
-}
-
-
-
-void node_close_response_config(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {prepare_node_arg(cmd)};
-    cmd->Node_Close_Callback_Config(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Node Close Callback", false);
-}
-
-void disable_response_config(uv_work_t *req, int status)
-{
-	MetricsInvoker invoker = [](MetricsCommand* cmd) {
-    Local<Value> argv[] = {prepare_disable_cluster_arg(cmd, &(cmd->client->as->config.policies.metrics))};
-    cmd->Disable_Callback_Config(1, argv);
-  };
-
-  respond_generic(req, status, invoker, "Executing Metrics Disable Snapshot", true);
-}
-
-
-void respond_generic(uv_work_t *req, int status, MetricsInvoker invoker, const char* message, bool delete_cmd)
-{
-  Nan::HandleScope scope;
-  MetricsCommand *cmd = reinterpret_cast<MetricsCommand *>(req->data);
-  if (cmd && (!(cmd->disabled)) && (!(*(cmd->client_closed)))) {
-		LogInfo *log = cmd->log;
-		as_v8_debug(log, message);
-
-		invoker(cmd); 
-  }
-
-  if (cmd && delete_cmd){
-  	delete cmd;
-  }
-  delete req;
-}
-
-
-
-as_status enable_listener(as_error* err, void* udata) {
-	return run_metrics_listener(err, udata, enable_response, NULL, NULL, false, false);
-}
-
-as_status snapshot_listener(as_error* err, struct as_cluster_s* cluster, void* udata) {
-	return run_metrics_listener(err, udata, snapshot_response, cluster, NULL, true, false);
-}
-
-as_status node_close_listener(as_error* err, struct as_node_s* node, void* udata) {
-	return run_metrics_listener(err, udata, node_close_response, NULL, node, false, false);
-}
-
-as_status disable_listener(as_error* err, struct as_cluster_s* cluster, void* udata) {
-	return run_metrics_listener(err, udata, disable_response, cluster, NULL, false, false);
-}
-
 as_status enable_listener_config(as_error* err, void* udata) {
-	return run_metrics_listener(err, udata, enable_response_config, NULL, NULL, false, false);
+	return queue_metrics_event(udata, METRICS_EVENT_ENABLE, true, NULL, NULL);
 }
 
 as_status snapshot_listener_config(as_error* err, struct as_cluster_s* cluster, void* udata) {
-	return run_metrics_listener(err, udata, snapshot_response_config, cluster, NULL, true, true);
+	return queue_metrics_event(udata, METRICS_EVENT_SNAPSHOT, true, cluster, NULL);
 }
 
 as_status node_close_listener_config(as_error* err, struct as_node_s* node, void* udata) {
-	return run_metrics_listener(err, udata, node_close_response_config, NULL, node, false, false);
+	return queue_metrics_event(udata, METRICS_EVENT_NODE_CLOSE, true, NULL, node);
 }
 
 as_status disable_listener_config(as_error* err, struct as_cluster_s* cluster, void* udata) {
-	return run_metrics_listener(err, udata, disable_response_config, cluster, NULL, false, true);
-}
-
-
-
-as_status run_metrics_listener(as_error* err, void* udata, void (*callback)(uv_work_t*, int), struct as_cluster_s* cluster, struct as_node_s* node, bool is_snapshot, bool is_config) {
-	MetricsCommand* cmd = reinterpret_cast<MetricsCommand *>(udata);
-	if(!cmd || cmd->disabled){
-		return (as_status) 0;
-	}
-
-	if(cluster) {
-		cmd->cluster = cluster;
-	}
-
-	if(node) {
-		cmd->node = node;
-	}
-
-
-
-	async_invoke_metrics(cmd, execute_nothing, callback);
-
-	return (as_status) 0;
+	return queue_metrics_event(udata, METRICS_EVENT_DISABLE, true, cluster, NULL);
 }

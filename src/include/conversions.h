@@ -17,6 +17,9 @@
 #pragma once
 
 #include <node.h>
+#include <string>
+#include <utility>
+#include <vector>
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -206,8 +209,51 @@ typedef struct {
     uint32_t *query;
 } latency;
 
-void cluster_to_jsobject(as_cluster_s* cluster, v8::Local<v8::Object> v8_cluster, as_metrics_policy* policy, const LogInfo *log);
-void node_to_jsobject(as_node_s* node, v8::Local<v8::Object> v8_node, const LogInfo *log);
+// Metrics data copied on the C thread that calls a metrics listener, so the
+// JS objects can be built later on the event-loop thread.
+struct MetricsNsSnapshot {
+	std::string ns;
+	uint64_t bytes_in;
+	uint64_t bytes_out;
+	uint64_t error_count;
+	uint64_t timeout_count;
+	uint64_t key_busy_count;
+	std::vector<uint32_t> conn_latency;
+	std::vector<uint32_t> write_latency;
+	std::vector<uint32_t> read_latency;
+	std::vector<uint32_t> batch_latency;
+	std::vector<uint32_t> query_latency;
+};
+
+struct MetricsNodeSnapshot {
+	std::string name;
+	std::string address;
+	uint32_t port;
+	as_conn_stats conns;
+	as_conn_stats sync_conns;
+	std::vector<MetricsNsSnapshot> metrics;
+};
+
+struct MetricsClusterSnapshot {
+	bool has_app_id;
+	std::string app_id;
+	std::string cluster_name;
+	uint32_t command_count;
+	uint32_t invalid_node_count;
+	uint32_t transaction_count;
+	uint32_t retry_count;
+	double delay_queue_timeout_count;
+	std::vector<std::pair<std::string, std::string>> labels;
+	bool has_event_loop;
+	uint32_t event_loop_process_size;
+	uint32_t event_loop_queue_size;
+	std::vector<MetricsNodeSnapshot> nodes;
+};
+
+void metrics_cluster_snapshot(as_cluster_s* cluster, as_metrics_policy* policy, MetricsClusterSnapshot* out);
+void metrics_node_snapshot(as_node_s* node, MetricsNodeSnapshot* out);
+void cluster_snapshot_to_jsobject(const MetricsClusterSnapshot* cluster, v8::Local<v8::Object> v8_cluster, const LogInfo *log);
+void node_snapshot_to_jsobject(const MetricsNodeSnapshot* node, v8::Local<v8::Object> v8_node, const LogInfo *log);
 int extract_blob_from_jsobject(uint8_t **data, int *len,
 							   v8::Local<v8::Object> obj, const LogInfo *log);
 int list_from_jsarray(as_list **list, v8::Local<v8::Array> array,

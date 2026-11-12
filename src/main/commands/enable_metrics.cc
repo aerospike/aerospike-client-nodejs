@@ -86,6 +86,10 @@ static void respond(uv_work_t *req, int status)
 	MetricsCommand *cmd = reinterpret_cast<MetricsCommand *>(req->data);
 	LogInfo *log = cmd->log;
 
+	// Run the enable listener, queued while enabling, before enableMetrics()
+	// completes.
+	cmd->Deliver(true);
+
 	if (cmd->err.code == AEROSPIKE_METRICS_CONFLICT) {
 		as_v8_warn(log, cmd->err.message);
 		as_error_reset(&cmd->err);

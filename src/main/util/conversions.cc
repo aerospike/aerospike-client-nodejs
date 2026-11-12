@@ -1791,87 +1791,80 @@ int recordmeta_from_jsobject(as_record *rec, Local<Object> obj,
 	return AS_NODE_PARAM_OK;
 }
 
-void cluster_to_jsobject(as_cluster_s* cluster, Local<Object> v8_cluster, as_metrics_policy* policy, const LogInfo *log) {
-	as_error err;
-	as_error_init(&err);
+void metrics_cluster_snapshot(as_cluster_s* cluster, as_metrics_policy* policy,
+							  MetricsClusterSnapshot* out)
+{
+	out->has_app_id = cluster->app_id != NULL;
+	out->app_id = cluster->app_id ? cluster->app_id : "";
+	out->cluster_name = cluster->cluster_name ? cluster->cluster_name : "";
+	out->command_count = (uint32_t)as_cluster_get_command_count(cluster);
+	out->invalid_node_count = cluster->invalid_node_count;
+	out->transaction_count = (uint32_t)as_cluster_get_tran_count(cluster);
+	out->retry_count = (uint32_t)as_cluster_get_retry_count(cluster);
+	out->delay_queue_timeout_count =
+		(double)as_cluster_get_delay_queue_timeout_count(cluster);
 
-	char* cluster_name = cluster->cluster_name;
-
-	if (cluster->cluster_name) {
-    	cluster_name = strdup(cluster->cluster_name);
-	} else {
-	    cluster_name = strdup("");  // Allocates memory for an empty string
-	}
-		/*
-	uint32_t cpu_load, mem;
-	as_metrics_process_cpu_load_mem_usage(&err, NULL, &cpu_load, &mem);
-
-	char now_str[128];
-	timestamp_to_string(now_str, sizeof(now_str));
-
-	Nan::Set(v8_cluster, Nan::New("time").ToLocalChecked(), Nan::New(now_str).ToLocalChecked());
-
-	Nan::Set(v8_cluster, Nan::New("cpuLoad").ToLocalChecked(), Nan::New(cpu_load));
-	*/
-
-	if(cluster->app_id) {
-		Nan::Set(v8_cluster, Nan::New("appId").ToLocalChecked(), Nan::New(cluster->app_id).ToLocalChecked());
-	}
-	else{
-		Nan::Set(v8_cluster, Nan::New("appId").ToLocalChecked(), Nan::Null());
-	}
-
-	Nan::Set(v8_cluster, Nan::New("clusterName").ToLocalChecked(), Nan::New(cluster_name).ToLocalChecked());
-
-	Nan::Set(v8_cluster, Nan::New("commandCount").ToLocalChecked(), Nan::New((uint32_t) as_cluster_get_command_count(cluster)));
-
-	Nan::Set(v8_cluster, Nan::New("invalidNodeCount").ToLocalChecked(), Nan::New(cluster->invalid_node_count));
-
-	Nan::Set(v8_cluster, Nan::New("transactionCount").ToLocalChecked(), Nan::New((uint32_t) as_cluster_get_tran_count(cluster)));
-
-	Nan::Set(v8_cluster, Nan::New("retryCount").ToLocalChecked(), Nan::New((uint32_t) as_cluster_get_retry_count(cluster)));
-
-	Nan::Set(v8_cluster, Nan::New("delayQueueTimeoutCount").ToLocalChecked(), Nan::New((double)as_cluster_get_delay_queue_timeout_count(cluster)));
-
-
-	Local<Object> v8_labels = Nan::New<Object>();
-	if(policy->labels){
-		for (uint32_t i = 0; i < policy->labels->size; ++i)
-		{
+	if (policy && policy->labels) {
+		for (uint32_t i = 0; i < policy->labels->size; ++i) {
 			as_metrics_label* label = (as_metrics_label *) as_vector_get(policy->labels, i);
-
-			Nan::Set(v8_labels, Nan::New(label->name).ToLocalChecked(), Nan::New(label->value).ToLocalChecked());
-
-		}	
-	}
-			
-	Nan::Set(v8_cluster, Nan::New("labels").ToLocalChecked(), v8_labels);
-	Local<Object> v8_event_loop = Nan::New<Object>();
-
-	for (uint32_t i = 0; i < as_event_loop_size; i++) {
-		as_event_loop* loop = &as_event_loops[i];
-		if (i > 0) {
-			exit(1);
+			out->labels.push_back(std::make_pair(std::string(label->name), std::string(label->value)));
 		}
-		Nan::Set(v8_event_loop, Nan::New("processSize").ToLocalChecked(), Nan::New((uint32_t) as_event_loop_get_process_size(loop)));
-		Nan::Set(v8_event_loop, Nan::New("queueSize").ToLocalChecked(), Nan::New((uint32_t) as_event_loop_get_queue_size(loop)));
-
 	}
 
-	Nan::Set(v8_cluster, Nan::New("eventLoop").ToLocalChecked(), v8_event_loop);
+	// Node registers a single event loop.
+	out->has_event_loop = as_event_loop_size > 0;
+	if (out->has_event_loop) {
+		as_event_loop* loop = &as_event_loops[0];
+		out->event_loop_process_size = (uint32_t) as_event_loop_get_process_size(loop);
+		out->event_loop_queue_size = (uint32_t) as_event_loop_get_queue_size(loop);
+	}
 
-	Local<Object> v8_nodes = Nan::New<Array>();	
 	as_nodes* nodes = as_nodes_reserve(cluster);
-	if(nodes){
+	if (nodes) {
+		out->nodes.resize(nodes->size);
 		for (uint32_t i = 0; i < nodes->size; i++) {
-			as_node* node = nodes->array[i];
-			Local<Object> v8_node = Nan::New<Object>();
-			node_to_jsobject(node, v8_node, log);
-			Nan::Set(v8_nodes, i, v8_node);
+			metrics_node_snapshot(nodes->array[i], &out->nodes[i]);
 		}
 	}
 	as_nodes_release(nodes);
+}
 
+void cluster_snapshot_to_jsobject(const MetricsClusterSnapshot* cluster,
+								  Local<Object> v8_cluster, const LogInfo *log)
+{
+	if (cluster->has_app_id) {
+		Nan::Set(v8_cluster, Nan::New("appId").ToLocalChecked(), Nan::New(cluster->app_id).ToLocalChecked());
+	}
+	else {
+		Nan::Set(v8_cluster, Nan::New("appId").ToLocalChecked(), Nan::Null());
+	}
+
+	Nan::Set(v8_cluster, Nan::New("clusterName").ToLocalChecked(), Nan::New(cluster->cluster_name).ToLocalChecked());
+	Nan::Set(v8_cluster, Nan::New("commandCount").ToLocalChecked(), Nan::New(cluster->command_count));
+	Nan::Set(v8_cluster, Nan::New("invalidNodeCount").ToLocalChecked(), Nan::New(cluster->invalid_node_count));
+	Nan::Set(v8_cluster, Nan::New("transactionCount").ToLocalChecked(), Nan::New(cluster->transaction_count));
+	Nan::Set(v8_cluster, Nan::New("retryCount").ToLocalChecked(), Nan::New(cluster->retry_count));
+	Nan::Set(v8_cluster, Nan::New("delayQueueTimeoutCount").ToLocalChecked(), Nan::New(cluster->delay_queue_timeout_count));
+
+	Local<Object> v8_labels = Nan::New<Object>();
+	for (const auto &label : cluster->labels) {
+		Nan::Set(v8_labels, Nan::New(label.first).ToLocalChecked(), Nan::New(label.second).ToLocalChecked());
+	}
+	Nan::Set(v8_cluster, Nan::New("labels").ToLocalChecked(), v8_labels);
+
+	Local<Object> v8_event_loop = Nan::New<Object>();
+	if (cluster->has_event_loop) {
+		Nan::Set(v8_event_loop, Nan::New("processSize").ToLocalChecked(), Nan::New(cluster->event_loop_process_size));
+		Nan::Set(v8_event_loop, Nan::New("queueSize").ToLocalChecked(), Nan::New(cluster->event_loop_queue_size));
+	}
+	Nan::Set(v8_cluster, Nan::New("eventLoop").ToLocalChecked(), v8_event_loop);
+
+	Local<Object> v8_nodes = Nan::New<Array>();
+	for (uint32_t i = 0; i < cluster->nodes.size(); i++) {
+		Local<Object> v8_node = Nan::New<Object>();
+		node_snapshot_to_jsobject(&cluster->nodes[i], v8_node, log);
+		Nan::Set(v8_nodes, i, v8_node);
+	}
 	Nan::Set(v8_cluster, Nan::New("nodes").ToLocalChecked(), v8_nodes);
 }
 
@@ -1902,54 +1895,43 @@ as_conn_stats_sum_internal(as_conn_stats* stats, as_async_conn_pool* pool)
 
 
 
-static Local<Array> latency_to_jsarray(as_latency *latency)
+static void latency_snapshot(as_latency *latency, std::vector<uint32_t> *out)
+{
+	as_latency *buckets = as_latency_reserve(latency);
+	for (uint8_t i = 0; i < buckets->size; i++) {
+		out->push_back((uint32_t)as_latency_get_bucket(buckets, i));
+	}
+	as_latency_release(buckets);
+}
+
+static Local<Array> latency_to_jsarray(const std::vector<uint32_t> &buckets)
 {
 	Nan::EscapableHandleScope scope;
 	Local<Array> v8_buckets = Nan::New<Array>();
-	as_latency *buckets = as_latency_reserve(latency);
-	for (uint8_t i = 0; i < buckets->size; i++) {
-		uint32_t count = (uint32_t)as_latency_get_bucket(buckets, i);
-		Nan::Set(v8_buckets, i, Nan::New(count));
+	for (uint32_t i = 0; i < buckets.size(); i++) {
+		Nan::Set(v8_buckets, i, Nan::New(buckets[i]));
 	}
-	as_latency_release(buckets);
 	return scope.Escape(v8_buckets);
 }
 
-void node_to_jsobject(as_node_s* node, Local<Object> v8_node, const LogInfo *log) {
-	Nan::Set(v8_node, Nan::New("name").ToLocalChecked(), Nan::New(node->name).ToLocalChecked());
+void metrics_node_snapshot(as_node_s* node, MetricsNodeSnapshot* out)
+{
+	out->name = node->name;
 
 	as_address* address = as_node_get_address(node);
-
 	struct sockaddr* addr = (struct sockaddr*)&address->addr;
-	uint32_t port = (uint32_t) as_address_port(addr);
+	out->port = (uint32_t) as_address_port(addr);
 	char address_name[AS_IP_ADDRESS_SIZE];
 	as_address_short_name(addr, address_name, sizeof(address_name));
+	out->address = address_name;
 
-	Nan::Set(v8_node, Nan::New("address").ToLocalChecked(), Nan::New(address_name).ToLocalChecked());
-	Nan::Set(v8_node, Nan::New("port").ToLocalChecked(), Nan::New(port));
-
-	struct as_conn_stats_s async;
-	as_conn_stats_init_internal(&async);
-
-
+	as_conn_stats_init_internal(&out->conns);
 	for (uint32_t i = 0; i < as_event_loop_size; i++) {
 		// Regular async.
-		as_conn_stats_sum_internal(&async, &node->async_conn_pools[i]);
+		as_conn_stats_sum_internal(&out->conns, &node->async_conn_pools[i]);
 	}
 
-	Local<Object> v8_conn_stats = Nan::New<Object>();
-	Nan::Set(v8_conn_stats, Nan::New("inUse").ToLocalChecked(), Nan::New(async.in_use));
-	Nan::Set(v8_conn_stats, Nan::New("inPool").ToLocalChecked(), Nan::New(async.in_pool));
-	Nan::Set(v8_conn_stats, Nan::New("opened").ToLocalChecked(), Nan::New(async.opened));
-	Nan::Set(v8_conn_stats, Nan::New("closed").ToLocalChecked(), Nan::New(async.closed));
-	Nan::Set(v8_conn_stats, Nan::New("aborted").ToLocalChecked(), Nan::New(async.aborted));
-	Nan::Set(v8_conn_stats, Nan::New("recovered").ToLocalChecked(), Nan::New(async.recovered));
-
-	Nan::Set(v8_node, Nan::New("conns").ToLocalChecked(), v8_conn_stats);
-
-	struct as_conn_stats_s sync;
-	as_conn_stats_init_internal(&sync);
-
+	as_conn_stats_init_internal(&out->sync_conns);
 	uint32_t max = node->cluster->conn_pools_per_node;
 
 	// Sync connection summary.
@@ -1961,128 +1943,97 @@ void node_to_jsobject(as_node_s* node, Local<Object> v8_node, const LogInfo *log
 		uint32_t total = pool->queue.total;
 		pthread_mutex_unlock(&pool->lock);
 
-		sync.in_pool += in_pool;
-		sync.in_use += total - in_pool;
+		out->sync_conns.in_pool += in_pool;
+		out->sync_conns.in_use += total - in_pool;
 	}
 
-	sync.opened = as_node_get_sync_conns_opened(node);
-	sync.closed = as_node_get_sync_conns_closed(node);
-	sync.recovered = as_node_get_sync_conns_recovered(node);
-	sync.aborted = as_node_get_sync_conns_aborted(node);
+	out->sync_conns.opened = as_node_get_sync_conns_opened(node);
+	out->sync_conns.closed = as_node_get_sync_conns_closed(node);
+	out->sync_conns.recovered = as_node_get_sync_conns_recovered(node);
+	out->sync_conns.aborted = as_node_get_sync_conns_aborted(node);
 
+	// The C client records connection latency once per node and leaves the
+	// namespace slot empty, so each namespace reports the node's histogram, as
+	// the C client's metrics file does. The node's histogram exists only after
+	// its first connection; until then the empty namespace slot is used.
+	as_latency *conn_latency =
+		(as_latency *)as_load_ptr((void *const *)&node->conn_latency);
 
-	Local<Object> v8_sync_conn_stats = Nan::New<Object>();
-	Nan::Set(v8_sync_conn_stats, Nan::New("inUse").ToLocalChecked(), Nan::New(sync.in_use));
-	Nan::Set(v8_sync_conn_stats, Nan::New("inPool").ToLocalChecked(), Nan::New(sync.in_pool));
-	Nan::Set(v8_sync_conn_stats, Nan::New("opened").ToLocalChecked(), Nan::New(sync.opened));
-	Nan::Set(v8_sync_conn_stats, Nan::New("closed").ToLocalChecked(), Nan::New(sync.closed));
-	Nan::Set(v8_sync_conn_stats, Nan::New("aborted").ToLocalChecked(), Nan::New(sync.aborted));
-	Nan::Set(v8_sync_conn_stats, Nan::New("recovered").ToLocalChecked(), Nan::New(sync.recovered));
+	out->metrics.resize(node->metrics_size);
+	for (uint8_t i = 0; i < node->metrics_size; i++) {
+		as_ns_metrics* metrics = node->metrics[i];
+		MetricsNsSnapshot* ns = &out->metrics[i];
 
+		ns->ns = metrics->ns;
+		ns->bytes_in = metrics->bytes_in;
+		ns->bytes_out = metrics->bytes_out;
+		ns->error_count = metrics->error_count;
+		ns->timeout_count = metrics->timeout_count;
+		ns->key_busy_count = metrics->key_busy_count;
 
+		latency_snapshot(conn_latency ? conn_latency : metrics->latency[AS_LATENCY_TYPE_CONN],
+						 &ns->conn_latency);
+		latency_snapshot(metrics->latency[AS_LATENCY_TYPE_WRITE], &ns->write_latency);
+		latency_snapshot(metrics->latency[AS_LATENCY_TYPE_READ], &ns->read_latency);
+		latency_snapshot(metrics->latency[AS_LATENCY_TYPE_BATCH], &ns->batch_latency);
+		latency_snapshot(metrics->latency[AS_LATENCY_TYPE_QUERY], &ns->query_latency);
+	}
+}
 
-	Nan::Set(v8_node, Nan::New("syncConns").ToLocalChecked(), v8_sync_conn_stats);
+static Local<Value> metrics_count_to_jsvalue(uint64_t count, const LogInfo *log)
+{
+	if (UMAX_SAFE_INTEGER < count) {
+		as_v8_detail(
+			log, "Integer value outside safe range - returning BigInt");
+		v8::Isolate *isolate = v8::Isolate::GetCurrent();
+		return BigInt::New(isolate, count);
+	}
+	return Nan::New((double)count);
+}
 
+static Local<Object> conn_stats_to_jsobject(const as_conn_stats &stats)
+{
+	Local<Object> v8_conn_stats = Nan::New<Object>();
+	Nan::Set(v8_conn_stats, Nan::New("inUse").ToLocalChecked(), Nan::New(stats.in_use));
+	Nan::Set(v8_conn_stats, Nan::New("inPool").ToLocalChecked(), Nan::New(stats.in_pool));
+	Nan::Set(v8_conn_stats, Nan::New("opened").ToLocalChecked(), Nan::New(stats.opened));
+	Nan::Set(v8_conn_stats, Nan::New("closed").ToLocalChecked(), Nan::New(stats.closed));
+	Nan::Set(v8_conn_stats, Nan::New("aborted").ToLocalChecked(), Nan::New(stats.aborted));
+	Nan::Set(v8_conn_stats, Nan::New("recovered").ToLocalChecked(), Nan::New(stats.recovered));
+	return v8_conn_stats;
+}
 
-	Local<Array> v8_ns_metrics_array= Nan::New<Array>();
+void node_snapshot_to_jsobject(const MetricsNodeSnapshot* node, Local<Object> v8_node,
+							   const LogInfo *log)
+{
+	Nan::Set(v8_node, Nan::New("name").ToLocalChecked(), Nan::New(node->name).ToLocalChecked());
+	Nan::Set(v8_node, Nan::New("address").ToLocalChecked(), Nan::New(node->address).ToLocalChecked());
+	Nan::Set(v8_node, Nan::New("port").ToLocalChecked(), Nan::New(node->port));
+	Nan::Set(v8_node, Nan::New("conns").ToLocalChecked(), conn_stats_to_jsobject(node->conns));
+	Nan::Set(v8_node, Nan::New("syncConns").ToLocalChecked(), conn_stats_to_jsobject(node->sync_conns));
 
-	for (uint8_t metrics_index = 0; metrics_index < node->metrics_size; metrics_index++)
-	{
+	Local<Array> v8_ns_metrics_array = Nan::New<Array>();
 
-		as_ns_metrics* metrics = node->metrics[metrics_index];
-
+	for (uint32_t i = 0; i < node->metrics.size(); i++) {
+		const MetricsNsSnapshot* metrics = &node->metrics[i];
 		Local<Object> v8_ns_metrics = Nan::New<Object>();
 
-		Local<String> v8_ns = Nan::New(metrics->ns).ToLocalChecked();
+		Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), latency_to_jsarray(metrics->conn_latency));
+		Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), latency_to_jsarray(metrics->write_latency));
+		Nan::Set(v8_ns_metrics, Nan::New("readLatency").ToLocalChecked(), latency_to_jsarray(metrics->read_latency));
+		Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), latency_to_jsarray(metrics->batch_latency));
+		Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), latency_to_jsarray(metrics->query_latency));
 
-		Local<Value> v8_bytes_in;
-		Local<Value> v8_bytes_out;
-		Local<Value> v8_error_count;
-		Local<Value> v8_timeout_count;
-		Local<Value> v8_key_busy_count;
+		Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), Nan::New(metrics->ns).ToLocalChecked());
+		Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), metrics_count_to_jsvalue(metrics->bytes_in, log));
+		Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), metrics_count_to_jsvalue(metrics->bytes_out, log));
+		Nan::Set(v8_ns_metrics, Nan::New("errorCount").ToLocalChecked(), metrics_count_to_jsvalue(metrics->error_count, log));
+		Nan::Set(v8_ns_metrics, Nan::New("timeoutCount").ToLocalChecked(), metrics_count_to_jsvalue(metrics->timeout_count, log));
+		Nan::Set(v8_ns_metrics, Nan::New("keyBusyCount").ToLocalChecked(), metrics_count_to_jsvalue(metrics->key_busy_count, log));
 
-
-		if ((uint64_t)MAX_SAFE_INTEGER < metrics->bytes_in) {
-			as_v8_detail(
-				log, "Integer value outside safe range - returning BigInt");
-			v8::Isolate *isolate = v8::Isolate::GetCurrent();
-			v8_bytes_in = BigInt::New(isolate, metrics->bytes_in);
-		}
-		else{
-			v8_bytes_in = Nan::New((double)metrics->bytes_in);
-		}
-
-		if (UMAX_SAFE_INTEGER < metrics->bytes_out) {
-			as_v8_detail(
-				log, "Integer value outside safe range - returning BigInt");
-			v8::Isolate *isolate = v8::Isolate::GetCurrent();
-			v8_bytes_out = BigInt::New(isolate, metrics->bytes_out);
-		}
-		else{
-			v8_bytes_out = Nan::New((double)metrics->bytes_out);
-		}
-
-		if (UMAX_SAFE_INTEGER < metrics->error_count) {
-			as_v8_detail(
-				log, "Integer value outside safe range - returning BigInt");
-			v8::Isolate *isolate = v8::Isolate::GetCurrent();
-			v8_error_count = BigInt::New(isolate, metrics->error_count);
-		}
-		else{
-			v8_error_count = Nan::New((double)metrics->error_count);
-		}
-
-		if (UMAX_SAFE_INTEGER < metrics->timeout_count) {
-			as_v8_detail(
-				log, "Integer value outside safe range - returning BigInt");
-			v8::Isolate *isolate = v8::Isolate::GetCurrent();
-			v8_timeout_count = BigInt::New(isolate, metrics->timeout_count);
-		}
-		else{
-			v8_timeout_count = Nan::New((double)metrics->timeout_count);
-		}
-
-		if (UMAX_SAFE_INTEGER < metrics->key_busy_count) {
-			as_v8_detail(
-				log, "Integer value outside safe range - returning BigInt");
-			v8::Isolate *isolate = v8::Isolate::GetCurrent();
-			v8_key_busy_count = BigInt::New(isolate, metrics->key_busy_count);
-		}
-		else{
-			v8_key_busy_count = Nan::New((double)metrics->key_busy_count);
-		}
-
-		// The C client records connection latency once per node and leaves the
-		// namespace slot empty, so each namespace reports the node's histogram, as
-		// the C client's metrics file does. The node's histogram exists only after
-		// its first connection; until then the empty namespace slot is used.
-		as_latency *conn_latency =
-			(as_latency *)as_load_ptr((void *const *)&node->conn_latency);
-		Local<Array> v8_connection = latency_to_jsarray(
-			conn_latency ? conn_latency : metrics->latency[AS_LATENCY_TYPE_CONN]);
-		Local<Array> v8_write = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_WRITE]);
-		Local<Array> v8_read = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_READ]);
-		Local<Array> v8_batch = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_BATCH]);
-		Local<Array> v8_query = latency_to_jsarray(metrics->latency[AS_LATENCY_TYPE_QUERY]);
-
-		Nan::Set(v8_ns_metrics, Nan::New("connLatency").ToLocalChecked(), v8_connection);
-		Nan::Set(v8_ns_metrics, Nan::New("writeLatency").ToLocalChecked(), v8_write);
-		Nan::Set(v8_ns_metrics, Nan::New("readLatency").ToLocalChecked(), v8_read);
-		Nan::Set(v8_ns_metrics, Nan::New("batchLatency").ToLocalChecked(), v8_batch);
-		Nan::Set(v8_ns_metrics, Nan::New("queryLatency").ToLocalChecked(), v8_query);
-
-		Nan::Set(v8_ns_metrics, Nan::New("ns").ToLocalChecked(), v8_ns);
-		Nan::Set(v8_ns_metrics, Nan::New("bytesIn").ToLocalChecked(), v8_bytes_in);
-		Nan::Set(v8_ns_metrics, Nan::New("bytesOut").ToLocalChecked(), v8_bytes_out);
-		Nan::Set(v8_ns_metrics, Nan::New("errorCount").ToLocalChecked(), v8_error_count);
-		Nan::Set(v8_ns_metrics, Nan::New("timeoutCount").ToLocalChecked(), v8_timeout_count);
-		Nan::Set(v8_ns_metrics, Nan::New("keyBusyCount").ToLocalChecked(), v8_key_busy_count);
-
-		Nan::Set(v8_ns_metrics_array, metrics_index, v8_ns_metrics);
+		Nan::Set(v8_ns_metrics_array, i, v8_ns_metrics);
 	}
 	Nan::Set(v8_node, Nan::New("metrics").ToLocalChecked(), v8_ns_metrics_array);
-
-
 }
 
 int extract_blob_from_jsobject(uint8_t **data, int *len, Local<Object> obj,
