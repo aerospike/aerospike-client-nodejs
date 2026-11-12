@@ -24,8 +24,8 @@ import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import { newQuery, errorFrom, streamErrorFrom } from './helpers.ts';
 
-const { orderByType, order, orderByFlags, AerospikeError, status } = Aerospike
-const { INTEGER, STRING } = orderByType
+const { binDataType, order, orderByFlags, AerospikeError, status } = Aerospike
+const { INTEGER, STRING } = binDataType
 const { ASC, DESC } = order
 
 // A query that is never sent: the setters only store what they're given.
@@ -64,7 +64,7 @@ async function expectRejectedEverywhere (configure: (query: Q) => void, message:
 
 describe('Top-K settings #noserver', function () {
   it('exports the order-by enums with their wire values', function () {
-    expect(orderByType).to.eql({ INTEGER: 1, DOUBLE: 2, STRING: 3, BYTES: 4 })
+    expect(binDataType).to.eql({ INTEGER: 1, DOUBLE: 2, STRING: 3, BYTES: 4 })
     expect(order).to.eql({ ASC: 0, DESC: 1 })
     expect(orderByFlags).to.eql({ DEFAULT: 0, CASE_INSENSITIVE: 1 })
   })
@@ -152,7 +152,7 @@ describe('Top-K settings checked by the Node client when the query runs', functi
 
   it('type, direction and flags must be unsigned 32-bit integers', async function () {
     const messages = {
-      type: 'Order key type must be one of Aerospike.orderByType',
+      type: 'Order key type must be one of Aerospike.binDataType',
       direction: 'Order key direction must be one of Aerospike.order',
       flags: 'Order key flags must be a combination of Aerospike.orderByFlags'
     }

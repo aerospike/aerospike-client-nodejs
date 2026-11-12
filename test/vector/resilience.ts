@@ -27,7 +27,7 @@ import { digests, skipUnlessTopKQueriesRun } from '../topk/helpers.ts';
 import { makeVector, loadVectors, removeLoadedSets, removeLater, seededRandom, nonFiniteVector } from './helpers.ts';
 
 const { Vector, exp, operations, batchType, status } = Aerospike
-const { DOUBLE } = Aerospike.orderByType
+const { DOUBLE } = Aerospike.binDataType
 const { DESC } = Aerospike.order
 const { FLOAT32, FLOAT64 } = Aerospike.vectorElementType
 const { COSINE_SIMILARITY } = Aerospike.vectorDistanceMetric

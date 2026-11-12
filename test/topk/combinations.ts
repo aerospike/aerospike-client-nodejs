@@ -27,7 +27,7 @@ import {
   partitionOf, seededRandom, pick, randomValue, skipUnlessTopKQueriesRun, checkUnlessString
 } from './helpers.ts';
 
-const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.orderByType
+const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.binDataType
 const { ASC, DESC } = Aerospike.order
 const { DEFAULT, CASE_INSENSITIVE } = Aerospike.orderByFlags
 const { exp, filter } = Aerospike

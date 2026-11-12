@@ -25,7 +25,7 @@ import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import { newQuery, errorFrom, streamErrorFrom, skipUnlessTopKQueriesRun, untilStringSupported } from './helpers.ts';
 
-const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.orderByType
+const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.binDataType
 const { DESC } = Aerospike.order
 const { CASE_INSENSITIVE } = Aerospike.orderByFlags
 const { status, exp } = Aerospike

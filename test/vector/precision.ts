@@ -113,7 +113,7 @@ describe('Vector distance precision setting', function () {
       const set = await loadVectors(vectors, order.map(n => ({ n })))
       const nearestFirst = (q: any) => {
         q.ops = [operations.read('n'), exp.operations.read('d', exp.vectorDistance(EUCLIDEAN_SQUARED, Vector.ofFloat32(new Float32Array(64)), exp.binVector('v')), 0)]
-        q.orderBy('d', Aerospike.orderByType.DOUBLE, Aerospike.order.ASC)
+        q.orderBy('d', Aerospike.binDataType.DOUBLE, Aerospike.order.ASC)
       }
 
       await setPrecision('double')

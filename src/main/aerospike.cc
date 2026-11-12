@@ -199,7 +199,7 @@ NAN_MODULE_INIT(Aerospike)
 	export("auth", auth_mode_enum_values());
 	export("batchTypes", batchTypes());
 	export("queryDuration", queryDuration());
-	export("orderByType", orderByType());
+	export("binDataType", binDataType());
 	export("order", order());
 	export("orderByFlags", orderByFlags());
 	export("vectorElementType", vectorElementType());
