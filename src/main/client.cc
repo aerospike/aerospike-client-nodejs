@@ -158,16 +158,10 @@ NAN_METHOD(AerospikeClient::Connect)
 		cmd->ErrorCallback(&err);
 	}
 	else if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
-		if (client->as->cluster) {
-			// The cluster was created but connect still failed, so close it.
-			close_client(client);
-		}
-		else {
-			// No cluster was created, so connect can be retried on this client.
-			// Release the event handle so it doesn't keep the process alive;
-			// the next connect sets it up again.
-			events_callback_close(&client->as->config);
-		}
+		// A failed connect leaves no cluster, so connect can be retried on
+		// this client. Release the event handle so it doesn't keep the
+		// process alive; the next connect sets it up again.
+		events_callback_close(&client->as->config);
 		cmd->ErrorCallback(&err);
 	}
 	else {
