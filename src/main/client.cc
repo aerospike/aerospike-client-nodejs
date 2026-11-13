@@ -83,6 +83,8 @@ NAN_METHOD(AerospikeClient::New)
 
 	if (result != AS_NODE_PARAM_OK) {
 		config_free_ip_map(&config);
+		// Frees what was parsed, including a registered provider or translator.
+		as_config_destroy(&config);
 		if(client->as){
 			cf_free(client->as);
 		}
