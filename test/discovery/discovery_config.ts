@@ -608,7 +608,10 @@ describe('discovery with the aws-tags provider', function () {
   })
 })
 
-describe('a seed TLS name without TLS #noserver', function () {
+// Not #noserver: before CLIENT-5836 (PR #1123) a failed connect keeps its event
+// handle, so the noserver run, which never releases the event loop, would not
+// exit. Tag it #noserver once that fix is in.
+describe('a seed TLS name without TLS', function () {
   // Port 1 refuses the connection, so connect fails at once.
   const log = { level: Aerospike.log.OFF }
 
@@ -632,6 +635,48 @@ describe('a seed TLS name without TLS #noserver', function () {
     expect((await failedConnect('127.0.0.1:1')).message).to.not.match(/tlsName/)
     expect((await failedConnect('[::1]:1')).message).to.not.match(/tlsName/)
     expect((await failedConnect('127.0.0.1:tls1:1', { tls: { enable: true } })).message).to.not.match(/tlsName/)
+  })
+})
+
+describe('discovery and translation with dynamic config', function () {
+  // Discovery and translation are set when the client is created. They are
+  // not dynamic config keys: a config file that names them doesn't change the
+  // client's own settings. (Today the C client rejects the whole file and
+  // logs it; the client keeps working with its own config.)
+  it('keeps its own settings when the config file names discovery and translation', async function () {
+    const file = path.join(os.tmpdir(), `discovery-dynamic-${process.pid}-${Date.now()}.yml`)
+    fs.writeFileSync(file, [
+      'version: 1.0.0',
+      'dynamic:',
+      '  client:',
+      '    discovery:',
+      '      provider: dns',
+      '      merge_policy: discovery_only',
+      '    translation:',
+      '      provider: pass-through',
+      '      on_miss: strict',
+      ''
+    ].join('\n'))
+    const translation = { provider: 'port-map' as const, portMap: { '192.0.2.1:3000': '127.0.0.1:3000' } }
+    try {
+      const client: Cli = await Aerospike.connect(Object.assign({}, helper.config, {
+        log: { level: Aerospike.log.OFF },
+        translation,
+        configProvider: { path: file, interval: 1000 }
+      }))
+      try {
+        const key = new Aerospike.Key(helper.namespace, helper.set, 'discovery/dynamic')
+        await client.put(key, { v: 1 })
+        expect((await client.get(key)).bins.v).to.equal(1)
+        await client.remove(key)
+        expect(client.config.translation).to.eql(translation)
+        expect(client.config).to.not.have.property('discovery')
+      } finally {
+        client.close()
+      }
+    } finally {
+      fs.unlinkSync(file)
+    }
   })
 })
 
