@@ -257,8 +257,153 @@ static int set_dns_seed_provider(as_config *config, Local<Object> obj, const Log
 }
 
 /**
- * discovery is { provider, dns, mergePolicy, executionMode, refreshIntervalMs,
- * refreshTimeoutMs, tendRefreshDeadlineMs }.
+ * aws is { region, filters: [{ name, values }], addressField, port, tlsName,
+ * timeoutMs, endpoint, caFile, caPath, accessKeyId, secretAccessKey,
+ * sessionToken }.
+ */
+static int set_aws_seed_provider(as_config *config, Local<Object> obj, const LogInfo *log)
+{
+	Local<Value> value = Nan::Get(obj, Nan::New("aws").ToLocalChecked()).ToLocalChecked();
+
+	if (!value->IsObject() || value->IsArray()) {
+		as_v8_error(log, "discovery.aws must be an object when discovery.provider is 'aws-tags'");
+		return AS_NODE_PARAM_ERR;
+	}
+
+	Local<Object> aws_obj = value.As<Object>();
+	as_aws_seed_provider_config aws;
+	as_aws_seed_provider_config_init(&aws);
+	// The Java client's default, so that it fits within the default
+	// refresh_timeout_ms.
+	aws.timeout_ms = 2000;
+
+	// Strings read from the object; the C client copies them.
+	const char *string_props[] = {"region", "tlsName", "endpoint", "caFile", "caPath",
+								  "accessKeyId", "secretAccessKey", "sessionToken"};
+	const int string_count = sizeof(string_props) / sizeof(string_props[0]);
+	char *strings[string_count] = {NULL};
+	std::vector<std::string> filter_names;
+	std::vector<std::vector<std::string>> filter_values;
+	std::vector<std::vector<const char *>> filter_value_ptrs;
+	std::vector<as_aws_filter> filters;
+	int rc = AS_NODE_PARAM_OK;
+	bool defined = false;
+	int index = 0;
+
+	for (int i = 0; i < string_count; i++) {
+		if ((rc = get_optional_string_property(&strings[i], NULL, aws_obj, string_props[i],
+											   log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+	}
+
+	{
+		Local<Value> filters_value =
+			Nan::Get(aws_obj, Nan::New("filters").ToLocalChecked()).ToLocalChecked();
+		if (!filters_value->IsArray()) {
+			as_v8_error(log, "discovery.aws.filters must be an array");
+			rc = AS_NODE_PARAM_ERR;
+			goto Cleanup;
+		}
+		Local<Array> filters_array = filters_value.As<Array>();
+		uint32_t count = filters_array->Length();
+		filter_values.resize(count);
+		for (uint32_t i = 0; i < count; i++) {
+			Local<Value> item = Nan::Get(filters_array, i).ToLocalChecked();
+			if (!item->IsObject() || item->IsArray()) {
+				as_v8_error(log, "discovery.aws.filters entries must be objects");
+				rc = AS_NODE_PARAM_ERR;
+				goto Cleanup;
+			}
+			Local<Object> filter = item.As<Object>();
+			Local<Value> name = Nan::Get(filter, Nan::New("name").ToLocalChecked()).ToLocalChecked();
+			if (!name->IsString()) {
+				as_v8_error(log, "discovery.aws.filters entry name must be a string");
+				rc = AS_NODE_PARAM_ERR;
+				goto Cleanup;
+			}
+			filter_names.push_back(*Nan::Utf8String(name));
+			if ((rc = get_optional_string_array_property(&filter_values[i], filter, "values",
+														 log)) != AS_NODE_PARAM_OK) {
+				goto Cleanup;
+			}
+		}
+		filter_value_ptrs.resize(count);
+		filters.resize(count);
+		for (uint32_t i = 0; i < count; i++) {
+			for (const auto &v : filter_values[i]) {
+				filter_value_ptrs[i].push_back(v.c_str());
+			}
+			filters[i].name = filter_names[i].c_str();
+			filters[i].values = filter_value_ptrs[i].empty() ? NULL : filter_value_ptrs[i].data();
+			filters[i].values_size = (uint32_t)filter_value_ptrs[i].size();
+		}
+	}
+
+	{
+		static const char *const address_fields[] = {"privateIp", "publicIp", "privateDns",
+													  "publicDns"};
+		if ((rc = get_optional_enum_property(&index, &defined, aws_obj, "addressField",
+											 address_fields, 4, log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+		if (defined) {
+			static const as_aws_address_field fields[] = {
+				AS_AWS_ADDRESS_PRIVATE_IP, AS_AWS_ADDRESS_PUBLIC_IP, AS_AWS_ADDRESS_PRIVATE_DNS,
+				AS_AWS_ADDRESS_PUBLIC_DNS};
+			aws.address_field = fields[index];
+		}
+
+		uint32_t port = aws.port;
+		if ((rc = get_optional_uint32_property(&port, NULL, aws_obj, "port", log)) !=
+			AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+		if (port == 0 || port > 65535) {
+			as_v8_error(log, "discovery.aws.port must be from 1 to 65535");
+			rc = AS_NODE_PARAM_ERR;
+			goto Cleanup;
+		}
+		aws.port = (uint16_t)port;
+		if ((rc = get_optional_uint32_property(&aws.timeout_ms, NULL, aws_obj, "timeoutMs",
+											   log)) != AS_NODE_PARAM_OK) {
+			goto Cleanup;
+		}
+	}
+
+	aws.region = strings[0];
+	aws.tls_name = strings[1];
+	aws.endpoint = strings[2];
+	aws.ca_file = strings[3];
+	aws.ca_path = strings[4];
+	aws.access_key_id = strings[5];
+	aws.secret_access_key = strings[6];
+	aws.session_token = strings[7];
+	aws.filters = filters.empty() ? NULL : filters.data();
+	aws.filters_size = (uint32_t)filters.size();
+
+	{
+		// The C client validates and copies the configuration.
+		as_error err;
+		as_error_init(&err);
+		if (as_config_set_aws_seed_provider(config, &aws, &err) != AEROSPIKE_OK) {
+			as_v8_error(log, "Invalid discovery.aws: %s", err.message);
+			rc = AS_NODE_PARAM_ERR;
+		}
+	}
+
+Cleanup:
+	for (int i = 0; i < string_count; i++) {
+		if (strings[i]) {
+			cf_free(strings[i]);
+		}
+	}
+	return rc;
+}
+
+/**
+ * discovery is { provider, dns, aws, mergePolicy, executionMode,
+ * refreshIntervalMs, refreshTimeoutMs, tendRefreshDeadlineMs }.
  */
 static int get_optional_discovery_property(as_config *config, Local<Object> obj,
 										   const LogInfo *log)
@@ -317,13 +462,17 @@ static int get_optional_discovery_property(as_config *config, Local<Object> obj,
 	}
 
 	// The provider is registered last, after the execution mode is set.
-	static const char *const providers[] = {"dns"};
+	// 'static' (the configured hosts only) registers nothing.
+	static const char *const providers[] = {"static", "dns", "aws-tags"};
 	if ((rc = get_optional_enum_property(&index, &defined, discovery, "provider",
-										 providers, 1, log)) != AS_NODE_PARAM_OK) {
+										 providers, 3, log)) != AS_NODE_PARAM_OK) {
 		return rc;
 	}
-	if (defined) {
+	if (defined && index == 1) {
 		return set_dns_seed_provider(config, discovery, log);
+	}
+	if (defined && index == 2) {
+		return set_aws_seed_provider(config, discovery, log);
 	}
 
 	return AS_NODE_PARAM_OK;
@@ -965,6 +1114,8 @@ int config_from_jsobject(as_config *config, Local<Object> configObj, AerospikeCl
 		cf_free(app_id);
 	}
 
+	// The Java client's default refresh timeout; the C client's is 10000.
+	config->discovery.refresh_timeout_ms = 2000;
 	if ((rc = get_optional_discovery_property(config, configObj, log)) !=
 		AS_NODE_PARAM_OK) {
 		goto Cleanup;
