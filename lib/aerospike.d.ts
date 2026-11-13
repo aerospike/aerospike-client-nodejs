@@ -7966,8 +7966,9 @@ export class Config {
     public ipMap?: Record<string, string>;
     /**
      * Where the client finds its seed hosts, in addition to or instead of
-     * <code>hosts</code>. With <code>provider: 'dns'</code>, the client
-     * resolves DNS names to seed hosts at connect and refreshes them.
+     * <code>hosts</code>. With <code>provider: 'dns'</code> the client
+     * resolves DNS names to seed hosts, and with <code>provider: 'aws-tags'</code>
+     * it lists EC2 instances by tag; it does so at connect and refreshes them.
      *
      * @example
      *
@@ -7982,7 +7983,8 @@ export class Config {
     /**
      * How the client translates the addresses that nodes advertise into
      * addresses it can reach. Applies to peer addresses, never to configured
-     * seed hosts. While a translator is set, <code>ipMap</code> is ignored.
+     * seed hosts. While <code>'port-map'</code> or <code>'pass-through'</code>
+     * is set, <code>ipMap</code> is ignored.
      *
      * @example
      *
@@ -10567,8 +10569,9 @@ export interface ConfigOptions {
     ipMap?: Record<string, string>;
     /**
      * Where the client finds its seed hosts, in addition to or instead of
-     * <code>hosts</code>. With <code>provider: 'dns'</code>, the client
-     * resolves DNS names to seed hosts at connect and refreshes them.
+     * <code>hosts</code>. With <code>provider: 'dns'</code> the client
+     * resolves DNS names to seed hosts, and with <code>provider: 'aws-tags'</code>
+     * it lists EC2 instances by tag; it does so at connect and refreshes them.
      *
      * @example
      *
@@ -10583,7 +10586,8 @@ export interface ConfigOptions {
     /**
      * How the client translates the addresses that nodes advertise into
      * addresses it can reach. Applies to peer addresses, never to configured
-     * seed hosts. While a translator is set, <code>ipMap</code> is ignored.
+     * seed hosts. While <code>'port-map'</code> or <code>'pass-through'</code>
+     * is set, <code>ipMap</code> is ignored.
      *
      * @example
      *
@@ -10947,15 +10951,16 @@ export interface ConfigOptions {
 export interface DnsDiscoveryConfig {
     /**
      * DNS names to resolve, queried in order as absolute names. Required.
+     * Names that differ only in case or in a trailing dot are duplicates.
      */
     names: string[];
     /**
      * <code>'A'</code> for A and AAAA records, or <code>'SRV'</code>, which
-     * also gives each host its port.
+     * also gives each host its port. Either case is accepted.
      *
      * @default 'A'
      */
-    recordType?: 'A' | 'SRV';
+    recordType?: 'A' | 'SRV' | 'a' | 'srv';
     /**
      * Port of the hosts resolved from A and AAAA records.
      *
@@ -10983,52 +10988,154 @@ export interface DnsDiscoveryConfig {
 }
 
 /**
+ * An EC2 <code>DescribeInstances</code> filter, {@link AwsDiscoveryConfig#filters}.
+ */
+export interface AwsDiscoveryFilter {
+    /**
+     * Filter name, for example <code>'tag:aerospike-cluster'</code>. It must
+     * not be <code>'instance-state-name'</code>: only running instances are used.
+     */
+    name: string;
+    /**
+     * One or more values.
+     */
+    values: string[];
+}
+
+/**
+ * Options for the aws-tags seed provider, {@link DiscoveryConfig#aws}.
+ * Credentials come from the static keys when set, otherwise from the
+ * standard AWS chain: environment variables, the shared credentials file,
+ * EKS web identity (IRSA), ECS and EKS Pod Identity, and EC2 instance
+ * metadata (IMDSv2).
+ */
+export interface AwsDiscoveryConfig {
+    /**
+     * AWS region, for example <code>'us-east-1'</code>. Required.
+     */
+    region: string;
+    /**
+     * Filters selecting the cluster's instances. At least one is required.
+     */
+    filters: AwsDiscoveryFilter[];
+    /**
+     * Which instance address becomes the seed host.
+     *
+     * @default 'privateIp'
+     */
+    addressField?: 'privateIp' | 'publicIp' | 'privateDns' | 'publicDns';
+    /**
+     * Port of the seed hosts.
+     *
+     * @default 3000
+     */
+    port?: number;
+    /**
+     * TLS name set on every discovered host.
+     */
+    tlsName?: string;
+    /**
+     * Time in milliseconds for one whole refresh. It must not exceed
+     * <code>refreshTimeoutMs</code>.
+     *
+     * @default 2000
+     */
+    timeoutMs?: number;
+    /**
+     * EC2 endpoint URL. By default <code>https://ec2.&lt;region&gt;.amazonaws.com</code>.
+     */
+    endpoint?: string;
+    /**
+     * File of PEM CA certificates for the AWS endpoints. By default the
+     * system's CA certificates are used.
+     */
+    caFile?: string;
+    /**
+     * Directory of hashed CA certificates for the AWS endpoints.
+     */
+    caPath?: string;
+    /**
+     * Static access key ID. Set together with <code>secretAccessKey</code>.
+     */
+    accessKeyId?: string;
+    /**
+     * Static secret access key. Set together with <code>accessKeyId</code>.
+     */
+    secretAccessKey?: string;
+    /**
+     * Session token for temporary static credentials.
+     */
+    sessionToken?: string;
+}
+
+/**
  * Seed discovery settings, {@link Config#discovery}.
+ *
+ * Invalid settings throw an {@link AerospikeError} with code
+ * {@link status.ERR_CLIENT} when the client is created.
  */
 export interface DiscoveryConfig {
     /**
-     * The seed provider. <code>'dns'</code> needs {@link DiscoveryConfig#dns}.
+     * The seed provider: <code>'static'</code> (the default) uses only
+     * <code>hosts</code>; <code>'dns'</code> needs {@link DiscoveryConfig#dns};
+     * <code>'aws-tags'</code> needs {@link DiscoveryConfig#aws} and runs only
+     * in thread mode.
+     *
+     * @default 'static'
      */
-    provider?: 'dns';
+    provider?: 'static' | 'dns' | 'aws-tags' | null;
     /**
      * DNS seed provider options.
      */
     dns?: DnsDiscoveryConfig;
     /**
-     * How discovered seeds combine with <code>hosts</code>:
-     * <code>'merge'</code> uses <code>hosts</code> first, then the discovered
-     * seeds; <code>'replace'</code> does the same at connect, then lets each
-     * later refresh replace the list (an empty result keeps the previous
-     * list); <code>'discoveryOnly'</code> uses only the discovered seeds, and
-     * <code>hosts</code> when discovery returns none. With any policy, a
-     * discovery failure at connect falls back to <code>hosts</code>, and a
-     * failed refresh after connect keeps the previous seeds.
+     * aws-tags seed provider options.
+     */
+    aws?: AwsDiscoveryConfig;
+    /**
+     * How discovered seeds combine with <code>hosts</code>.
+     * <ul>
+     * <li><code>'merge'</code>: <code>hosts</code> first, then the discovered
+     * seeds. Use it when <code>hosts</code> is still a reliable way in.</li>
+     * <li><code>'replace'</code>: the same at connect; after that each
+     * refresh's discovered seeds replace the list (an empty result keeps the
+     * previous list). Use it when <code>hosts</code> may go stale.</li>
+     * <li><code>'discoveryOnly'</code>: only the discovered seeds, and
+     * <code>hosts</code> when discovery returns none. Use it when
+     * <code>hosts</code> is only an emergency fallback.</li>
+     * </ul>
+     * With any policy, a discovery failure at connect falls back to
+     * <code>hosts</code>, and a failed refresh after connect keeps the
+     * previous seeds.
      *
      * @default 'merge'
      */
-    mergePolicy?: 'merge' | 'replace' | 'discoveryOnly';
+    mergePolicy?: 'merge' | 'replace' | 'discoveryOnly' | null;
     /**
      * Where refreshes run: a client-owned thread, or the tend thread within
      * <code>tendRefreshDeadlineMs</code>.
      *
      * @default 'thread'
      */
-    executionMode?: 'thread' | 'tend';
+    executionMode?: 'thread' | 'tend' | null;
     /**
-     * Time between refreshes in milliseconds.
+     * Time between refreshes in milliseconds. It must be at least
+     * {@link Config#tenderInterval}.
      *
      * @default 30000
      */
     refreshIntervalMs?: number;
     /**
      * Longest wait for a refresh in thread mode, including the first one at
-     * connect, in milliseconds.
+     * connect, in milliseconds. A refresh that takes longer is logged, and its
+     * result is still used when it arrives.
      *
-     * @default 10000
+     * @default 2000
      */
     refreshTimeoutMs?: number;
     /**
-     * Longest time a refresh may take in tend mode, in milliseconds.
+     * Longest time a refresh may take in tend mode, in milliseconds. At most
+     * half of {@link Config#tenderInterval}.
      *
      * @default 100
      */
@@ -11037,29 +11144,40 @@ export interface DiscoveryConfig {
 
 /**
  * Address translation settings, {@link Config#translation}.
+ *
+ * Invalid settings throw an {@link AerospikeError} with code
+ * {@link status.ERR_CLIENT} when the client is created.
  */
 export interface TranslationConfig {
     /**
+     * <code>'static-map'</code> (the default) replaces advertised hosts using
+     * {@link TranslationConfig#staticMap} or {@link Config#ipMap};
      * <code>'port-map'</code> maps advertised addresses with
      * {@link TranslationConfig#portMap}; <code>'pass-through'</code> uses them
      * as they are.
+     *
+     * @default 'static-map'
      */
-    provider?: 'port-map' | 'pass-through';
+    provider?: 'static-map' | 'port-map' | 'pass-through' | null;
     /**
      * Advertised <code>host:port</code>, or node name, to the
      * <code>host:port</code> to connect to. IPv6 hosts go in brackets.
      */
     portMap?: Record<string, string>;
     /**
-     * What happens to an advertised address that isn't mapped:
-     * <code>'passThrough'</code> connects to it anyway; <code>'strict'</code>
-     * skips that node, logs a warning and checks it again on every tend.
-     * Connect fails with {@link status.ERR_TRANSLATION_MISS} only when no node
-     * can be connected because of it.
+     * Advertised host to the host to connect to; the port is kept. The same
+     * as {@link Config#ipMap}; set one or the other.
+     */
+    staticMap?: Record<string, string>;
+    /**
+     * What happens to an advertised address that isn't mapped, with any
+     * provider including {@link Config#ipMap}: <code>'passThrough'</code>
+     * connects to it anyway; <code>'strict'</code> skips that node, logs a
+     * warning and checks it again on every tend.
      *
      * @default 'passThrough'
      */
-    onMiss?: 'passThrough' | 'strict';
+    onMiss?: 'passThrough' | 'strict' | null;
 }
 
 export interface ConfigPolicies {

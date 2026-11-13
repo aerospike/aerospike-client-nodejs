@@ -30,6 +30,7 @@ import * as Aerospike from '../../lib/aerospike.js'
 import * as helper from '../test_helper.ts'
 import { connectError } from './helpers.ts'
 import { startDnsServer, DnsServer } from './dns_server.ts'
+import { startEc2Server } from './ec2_server.ts'
 
 const Config = Aerospike.Config
 const native = require('../../lib/native.js')
@@ -58,6 +59,55 @@ describe('discovery and translation config #noserver', function () {
       const config = new Config({ discovery: null, translation: null } as any)
       expect(config).to.not.have.property('discovery')
       expect(config).to.not.have.property('translation')
+    })
+
+    it('drops unset values and the static provider, and upper-cases the record type', function () {
+      const config = new Config({
+        discovery: { provider: 'static', mergePolicy: null, executionMode: undefined },
+        translation: { provider: null, onMiss: null }
+      } as any)
+      expect(config.discovery).to.eql({})
+      expect(config.translation).to.eql({})
+      const dns = new Config({ discovery: { provider: 'dns', dns: { names: ['a.example'], recordType: 'srv', tlsName: null } } } as any)
+      expect(dns.discovery).to.eql({ provider: 'dns', dns: { names: ['a.example'], recordType: 'SRV' } })
+    })
+
+    it('does not change the options it was given', function () {
+      const discovery: any = { provider: 'dns', dns: { names: ['a.example'], recordType: 'srv' }, mergePolicy: null }
+      const translation: any = { provider: 'static-map', staticMap: { '10.0.0.1': 'gw' } }
+      const copy = JSON.parse(JSON.stringify({ discovery, translation }))
+      Aerospike.client({ hosts: 'h:3000', discovery, translation })
+      expect({ discovery, translation }).to.eql(copy)
+    })
+
+    it('turns static-map with staticMap into ipMap', function () {
+      const config = new Config({ translation: { provider: 'static-map', staticMap: { '10.0.0.1': 'gw.example.com' }, onMiss: 'strict' } })
+      expect(config.ipMap).to.eql({ '10.0.0.1': 'gw.example.com' })
+      expect(config.translation).to.eql({ onMiss: 'strict' })
+    })
+
+    it('keeps ipMap with static-map and no staticMap', function () {
+      const config = new Config({ ipMap: { '10.0.0.1': 'gw' }, translation: { provider: 'static-map' } })
+      expect(config.ipMap).to.eql({ '10.0.0.1': 'gw' })
+      expect(config.translation).to.eql({})
+    })
+
+    it('treats an empty cluster name as none', function () {
+      expect(new Config({ clusterName: '' }).clusterName).to.be.undefined
+      expect(new Config({ clusterName: 'prod' }).clusterName).to.equal('prod')
+    })
+
+    it('copies the aws-tags options', function () {
+      const aws = { region: 'eu-west-1', filters: [{ name: 'tag:cluster', values: ['a', 'b'] }], addressField: 'publicDns' as const, port: 4000, tlsName: 'tls1', timeoutMs: 1500, endpoint: 'https://ec2.example.com', caFile: '/ca.pem', accessKeyId: 'AKID', secretAccessKey: 'secret', sessionToken: 'token' }
+      expect(new Config({ discovery: { provider: 'aws-tags', aws } }).discovery).to.eql({ provider: 'aws-tags', aws })
+    })
+
+    it('accepts limits that are exactly met', function () {
+      expect(() => new Config({ discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 2000 } } })).to.not.throw()
+      expect(() => new Config({ tenderInterval: 30000, discovery: { provider: 'dns', dns: { names: ['a'] } } })).to.not.throw()
+      expect(() => new Config({ tenderInterval: 200, discovery: { provider: 'dns', executionMode: 'tend', dns: { names: ['a'], timeoutMs: 100 } } })).to.not.throw()
+      // The limits apply only to a provider that refreshes.
+      expect(() => new Config({ tenderInterval: 50000, discovery: { executionMode: 'tend', tendRefreshDeadlineMs: 50000 } })).to.not.throw()
     })
 
     describe('hosts default', function () {
@@ -92,12 +142,18 @@ describe('discovery and translation config #noserver', function () {
     const invalid: Array<[string, any, RegExp]> = [
       ['discovery not an object', { discovery: 'dns' }, /discovery must be an object/],
       ['an unknown discovery option', { discovery: { refreshInterval: 5 } }, /discovery.refreshInterval is not a valid option/],
-      ['an unknown provider', { discovery: { provider: 'aws' } }, /discovery.provider must be one of 'dns'/],
+      ['an unknown provider', { discovery: { provider: 'aws' } }, /discovery.provider must be one of 'static', 'dns', 'aws-tags'/],
       ['dns without the dns provider', { discovery: { dns } }, /discovery.dns is only valid/],
       ['the dns provider without dns', { discovery: { provider: 'dns' } }, /discovery.dns must be an object/],
       ['no dns names', { discovery: { provider: 'dns', dns: { names: [] } } }, /at least one DNS name/],
       ['an empty dns name', { discovery: { provider: 'dns', dns: { names: [''] } } }, /non-empty strings/],
-      ['duplicate dns names', { discovery: { provider: 'dns', dns: { names: ['a.example', 'A.example'] } } }, /more than once/],
+      ['duplicate dns names', { discovery: { provider: 'dns', dns: { names: ['a.example', 'A.example'] } } }, /duplicate name 'A.example'/],
+      ['dns names that differ by a trailing dot', { discovery: { provider: 'dns', dns: { names: ['a.example', 'a.example.'] } } }, /duplicate name 'a.example.'/],
+      ['the root dns name', { discovery: { provider: 'dns', dns: { names: ['.'] } } }, /Invalid DNS seed provider name: '.'/],
+      ['a dns name with a space', { discovery: { provider: 'dns', dns: { names: ['a b'] } } }, /Invalid DNS seed provider name: 'a b'/],
+      ['a resolver that is not an IP address', { discovery: { provider: 'dns', dns: { names: ['a'], servers: ['ns.example'] } } }, /server: 'ns.example': expected an IP address/],
+      ['a resolver with a bad port', { discovery: { provider: 'dns', dns: { names: ['a'], servers: ['10.0.0.2:0'] } } }, /server: '10.0.0.2:0': invalid port/],
+      ['an unclosed IPv6 resolver', { discovery: { provider: 'dns', dns: { names: ['a'], servers: ['[::1:53'] } } }, /Invalid DNS seed provider server: '\[::1:53'/],
       ['an unknown dns option', { discovery: { provider: 'dns', dns: { names: ['a'], ttl: 1 } } }, /discovery.dns.ttl is not a valid option/],
       ['a bad record type', { discovery: { provider: 'dns', dns: { names: ['a'], recordType: 'AAAA' } } }, /recordType must be one of/],
       ['a port out of range', { discovery: { provider: 'dns', dns: { names: ['a'], port: 70000 } } }, /port must be an integer from 1 to 65535/],
@@ -111,19 +167,55 @@ describe('discovery and translation config #noserver', function () {
       ['a negative tend deadline', { discovery: { tendRefreshDeadlineMs: -1 } }, /tendRefreshDeadlineMs must be an integer/],
       ['translation not an object', { translation: [] }, /translation must be an object/],
       ['an unknown translation option', { translation: { entries: {} } }, /translation.entries is not a valid option/],
-      ['an unknown translator', { translation: { provider: 'static-map' } }, /translation.provider must be one of/],
+      ['an unknown translator', { translation: { provider: 'nat' } }, /translation.provider must be one of 'static-map', 'port-map', 'pass-through'/],
+      ['staticMap without static-map', { translation: { staticMap: {} } }, /staticMap is only valid/],
+      ['a staticMap entry that is not a string', { translation: { provider: 'static-map', staticMap: { a: 1 } } }, /translation.staticMap entry "a"/],
+      ['both staticMap and ipMap', { ipMap: { a: 'b' }, translation: { provider: 'static-map', staticMap: { c: 'd' } } }, /Set translation.staticMap or ipMap, not both/],
+      ['an ipMap that is not an object', { ipMap: 'a=b' }, /ipMap must be an object/],
       ['portMap without port-map', { translation: { provider: 'pass-through', portMap: {} } }, /portMap is only valid/],
       ['port-map without portMap', { translation: { provider: 'port-map' } }, /portMap must be an object/],
       ['a portMap value without a port', { translation: { provider: 'port-map', portMap: { '10.0.0.1:3000': 'gw' } } }, /must map to a host:port/],
       ['a portMap value with a bad port', { translation: { provider: 'port-map', portMap: { '10.0.0.1:3000': 'gw:0' } } }, /must map to a host:port/],
       ['an unbracketed IPv6 key', { translation: { provider: 'port-map', portMap: { '::1:3000': 'gw:3000' } } }, /must be a host:port or a node name/],
-      ['a bad onMiss', { translation: { onMiss: 'STRICT' } }, /onMiss must be one of/]
+      ['a bad onMiss', { translation: { onMiss: 'STRICT' } }, /onMiss must be one of/],
+      // The Java client's limits, for a provider that refreshes.
+      ['a refresh interval below the tend interval', { tenderInterval: 250, discovery: { provider: 'dns', dns, refreshIntervalMs: 200 } }, /Discovery refresh interval 200 must be greater or equal to the tend interval 250/],
+      ['the default refresh interval below a long tend interval', { tenderInterval: 60000, discovery: { provider: 'dns', dns } }, /Discovery refresh interval 30000 must be greater or equal to the tend interval 60000/],
+      ['a DNS timeout over the default refresh timeout', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 2001 } } }, /DNS seed provider timeout 2001 must be less or equal to the discovery refresh timeout 2000/],
+      ['a DNS timeout over the refresh timeout', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 80 }, refreshTimeoutMs: 50 } }, /DNS seed provider timeout 80 must be less or equal to the discovery refresh timeout 50/],
+      ['a tend deadline over half the tend interval', { tenderInterval: 150, discovery: { provider: 'dns', dns, executionMode: 'tend', refreshIntervalMs: 1000 } }, /Invalid discovery tend refresh deadline: 100. Must be > 0 and <= tend interval \/ 2 \(75\)/],
+      ['a DNS timeout over the tend deadline', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 80 }, executionMode: 'tend', tendRefreshDeadlineMs: 50 } }, /DNS seed provider timeout 80 must be less or equal to the discovery tend refresh deadline 50/],
+      ['aws-tags in tend mode', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] }, executionMode: 'tend' } }, /'aws-tags' runs only in discovery.executionMode 'thread'/],
+      ['an AWS timeout over the refresh timeout', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], timeoutMs: 3000 } } }, /AWS EC2 seed provider timeout 3000 must be less or equal to the discovery refresh timeout 2000/],
+      // aws-tags options.
+      ['aws without the aws-tags provider', { discovery: { aws: {} } }, /discovery.aws is only valid with discovery.provider 'aws-tags'/],
+      ['the aws-tags provider without aws', { discovery: { provider: 'aws-tags' } }, /discovery.aws must be an object/],
+      ['an unknown aws option', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], profile: 'x' } } }, /discovery.aws.profile is not a valid option/],
+      ['a bad region', { discovery: { provider: 'aws-tags', aws: { region: 'US East', filters: [{ name: 'tag:a', values: ['b'] }] } } }, /discovery.aws.region must be an AWS region/],
+      ['no filters', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [] } } }, /at least one filter/],
+      ['a filter on instance-state-name', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'instance-state-name', values: ['running'] }] } } }, /must not filter on instance-state-name/],
+      ['duplicate filters', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }, { name: 'tag:a', values: ['c'] }] } } }, /lists "tag:a" more than once/],
+      ['a filter with no values', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: [] }] } } }, /"tag:a" must list at least one value/],
+      ['a filter with an empty value', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: [''] }] } } }, /"tag:a" values must be an array of non-empty strings/],
+      ['a bad address field', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], addressField: 'private_ip' } } }, /addressField must be one of 'privateIp', 'publicIp', 'privateDns', 'publicDns'/],
+      ['an empty aws tls name', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], tlsName: '' } } }, /discovery.aws.tlsName must be a non-empty string/],
+      ['an access key without a secret', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], accessKeyId: 'AKID' } } }, /must be set together/],
+      ['a session token without keys', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], sessionToken: 't' } } }, /sessionToken needs/]
     ]
 
     invalid.forEach(([name, options, message]) => {
-      it(`rejects ${name} with a TypeError`, function () {
-        expect(() => new Config(options as ConfigOptions)).to.throw(TypeError, message)
-        expect(() => Aerospike.client(options as ConfigOptions)).to.throw(TypeError, message)
+      it(`rejects ${name} with an AerospikeError`, function () {
+        for (const create of [() => new Config(options as ConfigOptions), () => Aerospike.client(options as ConfigOptions)]) {
+          let error: any
+          try {
+            create()
+          } catch (err) {
+            error = err
+          }
+          expect(error).to.be.instanceof(Aerospike.AerospikeError)
+          expect(error.code).to.equal(Aerospike.status.ERR_CLIENT)
+          expect(error.message).to.match(message)
+        }
       })
     })
 
@@ -162,7 +254,19 @@ describe('discovery and translation config #noserver', function () {
       ['discovery as an array', { discovery: [] }],
       ['translation as an array', { translation: [] }],
       ['dns as an array', { discovery: { provider: 'dns', dns: [] } }],
-      ['dns names of null with the dns provider', { discovery: { provider: 'dns', dns: { names: null } } }]
+      ['dns names of null with the dns provider', { discovery: { provider: 'dns', dns: { names: null } } }],
+      ['aws not an object', { discovery: { provider: 'aws-tags', aws: 'us-east-1' } }],
+      ['aws filters not an array', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: {} } } }],
+      ['an aws filter that is not an object', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: ['tag:a'] } } }],
+      ['an aws filter name that is not a string', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 1, values: ['b'] }] } } }],
+      ['aws filter values not an array', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: 'b' }] } } }],
+      ['a bad aws address field', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], addressField: 'ip' } } }],
+      ['an aws port of 0', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], port: 0 } } }],
+      ['an aws region that is not a string', { discovery: { provider: 'aws-tags', aws: { region: 1, filters: [{ name: 'tag:a', values: ['b'] }] } } }],
+      ['an aws timeout that is not a number', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], timeoutMs: '100' } } }],
+      ['an invalid aws region', { discovery: { provider: 'aws-tags', aws: { region: 'US', filters: [{ name: 'tag:a', values: ['b'] }] } } }],
+      ['aws-tags in tend mode', { discovery: { provider: 'aws-tags', executionMode: 'tend', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] } } }],
+      ['an aws endpoint that is not http or https', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], endpoint: 'ftp://x' } } }]
     ]
 
     nativeInvalid.forEach(([name, options]) => {
@@ -188,6 +292,12 @@ describe('discovery and translation config #noserver', function () {
         translation: { provider: 'port-map', portMap: {}, onMiss: 'passThrough' }
       }
       expect(native.client(options)).to.not.be.null
+    })
+
+    it('accepts the static and aws-tags providers in the native layer', function () {
+      expect(native.client({ hosts: 'localhost:3000', discovery: { provider: 'static' } })).to.not.be.null
+      const aws = { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b', 'c'] }, { name: 'tag:d', values: ['e'] }], addressField: 'privateDns', port: 4000, tlsName: 'tls1', timeoutMs: 1500, endpoint: 'http://127.0.0.1:1', accessKeyId: 'AKID', secretAccessKey: 'secret', sessionToken: 'token' }
+      expect(native.client({ hosts: 'localhost:3000', discovery: { provider: 'aws-tags', aws } })).to.not.be.null
     })
 
     it('accepts translation with only onMiss in the native layer', function () {
@@ -399,6 +509,9 @@ describe('discovery seed refresh and limits', function () {
     } finally {
       client.close()
     }
+    // close() returns at once and the C client stops discovery on its close
+    // thread, so a refresh already due may still run just after it returns.
+    await new Promise(resolve => setTimeout(resolve, 500))
     const afterClose = await dns.queries()
     await new Promise(resolve => setTimeout(resolve, 1000))
     expect(await dns.queries()).to.equal(afterClose)
@@ -429,21 +542,96 @@ describe('discovery seed refresh and limits', function () {
     expect(readLog()).to.match(/Seed provider dns refresh failed: .*seeds\.test: NXDOMAIN\. Keeping the previous seeds/)
   })
 
-  // C checks these when connecting and names the C settings in its messages.
-  const limits: Array<[string, any, any, RegExp]> = [
-    ['a DNS timeout over the tend deadline in tend mode', { executionMode: 'tend', tendRefreshDeadlineMs: 50 }, { timeoutMs: 80 }, /timeout_ms 80 exceeds discovery tend_refresh_deadline_ms 50/],
-    ['a DNS timeout over the refresh timeout in thread mode', { refreshTimeoutMs: 50 }, { timeoutMs: 80 }, /timeout_ms 80 exceeds discovery refresh_timeout_ms 50/],
-    ['a refresh interval below the tend interval', { refreshIntervalMs: 200 }, {}, /refresh_interval_ms 200 must be greater or equal to the tend interval 250/]
-  ]
+  it('takes the provider limits from refreshTimeoutMs when it is set', async function () {
+    const client: Cli = await Aerospike.connect(config(['seeds.test'], { refreshTimeoutMs: 3000 }, {}))
+    client.close()
+    const options: any = config(['seeds.test'], { refreshTimeoutMs: 3000 })
+    options.discovery.dns.timeoutMs = 2500
+    const withTimeout: Cli = await Aerospike.connect(options)
+    withTimeout.close()
+  })
+})
 
-  limits.forEach(([name, discovery, dnsOptions, message]) => {
-    it(`fails to connect with ERR_PARAM for ${name}`, async function () {
-      const options: any = config(['seeds.test'], discovery)
-      Object.assign(options.discovery.dns, dnsOptions)
-      const error = await connectError(options)
-      expect(error.code).to.equal(Aerospike.status.ERR_PARAM)
-      expect(error.message).to.match(message)
+describe('discovery with the aws-tags provider', function () {
+  this.timeout(20000)
+
+  const hosts: any = helper.config.hosts
+  const seed: any = Array.isArray(hosts) ? hosts[0] : null
+
+  before(function () {
+    if (!seed || !net.isIP(seed.addr)) this.skip()
+  })
+
+  function awsConfig (endpoint: string, aws: any = {}): ConfigOptions {
+    return Object.assign({}, helper.config, {
+      hosts: [],
+      discovery: {
+        provider: 'aws-tags',
+        aws: Object.assign({ region: 'us-east-1', filters: [{ name: 'tag:cluster', values: ['test'] }], endpoint, port: seed.port, accessKeyId: 'AKIDEXAMPLE', secretAccessKey: 'wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY' }, aws)
+      }
     })
+  }
+
+  it('connects through the instances EC2 lists, with the filters it was given', async function () {
+    const ec2 = await startEc2Server([seed.addr])
+    try {
+      const client: Cli = await Aerospike.connect(awsConfig(ec2.endpoint))
+      try {
+        expect(client.isConnected()).to.be.true
+      } finally {
+        client.close()
+      }
+      const [request] = await ec2.requests()
+      expect(request).to.include('Action=DescribeInstances')
+      expect(request).to.include('Filter.1.Name=tag%3Acluster&Filter.1.Value.1=test')
+      expect(request).to.include('Filter.2.Name=instance-state-name&Filter.2.Value.1=running')
+    } finally {
+      await ec2.stop()
+    }
+  })
+
+  it('fails with ERR_SEED_DISCOVERY_FAILED when EC2 cannot be reached and there are no hosts', async function () {
+    const error = await connectError(awsConfig('http://127.0.0.1:1', { timeoutMs: 500 }))
+    expect(error.code).to.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
+    expect(error.message).to.match(/Seed provider aws-tags failed and no seed host is left/)
+  })
+
+  it('treats an empty EC2 listing as a result, not a discovery failure', async function () {
+    const ec2 = await startEc2Server([])
+    try {
+      const error = await connectError(awsConfig(ec2.endpoint))
+      expect(error.code).to.not.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
+      expect(error.message).to.match(/Failed to connect/)
+    } finally {
+      await ec2.stop()
+    }
+  })
+})
+
+describe('a seed TLS name without TLS #noserver', function () {
+  // Port 1 refuses the connection, so connect fails at once.
+  const log = { level: Aerospike.log.OFF }
+
+  async function failedConnect (hosts: any, extra: any = {}): Promise<any> {
+    return await connectError(Object.assign({ hosts, log, connTimeoutMs: 1000 }, extra))
+  }
+
+  it('adds the likely cause to the error, keeping its code', async function () {
+    const plain = await failedConnect('127.0.0.1:1')
+    const named = await failedConnect('127.0.0.1:tls1:1')
+    expect(named.code).to.equal(plain.code)
+    expect(named.message).to.equal(`${plain.message}. Seed host tlsName 'tls1' defined but client tls not enabled`)
+  })
+
+  it('finds the TLS name in a hosts array and in an IPv6 hosts string', async function () {
+    expect((await failedConnect([{ addr: '127.0.0.1', port: 1, tlsname: 'tls2' }])).message).to.match(/Seed host tlsName 'tls2' defined/)
+    expect((await failedConnect('[::1]:tls3:1')).message).to.match(/Seed host tlsName 'tls3' defined/)
+  })
+
+  it('adds nothing without a TLS name, or when TLS is on', async function () {
+    expect((await failedConnect('127.0.0.1:1')).message).to.not.match(/tlsName/)
+    expect((await failedConnect('[::1]:1')).message).to.not.match(/tlsName/)
+    expect((await failedConnect('127.0.0.1:tls1:1', { tls: { enable: true } })).message).to.not.match(/tlsName/)
   })
 })
 

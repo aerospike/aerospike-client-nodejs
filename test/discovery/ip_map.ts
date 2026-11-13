@@ -51,7 +51,7 @@ describe('ipMap #noserver', function () {
 
     it('names the bad entry in the error', function () {
       expect(() => new Config({ ipMap: { '10.0.0.5': 'gw', '10.0.0.6': 7 } } as any))
-        .to.throw(TypeError, 'ipMap entry "10.0.0.6" must map a non-empty host to a non-empty host string')
+        .to.throw(Aerospike.AerospikeError, 'ipMap entry "10.0.0.6" must map a non-empty host to a non-empty host string')
     })
   })
 
@@ -120,9 +120,9 @@ describe('ipMap #noserver', function () {
     ]
 
     invalid.forEach(([name, ipMap]) => {
-      it(`rejects ${name} with a TypeError naming ipMap`, function () {
-        expect(() => new Config({ ipMap } as ConfigOptions)).to.throw(TypeError, /ipMap/)
-        expect(() => Aerospike.client({ ipMap } as ConfigOptions)).to.throw(TypeError, /ipMap/)
+      it(`rejects ${name} with an AerospikeError naming ipMap`, function () {
+        expect(() => new Config({ ipMap } as ConfigOptions)).to.throw(Aerospike.AerospikeError, /ipMap/)
+        expect(() => Aerospike.client({ ipMap } as ConfigOptions)).to.throw(Aerospike.AerospikeError, /ipMap/)
       })
 
       // The native layer checks again, for callers that skip Config. It returns
