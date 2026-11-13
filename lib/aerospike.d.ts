@@ -11003,11 +11003,20 @@ export interface AwsDiscoveryFilter {
 }
 
 /**
- * Options for the aws-tags seed provider, {@link DiscoveryConfig#aws}.
+ * Options for the aws-tags seed provider, {@link DiscoveryConfig#aws}. It
+ * runs only in thread mode.
+ *
+ * Each refresh is one EC2 <code>DescribeInstances</code> call with the
+ * filters, for running instances only, in the given region of the account the
+ * credentials belong to. The only permission it needs is
+ * <code>ec2:DescribeInstances</code> on resource <code>*</code>. It doesn't
+ * reach instances in other accounts, such as an Aerospike Cloud cluster.
+ *
  * Credentials come from the static keys when set, otherwise from the
  * standard AWS chain: environment variables, the shared credentials file,
  * EKS web identity (IRSA), ECS and EKS Pod Identity, and EC2 instance
- * metadata (IMDSv2).
+ * metadata (IMDSv2). SSO, <code>credential_process</code> and assume-role
+ * profiles are not supported.
  */
 export interface AwsDiscoveryConfig {
     /**
@@ -11071,6 +11080,16 @@ export interface AwsDiscoveryConfig {
 /**
  * Seed discovery settings, {@link Config#discovery}.
  *
+ * With the dns or aws-tags provider, <code>connect()</code> can wait up to
+ * <code>refreshTimeoutMs</code> for the first seeds. If the client loses every
+ * node after connect, it re-seeds on the next tend from the seeds it has and,
+ * in thread mode, also asks for a refresh at once (at most once per
+ * <code>refreshIntervalMs</code>).
+ *
+ * These settings are fixed when the client is created. They are not
+ * dynamic config: a config file ({@link Config#configProvider}) can't set or
+ * change them.
+ *
  * Invalid settings throw an {@link AerospikeError} with code
  * {@link status.ERR_CLIENT} when the client is created.
  */
@@ -11106,7 +11125,8 @@ export interface DiscoveryConfig {
      * </ul>
      * With any policy, a discovery failure at connect falls back to
      * <code>hosts</code>, and a failed refresh after connect keeps the
-     * previous seeds.
+     * previous seeds. The combined list has each <code>host:port</code> once:
+     * the first occurrence wins, with its TLS name.
      *
      * @default 'merge'
      */
@@ -11137,6 +11157,15 @@ export interface DiscoveryConfig {
      * Longest time a refresh may take in tend mode, in milliseconds. At most
      * half of {@link Config#tenderInterval}.
      *
+     * The deadline is declared, not enforced: the refresh runs on the tend
+     * thread, so while it runs no other tending happens, which can slow
+     * commands. A refresh that runs past the deadline is logged and its
+     * result discarded. After three in a row the provider is no longer called
+     * and the seeds go back to those found at connect, with an error in the
+     * log, until a new client is created. Only the dns provider runs in tend
+     * mode, and its <code>timeoutMs</code> must fit within the deadline, which
+     * in practice means a local resolver.
+     *
      * @default 100
      */
     tendRefreshDeadlineMs?: number;
@@ -11144,6 +11173,15 @@ export interface DiscoveryConfig {
 
 /**
  * Address translation settings, {@link Config#translation}.
+ *
+ * Translation changes only where the client connects. With TLS, each node is
+ * still checked against its own TLS name, the one in the peer lists the
+ * server reports, never the translated host name. The certificate must match
+ * that name: an IP address matches only iPAddress SAN entries and a host name
+ * only dNSName entries, ignoring case, with at most one wildcard as the
+ * left-most label. A certificate that matches only through its common name
+ * (CN) or an older wildcard form still works but logs a deprecation warning
+ * once per name; that fallback will be removed in the next major release.
  *
  * Invalid settings throw an {@link AerospikeError} with code
  * {@link status.ERR_CLIENT} when the client is created.
@@ -11156,12 +11194,41 @@ export interface TranslationConfig {
      * {@link TranslationConfig#portMap}; <code>'pass-through'</code> uses them
      * as they are.
      *
+     * <code>'pass-through'</code> works only when every node advertises an
+     * address the client can reach, for example when each node has its own
+     * public or load balancer address set as its access address (with
+     * {@link Config#useAlternateAccessAddress} for the alternate one). Until
+     * server fix SERVER-1839 is released, check that the server can resolve
+     * any host name set as an access address.
+     *
+     * <code>'port-map'</code> and <code>'pass-through'</code> apply to peer
+     * addresses only; configured seed hosts are used as they are. The
+     * <code>'static-map'</code> map (<code>ipMap</code>) also applies to seed
+     * hosts, so switching from it changes how seeds are reached.
+     *
      * @default 'static-map'
      */
     provider?: 'static-map' | 'port-map' | 'pass-through' | null;
     /**
      * Advertised <code>host:port</code>, or node name, to the
-     * <code>host:port</code> to connect to. IPv6 hosts go in brackets.
+     * <code>host:port</code> to connect to. IPv6 hosts go in brackets. Write
+     * the keys against the addresses the client reads: the alternate access
+     * addresses when {@link Config#useAlternateAccessAddress} is on, the
+     * standard ones otherwise.
+     *
+     * A port per node behind one load balancer endpoint has a node ceiling:
+     * on AWS it is 50 nodes, whatever the setup, since a Network Load Balancer
+     * has 50 listeners (not adjustable) and PrivateLink doesn't raise it; more
+     * endpoints count against the 50 interface endpoints a VPC may have,
+     * shared with every other endpoint in it. GCP allows 1,000 per network
+     * endpoint group and Azure 1,000 rules. A Kubernetes NodePort range limits
+     * it too; the lower limit wins.
+     *
+     * When the load balancer's ports are arbitrary, each new node needs a new
+     * entry. When the port follows from the node's address, entries can be
+     * written ahead of time. A missing entry is never silent: with
+     * <code>onMiss: 'strict'</code> the node is skipped and logged, and with
+     * <code>'passThrough'</code> the client tries the advertised address.
      */
     portMap?: Record<string, string>;
     /**

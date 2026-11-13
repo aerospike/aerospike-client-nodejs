@@ -31,7 +31,10 @@ import type { Client as Cli, ConfigOptions } from '../../lib/aerospike.js'
 import * as Aerospike from '../../lib/aerospike.js'
 
 import { expect } from 'chai'
+import * as fs from 'fs'
 import * as net from 'net'
+import * as os from 'os'
+import * as path from 'path'
 import { info, advertisedPeers, connectError, addresses, waitFor } from './helpers.ts'
 import { startDnsServer, DnsServer } from './dns_server.ts'
 
@@ -132,6 +135,66 @@ describe('address translation against a multi-node cluster', function () {
     expect(found).to.eql([`${seedHost}:${seedPort}`, ...others.map(node => `[::1]:${node.port}`)].sort())
   })
 
+  // Connects with C client warnings written to a file, and returns the node
+  // addresses and the log text once the tends have run for a while.
+  async function connectWithLog (config: ConfigOptions, expected: number, ms = 1500): Promise<{ found: string[], text: string }> {
+    const file = path.join(os.tmpdir(), `translation-${process.pid}-${Date.now()}.log`)
+    const fd = fs.openSync(file, 'w')
+    // C client logging is process wide, so it goes through the default logger.
+    Aerospike.setDefaultLogging({ level: Aerospike.log.WARN, file: fd })
+    try {
+      const client: Cli = await Aerospike.connect(Object.assign({ hosts, tenderInterval: 250 }, config))
+      try {
+        await waitFor(() => client.getNodes().length >= expected, 5000)
+        await new Promise(resolve => setTimeout(resolve, ms))
+        return { found: addresses(client), text: fs.readFileSync(file, 'utf8') }
+      } finally {
+        client.close()
+        // The C client finishes closing on its own thread; let its last tend
+        // log here rather than in the next test's file.
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+    } finally {
+      Aerospike.setDefaultLogging(log)
+      fs.closeSync(fd)
+      fs.unlinkSync(file)
+    }
+  }
+
+  function count (text: string, pattern: RegExp): number {
+    return (text.match(new RegExp(pattern.source, 'g')) ?? []).length
+  }
+
+  it('logs a strict miss on every tend, and nothing for the same miss with passThrough', async function () {
+    const [unmapped, ...mapped] = nodes.filter(node => node.port !== seedPort)
+    const portMap = portMapByAddress([...mapped, nodes[nodes.length - 1]])
+    const miss = new RegExp(`Address translator port-map has no mapping for node ${unmapped.name} advertised address ${unmapped.advertised.replace(/[.[\]]/g, '\\$&')} in the standard list`)
+
+    const passThrough = await connectWithLog({ translation: { provider: 'port-map', portMap, onMiss: 'passThrough' } }, nodes.length - 1)
+    expect(passThrough.found).to.have.lengthOf(nodes.length - 1)
+    expect(passThrough.text).to.not.match(/has no mapping/)
+
+    const strict = await connectWithLog({ translation: { provider: 'port-map', portMap, onMiss: 'strict' } }, nodes.length - 1)
+    expect(strict.found).to.have.lengthOf(nodes.length - 1)
+    // A strict miss skips the node, and the client checks it again on each tend.
+    expect(count(strict.text, miss)).to.be.at.least(3)
+    expect(strict.text).to.match(/set translation\.on_miss to pass_through/)
+  })
+
+  it('keeps a node in use when a new node translates to its address', async function () {
+    // The seed node joins first; another node mapped onto the seed's address
+    // is the newcomer, so only it is skipped.
+    const other = nodes.find(node => node.port !== seedPort) as ClusterNode
+    const seed = nodes[nodes.length - 1]
+    const portMap = portMapByAddress()
+    portMap[other.advertised] = portMap[seed.advertised]
+    const { found, text } = await connectWithLog({ translation: { provider: 'port-map', portMap } }, nodes.length - 1)
+    expect(found).to.include(`${seedHost}:${seedPort}`)
+    expect(found).to.not.include(`${seedHost}:${other.port}`)
+    expect(found).to.have.lengthOf(nodes.length - 1)
+    expect(text).to.match(new RegExp(`Address translator port-map translated nodes (${other.name} and ${seed.name}|${seed.name} and ${other.name}) to the same address ${seedHost}:${seedPort}`))
+  })
+
   it('connects an unmapped node at its advertised address with onMiss passThrough', async function () {
     // The advertised address is unreachable here, so that node doesn't join.
     const [unmapped, ...mapped] = nodes.filter(node => node.port !== seedPort)
@@ -166,6 +229,16 @@ describe('address translation against a multi-node cluster', function () {
     expect(found).to.not.include(`${seedHost}:${others[0].port}`)
     expect(found).to.not.include(`${seedHost}:${others[1].port}`)
     expect(found).to.have.lengthOf(nodes.length - 2)
+  })
+
+  it('logs both nodes when two new nodes translate to the same address', async function () {
+    const others = nodes.filter(node => node.port !== seedPort)
+    const portMap = portMapByAddress()
+    portMap[others[1].advertised] = portMap[others[0].advertised]
+    const { text } = await connectWithLog({ translation: { provider: 'port-map', portMap } }, nodes.length - 2)
+    const pair = `(${others[0].name} and ${others[1].name}|${others[1].name} and ${others[0].name})`
+    // The collision is logged again on each tend.
+    expect(count(text, new RegExp(`translated nodes ${pair} to the same address ${seedHost}:${others[0].port}`))).to.be.at.least(2)
   })
 
   it('uses advertised addresses as they are with pass-through', async function () {

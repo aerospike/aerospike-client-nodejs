@@ -34,6 +34,13 @@ Breaking changes below require a **major** version bump; they are intended to sh
 * **Bug Fixes**
   * [CLIENT-5911] A string key that contains a zero byte is no longer cut at it. Before, `'a\u0000b'`, `'a\u0000c'` and `'a'` all reached the same record. A key without a zero byte keeps its digest, so existing records stay reachable. A record written earlier under a key with a zero byte is stored under the cut key's digest, so it can only be read with the cut key. A string key returned by the server, such as from a query with `policy.key.SEND`, is also returned whole.
 
+* **Deprecations**
+  * [CLIENT-5736] TLS name matching follows RFC 9525: an IP address matches only iPAddress SAN entries and a host name only dNSName entries, ignoring case, with at most one left-most wildcard. A server certificate that matches only through its common name (CN) or an older wildcard form still works but logs a deprecation warning once per name; that fallback will be removed in the next major release. Issue certificates with a matching SAN entry.
+
+* **Known Limitations**
+  * [CLIENT-5736] Pluggable discovery adds no npm dependency: the dns and aws-tags providers and address translation run in the C client.
+  * [CLIENT-5736] The AWS operational envelope is partly unvalidated: connection-pool behaviour against a real PrivateLink idle teardown and AWS's 50-listener-per-endpoint ceiling have not been exercised.
+
 * **Documentation**
   * String `toInteger` / `toDouble` / `b64Decode` / `toString` (operate and `exp.string`): document the server error contract (`ERR_OP_NOT_APPLICABLE` with conversion / UTF-8 / base64 subcodes; `toString` accepts integer, float, bool, string, blob and returns `ERR_BIN_INCOMPATIBLE_TYPE` for list/map/GeoJSON/HLL).
   * `exp.isTombstone()` / `exp.ops.IS_TOMBSTONE`: documented that the Node binding maps this API to Aerospike `_AS_EXP_CODE_IS_TOMBSTONE` only; a duplicate or incorrect mapping (for example to `NOT`) would break tombstone checks. See `src/main/enums/exp_enum.cc` maintainer comment.
