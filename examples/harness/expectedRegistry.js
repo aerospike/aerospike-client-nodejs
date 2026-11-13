@@ -48,6 +48,7 @@ const CANONICAL_EXAMPLE_NAMES = [
   'AddressTranslationPortMap',
   'AddressTranslationPassThrough',
   'SeedDiscoveryDns',
+  'SeedDiscoveryAwsTags',
   'Metrics',
   'MrtCommit',
   'MrtAbort',

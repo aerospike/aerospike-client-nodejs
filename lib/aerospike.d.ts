@@ -7825,6 +7825,8 @@ export class Client extends EventEmitter {
  * settings.
  *
  * @throws {TypeError} If invalid config values are passed.
+ * @throws {AerospikeError} With code ERR_CLIENT if the ipMap, discovery or
+ * translation settings are invalid.
  *
  * @example
  *
@@ -7951,10 +7953,21 @@ export class Config {
     public hosts: Host[] | string;
     /**
      * Map of host addresses the server reports to the addresses the client
-     * should use instead. Applies to seed hosts and to peer node addresses.
+     * should use instead. Applies to configured seed hosts (and those added
+     * with {@link Client#addSeedHost}) and to peer node addresses; seeds found
+     * by a {@link Config#discovery} provider are used as they are.
      *
      * Only the host is replaced; the port stays the same. Keys must match the
-     * address exactly as the server reports it.
+     * address exactly as the server reports it. An address with no entry is
+     * used as it is, unless <code>translation.onMiss</code> is
+     * <code>'strict'</code>, which skips that node. The same map can be set
+     * as <code>translation.staticMap</code> with
+     * <code>translation.provider: 'static-map'</code>; set one or the other.
+     * It is ignored while <code>translation.provider</code> is
+     * <code>'port-map'</code> or <code>'pass-through'</code>.
+     *
+     * Throws an {@link AerospikeError} with code {@link status.ERR_CLIENT}
+     * when the client is created if it is not an object of non-empty strings.
      *
      * @example
      *
@@ -7969,6 +7982,10 @@ export class Config {
      * <code>hosts</code>. With <code>provider: 'dns'</code> the client
      * resolves DNS names to seed hosts, and with <code>provider: 'aws-tags'</code>
      * it lists EC2 instances by tag; it does so at connect and refreshes them.
+     * With either provider and no <code>hosts</code>, there is no
+     * <code>localhost</code> default. If discovery fails at connect and no
+     * seed host is left, connect fails with
+     * {@link status.ERR_SEED_DISCOVERY_FAILED}. See {@link DiscoveryConfig}.
      *
      * @example
      *
@@ -7982,9 +7999,19 @@ export class Config {
     public discovery?: DiscoveryConfig;
     /**
      * How the client translates the addresses that nodes advertise into
-     * addresses it can reach. Applies to peer addresses, never to configured
-     * seed hosts. While <code>'port-map'</code> or <code>'pass-through'</code>
-     * is set, <code>ipMap</code> is ignored.
+     * addresses it can reach. <code>'port-map'</code> and
+     * <code>'pass-through'</code> apply to peer addresses, never to
+     * configured seed hosts, and while one of them is set <code>ipMap</code>
+     * is ignored (the client logs a warning at connect).
+     *
+     * A node skipped by a <code>'strict'</code> miss is logged at warning
+     * level and checked again on every tend. When a new node translates to the
+     * address of a node the client already uses, the new node is skipped; when
+     * two new nodes translate to the same address, both are skipped. Connect
+     * fails with {@link status.ERR_TRANSLATION_MISS} or
+     * {@link status.ERR_TRANSLATION_COLLISION} when no node can be connected
+     * because of it, or when a node was skipped for it at connect while
+     * another node could not be reached. See {@link TranslationConfig}.
      *
      * @example
      *
@@ -8251,7 +8278,11 @@ export class Config {
     public sharedMemory?: SharedMemory;
 
     /**
-     * Polling interval in milliseconds for cluster tender.
+     * Polling interval in milliseconds for cluster tender. There is no
+     * minimum; a shorter interval finds cluster changes sooner. With a
+     * {@link Config#discovery} provider, <code>refreshIntervalMs</code> must be
+     * at least this interval, and in tend mode <code>tendRefreshDeadlineMs</code>
+     * at most half of it.
      *
      * @default 1000
      */
@@ -10554,10 +10585,21 @@ export interface ConfigOptions {
     hosts?: Host[] | string;
     /**
      * Map of host addresses the server reports to the addresses the client
-     * should use instead. Applies to seed hosts and to peer node addresses.
+     * should use instead. Applies to configured seed hosts (and those added
+     * with {@link Client#addSeedHost}) and to peer node addresses; seeds found
+     * by a {@link Config#discovery} provider are used as they are.
      *
      * Only the host is replaced; the port stays the same. Keys must match the
-     * address exactly as the server reports it.
+     * address exactly as the server reports it. An address with no entry is
+     * used as it is, unless <code>translation.onMiss</code> is
+     * <code>'strict'</code>, which skips that node. The same map can be set
+     * as <code>translation.staticMap</code> with
+     * <code>translation.provider: 'static-map'</code>; set one or the other.
+     * It is ignored while <code>translation.provider</code> is
+     * <code>'port-map'</code> or <code>'pass-through'</code>.
+     *
+     * Throws an {@link AerospikeError} with code {@link status.ERR_CLIENT}
+     * when the client is created if it is not an object of non-empty strings.
      *
      * @example
      *
@@ -10572,6 +10614,10 @@ export interface ConfigOptions {
      * <code>hosts</code>. With <code>provider: 'dns'</code> the client
      * resolves DNS names to seed hosts, and with <code>provider: 'aws-tags'</code>
      * it lists EC2 instances by tag; it does so at connect and refreshes them.
+     * With either provider and no <code>hosts</code>, there is no
+     * <code>localhost</code> default. If discovery fails at connect and no
+     * seed host is left, connect fails with
+     * {@link status.ERR_SEED_DISCOVERY_FAILED}. See {@link DiscoveryConfig}.
      *
      * @example
      *
@@ -10585,9 +10631,19 @@ export interface ConfigOptions {
     discovery?: DiscoveryConfig;
     /**
      * How the client translates the addresses that nodes advertise into
-     * addresses it can reach. Applies to peer addresses, never to configured
-     * seed hosts. While <code>'port-map'</code> or <code>'pass-through'</code>
-     * is set, <code>ipMap</code> is ignored.
+     * addresses it can reach. <code>'port-map'</code> and
+     * <code>'pass-through'</code> apply to peer addresses, never to
+     * configured seed hosts, and while one of them is set <code>ipMap</code>
+     * is ignored (the client logs a warning at connect).
+     *
+     * A node skipped by a <code>'strict'</code> miss is logged at warning
+     * level and checked again on every tend. When a new node translates to the
+     * address of a node the client already uses, the new node is skipped; when
+     * two new nodes translate to the same address, both are skipped. Connect
+     * fails with {@link status.ERR_TRANSLATION_MISS} or
+     * {@link status.ERR_TRANSLATION_COLLISION} when no node can be connected
+     * because of it, or when a node was skipped for it at connect while
+     * another node could not be reached. See {@link TranslationConfig}.
      *
      * @example
      *
@@ -10854,7 +10910,11 @@ export interface ConfigOptions {
     sharedMemory?: SharedMemory;
 
     /**
-     * Polling interval in milliseconds for cluster tender.
+     * Polling interval in milliseconds for cluster tender. There is no
+     * minimum; a shorter interval finds cluster changes sooner. With a
+     * {@link Config#discovery} provider, <code>refreshIntervalMs</code> must be
+     * at least this interval, and in tend mode <code>tendRefreshDeadlineMs</code>
+     * at most half of it.
      *
      * @default 1000
      */
@@ -10960,17 +11020,17 @@ export interface DnsDiscoveryConfig {
      *
      * @default 'A'
      */
-    recordType?: 'A' | 'SRV' | 'a' | 'srv';
+    recordType?: 'A' | 'SRV' | 'a' | 'srv' | null;
     /**
      * Port of the hosts resolved from A and AAAA records.
      *
      * @default 3000
      */
-    port?: number;
+    port?: number | null;
     /**
      * TLS name set on every discovered host.
      */
-    tlsName?: string;
+    tlsName?: string | null;
     /**
      * Time in milliseconds for one whole refresh, across every name and
      * resolver. It must not exceed <code>refreshTimeoutMs</code> (thread mode)
@@ -10978,13 +11038,13 @@ export interface DnsDiscoveryConfig {
      *
      * @default 80
      */
-    timeoutMs?: number;
+    timeoutMs?: number | null;
     /**
      * Resolver IP addresses, each with an optional port, for example
      * <code>'10.0.0.2'</code> or <code>'[2001:db8::1]:53'</code>. By default
      * the system resolvers are used.
      */
-    servers?: string[];
+    servers?: string[] | null;
 }
 
 /**
@@ -11032,49 +11092,60 @@ export interface AwsDiscoveryConfig {
      *
      * @default 'privateIp'
      */
-    addressField?: 'privateIp' | 'publicIp' | 'privateDns' | 'publicDns';
+    addressField?: 'privateIp' | 'publicIp' | 'privateDns' | 'publicDns' | null;
     /**
      * Port of the seed hosts.
      *
      * @default 3000
      */
-    port?: number;
+    port?: number | null;
     /**
      * TLS name set on every discovered host.
      */
-    tlsName?: string;
+    tlsName?: string | null;
     /**
      * Time in milliseconds for one whole refresh. It must not exceed
      * <code>refreshTimeoutMs</code>.
      *
      * @default 2000
      */
-    timeoutMs?: number;
+    timeoutMs?: number | null;
     /**
-     * EC2 endpoint URL. By default <code>https://ec2.&lt;region&gt;.amazonaws.com</code>.
+     * EC2 endpoint URL: http or https, with a host and an optional port and
+     * path, and no query, fragment or user info. By default
+     * <code>https://ec2.&lt;region&gt;.amazonaws.com</code>.
      */
-    endpoint?: string;
+    endpoint?: string | null;
     /**
-     * File of PEM CA certificates for the AWS endpoints. By default the
-     * system's CA certificates are used.
+     * File of PEM CA certificates for the AWS endpoints (EC2, and STS for web
+     * identity credentials). By default the OpenSSL default paths are used,
+     * which honour <code>SSL_CERT_FILE</code> and <code>SSL_CERT_DIR</code>,
+     * plus the usual system bundle on Linux. On Windows those defaults are not
+     * the system certificate store, so set <code>caFile</code> (or
+     * <code>SSL_CERT_FILE</code>) there. It must be a readable file.
      */
-    caFile?: string;
+    caFile?: string | null;
     /**
-     * Directory of hashed CA certificates for the AWS endpoints.
+     * Directory of hashed CA certificates for the AWS endpoints, with or
+     * instead of <code>caFile</code>.
      */
-    caPath?: string;
+    caPath?: string | null;
     /**
-     * Static access key ID. Set together with <code>secretAccessKey</code>.
+     * Static access key ID, letters and digits. Set together with
+     * <code>secretAccessKey</code>.
      */
-    accessKeyId?: string;
+    accessKeyId?: string | null;
     /**
-     * Static secret access key. Set together with <code>accessKeyId</code>.
+     * Static secret access key, visible ASCII characters. Set together with
+     * <code>accessKeyId</code>. The client never logs it and removes it from
+     * any error message.
      */
-    secretAccessKey?: string;
+    secretAccessKey?: string | null;
     /**
-     * Session token for temporary static credentials.
+     * Session token for temporary static credentials, visible ASCII
+     * characters.
      */
-    sessionToken?: string;
+    sessionToken?: string | null;
 }
 
 /**
@@ -11092,6 +11163,16 @@ export interface AwsDiscoveryConfig {
  *
  * Invalid settings throw an {@link AerospikeError} with code
  * {@link status.ERR_CLIENT} when the client is created.
+ *
+ * The C client's log lines use its own setting names: <code>merge_policy</code>,
+ * <code>execution_mode</code>, <code>refresh_interval_ms</code>,
+ * <code>refresh_timeout_ms</code>, <code>tend_refresh_deadline_ms</code>,
+ * <code>timeout_ms</code> and <code>translation.on_miss</code> are
+ * <code>mergePolicy</code>, <code>executionMode</code>,
+ * <code>refreshIntervalMs</code>, <code>refreshTimeoutMs</code>,
+ * <code>tendRefreshDeadlineMs</code>, <code>timeoutMs</code> and
+ * <code>translation.onMiss</code> here, and <code>pass_through</code> is
+ * <code>'passThrough'</code>.
  */
 export interface DiscoveryConfig {
     /**
@@ -11106,11 +11187,11 @@ export interface DiscoveryConfig {
     /**
      * DNS seed provider options.
      */
-    dns?: DnsDiscoveryConfig;
+    dns?: DnsDiscoveryConfig | null;
     /**
      * aws-tags seed provider options.
      */
-    aws?: AwsDiscoveryConfig;
+    aws?: AwsDiscoveryConfig | null;
     /**
      * How discovered seeds combine with <code>hosts</code>.
      * <ul>
@@ -11144,7 +11225,7 @@ export interface DiscoveryConfig {
      *
      * @default 30000
      */
-    refreshIntervalMs?: number;
+    refreshIntervalMs?: number | null;
     /**
      * Longest wait for a refresh in thread mode, including the first one at
      * connect, in milliseconds. A refresh that takes longer is logged, and its
@@ -11152,7 +11233,7 @@ export interface DiscoveryConfig {
      *
      * @default 2000
      */
-    refreshTimeoutMs?: number;
+    refreshTimeoutMs?: number | null;
     /**
      * Longest time a refresh may take in tend mode, in milliseconds. At most
      * half of {@link Config#tenderInterval}.
@@ -11168,7 +11249,7 @@ export interface DiscoveryConfig {
      *
      * @default 100
      */
-    tendRefreshDeadlineMs?: number;
+    tendRefreshDeadlineMs?: number | null;
 }
 
 /**
@@ -11182,6 +11263,11 @@ export interface DiscoveryConfig {
  * left-most label. A certificate that matches only through its common name
  * (CN) or an older wildcard form still works but logs a deprecation warning
  * once per name; that fallback will be removed in the next major release.
+ *
+ * With {@link Config#useAlternateAccessAddress}, a node that has no
+ * alternate access address is an error: it is logged at error level and the
+ * node is skipped, and if the seed is the only node connected at that point,
+ * connect fails with {@link status.ERR_INVALID_NODE}.
  *
  * Invalid settings throw an {@link AerospikeError} with code
  * {@link status.ERR_CLIENT} when the client is created.
@@ -11226,16 +11312,18 @@ export interface TranslationConfig {
      *
      * When the load balancer's ports are arbitrary, each new node needs a new
      * entry. When the port follows from the node's address, entries can be
-     * written ahead of time. A missing entry is never silent: with
-     * <code>onMiss: 'strict'</code> the node is skipped and logged, and with
-     * <code>'passThrough'</code> the client tries the advertised address.
+     * written ahead of time. With <code>onMiss: 'strict'</code> a missing
+     * entry is logged on every tend and the node is skipped; with
+     * <code>'passThrough'</code> the client tries the advertised address and
+     * logs nothing about the missing entry, so use <code>'strict'</code> to
+     * see it.
      */
-    portMap?: Record<string, string>;
+    portMap?: Record<string, string> | null;
     /**
      * Advertised host to the host to connect to; the port is kept. The same
      * as {@link Config#ipMap}; set one or the other.
      */
-    staticMap?: Record<string, string>;
+    staticMap?: Record<string, string> | null;
     /**
      * What happens to an advertised address that isn't mapped, with any
      * provider including {@link Config#ipMap}: <code>'passThrough'</code>

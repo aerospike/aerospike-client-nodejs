@@ -98,8 +98,48 @@ describe('discovery and translation config #noserver', function () {
     })
 
     it('copies the aws-tags options', function () {
-      const aws = { region: 'eu-west-1', filters: [{ name: 'tag:cluster', values: ['a', 'b'] }], addressField: 'publicDns' as const, port: 4000, tlsName: 'tls1', timeoutMs: 1500, endpoint: 'https://ec2.example.com', caFile: '/ca.pem', accessKeyId: 'AKID', secretAccessKey: 'secret', sessionToken: 'token' }
+      const aws = { region: 'eu-west-1', filters: [{ name: 'tag:cluster', values: ['a', 'b'] }], addressField: 'publicDns' as const, port: 4000, tlsName: 'tls1', timeoutMs: 1500, endpoint: 'https://ec2.example.com', caFile: __filename, accessKeyId: 'AKID', secretAccessKey: 'secret', sessionToken: 'token' }
       expect(new Config({ discovery: { provider: 'aws-tags', aws } }).discovery).to.eql({ provider: 'aws-tags', aws })
+    })
+
+    it('accepts any tend interval, with no minimum', function () {
+      // The Java client rejects a tend interval below 250 ms; Node keeps
+      // accepting it, so a client that tends more often keeps doing so.
+      expect(() => new Config({ tenderInterval: 100, discovery: { provider: 'dns', dns: { names: ['a'] } } })).to.not.throw()
+      expect(new Config({ tenderInterval: 100 }).tenderInterval).to.equal(100)
+    })
+
+    it('accepts valid aws-tags endpoints, CA files and keys', function () {
+      const aws = { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] }
+      for (const extra of [{ endpoint: 'http://127.0.0.1:8080/ec2' }, { endpoint: 'https://[::1]:443' }, { caFile: __filename, caPath: __dirname },
+        { accessKeyId: 'AKIDEXAMPLE', secretAccessKey: 'wJalr/K7MDENG+bPxRfiCY!', sessionToken: 'Fw0G//Z=' }]) {
+        expect(() => new Config({ discovery: { provider: 'aws-tags', aws: Object.assign({}, aws, extra) } })).to.not.throw()
+      }
+    })
+
+    it('has no public option or export named after a load balancer product', function () {
+      // U-11: the configuration surface stays product neutral.
+      const names: string[] = []
+      const collect = (obj: any, prefix: string, depth: number): void => {
+        if (obj === null || (typeof obj !== 'object' && typeof obj !== 'function') || depth > 2) return
+        for (const key of Object.keys(obj)) {
+          names.push(prefix + key)
+          collect(obj[key], `${prefix}${key}.`, depth + 1)
+        }
+      }
+      collect(Aerospike, '', 0)
+      collect(new Config({ discovery: { provider: 'dns', dns: { names: ['a'] } }, translation: { provider: 'port-map', portMap: {} } }), 'config.', 0)
+      const declarations = fs.readFileSync(path.join(__dirname, '..', '..', 'lib', 'aerospike.d.ts'), 'utf8')
+        .split('\n').filter(line => !/^\s*(\*|\/\/|\/\*)/.test(line)).join('\n')
+      expect(names.filter(name => /nlb/i.test(name))).to.eql([])
+      expect(declarations).to.not.match(/nlb/i)
+    })
+
+    it('leaves the idle connection limit to the C client default', function () {
+      // U-12: with maxSocketIdle unset (0), the C client closes connections
+      // idle for 55 s, checked about every 30 tends, well under the 350 s
+      // idle timeout of an AWS load balancer endpoint.
+      expect(new Config({})).to.not.have.property('maxSocketIdle')
     })
 
     it('accepts limits that are exactly met', function () {
@@ -200,7 +240,17 @@ describe('discovery and translation config #noserver', function () {
       ['a bad address field', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], addressField: 'private_ip' } } }, /addressField must be one of 'privateIp', 'publicIp', 'privateDns', 'publicDns'/],
       ['an empty aws tls name', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], tlsName: '' } } }, /discovery.aws.tlsName must be a non-empty string/],
       ['an access key without a secret', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], accessKeyId: 'AKID' } } }, /must be set together/],
-      ['a session token without keys', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], sessionToken: 't' } } }, /sessionToken needs/]
+      ['a session token without keys', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], sessionToken: 't' } } }, /sessionToken needs/],
+      // The C client's aws-tags checks, made here so the message says what is wrong.
+      ['an endpoint that is not http or https', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], endpoint: 'ftp://ec2.example.com' } } }, /Invalid AWS EC2 seed provider endpoint 'ftp:\/\/ec2.example.com'/],
+      ['an endpoint with a query', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], endpoint: 'https://ec2.example.com/?x=1' } } }, /expected http or https URL with a host and no query/],
+      ['an endpoint with port 0', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], endpoint: 'https://ec2.example.com:0' } } }, /expected http or https URL/],
+      ['an endpoint with credentials, not repeated in the message', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], endpoint: 'https://user:pw@ec2.example.com' } } }, /^Invalid AWS EC2 seed provider endpoint: expected/],
+      ['an access key with other characters', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], accessKeyId: 'AKID-1', secretAccessKey: 'secret' } } }, /access_key_id: expected letters and digits/],
+      ['a secret with a space', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], accessKeyId: 'AKID', secretAccessKey: 'se cret' } } }, /^Invalid AWS EC2 seed provider secret_access_key: invalid character$/],
+      ['a session token with a space', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], accessKeyId: 'AKID', secretAccessKey: 'secret', sessionToken: 'to ken' } } }, /session_token: invalid character/],
+      ['a CA file that does not exist', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], caFile: '/no/such/ca.pem' } } }, /caFile '\/no\/such\/ca.pem' is not a readable file/],
+      ['a CA path that is not a directory', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], caPath: __filename } } }, /caPath '.*' is not a directory/]
     ]
 
     invalid.forEach(([name, options, message]) => {
@@ -500,6 +550,17 @@ describe('discovery seed refresh and limits', function () {
         }
       })
     })
+  })
+
+  it('uses the configured hosts with discoveryOnly when discovery finds no seeds', async function () {
+    // An empty answer is a result, not a failure: discoveryOnly falls back to hosts.
+    await dns.setRecords({ 'seeds.test': { A: [seed.addr] }, 'v6.seeds.test': { AAAA: ['::1'] }, 'empty.seeds.test': { A: [] } })
+    const client: Cli = await Aerospike.connect(config(['empty.seeds.test'], { mergePolicy: 'discoveryOnly' }, { hosts: [{ addr: seed.addr, port: seed.port }] }))
+    try {
+      expect(client.getNodes()[0].address).to.equal(`${seed.addr}:${seed.port}`)
+    } finally {
+      client.close()
+    }
   })
 
   it('refreshes periodically in thread mode, and stops after close', async function () {
