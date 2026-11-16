@@ -231,6 +231,17 @@ describe('Top-K on each query path', function () {
     }
   })
 
+  it('uses the operations and ignores selected bins when a query has both, as any query does', async function () {
+    const set = await loadSet([1, 5, 3, 4, 2].map(n => ({ n, label: `n${n}` })))
+
+    const records = await topK(set, q => {
+      q.select('label')
+      q.ops = [Aerospike.operations.read('n')]
+      byNDesc(q)
+    }, 3)
+    expect(records.map(record => record.bins)).to.eql([{ n: 5 }, { n: 4 }, { n: 3 }])
+  })
+
   it('orders by a computed bin; records it cannot compute drop out by default, or rank last with EVAL_NO_FAIL', async function () {
     const set = await loadSet([{ m: 1 }, { m: 2 }, { m: 3 }, { other: 1 }, { other: 2 }])
     const byNegatedM = (flags: number) => (q: any) => {

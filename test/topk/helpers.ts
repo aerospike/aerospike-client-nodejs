@@ -144,8 +144,13 @@ export async function removeLoadedSets () {
   for (const index of indexes.splice(0)) {
     await helper.index.remove(index)
   }
+  // A strong consistency namespace allows only durable deletes (otherwise error 22).
+  const remove = (key: Aerospike.Key): Promise<unknown> => helper.client.remove(key).catch(error => {
+    if (error.code === Aerospike.status.ERR_FAIL_FORBIDDEN) return helper.client.remove(key, { durableDelete: true } as any)
+    throw error
+  })
   for (const { set, count } of loaded.splice(0)) {
-    await inBatches(count, i => helper.client.remove(new Aerospike.Key(helper.namespace, set, i)))
+    await inBatches(count, i => remove(new Aerospike.Key(helper.namespace, set, i)))
   }
 }
 

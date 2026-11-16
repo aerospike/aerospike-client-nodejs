@@ -39,21 +39,32 @@ describe('Top-K with projection operations', function () {
   skipUnlessTopKQueriesRun(this)
   afterEach(removeLoadedSets)
 
-  it('leaves out a record whose operation fails, without an error, even if it would rank first', async function () {
+  it('fails when an operation fails on a record, where a plain query leaves the record out', async function () {
     const set = await loadSet([{ n: 1, l: [1] }, { n: 2, l: [1, 2] }, { n: 100, l: 7 }])
-    const records = await topK(set, q => {
-      q.ops = [operations.read('n'), lists.size('l')]
-      q.orderBy('n', INTEGER, DESC)
-    }, 3)
-    expect(values(records, 'n')).to.eql([2, 1])
-    expect(values(records, 'l')).to.eql([2, 1])
+    const project = (q: any) => { q.ops = [operations.read('n'), lists.size('l')] }
+
+    const plain = helper.client.query(helper.namespace, set)
+    project(plain)
+    expect(values(await plain.results(), 'n').sort()).to.eql([1, 2])
+
+    const query = helper.client.query(helper.namespace, set)
+    project(query)
+    query.orderBy('n', INTEGER, DESC)
+    query.topK(3)
+    expect((await errorFrom(() => query.results()))?.code).to.equal(status.ERR_BIN_INCOMPATIBLE_TYPE)
   })
 
-  it('returns no records past 32,768 operations, as the server does', async function () {
+  it('accepts 32,768 operations and rejects more when the query starts, as the server does', async function () {
     const set = await loadSet([{ n: 1, x: 1 }, { n: 2, x: 2 }, { n: 3, x: 3 }])
     expect(values(await topK(set, withOps(32768), 3), 'n')).to.eql([3, 2, 1])
-    expect(await topK(set, withOps(32769), 3)).to.eql([])
-    expect(await topK(set, withOps(65535), 3)).to.eql([])
+    for (const count of [32769, 65535]) {
+      const query = helper.client.query(helper.namespace, set)
+      withOps(count)(query)
+      query.topK(3)
+      const error = await errorFrom(() => query.results({ errorDetailVerbosity: Aerospike.errorDetailVerbosity.MESSAGE } as any))
+      expect(error?.code, `${count} operations`).to.equal(status.ERR_REQUEST_INVALID)
+      expect(error.message, `${count} operations`).to.match(new RegExp(` request has ${count} bin ops, max is 32768$`))
+    }
   })
 
   it('rejects more than 65,535 operations before sending, instead of wrapping the count', async function () {

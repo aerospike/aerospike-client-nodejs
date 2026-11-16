@@ -21,7 +21,7 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { ELEMENT_TYPES, makeVector, loadVectors, removeLoadedSets, seededRandom } from './helpers.ts';
+import { ELEMENT_TYPES, makeVector, loadVectors, removeLater, removeLoadedSets, seededRandom } from './helpers.ts';
 
 const { Vector, exp, operations, batchType, status } = Aerospike
 const { FLOAT16, INT32, FLOAT32, FLOAT64 } = Aerospike.vectorElementType
@@ -71,13 +71,63 @@ describe('Vector write and read paths', function () {
     }
   })
 
-  it('stores the most dimensions each element type holds (R6)', async function () {
+  it('stores the most dimensions each element type holds, read by get() and a scan, with and without compression (R6)', async function () {
     const random = seededRandom(32)
     const vectors = ELEMENT_TYPES.map(({ type, maxDimensions }) => makeVector(type, maxDimensions, () => random() * 100).vector)
-    const set = await loadVectors(vectors)
+    const set = await loadVectors(vectors, vectors.map((_, i) => ({ id: i })))
+    const compressed = 'vc'
     for (let i = 0; i < vectors.length; i++) {
-      const record = await helper.client.get(keyOf(set, i))
-      expectSameVector(record.bins.v, vectors[i], ELEMENT_TYPES[i].name)
+      await helper.client.put(keyOf(set, i), { [compressed]: vectors[i] }, null, { compress: true } as any)
+    }
+    for (const compress of [false, true]) {
+      for (let i = 0; i < vectors.length; i++) {
+        const { bins } = await helper.client.get(keyOf(set, i), { compress } as any)
+        expectSameVector(bins.v, vectors[i], `get(), compress ${compress}, ${ELEMENT_TYPES[i].name}`)
+        expectSameVector(bins[compressed], vectors[i], `get() of the compressed write, compress ${compress}, ${ELEMENT_TYPES[i].name}`)
+      }
+      const scanned = await helper.client.scan(helper.namespace, set).results({ compress } as any)
+      expect(scanned.length).to.equal(vectors.length)
+      for (const { bins } of scanned) {
+        const label = `scan, compress ${compress}, ${ELEMENT_TYPES[bins.id as number].name}`
+        expectSameVector(bins.v, vectors[bins.id as number], label)
+        expectSameVector(bins[compressed], vectors[bins.id as number], label)
+      }
+    }
+  })
+
+  it('writes back a vector it read, through put(), a generation check and a batch replace with a stored key', async function () {
+    const set = await loadVectors(testVectors(), testVectors().map((_, i) => ({ id: i })))
+    for (let i = 0; i < testVectors().length; i++) {
+      const read = await helper.client.get(keyOf(set, i))
+      await helper.client.put(keyOf(set, i), read.bins)
+      const again = await helper.client.get(keyOf(set, i))
+      await helper.client.put(keyOf(set, i), again.bins, { gen: again.gen }, { gen: Aerospike.policy.gen.EQ } as any)
+      const batch = await helper.client.batchWrite([{
+        type: batchType.BATCH_WRITE,
+        key: keyOf(set, i),
+        ops: Object.entries(again.bins).map(([bin, value]) => operations.write(bin, value as any)),
+        policy: new Aerospike.BatchWritePolicy({ key: Aerospike.policy.key.SEND, exists: Aerospike.policy.exists.REPLACE })
+      }])
+      expect(batch.map(r => r.status), `vector ${i}`).to.eql([status.OK])
+
+      const final = await helper.client.get(keyOf(set, i))
+      expect(final.bins.id, `vector ${i}`).to.equal(i)
+      expect(final.key.key, `vector ${i}`).to.equal(i)
+      expectSameVector(final.bins.v, read.bins.v as Aerospike.Vector, `vector ${i}`)
+    }
+  })
+
+  it('returns every record of a set with vectors from a scan and a query that ask for no bins', async function () {
+    const vectors = testVectors()
+    const set = await loadVectors(vectors, vectors.map((_, i) => ({ id: i })))
+    for (const [path, run] of [
+      ['scan', () => helper.client.scan(helper.namespace, set, { nobins: true }).results()],
+      ['query', () => helper.client.query(helper.namespace, set, { nobins: true }).results()]
+    ] as const) {
+      const records = await run()
+      expect(records.length, path).to.equal(vectors.length)
+      expect(new Set(records.map(r => r.key.digest!.toString('hex'))).size, path).to.equal(vectors.length)
+      for (const record of records) expect(record.bins ?? {}, path).to.eql({})
     }
   })
 
@@ -252,6 +302,44 @@ describe('Vector write and read paths', function () {
     before = await tombstones()
     await helper.client.remove(keyOf(set, 1), durable as any)
     expect(await tombstones(), 'remove()').to.be.above(before)
+  })
+
+  it('replaces a vector with a scalar and back, raising the generation each time (R11)', async function () {
+    const set = await loadVectors([Vector.ofFloat32([1, 2])], [{ n: 1 }])
+    const key = keyOf(set, 0)
+    let gen = (await helper.client.get(key)).gen
+    for (const value of [7, 'text', Vector.ofInt32([3, 4]), Buffer.from([5])]) {
+      await helper.client.put(key, { v: value as any })
+      const record = await helper.client.get(key)
+      expect(record.gen, String(value)).to.equal(gen + 1)
+      gen = record.gen
+      if (value instanceof Vector) expectSameVector(record.bins.v, value)
+      else expect(record.bins.v, String(value)).to.eql(value)
+      expect(record.bins.n).to.equal(1)
+    }
+  })
+
+  it('returns intact vectors from a scan filtered by last-update time', async function () {
+    const vectors = testVectors()
+    const set = await loadVectors(vectors.slice(0, 4), vectors.slice(0, 4).map((_, i) => ({ id: i })))
+    await new Promise(resolve => setTimeout(resolve, 3000))
+    for (let i = 4; i < vectors.length; i++) await helper.client.put(keyOf(set, i), { v: vectors[i], id: i })
+    removeLater(set, vectors.length)
+
+    // Updated in the last 1.5 seconds, by the server's clock.
+    const filterExpression = exp.lt(exp.sinceUpdate(), exp.int(1500))
+    const records = await helper.client.scan(helper.namespace, set).results({ filterExpression } as any)
+    expect(records.map(r => r.bins.id as number).sort((a, b) => a - b)).to.eql(vectors.map((_, i) => i).slice(4))
+    for (const record of records) expectSameVector(record.bins.v, vectors[record.bins.id as number], `vector ${record.bins.id}`)
+  })
+
+  it('refuses a durable write that removes the last bin on a community server, showing the flag reached it', async function () {
+    if (helper.cluster.isEnterprise()) this.skip()
+    const set = await loadVectors([Vector.ofFloat32([1, 2])])
+    const error = await helper.client.operate(keyOf(set, 0), [operations.write('v', null)], null, { durableDelete: true } as any)
+      .then(() => null, e => e)
+    expect(error?.code).to.equal(status.ERR_FAIL_ENTERPRISE_ONLY)
+    expect(await helper.client.exists(keyOf(set, 0))).to.be.true
   })
 
   it('removes a vector bin written as null, and the record when deleted (R11)', async function () {
