@@ -139,7 +139,7 @@ describe('Top-K across several nodes', function () {
     expect(digests(top)).to.eql(hexDigests(expected))
   })
 
-  it('returns the exact top k with every replica policy that queries accept', async function () {
+  it('returns the exact top k with every replica policy that queries accept (AP-08)', async function () {
     const { set, model } = await loadModel(scoredRecords(5000, 500, 8))
     const expected = hexDigests(referenceTopK(model, byScoreThenTag, 100))
     const { RANDOM, ...others } = Aerospike.policy.replica
@@ -257,7 +257,7 @@ describe('Top-K across several nodes', function () {
   })
 
   describe('while a node fails (AEROSPIKE_NODE_FAILURE_TEST=1: replication factor 2; kill or freeze a node during the test)', function () {
-    it('returns the exact top k or a clean error, never a partial or repeated result', async function () {
+    it('returns the exact top k or a clean error, never a partial or repeated result (AM-05)', async function () {
       if (process.env.AEROSPIKE_NODE_FAILURE_TEST !== '1') this.skip()
       const { set, model } = await loadModel(scoredRecords(20000, 1000, 9))
       const expected = hexDigests(referenceTopK(model, byScoreThenTag, 100))
@@ -291,7 +291,7 @@ describe('Top-K across several nodes', function () {
   })
 
   describe('with partitions unavailable (AEROSPIKE_PARTITIONS_UNAVAILABLE=1: strong consistency; freeze all nodes but one during the test)', function () {
-    it('fails rather than ranking only the partitions it can reach', async function () {
+    it('fails rather than ranking only the partitions it can reach (AM-12)', async function () {
       if (process.env.AEROSPIKE_PARTITIONS_UNAVAILABLE !== '1') this.skip()
       const { set, model } = await loadModel(scoredRecords(5000, 500, 10))
       const expected = hexDigests(referenceTopK(model, byScoreThenTag, 100))
@@ -324,7 +324,7 @@ describe('Top-K across several nodes', function () {
   })
 
   describe('when the older node is upgraded (AEROSPIKE_UPGRADE_TEST=1: a mixed cluster at replication factor 2; run `cluster.sh upgrade` during the test)', function () {
-    it('runs Top-K and stores vectors once every node supports them, with the same client', async function () {
+    it('runs Top-K and stores vectors once every node supports them, with the same client (AG-03)', async function () {
       if (process.env.AEROSPIKE_UPGRADE_TEST !== '1') this.skip()
       const { set, model } = await loadModel(scoredRecords(2000, 500, 11))
       const expected = hexDigests(referenceTopK(model, byScore, 50))

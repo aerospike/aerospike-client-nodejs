@@ -155,7 +155,7 @@ describe('Vector search with Top-K', function () {
     expect(records.length).to.equal(7)
   })
 
-  it('ranks records whose distance is unknown last with EVAL_NO_FAIL (R19)', async function () {
+  it('ranks records whose distance is unknown last with EVAL_NO_FAIL (R19, AO-09)', async function () {
     const good = [Vector.ofFloat32([1, 0]), Vector.ofFloat32([0, 1]), Vector.ofFloat32([1, 1])]
     const unknown = [
       Vector.ofFloat32([1, 0, 0]), // other dimensions

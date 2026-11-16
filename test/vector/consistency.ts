@@ -97,7 +97,7 @@ describe('Vectors with strong consistency', function () {
     }
   })
 
-  it('reads and filters by a transaction\'s own vector inside it, and keeps its keys from other writers until it ends', async function () {
+  it('reads and filters by a transaction\'s own vector inside it, and keeps its keys from other writers until it ends (AW-11)', async function () {
     const set = await loadVectors([Vector.ofFloat32([1, 0]), Vector.ofFloat32([0, 1])])
     removeLater(set, 3)
     const keys = [0, 1, 2].map(i => new Aerospike.Key(helper.namespace, set, i))
@@ -131,7 +131,7 @@ describe('Vectors with strong consistency', function () {
     expect(bytesOf(await helper.client.get(keys[2], LINEARIZE as any))).to.eql(Vector.ofFloat32([4, 0]).toBytes())
   })
 
-  it('fails the commit and rolls back when a vector it read changed before the commit', async function () {
+  it('fails the commit and rolls back when a vector it read changed before the commit (AW-11)', async function () {
     const set = await loadVectors([Vector.ofFloat32([1, 0]), Vector.ofFloat32([0, 1])])
     const keys = [0, 1].map(i => new Aerospike.Key(helper.namespace, set, i))
     const txn = new Aerospike.Transaction()
@@ -144,7 +144,7 @@ describe('Vectors with strong consistency', function () {
     expect(bytesOf(await helper.client.get(keys[0], LINEARIZE as any)), 'rolled back').to.eql(Vector.ofFloat32([1, 0]).toBytes())
   })
 
-  it('refuses a write after the transaction expires', async function () {
+  it('refuses a write after the transaction expires (AW-11)', async function () {
     const set = await loadVectors([Vector.ofFloat32([1, 0])])
     const key = new Aerospike.Key(helper.namespace, set, 0)
     const txn = new Aerospike.Transaction()

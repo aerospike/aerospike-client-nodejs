@@ -39,7 +39,7 @@ describe('Top-K with projection operations', function () {
   skipUnlessTopKQueriesRun(this)
   afterEach(removeLoadedSets)
 
-  it('fails when an operation fails on a record, where a plain query leaves the record out', async function () {
+  it('fails when an operation fails on a record, where a plain query leaves the record out (AE-04)', async function () {
     const set = await loadSet([{ n: 1, l: [1] }, { n: 2, l: [1, 2] }, { n: 100, l: 7 }])
     const project = (q: any) => { q.ops = [operations.read('n'), lists.size('l')] }
 
@@ -54,7 +54,7 @@ describe('Top-K with projection operations', function () {
     expect((await errorFrom(() => query.results()))?.code).to.equal(status.ERR_BIN_INCOMPATIBLE_TYPE)
   })
 
-  it('accepts 32,768 operations and rejects more when the query starts, as the server does', async function () {
+  it('accepts 32,768 operations and rejects more when the query starts, as the server does (AE-05)', async function () {
     const set = await loadSet([{ n: 1, x: 1 }, { n: 2, x: 2 }, { n: 3, x: 3 }])
     expect(values(await topK(set, withOps(32768), 3), 'n')).to.eql([3, 2, 1])
     for (const count of [32769, 65535]) {

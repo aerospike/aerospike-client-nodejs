@@ -102,7 +102,7 @@ describe('Top-K under stress', function () {
     expect(grownMb, `memory grew by ${grownMb.toFixed(1)} MB over 1,000 queries`).to.be.below(50)
   })
 
-  it('times out cleanly, never with a wrong or repeated answer, at total timeouts of 1, 2 and 5 ms', async function () {
+  it('times out cleanly, never with a wrong or repeated answer, at total timeouts of 1, 2 and 5 ms (AN-03)', async function () {
     let timeouts = 0
     for (const totalTimeout of [1, 2, 5]) {
       for (let i = 0; i < 10; i++) {
@@ -121,7 +121,7 @@ describe('Top-K under stress', function () {
     expect(timeouts, 'a total timeout of a few ms should time out at least once over 50,000 records').to.be.above(0)
   })
 
-  it('refuses queries past the node\'s Top-K memory limit with code 22, never with a partial result (R69)', async function () {
+  it('refuses queries past the node\'s Top-K memory limit with code 22, never with a partial result (R69, AM-06)', async function () {
     // The limit is per node; on more nodes each holds only part of the data.
     if (helper.client.getNodes().length !== 1) this.skip()
     // 1,000 records of 100 KB: each query holds about 100 MB, so 20 at once pass the ~1 GiB limit.
@@ -146,7 +146,7 @@ describe('Top-K under stress', function () {
     expect((await runQuery(big, 1000, details)).map(r => r.bins.score)).to.eql(top)
   })
 
-  it('stops 20 Top-K streams at their first record, then answers exactly', async function () {
+  it('stops 20 Top-K streams at their first record, then answers exactly (AP-07)', async function () {
     const streams = Array.from({ length: 20 }, () => new Promise<number>((resolve, reject) => {
       const query = helper.client.query(helper.namespace, set)
       orderBy(byScore)(query)

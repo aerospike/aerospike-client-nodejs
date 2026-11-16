@@ -85,7 +85,7 @@ describe('Vector rules the server enforces', function () {
     }
   })
 
-  it('rejects list and map operations and expression literals that would add a vector (R71)', async function () {
+  it('rejects list and map operations and expression literals that would add a vector (R71, AS-01)', async function () {
     const vector = Vector.ofFloat32([1])
     const ops: Array<[string, any, string]> = [
       ['list append', lists.append('l', vector), 'list_append: list/map cannot hold a vector'],
@@ -99,7 +99,7 @@ describe('Vector rules the server enforces', function () {
     }
   })
 
-  it('rejects append, prepend, increment, list and map operations on a vector bin, alone or after another write (R56)', async function () {
+  it('rejects append, prepend, increment, list and map operations on a vector bin, alone or after another write (R56, AS-02)', async function () {
     const ops: Array<[string, any, string]> = [
       ['append', operations.append('v', 'x'), 'cannot append/prepend to a vector bin - write the whole vector'],
       ['append a blob', operations.append('v', Buffer.from([1])), 'cannot append/prepend to a vector bin - write the whole vector'],
@@ -117,7 +117,7 @@ describe('Vector rules the server enforces', function () {
     }
   })
 
-  it('reads a vector bin as unknown through blob, list and map bin expressions', async function () {
+  it('reads a vector bin as unknown through blob, list and map bin expressions (AX-12)', async function () {
     const set = await loadVectors([ORIGINAL])
     const key = new Aerospike.Key(helper.namespace, set, 0)
     for (const [name, bin] of [['blob', exp.binBlob('v')], ['list', exp.binList('v')], ['map', exp.binMap('v')]] as const) {
@@ -130,7 +130,7 @@ describe('Vector rules the server enforces', function () {
     expect(filtered?.code, 'blob filter').to.equal(status.FILTERED_OUT)
   })
 
-  it('refuses a blob expression index over a vector, and keeps vector values out of a blob index on the bin (R79)', async function () {
+  it('refuses a blob expression index over a vector, and keeps vector values out of a blob index on the bin (R79, AS-04)', async function () {
     const set = await loadVectors([ORIGINAL], [{ id: 0 }])
     const refused = await helper.client.createExpIndex({ ns: helper.namespace, set, exp: exp.binVector('v'), index: `${set}_vexp`, datatype: Aerospike.indexDataType.BLOB } as any)
       .then(() => null, e => e)

@@ -231,7 +231,7 @@ describe('Top-K on each query path', function () {
     }
   })
 
-  it('uses the operations and ignores selected bins when a query has both, as any query does', async function () {
+  it('uses the operations and ignores selected bins when a query has both, as any query does (AT-11)', async function () {
     const set = await loadSet([1, 5, 3, 4, 2].map(n => ({ n, label: `n${n}` })))
 
     const records = await topK(set, q => {
@@ -242,7 +242,7 @@ describe('Top-K on each query path', function () {
     expect(records.map(record => record.bins)).to.eql([{ n: 5 }, { n: 4 }, { n: 3 }])
   })
 
-  it('orders by a computed bin; records it cannot compute rank last with EVAL_NO_FAIL', async function () {
+  it('orders by a computed bin; records it cannot compute rank last with EVAL_NO_FAIL (AO-10)', async function () {
     const set = await loadSet([{ m: 1 }, { m: 2 }, { m: 3 }, { other: 1 }, { other: 2 }])
     const byNegatedM = (q: any) => {
       q.ops = [exp.operations.read('negM', exp.mul(exp.binInt('m'), exp.int(-1)), exp.expReadFlags.EVAL_NO_FAIL)]

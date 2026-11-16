@@ -181,7 +181,7 @@ describe('Vector values #noserver', function () {
     }
   })
 
-  it('cannot be a record key', function () {
+  it('cannot be a record key (AV-09)', function () {
     expectTypeError(() => new Aerospike.Key('test', 'demo', Vector.ofFloat32([1]) as any),
       'Invalid user key: Must be string, integer, BigInt, or Buffer')
   })

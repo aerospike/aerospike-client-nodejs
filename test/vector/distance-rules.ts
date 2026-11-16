@@ -161,7 +161,7 @@ describe('Vector distance rules', function () {
     }
   })
 
-  it('gives each record in a batch its own result: the distance, 26 when it cannot compare, 27 when filtered out', async function () {
+  it('gives each record in a batch its own result: the distance, 26 when it cannot compare, 27 when filtered out (AX-15)', async function () {
     const values = [Vector.ofFloat32([3, 4]), Vector.ofFloat32([1, 0, 0])]
     const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
     const keys = values.map((_, i) => new Aerospike.Key(helper.namespace, set, i))
@@ -186,7 +186,7 @@ describe('Vector distance rules', function () {
     expect(filtered[0].record.bins.d).to.equal(3)
   })
 
-  it('returns the vector and its distance from a query, leaving out a record it cannot compare unless EVAL_NO_FAIL is set', async function () {
+  it('returns the vector and its distance from a query, leaving out a record it cannot compare unless EVAL_NO_FAIL is set (AX-15)', async function () {
     const values = [Vector.ofFloat32([3, 4]), Vector.ofFloat32([1, 0, 0])]
     const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
     const run = async (flags: number) => {
@@ -207,7 +207,7 @@ describe('Vector distance rules', function () {
   describe('in a Top-K query', function () {
     skipUnlessTopKQueriesRun(this)
 
-    it('ranks by the same distance operate() reads', async function () {
+    it('ranks by the same distance operate() reads (AX-05)', async function () {
       const random = seededRandom(23)
       const stored = Array.from({ length: 20 }, () => makeVector(FLOAT64, 32, () => random() * 2 - 1))
       const query = makeVector(FLOAT64, 32, () => random() * 2 - 1).vector

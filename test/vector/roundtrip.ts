@@ -71,7 +71,7 @@ describe('Vector write and read paths', function () {
     }
   })
 
-  it('stores the most dimensions each element type holds, read by get() and a scan, with and without compression (R6)', async function () {
+  it('stores the most dimensions each element type holds, read by get() and a scan, with and without compression (R6, AW-02)', async function () {
     const random = seededRandom(32)
     const vectors = ELEMENT_TYPES.map(({ type, maxDimensions }) => makeVector(type, maxDimensions, () => random() * 100).vector)
     const set = await loadVectors(vectors, vectors.map((_, i) => ({ id: i })))
@@ -95,7 +95,7 @@ describe('Vector write and read paths', function () {
     }
   })
 
-  it('writes back a vector it read, through put(), a generation check and a batch replace with a stored key', async function () {
+  it('writes back a vector it read, through put(), a generation check and a batch replace with a stored key (AW-05)', async function () {
     const set = await loadVectors(testVectors(), testVectors().map((_, i) => ({ id: i })))
     for (let i = 0; i < testVectors().length; i++) {
       const read = await helper.client.get(keyOf(set, i))
@@ -117,7 +117,7 @@ describe('Vector write and read paths', function () {
     }
   })
 
-  it('returns every record of a set with vectors from a scan and a query that ask for no bins', async function () {
+  it('returns every record of a set with vectors from a scan and a query that ask for no bins (AW-06)', async function () {
     const vectors = testVectors()
     const set = await loadVectors(vectors, vectors.map((_, i) => ({ id: i })))
     for (const [path, run] of [
@@ -304,7 +304,7 @@ describe('Vector write and read paths', function () {
     expect(await tombstones(), 'remove()').to.be.above(before)
   })
 
-  it('replaces a vector with a scalar and back, raising the generation each time (R11)', async function () {
+  it('replaces a vector with a scalar and back, raising the generation each time (R11, AW-08)', async function () {
     const set = await loadVectors([Vector.ofFloat32([1, 2])], [{ n: 1 }])
     const key = keyOf(set, 0)
     let gen = (await helper.client.get(key)).gen
@@ -319,7 +319,7 @@ describe('Vector write and read paths', function () {
     }
   })
 
-  it('returns intact vectors from a scan filtered by last-update time', async function () {
+  it('returns intact vectors from a scan filtered by last-update time (AW-07)', async function () {
     const vectors = testVectors()
     const set = await loadVectors(vectors.slice(0, 4), vectors.slice(0, 4).map((_, i) => ({ id: i })))
     await new Promise(resolve => setTimeout(resolve, 3000))
@@ -333,7 +333,7 @@ describe('Vector write and read paths', function () {
     for (const record of records) expectSameVector(record.bins.v, vectors[record.bins.id as number], `vector ${record.bins.id}`)
   })
 
-  it('refuses a durable write that removes the last bin on a community server, showing the flag reached it', async function () {
+  it('refuses a durable write that removes the last bin on a community server, showing the flag reached it (AW-10)', async function () {
     if (helper.cluster.isEnterprise()) this.skip()
     const set = await loadVectors([Vector.ofFloat32([1, 2])])
     const error = await helper.client.operate(keyOf(set, 0), [operations.write('v', null)], null, { durableDelete: true } as any)

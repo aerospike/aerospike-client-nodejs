@@ -124,14 +124,14 @@ describe('Top-K rejections', function () {
       expectRejected(await errorFrom(() => thenOrderByFirst.results()), message, 'thenOrderBy, then orderBy:')
     })
 
-    it('rejects a third order key', async function () {
+    it('rejects a third order key (AT-05)', async function () {
       const query = topKQuery()
       query.thenOrderBy('ts', INTEGER, DESC)
       query.thenOrderBy('other', INTEGER, DESC)
       expectRejected(await errorFrom(() => query.results()), 'orderBy supports at most two keys')
     })
 
-    it('rejects the same bin as both order keys', async function () {
+    it('rejects the same bin as both order keys (AT-05)', async function () {
       const query = topKQuery()
       query.thenOrderBy('score', INTEGER, DESC)
       expectRejected(await errorFrom(() => query.results()), "order-by names bin 'score' more than once")
@@ -225,7 +225,7 @@ describe('Top-K rejections', function () {
       expect(error.message).to.match(/ top-k needs both order-by and top-k fields$/)
     })
 
-    it('rejects orderBy without topK with the generic message when no error details are asked for', async function () {
+    it('rejects orderBy without topK with the generic message when no error details are asked for (AE-02)', async function () {
       const query = newQuery()
       query.orderBy('score', INTEGER, DESC)
       const error = await errorFrom(() => query.results())

@@ -127,7 +127,7 @@ describe('Vector distance precision setting', function () {
     })
   })
 
-  it('never mixes float and double within one query while the setting changes (R67)', async function () {
+  it('never mixes float and double within one query while the setting changes (R67, AX-08)', async function () {
     // 16,777,217 has no 32-bit float: the dot product with (1) is 16,777,216 with
     // float and 16,777,217 with double.
     const set = await loadVectors(new Array(3000).fill(Vector.ofInt32([16777217])))

@@ -56,7 +56,7 @@ describe('Top-K and vector search with strong consistency', function () {
     await removeLoadedSets()
   })
 
-  it('ranks the same records as on an AP namespace, on every query path', async function () {
+  it('ranks the same records as on an AP namespace, on every query path (AP-13)', async function () {
     const records = tenRecords()
     const set = await loadVectors(records.map(() => undefined), records)
 
@@ -83,7 +83,7 @@ describe('Top-K and vector search with strong consistency', function () {
       .to.eql([5, 4, 3])
   })
 
-  it('finds the same nearest vectors as a brute-force search, for every metric', async function () {
+  it('finds the same nearest vectors as a brute-force search, for every metric (AP-13)', async function () {
     const random = seededRandom(91)
     const stored = Array.from({ length: 200 }, () => makeVector(FLOAT64, 16, () => random() * 2 - 1))
     const query = makeVector(FLOAT64, 16, () => random() * 2 - 1)
@@ -102,7 +102,7 @@ describe('Top-K and vector search with strong consistency', function () {
     }
   })
 
-  it('ranks the committed vector, not one an open transaction has replaced, with or without the transaction', async function () {
+  it('ranks the committed vector, not one an open transaction has replaced, with or without the transaction (AW-14)', async function () {
     const set = await loadVectors([Vector.ofFloat32([1, 0]), Vector.ofFloat32([0, 1])], [{ id: 0 }, { id: 1 }])
     const nearest = (q: any) => {
       q.ops = [operations.read('id'), exp.operations.read('d', exp.vectorDistance(Aerospike.vectorDistanceMetric.DOT_PRODUCT, Vector.ofFloat32([1, 0]), exp.binVector('v')), 0)]
