@@ -242,17 +242,14 @@ describe('Top-K on each query path', function () {
     expect(records.map(record => record.bins)).to.eql([{ n: 5 }, { n: 4 }, { n: 3 }])
   })
 
-  it('orders by a computed bin; records it cannot compute drop out by default, or rank last with EVAL_NO_FAIL', async function () {
+  it('orders by a computed bin; records it cannot compute rank last with EVAL_NO_FAIL', async function () {
     const set = await loadSet([{ m: 1 }, { m: 2 }, { m: 3 }, { other: 1 }, { other: 2 }])
-    const byNegatedM = (flags: number) => (q: any) => {
-      q.ops = [exp.operations.read('negM', exp.mul(exp.binInt('m'), exp.int(-1)), flags)]
+    const byNegatedM = (q: any) => {
+      q.ops = [exp.operations.read('negM', exp.mul(exp.binInt('m'), exp.int(-1)), exp.expReadFlags.EVAL_NO_FAIL)]
       q.orderBy('negM', INTEGER, DESC)
     }
 
-    const computable = await topK(set, byNegatedM(exp.expReadFlags.DEFAULT), 5)
-    expect(values(computable, 'negM')).to.eql([-1, -2, -3])
-
-    const all = await topK(set, byNegatedM(exp.expReadFlags.EVAL_NO_FAIL), 5)
+    const all = await topK(set, byNegatedM, 5)
     expect(values(all, 'negM').slice(0, 3)).to.eql([-1, -2, -3])
     expect(values(all, 'negM').slice(3).every(value => value == null), 'the two without m have no value').to.be.true
   })

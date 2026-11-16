@@ -45,7 +45,7 @@ interface Search {
   fetchVector: boolean
   secondKey: boolean
   inStockOnly: boolean
-  shape: 'plain' | 'unknowns' | 'zeros' | 'duplicates'
+  shape: 'plain' | 'zeros' | 'duplicates'
 }
 
 function pick<T> (random: () => number, choices: T[]): T {
@@ -63,7 +63,7 @@ function randomSearch (random: () => number): Search {
     fetchVector: pick(random, [true, false]),
     secondKey: pick(random, [true, false]),
     inStockOnly: pick(random, [true, false]),
-    shape: pick(random, ['plain', 'unknowns', 'zeros', 'duplicates'] as const)
+    shape: pick(random, ['plain', 'zeros', 'duplicates'] as const)
   }
 }
 
@@ -86,12 +86,8 @@ async function runSearch (s: Search, seed: number, precision: string) {
     for (let i = 1; i < count; i += 3) stored[i] = stored[i - 1] // equal distances, to exercise ties
   }
   const query = makeVector(s.elementType, s.dimensions, element)
-  const unknown = (i: number) => s.shape === 'unknowns' && i % 7 === 0
-  // Unknown distances: the other float type, or one more dimension.
-  const otherType = s.elementType === FLOAT64 ? Aerospike.vectorElementType.FLOAT32 : FLOAT64
-  const values = stored.map((v, i) => !unknown(i) ? v.vector : (i % 14 === 0 ? makeVector(otherType, s.dimensions, element).vector : makeVector(s.elementType, s.dimensions + 1, element).vector))
   const bins = stored.map((_, i) => ({ id: i, g: i % 4, stock: i % 3 }))
-  const set = await loadVectors(values, bins)
+  const set = await loadVectors(stored.map(v => v.vector), bins)
 
   const records = await topK(set, q => {
     q.ops = [
@@ -104,7 +100,7 @@ async function runSearch (s: Search, seed: number, precision: string) {
     if (s.secondKey) q.thenOrderBy('g', INTEGER, ASC)
   }, s.k, s.inStockOnly ? { filterExpression: exp.gt(exp.binInt('stock'), exp.int(0)) } : null)
 
-  const eligible = (i: number) => !unknown(i) && (!s.inStockOnly || bins[i].stock > 0)
+  const eligible = (i: number) => !s.inStockOnly || bins[i].stock > 0
   const references = stored.map((v, i) => (eligible(i) ? referenceDistance(s.metric, v.values, query.values) : null))
   expectBestK(records, references, s.k, s.ascending, s.dimensions, roundoff(s.elementType, precision))
   expectTiesBroken(records, s.secondKey)

@@ -131,6 +131,12 @@ describe('Top-K rejections', function () {
       expectRejected(await errorFrom(() => query.results()), 'orderBy supports at most two keys')
     })
 
+    it('rejects the same bin as both order keys', async function () {
+      const query = topKQuery()
+      query.thenOrderBy('score', INTEGER, DESC)
+      expectRejected(await errorFrom(() => query.results()), "order-by names bin 'score' more than once")
+    })
+
     it('rejects topK without orderBy', async function () {
       const query = newQuery()
       query.topK(10)
