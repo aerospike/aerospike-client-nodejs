@@ -256,10 +256,10 @@ NAN_METHOD(AerospikeClient::GetNodes)
 
 /**
  * Internal, for the pluggable discovery test driver (test/discovery/l5/driver.js);
- * not part of the public API. Returns the nodes the client holds, with the host
- * and port it connects to, the IP address that resolved to, and whether the node
- * is active. Given a namespace, also returns the master node name of each of
- * its partitions in the client's map (null when there is none).
+ * not part of the public API. Returns the nodes the client holds, with the IP
+ * address and port it connects to and whether the node is active. Given a
+ * namespace, also returns the master node name of each of its partitions in the
+ * client's map (null when there is none).
  */
 NAN_METHOD(AerospikeClient::Routing)
 {
@@ -287,8 +287,6 @@ NAN_METHOD(AerospikeClient::Routing)
 		Local<Object> node_obj = Nan::New<Object>();
 		Nan::Set(node_obj, Nan::New("name").ToLocalChecked(),
 				 Nan::New<String>(node->name).ToLocalChecked());
-		Nan::Set(node_obj, Nan::New("host").ToLocalChecked(),
-				 Nan::New<String>(node->hostname ? node->hostname : ip).ToLocalChecked());
 		Nan::Set(node_obj, Nan::New("port").ToLocalChecked(),
 				 Nan::New((uint32_t)as_address_port(addr)));
 		Nan::Set(node_obj, Nan::New("address").ToLocalChecked(),
