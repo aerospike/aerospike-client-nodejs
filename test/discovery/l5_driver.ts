@@ -64,14 +64,14 @@ async function runDriver (args: string[], script: Array<[number, string]> = [], 
 
 describe('L5 driver #noserver', function () {
   const required = ['--seed', '127.0.0.1:3000', '--shape', 'port-map', '--tend-interval', '250',
-    '--timeout', '1000', '--namespace', 'test', '--set', 'l5']
+    '--timeout', '1000', '--namespace', 'test', '--set', 'l5', '--port-map', 'A=h:1']
 
   describe('flags', function () {
     it('reads the required flags and applies the defaults', function () {
       const options = driver.parseArgs(required)
       expect(options.seed).to.eql({ host: '127.0.0.1', port: 3000 })
       expect(options).to.include({ shape: 'port-map', onMiss: 'strict', tendInterval: 250, timeout: 1000, namespace: 'test', set: 'l5', workers: 4, keys: 1000 })
-      expect(options.portMap).to.eql({})
+      expect(options.portMap).to.eql({ A: 'h:1' })
       expect(options.user).to.be.undefined
       expect(options.tlsName).to.be.undefined
     })
@@ -82,11 +82,18 @@ describe('L5 driver #noserver', function () {
     })
 
     it('reads an IPv6 seed and the optional flags', function () {
-      const args = ['--seed', '[::1]:4000', '--shape', 'pass-through', '--on-miss', 'pass-through', '--user', 'admin',
-        '--tend-interval', '100', '--timeout', '500', '--namespace', 'n', '--set', 's', '--workers', '2', '--keys', '10',
-        '--tls-name', 'tls1', '--tls-ca-file', '/ca.pem']
-      expect(driver.parseArgs(args)).to.include({ shape: 'pass-through', onMiss: 'pass-through', user: 'admin', workers: 2, keys: 10, tlsName: 'tls1', tlsCaFile: '/ca.pem' })
-      expect(driver.parseArgs(args).seed).to.eql({ host: '::1', port: 4000 })
+      const password = process.env.AEROSPIKE_ADMIN_PASSWORD
+      process.env.AEROSPIKE_ADMIN_PASSWORD = 'secret'
+      try {
+        const args = ['--seed', '[::1]:4000', '--shape', 'pass-through', '--on-miss', 'pass-through', '--user', 'admin',
+          '--tend-interval', '100', '--timeout', '500', '--namespace', 'n', '--set', 's', '--workers', '2', '--keys', '10',
+          '--tls-name', 'tls1', '--tls-ca-file', '/ca.pem']
+        expect(driver.parseArgs(args)).to.include({ shape: 'pass-through', onMiss: 'pass-through', user: 'admin', workers: 2, keys: 10, tlsName: 'tls1', tlsCaFile: '/ca.pem' })
+        expect(driver.parseArgs(args).seed).to.eql({ host: '::1', port: 4000 })
+      } finally {
+        if (password === undefined) delete process.env.AEROSPIKE_ADMIN_PASSWORD
+        else process.env.AEROSPIKE_ADMIN_PASSWORD = password
+      }
     })
 
     const invalid: Array<[string, string[], RegExp]> = [
@@ -101,6 +108,7 @@ describe('L5 driver #noserver', function () {
       ['port-map with the pass-through shape', ['--seed', 'h:1', '--shape', 'pass-through', ...required.slice(4), '--port-map', 'A=h:1'], /--port-map is only valid with --shape port-map/],
       ['a port-map entry without a target', [...required, '--port-map', 'A'], /--port-map entry must be KEY=HOST:PORT/],
       ['a port-map target without a port', [...required, '--port-map', 'A=gw'], /--port-map target must be HOST:PORT/],
+      ['the port-map shape without a port map', required.slice(0, 12), /--shape port-map needs --port-map/],
       ['a CA file without a TLS name', [...required, '--tls-ca-file', '/ca.pem'], /--tls-ca-file is only valid with --tls-name/]
     ]
 
@@ -108,6 +116,17 @@ describe('L5 driver #noserver', function () {
       it(`rejects ${name}`, function () {
         expect(() => driver.parseArgs(args)).to.throw(driver.UsageError, message)
       })
+    })
+
+    it('rejects a user without a password in the environment', function () {
+      const password = process.env.AEROSPIKE_ADMIN_PASSWORD
+      delete process.env.AEROSPIKE_ADMIN_PASSWORD
+      try {
+        expect(() => driver.parseArgs([...required, '--user', 'admin']))
+          .to.throw(driver.UsageError, /--user needs AEROSPIKE_ADMIN_PASSWORD/)
+      } finally {
+        if (password !== undefined) process.env.AEROSPIKE_ADMIN_PASSWORD = password
+      }
     })
   })
 
@@ -150,7 +169,7 @@ describe('L5 driver #noserver', function () {
 
     it('exits 3 when the client cannot be created, with an error line', async function () {
       // Port 1 refuses the connection.
-      const run = await runDriver(['--seed', '127.0.0.1:1', '--shape', 'port-map', '--tend-interval', '250',
+      const run = await runDriver(['--seed', '127.0.0.1:1', '--shape', 'pass-through', '--tend-interval', '250',
         '--timeout', '500', '--namespace', 'test', '--set', 'l5'])
       expect(run.code).to.equal(3)
       expect(run.lines).to.have.lengthOf(1)
