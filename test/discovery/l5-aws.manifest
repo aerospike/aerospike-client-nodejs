@@ -1,0 +1,7 @@
+# Manifest for the l5-aws, l2-proxy and l3-kind harnesses in aerospike-client-conformance
+# (l5-aws/DRIVER.md there). Each command runs with bash on Amazon Linux 2023 from the repository root.
+# L5_SETUP installs the build tools and a pinned Node.js for the machine's architecture.
+L5_SETUP='sudo dnf install -y -q gcc-c++ make python3 git tar xz wget autoconf automake libtool openssl-devel zlib-devel libyaml-devel && case "$(uname -m)" in x86_64) arch=x64 ;; aarch64) arch=arm64 ;; *) echo "unsupported architecture $(uname -m)" >&2; exit 1 ;; esac && curl -fsSL "https://nodejs.org/dist/v22.11.0/node-v22.11.0-linux-$arch.tar.xz" | sudo tar -xJ -C /usr/local --strip-components=1'
+# A local run.sh export has no .git but already holds the submodule contents.
+L5_BUILD='if [ ! -f aerospike-client-c/Makefile ]; then git config --global --add safe.directory "$PWD" && git submodule update --init --recursive; fi && npm ci --ignore-scripts && ./scripts/build-c-client.sh && npm run build'
+L5_DRIVER='node test/discovery/l5/driver.js'

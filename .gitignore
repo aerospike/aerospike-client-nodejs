@@ -24,6 +24,8 @@ tsconfig.tsbuildinfo
 **/*.log
 # Generated javascript tests from typescript tests
 test/**/*.*js
+# Hand-written: the L5 driver run by the conformance harnesses
+!test/discovery/l5/driver.js
 prebuilds/
 packages/prebuild-*/
 .tmp-slim-verify/
