@@ -242,15 +242,22 @@ describe('Top-K on each query path', function () {
     expect(records.map(record => record.bins)).to.eql([{ n: 5 }, { n: 4 }, { n: 3 }])
   })
 
-  it('orders by a computed bin; records it cannot compute rank last with EVAL_NO_FAIL (AO-10)', async function () {
-    const set = await loadSet([{ m: 1 }, { m: 2 }, { m: 3 }, { other: 1 }, { other: 2 }])
-    const byNegatedM = (q: any) => {
-      q.ops = [exp.operations.read('negM', exp.mul(exp.binInt('m'), exp.int(-1)), exp.expReadFlags.EVAL_NO_FAIL)]
-      q.orderBy('negM', INTEGER, DESC)
-    }
+  // Three records with m, two without, ranked by -m.
+  const loadComputed = () => loadSet([{ m: 1 }, { m: 2 }, { m: 3 }, { other: 1 }, { other: 2 }])
+  const byNegatedM = (flags: number) => (q: any) => {
+    q.ops = [exp.operations.read('negM', exp.mul(exp.binInt('m'), exp.int(-1)), flags)]
+    q.orderBy('negM', INTEGER, DESC)
+  }
 
-    const all = await topK(set, byNegatedM, 5)
+  it('orders by a computed bin; records it cannot compute rank last with EVAL_NO_FAIL (AO-10)', async function () {
+    const all = await topK(await loadComputed(), byNegatedM(exp.expReadFlags.EVAL_NO_FAIL), 5)
     expect(values(all, 'negM').slice(0, 3)).to.eql([-1, -2, -3])
     expect(values(all, 'negM').slice(3).every(value => value == null), 'the two without m have no value').to.be.true
+  })
+
+  // Skipped until the server follows R19: 8.2.1 fails the query with rc 26 instead.
+  it.skip('orders by a computed bin; records it cannot compute drop out by default (R19, AO-10)', async function () {
+    const computable = await topK(await loadComputed(), byNegatedM(exp.expReadFlags.DEFAULT), 5)
+    expect(values(computable, 'negM')).to.eql([-1, -2, -3])
   })
 })

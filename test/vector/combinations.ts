@@ -45,7 +45,7 @@ interface Search {
   fetchVector: boolean
   secondKey: boolean
   inStockOnly: boolean
-  shape: 'plain' | 'zeros' | 'duplicates'
+  shape: 'plain' | 'unknowns' | 'zeros' | 'duplicates'
 }
 
 function pick<T> (random: () => number, choices: T[]): T {
@@ -86,8 +86,12 @@ async function runSearch (s: Search, seed: number, precision: string) {
     for (let i = 1; i < count; i += 3) stored[i] = stored[i - 1] // equal distances, to exercise ties
   }
   const query = makeVector(s.elementType, s.dimensions, element)
+  const unknown = (i: number) => s.shape === 'unknowns' && i % 7 === 0
+  // Unknown distances: the other float type, or one more dimension.
+  const otherType = s.elementType === FLOAT64 ? Aerospike.vectorElementType.FLOAT32 : FLOAT64
+  const values = stored.map((v, i) => !unknown(i) ? v.vector : (i % 14 === 0 ? makeVector(otherType, s.dimensions, element).vector : makeVector(s.elementType, s.dimensions + 1, element).vector))
   const bins = stored.map((_, i) => ({ id: i, g: i % 4, stock: i % 3 }))
-  const set = await loadVectors(stored.map(v => v.vector), bins)
+  const set = await loadVectors(values, bins)
 
   const records = await topK(set, q => {
     q.ops = [
@@ -100,7 +104,7 @@ async function runSearch (s: Search, seed: number, precision: string) {
     if (s.secondKey) q.thenOrderBy('g', INTEGER, ASC)
   }, s.k, s.inStockOnly ? { filterExpression: exp.gt(exp.binInt('stock'), exp.int(0)) } : null)
 
-  const eligible = (i: number) => !s.inStockOnly || bins[i].stock > 0
+  const eligible = (i: number) => !unknown(i) && (!s.inStockOnly || bins[i].stock > 0)
   const references = stored.map((v, i) => (eligible(i) ? referenceDistance(s.metric, v.values, query.values) : null))
   expectBestK(records, references, s.k, s.ascending, s.dimensions, roundoff(s.elementType, precision))
   expectTiesBroken(records, s.secondKey)
@@ -160,13 +164,22 @@ describe('Vector search combinations against the reference', function () {
     }
   })
 
-  it('random searches over random data', async function () {
+  async function randomSearches (shape?: Search['shape']) {
     const random = seededRandom(Number(process.env.VECTOR_SEED ?? 300))
     for (let run = 0; run < 40; run++) {
       const seed = Math.floor(random() * 1e9)
-      const search = randomSearch(seededRandom(seed))
+      const search = { ...randomSearch(seededRandom(seed)), ...(shape ? { shape } : {}) }
       await runSearch(search, seed, precision).catch(e => { e.message = `${describeSearch(search, seed)}: ${e.message}`; throw e })
       await removeLoadedSets()
     }
+  }
+
+  it('random searches over random data', async function () {
+    await randomSearches()
+  })
+
+  // Skipped until the server follows R19: 8.2.1 fails the query with rc 26 instead of leaving the records out.
+  it.skip('random searches where some distances are unknown (R19, AO-09)', async function () {
+    await randomSearches('unknowns')
   })
 })
