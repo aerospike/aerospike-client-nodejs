@@ -259,7 +259,7 @@ NAN_METHOD(AerospikeClient::GetNodes)
  * not part of the public API. Returns the nodes the client holds, with the IP
  * address and port it connects to and whether the node is active. Given a
  * namespace, also returns the master node name of each of its partitions in the
- * client's map (null when there is none).
+ * client's map, or null when the partition has no master the client holds.
  */
 NAN_METHOD(AerospikeClient::Routing)
 {
@@ -278,7 +278,6 @@ NAN_METHOD(AerospikeClient::Routing)
 
 	for (uint32_t i = 0; i < nodes->size; i++) {
 		as_node *node = nodes->array[i];
-		as_node_reserve(node);
 		as_address *address = as_node_get_address(node);
 		struct sockaddr *addr = (struct sockaddr *)&address->addr;
 		char ip[AS_IP_ADDRESS_SIZE];
@@ -294,9 +293,7 @@ NAN_METHOD(AerospikeClient::Routing)
 		Nan::Set(node_obj, Nan::New("active").ToLocalChecked(),
 				 Nan::New<Boolean>(node->active != 0));
 		Nan::Set(v8_nodes, i, node_obj);
-		as_node_release(node);
 	}
-	as_nodes_release(nodes);
 	Nan::Set(result, Nan::New("nodes").ToLocalChecked(), v8_nodes);
 
 	// Shared memory tending keeps the map elsewhere; the driver then reports no
@@ -305,24 +302,32 @@ NAN_METHOD(AerospikeClient::Routing)
 		Nan::Utf8String ns(info[0]);
 		as_partition_table *table =
 			as_partition_tables_get(&cluster->partition_tables, *ns);
+		uint32_t size = table ? table->size : cluster->n_partitions;
+		Local<Array> masters = Nan::New<Array>(size);
 
-		if (table) {
-			Local<Array> masters = Nan::New<Array>(table->size);
-			for (uint32_t i = 0; i < table->size; i++) {
-				// Nodes are released through the cluster's garbage collector,
-				// so a master loaded here stays valid while its name is read.
-				as_node *master = as_node_load(&table->partitions[i].nodes[0]);
-				if (master) {
-					Nan::Set(masters, i, Nan::New<String>(master->name).ToLocalChecked());
-				}
-				else {
-					Nan::Set(masters, i, Nan::Null());
-				}
+		// A partition's master counts only when it is the very node the client
+		// holds under that name, and active, as in the Java and C drivers. A
+		// node replaced under the same name, or a namespace with no table
+		// yet, leaves its partitions without a master (null). The nodes stay
+		// reserved, so these pointers stay comparable.
+		for (uint32_t i = 0; i < size; i++) {
+			as_node *master = table ? as_node_load(&table->partitions[i].nodes[0]) : NULL;
+			bool held = false;
+
+			for (uint32_t j = 0; master && j < nodes->size && !held; j++) {
+				held = nodes->array[j] == master;
 			}
-			Nan::Set(result, Nan::New("masters").ToLocalChecked(), masters);
+			if (held && master->active) {
+				Nan::Set(masters, i, Nan::New<String>(master->name).ToLocalChecked());
+			}
+			else {
+				Nan::Set(masters, i, Nan::Null());
+			}
 		}
+		Nan::Set(result, Nan::New("masters").ToLocalChecked(), masters);
 	}
 
+	as_nodes_release(nodes);
 	info.GetReturnValue().Set(result);
 }
 

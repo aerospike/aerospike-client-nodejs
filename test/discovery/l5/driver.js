@@ -131,6 +131,12 @@ function parseArgs (argv) {
   if (values['--port-map'] !== undefined && shape !== 'port-map') {
     throw new UsageError('--port-map is only valid with --shape port-map')
   }
+  if (values['--port-map'] === undefined && shape === 'port-map') {
+    throw new UsageError('--shape port-map needs --port-map')
+  }
+  if (values['--user'] !== undefined && process.env.AEROSPIKE_ADMIN_PASSWORD === undefined) {
+    throw new UsageError('--user needs AEROSPIKE_ADMIN_PASSWORD in the environment')
+  }
   // A key that contains ':' is an advertised HOST:PORT, any other a node name;
   // each is passed to the port-map translator as given.
   const portMap = {}
@@ -249,6 +255,7 @@ class Driver {
     this.maxLatencyMs = 0
     this.resetAt = 0
     this.reachable = new Map()
+    this.checking = new Set()
     this.lastRouting = null
     this.lastKey = null
     this.unownedSince = null
@@ -390,13 +397,13 @@ class Driver {
     })).sort((a, b) => a.name.localeCompare(b.name))
     const routing = { nodes }
     if (raw.masters) {
-      const held = new Map(raw.nodes.map(n => [n.name, n]))
+      // The native side gives null for a partition with no master, an inactive
+      // one, or one that is not the node the client holds under that name.
       const owners = {}
       let unowned = 0
       for (const master of raw.masters) {
-        const node = master === null ? undefined : held.get(master)
-        if (node === undefined || !node.active) unowned++
-        if (master !== null) owners[master] = (owners[master] || 0) + 1
+        if (master === null) unowned++
+        else owners[master] = (owners[master] || 0) + 1
       }
       routing.unowned = unowned
       routing.owners = owners
@@ -426,11 +433,17 @@ class Driver {
     const changed = this.lastKey !== null && key !== this.lastKey
     this.lastKey = key
     this.lastRouting = routing
-    if (!heartbeat && !changed) return
+    // A tick that sees a change and is also due a heartbeat writes both, the
+    // change first, as the Java and C drivers do.
+    if (changed) this.snapshot('change', t, routing)
+    if (heartbeat) this.snapshot('heartbeat', t, routing)
+  }
+
+  snapshot (reason, t, routing) {
     const snapshot = {
       type: 'snapshot',
       t,
-      reason: changed && !heartbeat ? 'change' : 'heartbeat',
+      reason,
       nodes: routing.nodes
     }
     if (routing.unowned !== undefined) {
@@ -454,10 +467,15 @@ class Driver {
     for (const name of this.reachable.keys()) {
       if (!names.has(name)) this.reachable.delete(name)
     }
+    // One check per node at a time: a node that does not answer would
+    // otherwise pile up checks every interval, as the Java and C drivers avoid.
     for (const name of names) {
+      if (this.checking.has(name)) continue
+      this.checking.add(name)
       this.client.infoNode('node', { name }, { timeout: REACH_TIMEOUT_MS })
         .then(response => this.reachable.set(name, response.trim().split('\t').pop() === name))
         .catch(() => this.reachable.set(name, false))
+        .finally(() => this.checking.delete(name))
     }
   }
 
