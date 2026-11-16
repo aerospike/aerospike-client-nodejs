@@ -195,11 +195,10 @@ class LogTail {
     }
   }
 
-  // A C client line looks like "<date>: WARN(1234) [file.c:12] [fn] - message".
   emit (line) {
-    const match = /^[^:]+:\d\d:\d\d [A-Z]+: (WARN|ERROR)\s*\(\d+\) \[[^\]]*\] \[[^\]]*\] - (.*)$/.exec(line)
-    if (!match) return
-    if (this.isReady()) write({ type: 'log', t: now(), level: match[1], message: match[2] })
+    const entry = parseLogLine(line)
+    if (entry === null) return
+    if (this.isReady()) write({ type: 'log', t: now(), level: entry.level, message: entry.message })
     else process.stderr.write(line + '\n')
   }
 
@@ -211,6 +210,13 @@ class LogTail {
       fs.unlinkSync(this.file)
     } catch (err) {}
   }
+}
+
+// A C client log line looks like "<date>: WARN(1234) [file.c:12] [fn] - message".
+// Returns its level and message when it is WARN or ERROR, otherwise null.
+function parseLogLine (line) {
+  const match = /^[^:]+:\d\d:\d\d [A-Z]+: (WARN|ERROR)\s*\(\d+\) \[[^\]]*\] \[[^\]]*\] - (.*)$/.exec(line)
+  return match === null ? null : { level: match[1], message: match[2] }
 }
 
 // ---------------------------------------------------------------------------
@@ -372,7 +378,7 @@ class Driver {
     const raw = this.client.as_client._routing(this.options.namespace)
     if (raw === null) return null
     // host is the address the client connects to, as in the C client's
-    // driver. A seed node keeps the seed's host name in the client, which is
+    // driver: a seed node keeps the seed's host name in the client, which is
     // not the name it advertises, while its address is the same either way.
     const nodes = raw.nodes.map(n => ({
       name: n.name,
@@ -740,4 +746,9 @@ function main () {
   new Driver(options).start()
 }
 
-main()
+if (require.main === module) {
+  main()
+}
+
+// For the driver's own tests.
+module.exports = { parseArgs, parseHostPort, parseLogLine, partitionId, UsageError, CONTRACT, PARTITIONS }
