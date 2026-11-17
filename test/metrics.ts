@@ -2110,12 +2110,112 @@ describe('Metrics tests', function () {
       })
 
       context('disableMetrics', function () {
-        it('with no arguments', async function () { 
+        it('with no arguments', async function () {
           await client.enableMetrics()
 
           await client.disableMetrics()
         })
 
+      })
+
+      // CLIENT-5900: the C client calls the listeners on its own threads, and the
+      // calls reach JS through uv_async_send().
+      context('listener delivery', function () {
+        let counts: { enable: number, snapshot: number, disable: number }
+
+        function countingListeners (): MetricsListeners {
+          return new Aerospike.MetricsListeners({
+            enableListener: () => { counts.enable++ },
+            snapshotListener: () => { counts.snapshot++ },
+            nodeCloseListener: emptyNodeListener,
+            disableListener: () => { counts.disable++ }
+          })
+        }
+
+        this.beforeEach(function () {
+          counts = { enable: 0, snapshot: 0, disable: 0 }
+        })
+
+        it('runs the enable listener before enableMetrics() resolves', async function () {
+          const dummyClient = await Aerospike.connect(helper.config)
+          try {
+            for (let i = 1; i <= 20; i++) {
+              await dummyClient.enableMetrics(new MetricsPolicy({ metricsListeners: countingListeners() }))
+              expect(counts.enable).to.equal(i)
+              await dummyClient.disableMetrics()
+            }
+          } finally {
+            dummyClient.close()
+          }
+        })
+
+        it('calls the enable and disable listeners once per cycle, under load', async function () {
+          const dummyClient = await Aerospike.connect(helper.config)
+          // Keep the libuv thread pool and the event loop busy, as an app would.
+          let busy = true
+          const key = new Aerospike.Key(helper.namespace, helper.set, 'metrics/delivery')
+          const load = (async () => {
+            while (busy) {
+              await Promise.all([fs.promises.readFile('package.json'), dummyClient.put(key, { v: 1 })])
+            }
+          })()
+          try {
+            for (let i = 1; i <= 200; i++) {
+              await dummyClient.enableMetrics(new MetricsPolicy({ metricsListeners: countingListeners() }))
+              expect(counts.enable).to.equal(i)
+              await dummyClient.disableMetrics()
+            }
+            await new Promise(r => setTimeout(r, 100))
+            expect(counts.enable).to.equal(200)
+            expect(counts.disable).to.equal(200)
+          } finally {
+            busy = false
+            await load
+            await dummyClient.remove(key).catch(() => {})
+            dummyClient.close()
+          }
+        })
+
+        it('passes the snapshot listener a complete cluster', async function () {
+          const dummyClient = await Aerospike.connect(helper.config)
+          try {
+            await dummyClient.enableMetrics(new MetricsPolicy({ metricsListeners: new Aerospike.MetricsListeners({
+              enableListener: emptyListener,
+              snapshotListener: snapshotSaveListener,
+              nodeCloseListener: emptyNodeListener,
+              disableListener: disableSaveListener
+            }),
+            interval: 1 }))
+            await new Promise(r => setTimeout(r, 1500))
+            await dummyClient.disableMetrics()
+            await new Promise(r => setTimeout(r, 100))
+
+            for (const cluster of [clusterFromSnapshotListener, clusterFromDisableListener]) {
+              expect(cluster.nodes).to.have.length.greaterThan(0)
+              for (const node of cluster.nodes) {
+                expect(node.name).to.be.a('string')
+                expect(node.address).to.be.a('string')
+                expect(node.conns.inUse).to.be.a('number')
+                for (const ns of node.metrics) {
+                  expect(ns.ns).to.be.a('string')
+                  expect(ns.writeLatency).to.be.an('array')
+                }
+              }
+            }
+          } finally {
+            dummyClient.close()
+          }
+        })
+
+        it('does not run listeners after the client closes', async function () {
+          const dummyClient = await Aerospike.connect(helper.config)
+          await dummyClient.enableMetrics(new MetricsPolicy({ metricsListeners: countingListeners(), interval: 1 }))
+          dummyClient.close()
+          await new Promise(r => setTimeout(r, 1500))
+          expect(counts.enable).to.equal(1)
+          expect(counts.snapshot).to.equal(0)
+          expect(counts.disable).to.equal(0)
+        })
       })
     })
   })
