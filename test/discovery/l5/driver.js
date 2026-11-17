@@ -48,6 +48,8 @@ const SERVING_ROUNDS = 3
 const USABLE_WAIT_MS = 60000
 const KEY_SEARCH_LIMIT = 1000000
 const QUIT_WAIT_MS = 30000
+const LARGE_BYTES_MAX = 64 * 1024 * 1024
+const LARGE_KEYS_MAX = 100000
 const LOG_POLL_MS = 50
 
 const USAGE = 'usage: driver.js --seed HOST:PORT --shape pass-through|port-map ' +
@@ -107,6 +109,17 @@ function parsePositive (value, flag) {
   return n
 }
 
+// `large STEP BYTES KEYS`: both sizes positive and within the C driver's
+// limits, and the longest key name, STEP-<KEYS-1>, fits in BYTES so every
+// value can start with its key's name, as the Java and C drivers require.
+function largeArgs (words) {
+  if (words.length !== 4 || !/^\d+$/.test(words[2]) || !/^\d+$/.test(words[3])) return false
+  const bytes = Number(words[2])
+  const keys = Number(words[3])
+  return bytes > 0 && bytes <= LARGE_BYTES_MAX && keys > 0 && keys <= LARGE_KEYS_MAX &&
+    `${words[1]}-${keys - 1}`.length <= bytes
+}
+
 function parseArgs (argv) {
   const known = ['--seed', '--shape', '--port-map', '--on-miss', '--user', '--tend-interval', '--timeout',
     '--namespace', '--set', '--workers', '--keys', '--tls-name', '--tls-ca-file']
@@ -115,6 +128,7 @@ function parseArgs (argv) {
     const flag = argv[i]
     if (!known.includes(flag)) throw new UsageError(`unknown flag '${flag}'`)
     if (i + 1 >= argv.length) throw new UsageError(`${flag} needs a value`)
+    if (values[flag] !== undefined) throw new UsageError(`${flag} given twice`)
     values[flag] = argv[i + 1]
   }
   for (const flag of ['--seed', '--shape', '--tend-interval', '--timeout', '--namespace', '--set']) {
@@ -144,9 +158,12 @@ function parseArgs (argv) {
     for (const entry of values['--port-map'].split(',')) {
       const eq = entry.indexOf('=')
       if (eq <= 0) throw new UsageError(`--port-map entry must be KEY=HOST:PORT, got '${entry}'`)
+      const key = entry.slice(0, eq)
       const target = entry.slice(eq + 1)
+      if (key.includes(':')) parseHostPort(key, '--port-map key')
       parseHostPort(target, '--port-map target')
-      portMap[entry.slice(0, eq)] = target
+      if (portMap[key] !== undefined) throw new UsageError(`--port-map names ${key} twice`)
+      portMap[key] = target
     }
   }
   if (values['--tls-ca-file'] !== undefined && values['--tls-name'] === undefined) {
@@ -304,8 +321,8 @@ class Driver {
     try {
       this.client = await Aerospike.connect(this.config())
     } catch (err) {
-      write({ type: 'error', t: now(), message: message(err) })
-      process.stderr.write(`could not create the client: ${message(err)}\n`)
+      write({ type: 'error', t: now(), message: `client not created: ${message(err)}` })
+      process.stderr.write(`client not created: ${message(err)}\n`)
       this.log.stop()
       process.exit(3)
     }
@@ -527,7 +544,7 @@ class Driver {
         return true
       }
       case 'large':
-        if (words.length !== 4 || !/^\d+$/.test(words[2]) || !/^\d+$/.test(words[3])) malformed()
+        if (!largeArgs(words)) malformed()
         else await this.large(words[1], Number(words[2]), Number(words[3]))
         return true
       case 'quit':
@@ -621,7 +638,7 @@ class Driver {
     for (let i = 0; i < count; i++) {
       const name = `${step}-${i}`
       const key = new Aerospike.Key(o.namespace, o.set, name)
-      const value = name.length >= bytes ? name.slice(0, bytes) : name + 'x'.repeat(bytes - name.length)
+      const value = name + 'x'.repeat(bytes - name.length)
       let t = now()
       try {
         await this.client.put(key, { v: value })
@@ -769,4 +786,4 @@ if (require.main === module) {
 }
 
 // For the driver's own tests.
-module.exports = { parseArgs, parseHostPort, parseLogLine, partitionId, UsageError, CONTRACT, PARTITIONS }
+module.exports = { largeArgs, parseArgs, parseHostPort, parseLogLine, partitionId, UsageError, CONTRACT, PARTITIONS }
