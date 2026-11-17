@@ -77,7 +77,7 @@ describe('L5 driver #noserver', function () {
     })
 
     it('takes port-map keys as node names or advertised HOST:PORT, as given', function () {
-      const options = driver.parseArgs([...required, '--port-map', 'BB9A=gw.example:31001,10.0.0.5:3000=gw.example:31002,BB9C=[::1]:3000'])
+      const options = driver.parseArgs([...required.slice(0, 12), '--port-map', 'BB9A=gw.example:31001,10.0.0.5:3000=gw.example:31002,BB9C=[::1]:3000'])
       expect(options.portMap).to.eql({ BB9A: 'gw.example:31001', '10.0.0.5:3000': 'gw.example:31002', BB9C: '[::1]:3000' })
     })
 
@@ -105,10 +105,13 @@ describe('L5 driver #noserver', function () {
       ['a seed without a port', ['--seed', 'h', ...required.slice(2)], /--seed must be HOST:PORT/],
       ['a seed port of 0', ['--seed', 'h:0', ...required.slice(2)], /--seed must be HOST:PORT/],
       ['a timeout that is not a number', [...required.slice(0, 6), '--timeout', 'x', ...required.slice(8)], /--timeout must be a positive integer/],
-      ['port-map with the pass-through shape', ['--seed', 'h:1', '--shape', 'pass-through', ...required.slice(4), '--port-map', 'A=h:1'], /--port-map is only valid with --shape port-map/],
-      ['a port-map entry without a target', [...required, '--port-map', 'A'], /--port-map entry must be KEY=HOST:PORT/],
-      ['a port-map target without a port', [...required, '--port-map', 'A=gw'], /--port-map target must be HOST:PORT/],
+      ['port-map with the pass-through shape', ['--seed', 'h:1', '--shape', 'pass-through', ...required.slice(4, 12), '--port-map', 'A=h:1'], /--port-map is only valid with --shape port-map/],
+      ['a port-map entry without a target', [...required.slice(0, 12), '--port-map', 'A'], /--port-map entry must be KEY=HOST:PORT/],
+      ['a port-map target without a port', [...required.slice(0, 12), '--port-map', 'A=gw'], /--port-map target must be HOST:PORT/],
       ['the port-map shape without a port map', required.slice(0, 12), /--shape port-map needs --port-map/],
+      ['a flag given twice', [...required, '--set', 'other'], /--set given twice/],
+      ['a port-map key that is a bad HOST:PORT', [...required.slice(0, 12), '--port-map', '10.0.0.1:x=h:1'], /--port-map key must be HOST:PORT/],
+      ['a port-map key named twice', [...required.slice(0, 12), '--port-map', 'A=h:1,A=h:2'], /--port-map names A twice/],
       ['a CA file without a TLS name', [...required, '--tls-ca-file', '/ca.pem'], /--tls-ca-file is only valid with --tls-name/]
     ]
 
@@ -127,6 +130,29 @@ describe('L5 driver #noserver', function () {
       } finally {
         if (password !== undefined) process.env.AEROSPIKE_ADMIN_PASSWORD = password
       }
+    })
+  })
+
+  describe('large command arguments', function () {
+    it('accepts sizes whose longest key name fits in BYTES', function () {
+      expect(driver.largeArgs(['large', 'mtu', '1048576', '8'])).to.be.true
+      expect(driver.largeArgs(['large', 'big', '5', '1'])).to.be.true // big-0
+    })
+
+    const bad: Array<[string, string[]]> = [
+      ['a missing size', ['large', 'mtu', '10']],
+      ['a size that is not a number', ['large', 'mtu', '10x', '2']],
+      ['zero bytes', ['large', 'mtu', '0', '2']],
+      ['zero keys', ['large', 'mtu', '10', '0']],
+      ['BYTES shorter than the longest key name', ['large', 'big', '5', '11']], // big-10
+      ['more than 64 MiB', ['large', 'mtu', String(64 * 1024 * 1024 + 1), '1']],
+      ['more than 100000 keys', ['large', 'mtu', '100', '100001']]
+    ]
+
+    bad.forEach(([name, words]) => {
+      it(`rejects ${name}`, function () {
+        expect(driver.largeArgs(words)).to.be.false
+      })
     })
   })
 
@@ -174,8 +200,8 @@ describe('L5 driver #noserver', function () {
       expect(run.code).to.equal(3)
       expect(run.lines).to.have.lengthOf(1)
       expect(run.lines[0]).to.include({ type: 'error' })
-      expect(run.lines[0].message).to.be.a('string').that.is.not.empty
-      expect(run.stderr).to.match(/could not create the client/)
+      expect(run.lines[0].message).to.match(/^client not created: ./)
+      expect(run.stderr).to.match(/client not created/)
     })
   })
 })
@@ -243,6 +269,7 @@ describe('L5 driver against a server', function () {
         [100, 'serve test-step'],
         [100, 'reset'],
         [100, 'large big 1000 3'],
+        [100, 'large big 3 3'],
         [100, 'bogus command'],
         [100, 'serve'],
         [100, 'quit']
@@ -289,6 +316,8 @@ describe('L5 driver against a server', function () {
     const errors = run.lines.filter(l => l.type === 'error').map(l => l.message)
     expect(errors).to.include('unknown command: bogus command')
     expect(errors).to.include('malformed command: serve')
+    expect(errors).to.include('malformed command: large big 3 3')
+    expect(run.lines.filter(l => l.type === 'large')).to.have.lengthOf(1)
     expect(errors).to.include(`a watch is already running: watch 127.0.0.1:${probePort} ${nodeName}`)
 
     const watch = run.lines.find(l => l.type === 'watch')
