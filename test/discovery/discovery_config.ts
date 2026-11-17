@@ -669,10 +669,7 @@ describe('discovery with the aws-tags provider', function () {
   })
 })
 
-// Not #noserver: before CLIENT-5836 (PR #1123) a failed connect keeps its event
-// handle, so the noserver run, which never releases the event loop, would not
-// exit. Tag it #noserver once that fix is in.
-describe('a seed TLS name without TLS', function () {
+describe('a seed TLS name without TLS #noserver', function () {
   // Port 1 refuses the connection, so connect fails at once.
   const log = { level: Aerospike.log.OFF }
 
