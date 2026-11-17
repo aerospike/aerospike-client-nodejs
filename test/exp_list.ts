@@ -789,8 +789,10 @@ describe('Aerospike.exp_operations', function () {
       it('selects "count" list items starting at specified rank', async function () {
         const key: Key = await createRecord({ values: [83, 39, 49, 20, 42, 41, 98] })
 
-        await testNoMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([39, 41, 42])))
-        await testMatch(key, exp.eq(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), exp.list([42, 41])))
+        // The server gives no order for a rank range, so sort the values before comparing.
+        const rankRange = exp.lists.sort(exp.lists.getByRankRange(exp.binList('values'), exp.int(2), exp.int(2), lists.returnType.VALUE), lists.sortFlags.DEFAULT)
+        await testNoMatch(key, exp.eq(rankRange, exp.list([39, 41, 42])))
+        await testMatch(key, exp.eq(rankRange, exp.list([41, 42])))
       })
     })
 

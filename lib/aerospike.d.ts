@@ -1441,9 +1441,12 @@ export class Query {
      * rank last and still count toward k. Records that tie on every order key rank by digest,
      * lowest first. For a DOUBLE key, NaN ranks above every other value, and -0.0 equals 0.0.
      *
-     * A record whose projection fails, such as a list operation on a bin that isn't a list, is
-     * left out without an error. A query with more than 32,768 operations returns no records.
-     * A node at its Top-K memory limit refuses the query with
+     * If a projection operation fails on any record, such as a list operation on a bin that isn't
+     * a list, the query fails with that operation's error, for example
+     * {@link statusNamespace.ERR_BIN_INCOMPATIBLE_TYPE|ERR_BIN_INCOMPATIBLE_TYPE} (12). A query
+     * with more than 32,768 operations is rejected with
+     * {@link statusNamespace.ERR_REQUEST_INVALID|ERR_REQUEST_INVALID} (4). A node at its Top-K
+     * memory limit refuses the query with
      * {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN} (22); retry it later.
      *
      * @param bin - Name of the bin to order by, as it appears in the returned record. At most

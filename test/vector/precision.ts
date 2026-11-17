@@ -127,6 +127,35 @@ describe('Vector distance precision setting', function () {
     })
   })
 
+  it('never mixes float and double within one query while the setting changes (R67, AX-08)', async function () {
+    // 16,777,217 has no 32-bit float: the dot product with (1) is 16,777,216 with
+    // float and 16,777,217 with double.
+    const set = await loadVectors(new Array(3000).fill(Vector.ofInt32([16777217])))
+    const distances = async () => {
+      const query = helper.client.query(helper.namespace, set)
+      query.ops = [exp.operations.read('d', exp.vectorDistance(DOT_PRODUCT, Vector.ofInt32([1]), exp.binVector('v')), 0)]
+      return new Set((await query.results()).map(r => r.bins.d))
+    }
+
+    const seenAcrossRuns = new Set()
+    let switching = true
+    const switcher = (async () => {
+      for (let i = 0; switching; i++) await setPrecision(i % 2 === 0 ? 'double' : 'float')
+    })()
+    try {
+      for (let run = 0; run < 20; run++) {
+        const seen = await distances()
+        expect(seen.size, `run ${run} saw ${[...seen].join(' and ')}`).to.equal(1)
+        seen.forEach(d => seenAcrossRuns.add(d))
+      }
+      // Both settings were in force during the runs, so the setting changed while queries ran.
+      expect([...seenAcrossRuns].sort()).to.eql([16777216, 16777217])
+    } finally {
+      switching = false
+      await switcher
+    }
+  })
+
   it('rejects an unknown value and keeps the setting', async function () {
     await setPrecision('float')
     const error = await setPrecision('quad').then(() => null, e => e)

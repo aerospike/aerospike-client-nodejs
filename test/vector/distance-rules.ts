@@ -29,7 +29,7 @@ import {
 
 const { Vector, exp, operations, status } = Aerospike
 const { DOUBLE } = Aerospike.binDataType
-const { ASC } = Aerospike.order
+const { ASC, DESC } = Aerospike.order
 const { FLOAT64 } = Aerospike.vectorElementType
 const { EUCLIDEAN_SQUARED, DOT_PRODUCT, COSINE_SIMILARITY } = Aerospike.vectorDistanceMetric
 
@@ -161,8 +161,68 @@ describe('Vector distance rules', function () {
     }
   })
 
+  it('gives each record in a batch its own result: the distance, 26 when it cannot compare, 27 when filtered out (AX-15)', async function () {
+    const values = [Vector.ofFloat32([3, 4]), Vector.ofFloat32([1, 0, 0])]
+    const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
+    const keys = values.map((_, i) => new Aerospike.Key(helper.namespace, set, i))
+    const distance = exp.vectorDistance(DOT_PRODUCT, QUERY, exp.binVector('v'))
+    const written = Vector.ofInt32([7])
+
+    const operated = await helper.client.batchWrite(keys.map(key => ({
+      type: Aerospike.batchType.BATCH_WRITE,
+      key,
+      ops: [operations.write('w', written), operations.read('v'), exp.operations.read('d', distance, 0)]
+    })))
+    expect(operated.map(r => r.status)).to.eql([status.OK, status.ERR_OP_NOT_APPLICABLE])
+    expect(operated[0].record.bins.d).to.equal(3)
+    expect((operated[0].record.bins.v as Aerospike.Vector).toBytes()).to.eql(values[0].toBytes())
+    const stored = await helper.client.get(keys[0])
+    expect(stored.bins.w).to.be.instanceof(Vector)
+    expect((stored.bins.w as Aerospike.Vector).toBytes()).to.eql(written.toBytes())
+
+    const filtered = await helper.client.batchRead(keys.map(key => ({ key, ops: [exp.operations.read('d', distance, 0)] })),
+      { filterExpression: exp.gt(distance, exp.float(1)) } as any)
+    expect(filtered.map(r => r.status)).to.eql([status.OK, status.FILTERED_OUT])
+    expect(filtered[0].record.bins.d).to.equal(3)
+  })
+
+  it('returns the vector and its distance from a query, leaving out a record it cannot compare unless EVAL_NO_FAIL is set (AX-15)', async function () {
+    const values = [Vector.ofFloat32([3, 4]), Vector.ofFloat32([1, 0, 0])]
+    const set = await loadVectors(values, values.map((_, i) => ({ id: i })))
+    const run = async (flags: number) => {
+      const query = helper.client.query(helper.namespace, set)
+      query.ops = [operations.read('id'), operations.read('v'), exp.operations.read('d', exp.vectorDistance(DOT_PRODUCT, QUERY, exp.binVector('v')), flags)]
+      return (await query.results()).sort((a, b) => (a.bins.id as number) - (b.bins.id as number))
+    }
+
+    const strict = await run(0)
+    expect(strict.map(r => [r.bins.id, r.bins.d])).to.eql([[0, 3]])
+    const lenient = await run(exp.expReadFlags.EVAL_NO_FAIL)
+    expect(lenient.map(r => [r.bins.id, r.bins.d ?? null])).to.eql([[0, 3], [1, null]])
+    for (const record of lenient) {
+      expect((record.bins.v as Aerospike.Vector).toBytes()).to.eql(values[record.bins.id as number].toBytes())
+    }
+  })
+
   describe('in a Top-K query', function () {
     skipUnlessTopKQueriesRun(this)
+
+    it('ranks by the same distance operate() reads (AX-05)', async function () {
+      const random = seededRandom(23)
+      const stored = Array.from({ length: 20 }, () => makeVector(FLOAT64, 32, () => random() * 2 - 1))
+      const query = makeVector(FLOAT64, 32, () => random() * 2 - 1).vector
+      const set = await loadVectors(stored.map(s => s.vector), stored.map((_, i) => ({ id: i })))
+
+      for (const { name, metric } of METRICS) {
+        const single = await Promise.all(stored.map((_, i) => distanceOf(set, i, metric, query)))
+        const records = await topK(set, q => {
+          q.ops = [operations.read('id'), exp.operations.read('d', exp.vectorDistance(metric, query, exp.binVector('v')), 0)]
+          q.orderBy('d', DOUBLE, DESC)
+        }, stored.length)
+        expect(records.length, name).to.equal(stored.length)
+        for (const record of records) expect(record.bins.d, `${name} record ${record.bins.id}`).to.equal(single[record.bins.id as number])
+      }
+    })
 
     it('ranks in the direction asked, so ASC on cosine gives the least similar first', async function () {
       const set = await loadVectors([[1, 0], [0, 1], [-1, 0], [1, 1]].map(v => Vector.ofFloat32(v)), [0, 1, 2, 3].map(id => ({ id })))

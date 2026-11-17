@@ -139,6 +139,25 @@ describe('Top-K across several nodes', function () {
     expect(digests(top)).to.eql(hexDigests(expected))
   })
 
+  it('returns the exact top k with every replica policy that queries accept (AP-08)', async function () {
+    const { set, model } = await loadModel(scoredRecords(5000, 500, 8))
+    const expected = hexDigests(referenceTopK(model, byScoreThenTag, 100))
+    const { RANDOM, ...others } = Aerospike.policy.replica
+    for (const [name, replica] of Object.entries(others)) {
+      expect(digests(await topK(set, orderBy(byScoreThenTag), 100, { replica })), name).to.eql(expected)
+    }
+
+    // Any query refuses RANDOM before sending, Top-K or not.
+    const topKQuery = helper.client.query(helper.namespace, set)
+    orderBy(byScoreThenTag)(topKQuery)
+    topKQuery.topK(100)
+    for (const [name, query] of [['Top-K', topKQuery], ['plain', helper.client.query(helper.namespace, set)]] as const) {
+      const error = await errorFrom(() => query.results({ replica: RANDOM } as any))
+      expect(error?.code, `${name} query with RANDOM`).to.equal(status.ERR_PARAM)
+      expect(error.message, `${name} query with RANDOM`).to.equal('Invalid replica: AS_POLICY_REPLICA_RANDOM')
+    }
+  })
+
   describe('at scale', function () {
     skipUnlessMultiNode(this, 5)
 
@@ -234,6 +253,114 @@ describe('Top-K across several nodes', function () {
       await waitForMigrations()
       expect(digests(await topK(set, orderBy(byScore), 100)), 'after migrations settle')
         .to.eql(hexDigests(referenceTopK(model, byScore, 100)))
+    })
+  })
+
+  describe('while a node fails (AEROSPIKE_NODE_FAILURE_TEST=1: replication factor 2; kill or freeze a node during the test)', function () {
+    it('returns the exact top k or a clean error, never a partial or repeated result (AM-05)', async function () {
+      if (process.env.AEROSPIKE_NODE_FAILURE_TEST !== '1') this.skip()
+      const { set, model } = await loadModel(scoredRecords(20000, 1000, 9))
+      const expected = hexDigests(referenceTopK(model, byScoreThenTag, 100))
+      const allowed = [status.ERR_CLUSTER, status.ERR_TIMEOUT, status.ERR_CONNECTION, status.ERR_ASYNC_CONNECTION,
+        status.ERR_NO_MORE_CONNECTIONS, status.ERR_SERVER_FULL]
+
+      // Keep querying for 90 seconds, with retries; meanwhile a node is stopped,
+      // killed or frozen. A result must be exact; anything else must be an error.
+      const end = Date.now() + 90000
+      let exact = 0
+      let failed = 0
+      while (Date.now() < end) {
+        const query = helper.client.query(helper.namespace, set)
+        orderBy(byScoreThenTag)(query)
+        query.topK(100)
+        try {
+          const top = await query.results({ socketTimeout: 5000, totalTimeout: 30000, maxRetries: 3 } as any)
+          expect(digests(top), `result ${exact + failed}`).to.eql(expected)
+          exact++
+        } catch (error: any) {
+          if (error.name === 'AssertionError') throw error
+          expect(allowed, `${error.code}: ${error.message}`).to.include(error.code)
+          failed++
+        }
+      }
+      expect(exact, `${exact} exact results, ${failed} errors`).to.be.above(0)
+
+      await waitForMigrations()
+      expect(digests(await topK(set, orderBy(byScoreThenTag), 100)), 'once the node is back').to.eql(expected)
+    })
+  })
+
+  describe('with partitions unavailable (AEROSPIKE_PARTITIONS_UNAVAILABLE=1: strong consistency; freeze all nodes but one during the test)', function () {
+    it('fails rather than ranking only the partitions it can reach (AM-12)', async function () {
+      if (process.env.AEROSPIKE_PARTITIONS_UNAVAILABLE !== '1') this.skip()
+      const { set, model } = await loadModel(scoredRecords(5000, 500, 10))
+      const expected = hexDigests(referenceTopK(model, byScoreThenTag, 100))
+
+      // Keep querying for two and a half minutes; meanwhile all nodes but one are
+      // frozen, so some partitions have no available copy, and then thawed.
+      const end = Date.now() + 150000
+      const codes = new Set<number>()
+      let exact = 0
+      while (Date.now() < end) {
+        const query = helper.client.query(helper.namespace, set)
+        orderBy(byScoreThenTag)(query)
+        query.topK(100)
+        try {
+          const top = await query.results({ socketTimeout: 5000, totalTimeout: 20000 } as any)
+          expect(digests(top), 'a result drawn from part of the partitions').to.eql(expected)
+          exact++
+        } catch (error: any) {
+          if (error.name === 'AssertionError') throw error
+          expect(error, String(error)).to.be.instanceof(Aerospike.AerospikeError)
+          codes.add(error.code)
+        }
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+      expect(codes.size, `no query failed while partitions were unavailable (${exact} exact results)`).to.be.above(0)
+
+      await waitForMigrations()
+      expect(digests(await topK(set, orderBy(byScoreThenTag), 100)), 'once every partition is back').to.eql(expected)
+    })
+  })
+
+  describe('when the older node is upgraded (AEROSPIKE_UPGRADE_TEST=1: a mixed cluster at replication factor 2; run `cluster.sh upgrade` during the test)', function () {
+    it('runs Top-K and stores vectors once every node supports them, with the same client (AG-03)', async function () {
+      if (process.env.AEROSPIKE_UPGRADE_TEST !== '1') this.skip()
+      const { set, model } = await loadModel(scoredRecords(2000, 500, 11))
+      const expected = hexDigests(referenceTopK(model, byScore, 50))
+      const run = () => {
+        const query = helper.client.query(helper.namespace, set)
+        orderBy(byScore)(query)
+        query.topK(50)
+        return query.results({ socketTimeout: 5000, totalTimeout: 30000 } as any)
+      }
+
+      const before = await errorFrom(run)
+      expect(before?.code, 'the cluster must start mixed').to.equal(status.ERR_PARAM)
+
+      // Retry until the client sees that every node supports Top-K.
+      const end = Date.now() + 300000
+      let error = before
+      while (error && Date.now() < end) {
+        expect([status.ERR_PARAM, status.ERR_CLUSTER, status.ERR_TIMEOUT, status.ERR_CONNECTION], `${error.code}: ${error.message}`)
+          .to.include(error.code)
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        error = await errorFrom(run)
+      }
+      expect(error, 'Top-K still refused after the upgrade').to.be.null
+
+      await waitForMigrations()
+      expect(digests(await topK(set, orderBy(byScore), 50)), 'after the upgrade').to.eql(expected)
+
+      const vector = Aerospike.Vector.ofFloat32([1, 2, 3])
+      for (let i = 0; i < 200; i++) {
+        const key = new Aerospike.Key(helper.namespace, set, `upgraded_${i}`)
+        await helper.client.put(key, { v: vector })
+        const read = (await helper.client.get(key)).bins.v
+        expect(read, `record ${i}`).to.be.instanceof(Aerospike.Vector)
+        expect((read as Aerospike.Vector).toBytes(), `record ${i}`).to.eql(vector.toBytes())
+        await helper.client.remove(key)
+      }
     })
   })
 })

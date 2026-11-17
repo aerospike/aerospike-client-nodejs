@@ -23,7 +23,7 @@ import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import { loadVectors, removeLoadedSets, nonFiniteVector } from './helpers.ts';
 
-const { Vector, operations, lists, maps, status } = Aerospike
+const { Vector, operations, lists, maps, status, exp } = Aerospike
 const { FLOAT16, FLOAT32, FLOAT64 } = Aerospike.vectorElementType
 
 // Ask the server to explain its rejections.
@@ -85,28 +85,66 @@ describe('Vector rules the server enforces', function () {
     }
   })
 
-  it('rejects list and map operations that would add a vector (R71)', async function () {
+  it('rejects list and map operations and expression literals that would add a vector (R71, AS-01)', async function () {
     const vector = Vector.ofFloat32([1])
     const ops: Array<[string, any, string]> = [
       ['list append', lists.append('l', vector), 'list_append: list/map cannot hold a vector'],
       ['map value', maps.put('m', 'b', vector), 'map_add: invalid value - list/map cannot hold a vector'],
-      ['map key', maps.put('m', vector, 1), 'map_add: invalid key - list/map cannot hold a vector']
+      ['map key', maps.put('m', vector, 1), 'map_add: invalid key - list/map cannot hold a vector'],
+      ['list literal', exp.operations.write('l', exp.list([1, vector] as any), 0), 'expression literal: list/map cannot hold a vector'],
+      ['map literal', exp.operations.write('m', exp.map({ a: vector } as any), 0), 'expression literal: list/map cannot hold a vector']
     ]
     for (const [name, op, message] of ops) {
       await expectRejected(key => helper.client.operate(key, [op], null, DETAILS), status.ERR_REQUEST_INVALID, message, name)
     }
   })
 
-  it('rejects append, prepend, increment and list operations on a vector bin (R56)', async function () {
+  it('rejects append, prepend, increment, list and map operations on a vector bin, alone or after another write (R56, AS-02)', async function () {
     const ops: Array<[string, any, string]> = [
       ['append', operations.append('v', 'x'), 'cannot append/prepend to a vector bin - write the whole vector'],
       ['append a blob', operations.append('v', Buffer.from([1])), 'cannot append/prepend to a vector bin - write the whole vector'],
       ['prepend', operations.prepend('v', 'x'), 'cannot append/prepend to a vector bin - write the whole vector'],
       ['increment', operations.incr('v', 1), 'cannot increment a vector bin'],
-      ['list append', lists.append('v', 1), 'list modify requires list bin, got bin type vector']
+      ['list append', lists.append('v', 1), 'list modify requires list bin, got bin type vector'],
+      ['list read', lists.size('v'), 'list read requires list bin, got bin type vector'],
+      ['map put', maps.put('v', 'a', 1), 'map modify requires map bin, got bin type vector'],
+      ['map read', maps.getByKey('v', 'a', maps.returnType.VALUE), 'map read requires map bin, got bin type vector']
     ]
     for (const [name, op, message] of ops) {
       await expectRejected(key => helper.client.operate(key, [op], null, DETAILS), status.ERR_BIN_INCOMPATIBLE_TYPE, message, name)
+      await expectRejected(key => helper.client.operate(key, [operations.write('n', 1), op], null, DETAILS),
+        status.ERR_BIN_INCOMPATIBLE_TYPE, message, `${name} after a write to another bin`)
+    }
+  })
+
+  it('reads a vector bin as unknown through blob, list and map bin expressions (AX-12)', async function () {
+    const set = await loadVectors([ORIGINAL])
+    const key = new Aerospike.Key(helper.namespace, set, 0)
+    for (const [name, bin] of [['blob', exp.binBlob('v')], ['list', exp.binList('v')], ['map', exp.binMap('v')]] as const) {
+      const error = await helper.client.operate(key, [exp.operations.read('r', bin, 0)]).then(() => null, e => e)
+      expect(error?.code, `${name} read`).to.equal(status.ERR_OP_NOT_APPLICABLE)
+    }
+    const bytes = ORIGINAL.toBytes()
+    const filtered = await helper.client.get(key, { filterExpression: exp.eq(exp.binBlob('v'), exp.bytes(bytes, bytes.length)) })
+      .then(() => null, e => e)
+    expect(filtered?.code, 'blob filter').to.equal(status.FILTERED_OUT)
+  })
+
+  it('refuses a blob expression index over a vector, and keeps vector values out of a blob index on the bin (R79, AS-04)', async function () {
+    const set = await loadVectors([ORIGINAL], [{ id: 0 }])
+    const refused = await helper.client.createExpIndex({ ns: helper.namespace, set, exp: exp.binVector('v'), index: `${set}_vexp`, datatype: Aerospike.indexDataType.BLOB } as any)
+      .then(() => null, e => e)
+    expect(refused?.code, 'expression index').to.equal(status.ERR_REQUEST_INVALID)
+    expect(refused.message, 'expression index').to.match(/expression type 'vector' does not match expected type 'blob'/)
+
+    const index = `${set}_v`
+    await helper.index.create(index, set, 'v', Aerospike.indexDataType.BLOB as any, Aerospike.indexType.DEFAULT as any)
+    try {
+      const query = helper.client.query(helper.namespace, set)
+      query.where(Aerospike.filter.equal('v', ORIGINAL.toBytes() as any))
+      expect(await query.results()).to.eql([])
+    } finally {
+      await helper.index.remove(index)
     }
   })
 

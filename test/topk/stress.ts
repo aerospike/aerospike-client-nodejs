@@ -24,7 +24,7 @@ import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import type { OrderKey, ModelRecord } from './helpers.ts';
-import { loadModel, removeLoadedSets, digests, referenceTopK, orderBy, seededRandom, skipUnlessTopKQueriesRun } from './helpers.ts';
+import { loadModel, loadSet, removeLoadedSets, digests, referenceTopK, orderBy, seededRandom, skipUnlessTopKQueriesRun } from './helpers.ts';
 
 const { INTEGER } = Aerospike.binDataType
 const { DESC } = Aerospike.order
@@ -102,19 +102,66 @@ describe('Top-K under stress', function () {
     expect(grownMb, `memory grew by ${grownMb.toFixed(1)} MB over 1,000 queries`).to.be.below(50)
   })
 
-  it('times out cleanly, never with a wrong answer, when totalTimeout is tiny', async function () {
+  it('times out cleanly, never with a wrong or repeated answer, at total timeouts of 1, 2 and 5 ms (AN-03)', async function () {
     let timeouts = 0
-    for (let i = 0; i < 20; i++) {
-      try {
-        expect(digests(await runQuery(set, 100, { totalTimeout: 1 })), `attempt ${i}`).to.eql(expected)
-      } catch (error: any) {
-        if (error.name === 'AssertionError') throw error
-        expect(error.code, `attempt ${i}: ${error.message}`).to.equal(status.ERR_TIMEOUT)
-        timeouts++
+    for (const totalTimeout of [1, 2, 5]) {
+      for (let i = 0; i < 10; i++) {
+        const label = `${totalTimeout} ms, attempt ${i}`
+        try {
+          expect(digests(await runQuery(set, 100, { totalTimeout, maxRetries: 2 })), label).to.eql(expected)
+        } catch (error: any) {
+          if (error.name === 'AssertionError') throw error
+          expect(error.code, `${label}: ${error.message}`).to.equal(status.ERR_TIMEOUT)
+          timeouts++
+        }
       }
     }
     // The client still works afterwards.
     expect(digests(await runQuery(set, 100))).to.eql(expected)
-    expect(timeouts, 'a 1 ms total timeout should time out at least once over 50,000 records').to.be.above(0)
+    expect(timeouts, 'a total timeout of a few ms should time out at least once over 50,000 records').to.be.above(0)
+  })
+
+  it('refuses queries past the node\'s Top-K memory limit with code 22, never with a partial result (R69, AM-06)', async function () {
+    // The limit is per node; on more nodes each holds only part of the data.
+    if (helper.client.getNodes().length !== 1) this.skip()
+    // 1,000 records of 100 KB: each query holds about 100 MB, so 20 at once pass the ~1 GiB limit.
+    const big = await loadSet(Array.from({ length: 1000 }, (_, score) => ({ score, blob: Buffer.alloc(100 * 1024, score % 256) })))
+    const top = Array.from({ length: 1000 }, (_, i) => 999 - i)
+    const details = { errorDetailVerbosity: Aerospike.errorDetailVerbosity.MESSAGE, socketTimeout: 0, totalTimeout: 120000 }
+
+    const outcomes = await Promise.all(Array.from({ length: 20 }, () => runQuery(big, 1000, details).then(records => records, error => error)))
+    let refused = 0
+    for (const outcome of outcomes) {
+      if (outcome instanceof Error) {
+        const error = outcome as any
+        expect(error.code, error.message).to.equal(status.ERR_FAIL_FORBIDDEN)
+        refused++
+      } else {
+        expect(outcome.map(r => r.bins.score), 'a partial result').to.eql(top)
+      }
+    }
+    expect(refused, 'no query reached the memory limit').to.be.above(0)
+
+    // The node recovers once the queries end.
+    expect((await runQuery(big, 1000, details)).map(r => r.bins.score)).to.eql(top)
+  })
+
+  it('stops 20 Top-K streams at their first record, then answers exactly (AP-07)', async function () {
+    const streams = Array.from({ length: 20 }, () => new Promise<number>((resolve, reject) => {
+      const query = helper.client.query(helper.namespace, set)
+      orderBy(byScore)(query)
+      query.topK(100)
+      let received = 0
+      const stream = query.foreach()
+      stream.on('data', () => {
+        received++
+        stream.abort()
+      })
+      stream.on('error', reject)
+      stream.on('end', () => resolve(received))
+    }))
+    for (const received of await Promise.all(streams)) expect(received).to.be.within(1, 100)
+
+    expect(digests(await runQuery(set, 100))).to.eql(expected)
   })
 })

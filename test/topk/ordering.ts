@@ -272,15 +272,16 @@ describe('Top-K ordering', function () {
     expect(await ranked(10)).to.eql([5, 4, 3, 2, 1])
   })
 
-  it('returns complete records', async function () {
+  it('returns complete records, with the stored bins, digest and generation (AP-09)', async function () {
     const set = await loadSet([3, 1, 4, 1, 5, 9, 2, 6].map(n => ({ n, label: `n${n}` })))
     const records = await topK(set, q => q.orderBy('n', INTEGER, DESC), 5)
 
     expect(values(records, 'n')).to.eql([9, 6, 5, 4, 3])
     for (const record of records) {
-      expect(record.bins.label).to.equal(`n${record.bins.n}`)
-      expect(record.key.digest).to.have.length(20)
-      expect(record.gen).to.be.a('number')
+      const stored = await helper.client.get(record.key)
+      expect(record.bins, `n ${record.bins.n}`).to.eql(stored.bins)
+      expect(record.key.digest, `n ${record.bins.n}`).to.eql(stored.key.digest)
+      expect(record.gen, `n ${record.bins.n}`).to.equal(stored.gen)
     }
   })
 })

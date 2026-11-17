@@ -27,7 +27,7 @@ import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
 import { makeVector, loadVectors, removeLoadedSets, removeLater, seededRandom, nonFiniteVector } from './helpers.ts';
 
-const { Vector, status } = Aerospike
+const { Vector, status, exp } = Aerospike
 const { FLOAT32 } = Aerospike.vectorElementType
 
 const LINEARIZE = { readModeSC: Aerospike.policy.readModeSC.LINEARIZE }
@@ -95,6 +95,69 @@ describe('Vectors with strong consistency', function () {
     for (const key of keys) {
       expect(bytesOf(await helper.client.get(key, LINEARIZE as any))).to.eql(original.toBytes())
     }
+  })
+
+  it('reads and filters by a transaction\'s own vector inside it, and keeps its keys from other writers until it ends (AW-11)', async function () {
+    const set = await loadVectors([Vector.ofFloat32([1, 0]), Vector.ofFloat32([0, 1])])
+    removeLater(set, 3)
+    const keys = [0, 1, 2].map(i => new Aerospike.Key(helper.namespace, set, i))
+    const distance = exp.vectorDistance(Aerospike.vectorDistanceMetric.DOT_PRODUCT, Vector.ofFloat32([1, 0]), exp.binVector('v'))
+    const txn = new Aerospike.Transaction()
+    const other = new Aerospike.Transaction()
+    try {
+      await helper.client.put(keys[0], { v: Vector.ofFloat32([3, 0]) }, null, { txn } as any)
+      await helper.client.put(keys[2], { v: Vector.ofFloat32([4, 0]) }, null, { txn } as any)
+
+      const read = await helper.client.operate(keys[0], [exp.operations.read('d', distance, 0)], null, { txn } as any)
+      expect(read.bins.d, 'distance read inside').to.equal(3)
+      const kept = await helper.client.get(keys[0], { txn, filterExpression: exp.gt(distance, exp.float(2)) } as any)
+      expect(bytesOf(kept), 'distance filter inside').to.eql(Vector.ofFloat32([3, 0]).toBytes())
+      expect(await helper.client.exists(keys[2]), 'a new key outside the transaction').to.be.false
+
+      const plain = await helper.client.put(keys[0], { v: Vector.ofFloat32([9, 9]) }).then(() => null, e => e)
+      expect(plain?.code, 'a plain write to a locked key').to.equal(status.MRT_BLOCKED)
+      const second = await helper.client.put(keys[0], { v: Vector.ofFloat32([9, 9]) }, null, { txn: other } as any).then(() => null, e => e)
+      expect(second?.code, 'another transaction writing a locked key').to.equal(status.MRT_BLOCKED)
+
+      const inList = await helper.client.put(keys[1], { l: [Vector.ofFloat32([1])] } as any, null, { txn } as any).then(() => null, e => e)
+      expect(inList?.code, 'a vector inside a list').to.equal(status.ERR_REQUEST_INVALID)
+
+      expect(await helper.client.commit(txn)).to.equal(Aerospike.Transaction.commitStatus.OK)
+    } finally {
+      await helper.client.abort(other)
+    }
+    expect(bytesOf(await helper.client.get(keys[0], LINEARIZE as any))).to.eql(Vector.ofFloat32([3, 0]).toBytes())
+    expect(bytesOf(await helper.client.get(keys[1], LINEARIZE as any))).to.eql(Vector.ofFloat32([0, 1]).toBytes())
+    expect(bytesOf(await helper.client.get(keys[2], LINEARIZE as any))).to.eql(Vector.ofFloat32([4, 0]).toBytes())
+  })
+
+  it('fails the commit and rolls back when a vector it read changed before the commit (AW-11)', async function () {
+    const set = await loadVectors([Vector.ofFloat32([1, 0]), Vector.ofFloat32([0, 1])])
+    const keys = [0, 1].map(i => new Aerospike.Key(helper.namespace, set, i))
+    const txn = new Aerospike.Transaction()
+    await helper.client.get(keys[1], { txn } as any)
+    await helper.client.put(keys[0], { v: Vector.ofFloat32([5, 5]) }, null, { txn } as any)
+    await helper.client.put(keys[1], { v: Vector.ofFloat32([7, 7]) }) // makes the transaction's read stale
+
+    const error = await helper.client.commit(txn).then(() => null, e => e)
+    expect(error?.code, String(error)).to.equal(status.TXN_FAILED)
+    expect(bytesOf(await helper.client.get(keys[0], LINEARIZE as any)), 'rolled back').to.eql(Vector.ofFloat32([1, 0]).toBytes())
+  })
+
+  it('refuses a write after the transaction expires (AW-11)', async function () {
+    const set = await loadVectors([Vector.ofFloat32([1, 0])])
+    const key = new Aerospike.Key(helper.namespace, set, 0)
+    const txn = new Aerospike.Transaction()
+    txn.setTimeout(1)
+    try {
+      await helper.client.put(key, { v: Vector.ofFloat32([2, 0]) }, null, { txn } as any)
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      const error = await helper.client.put(key, { v: Vector.ofFloat32([3, 0]) }, null, { txn } as any).then(() => null, e => e)
+      expect(error?.code, String(error)).to.equal(status.MRT_EXPIRED)
+    } finally {
+      await helper.client.abort(txn)
+    }
+    expect(bytesOf(await helper.client.get(key, LINEARIZE as any))).to.eql(Vector.ofFloat32([1, 0]).toBytes())
   })
 
   describe('while a node fails (AEROSPIKE_NODE_FAILURE_TEST=1: kill or freeze a node during the test)', function () {

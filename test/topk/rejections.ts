@@ -92,7 +92,7 @@ describe('Top-K rejections', function () {
     skipUnlessTopKQueriesRun(this)
 
     it('rejects k above 1,000', async function () {
-      for (const k of [1001, 2 ** 32 - 1]) {
+      for (const k of [1001, 2 ** 20, 2 ** 30, 2 ** 31, 2 ** 32 - 1]) {
         const query = topKQuery()
         query.topK(k)
         expectRejected(await errorFrom(() => query.results()), `topK must be in [1, 1000]; got ${k}`, `k = ${k}:`)
@@ -122,6 +122,19 @@ describe('Top-K rejections', function () {
       thenOrderByFirst.orderBy('score', INTEGER, DESC)
       thenOrderByFirst.topK(10)
       expectRejected(await errorFrom(() => thenOrderByFirst.results()), message, 'thenOrderBy, then orderBy:')
+    })
+
+    it('rejects a third order key (AT-05)', async function () {
+      const query = topKQuery()
+      query.thenOrderBy('ts', INTEGER, DESC)
+      query.thenOrderBy('other', INTEGER, DESC)
+      expectRejected(await errorFrom(() => query.results()), 'orderBy supports at most two keys')
+    })
+
+    it('rejects the same bin as both order keys (AT-05)', async function () {
+      const query = topKQuery()
+      query.thenOrderBy('score', INTEGER, DESC)
+      expectRejected(await errorFrom(() => query.results()), "order-by names bin 'score' more than once")
     })
 
     it('rejects topK without orderBy', async function () {
@@ -204,11 +217,20 @@ describe('Top-K rejections', function () {
     it('rejects orderBy without topK on the server', async function () {
       const query = newQuery()
       query.orderBy('score', INTEGER, DESC)
-      const error = await errorFrom(() => query.results())
+      const error = await errorFrom(() => query.results({ errorDetailVerbosity: Aerospike.errorDetailVerbosity.MESSAGE } as any))
 
       // R20: the server rejects an order key sent without k with a parameter error.
       expect(error, 'expected an error').to.not.be.null
       expect(error.code).to.equal(status.ERR_REQUEST_INVALID)
+      expect(error.message).to.match(/ top-k needs both order-by and top-k fields$/)
+    })
+
+    it('rejects orderBy without topK with the generic message when no error details are asked for (AE-02)', async function () {
+      const query = newQuery()
+      query.orderBy('score', INTEGER, DESC)
+      const error = await errorFrom(() => query.results())
+      expect(error?.code).to.equal(status.ERR_REQUEST_INVALID)
+      expect(error.message).to.match(/ Request protocol invalid, or invalid protocol field\.$/)
     })
   })
 })

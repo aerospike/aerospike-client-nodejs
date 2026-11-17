@@ -173,11 +173,17 @@ describe('Vector values #noserver', function () {
       ['an unknown element type', withHeader(header(7, 3)), 'vector: invalid element type 7'],
       ['no dimensions', header(FLOAT32, 0), 'vector: must have at least 1 dimension'],
       ['one byte short', good.subarray(0, good.length - 1), 'vector: value size 17 does not match 18 (3 dimensions of 4 bytes, little-endian)'],
+      ['two bytes too many', Buffer.concat([good, Buffer.alloc(2)]), 'vector: value size 20 does not match 18 (3 dimensions of 4 bytes, little-endian)'],
       ['too many dimensions', header(FLOAT32, 65537), 'vector: 65537 dimensions exceed max 65536 for element type 3']
     ]
     for (const [name, bytes, message] of cases) {
       expectParamError(() => new Vector(bytes), message, name)
     }
+  })
+
+  it('cannot be a record key (AV-09)', function () {
+    expectTypeError(() => new Aerospike.Key('test', 'demo', Vector.ofFloat32([1]) as any),
+      'Invalid user key: Must be string, integer, BigInt, or Buffer')
   })
 
   it('is not changed by its input, elements() or toBytes()', function () {
