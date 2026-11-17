@@ -53,7 +53,9 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static v8::Local<v8::Value> NewInstance(v8::Local<v8::Object> config);
 
 	aerospike *as;
-	LogInfo *log;
+	// Lives as long as the client, so the client can still log after it closes.
+	LogInfo log_info;
+	LogInfo *log = &log_info;
 	uv_async_t asyncEventCb;
 	bool closed = false;
 

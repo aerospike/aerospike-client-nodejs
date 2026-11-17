@@ -57,7 +57,7 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	IndexRemoveCommand *cmd =
 		new IndexRemoveCommand(client, info[3].As<Function>());
-	LogInfo *log = cmd->log = client->log;
+	LogInfo *log = cmd->log;
 
 	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()),
 				   AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {

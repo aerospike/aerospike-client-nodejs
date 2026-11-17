@@ -103,7 +103,6 @@ describe('ipMap #noserver', function () {
         error = err
       }
       expect(error).to.be.instanceof(Aerospike.AerospikeError)
-      // connect() already closed the native client.
       client.close()
       client.close()
     })

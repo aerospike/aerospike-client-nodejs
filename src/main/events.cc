@@ -44,7 +44,7 @@ class EventQueue : public Nan::AsyncResource {
 	{
 		as_queue_mt_init(&events, sizeof(as_cluster_event), 4);
 		callback.Reset(cb);
-		log = p_log;
+		log_info = *p_log;
 	}
 
 	~EventQueue()
@@ -77,7 +77,9 @@ class EventQueue : public Nan::AsyncResource {
   private:
 	as_queue_mt events;
 	Nan::Persistent<Function> callback;
-	LogInfo *log;
+	// A copy, so events can still log after the client closes.
+	LogInfo log_info;
+	LogInfo *log = &log_info;
 
 	Local<Value> convert(as_cluster_event *event)
 	{
@@ -140,8 +142,13 @@ void events_callback_close(as_config *config)
 {
 	Nan::HandleScope scope;
 	uv_handle_t *handle = (uv_handle_t *)config->event_callback_udata;
+	if (!handle) {
+		// Never set up, or already released after a failed connect.
+		return;
+	}
 	// EventQueue* queue = reinterpret_cast<EventQueue*>(handle->data);
 	// delete queue;
+	config->event_callback = NULL;
 	config->event_callback_udata = NULL;
 	handle->data = NULL;
 	uv_close(handle, events_async_close);

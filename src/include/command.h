@@ -30,7 +30,7 @@ class AerospikeCommand : public Nan::AsyncResource {
 	AerospikeCommand(std::string name, AerospikeClient *client,
 					 v8::Local<v8::Function> callback_)
 		: Nan::AsyncResource(("aerospike:" + name + "Command").c_str()),
-		  as(client->as), log(client->log), cmd(name)
+		  as(client->as), log_info(*client->log), log(&log_info), cmd(name)
 	{
 		as_error_init(&err);
 		callback.Reset(callback_);
@@ -41,6 +41,10 @@ class AerospikeCommand : public Nan::AsyncResource {
 		Nan::HandleScope scope;
 		callback.Reset();
 	}
+
+	// Not copyable: log points at this command's own log_info.
+	AerospikeCommand(const AerospikeCommand &) = delete;
+	AerospikeCommand &operator=(const AerospikeCommand &) = delete;
 
 	AerospikeCommand *SetError(as_status code, const char *func,
 							   const char *file, uint32_t line, const char *fmt,
@@ -57,6 +61,8 @@ class AerospikeCommand : public Nan::AsyncResource {
 
 	aerospike *as;
 	as_error err;
+	// A copy, so a command still in flight when the client closes can log.
+	LogInfo log_info;
 	LogInfo *log;
 
   private:

@@ -63,7 +63,6 @@ class IndexCreateCommand : public AerospikeCommand {
 	as_index_datatype dtype;
 	as_cdt_ctx context;
 	bool with_context;
-	LogInfo *log = NULL;
 	as_exp *exp = NULL;
 };
 
@@ -74,7 +73,6 @@ static void *prepare(const Nan::FunctionCallbackInfo<Value> &info)
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 	IndexCreateCommand *cmd =
 		new IndexCreateCommand(client, info[9].As<Function>());
-	cmd->log = client->log;
 
 	if (as_strlcpy(cmd->ns, *Nan::Utf8String(info[0].As<String>()),
 				   AS_NAMESPACE_MAX_SIZE) > AS_NAMESPACE_MAX_SIZE) {
