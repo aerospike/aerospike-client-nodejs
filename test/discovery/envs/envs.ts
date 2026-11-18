@@ -134,9 +134,21 @@ async function connectError (config: any): Promise<any> {
   return null
 }
 
-// Runs fn with the client and closes it.
-async function withClient (config: any, fn: (client: any) => Promise<void>): Promise<void> {
-  const client = await Aerospike.connect(config)
+// Runs fn with the client and closes it. A cluster the environment has just
+// brought up may refuse the first connects for a moment; retryMs retries a
+// failed connect for that long.
+async function withClient (config: any, fn: (client: any) => Promise<void>, retryMs = 0): Promise<void> {
+  const deadline = Date.now() + retryMs
+  let client: any
+  for (;;) {
+    try {
+      client = await Aerospike.connect(config)
+      break
+    } catch (err) {
+      if (Date.now() >= deadline) throw err
+      await sleep(500)
+    }
+  }
   try {
     await fn(client)
   } finally {
@@ -345,7 +357,7 @@ describe('conformance test environment', function () {
       const b = node('CONTROL_NODE_B')
       await withClient(passThrough(a, logFile()), async client => {
         expect(await waitNodes(client, [a.name, b.name])).to.eql([a.name, b.name].sort())
-      })
+      }, 20000)
     })
 
     it('keeps the node in use and never holds the node that translates to its address', async function () {
@@ -439,7 +451,7 @@ describe('conformance test environment', function () {
       const b = node('CONTROL_NODE_B')
       await withClient(config(a, logFile()), async client => {
         expect(await waitNodes(client, [a.name, b.name])).to.eql([a.name, b.name].sort())
-      })
+      }, 20000)
     })
 
     it('fails with ERR_INVALID_NODE, naming the setting, when a node has no alternate address', async function () {
