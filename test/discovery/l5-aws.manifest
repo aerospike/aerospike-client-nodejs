@@ -3,7 +3,8 @@
 # L5_SETUP installs the build tools and a pinned Node.js for the machine's architecture.
 L5_SETUP='sudo dnf install -y -q gcc-c++ make python3 git tar xz wget autoconf automake libtool openssl-devel zlib-devel libyaml-devel && case "$(uname -m)" in x86_64) arch=x64 ;; aarch64) arch=arm64 ;; *) echo "unsupported architecture $(uname -m)" >&2; exit 1 ;; esac && curl -fsSL "https://nodejs.org/dist/v22.11.0/node-v22.11.0-linux-$arch.tar.xz" | sudo tar -xJ -C /usr/local --strip-components=1'
 # A local run.sh export has no .git but already holds the submodule contents.
-L5_BUILD='if [ ! -f aerospike-client-c/Makefile ]; then git config --global --add safe.directory "$PWD" && git submodule update --init --recursive; fi && npm ci --ignore-scripts && ./scripts/build-c-client.sh && npm run build'
+# The build ends with the driver's own tests that need no server, as the C client's does.
+L5_BUILD='if [ ! -f aerospike-client-c/Makefile ]; then git config --global --add safe.directory "$PWD" && git submodule update --init --recursive; fi && npm ci --ignore-scripts && ./scripts/build-c-client.sh && npm run build && GLOBAL_CLIENT=false npx mocha --no-config --require choma --require mocha-clean --node-option import=tsx test/discovery/l5_driver.ts -g "#noserver"'
 # The harness appends its flags. Client messages up to debug level (node add,
 # remove and address changes, peer and partition-map updates) reach the row log
 # as DRIVER-STDERR client-log lines, as with the C client's manifest.

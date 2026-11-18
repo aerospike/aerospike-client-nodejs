@@ -191,6 +191,127 @@ describe('L5 driver #noserver', function () {
     })
   })
 
+  // Captures the driver's output in memory for one test.
+  function capture (readySent: boolean): { stdout: any[], stderr: any[], restore: () => void } {
+    const saved = { readySent: driver.output.readySent, stdout: driver.output.stdout, stderr: driver.output.stderr }
+    const stdout: any[] = []
+    const stderr: any[] = []
+    driver.output.readySent = readySent
+    driver.output.stdout = (text: string) => stdout.push(JSON.parse(text))
+    driver.output.stderr = (text: string) => stderr.push(JSON.parse(text))
+    return { stdout, stderr, restore: () => Object.assign(driver.output, saved) }
+  }
+
+  describe('output order', function () {
+    it('sends lines before ready to stderr, drops failures before ready, and keeps the exit 3 error on stdout', function () {
+      const out = capture(false)
+      try {
+        driver.write({ type: 'error', t: 1, message: 'malformed command: x' })
+        driver.write({ type: 'failure', t: 2, startedAt: 1, message: 'timeout' })
+        driver.write({ type: 'error', t: 3, message: 'client not created: x' }, { stdout: true })
+        driver.write({ type: 'ready', t: 4 })
+        driver.write({ type: 'failure', t: 5, startedAt: 4, message: 'timeout' })
+        expect(out.stderr.map(l => l.t)).to.eql([1])
+        expect(out.stdout.map(l => [l.type, l.t])).to.eql([['error', 3], ['ready', 4], ['failure', 5]])
+      } finally {
+        out.restore()
+      }
+    })
+  })
+
+  describe('snapshots', function () {
+    function fakeDriver (raw: () => any): any {
+      const d = new driver.Driver(driver.parseArgs(required))
+      d.client = { as_client: { _routing: raw } }
+      return d
+    }
+    const node = (active = true, port = 3000) => ({ name: 'A', address: '10.0.0.1', port, active })
+
+    it('writes a change for a node, host, port, active or unowned change, not for reachability alone', function () {
+      let raw: any = { nodes: [node()], masters: new Array(4096).fill('A') }
+      const d = fakeDriver(() => raw)
+      const out = capture(true)
+      try {
+        d.poll(false)
+        d.reachable.set('A', true)
+        d.poll(false)
+        expect(out.stdout).to.be.empty
+        const changes: Array<[string, any]> = [
+          ['port', { nodes: [node(true, 3001)], masters: raw.masters }],
+          ['active', { nodes: [node(false, 3001)], masters: raw.masters }],
+          ['unowned', { nodes: [node(false, 3001)], masters: [null, ...raw.masters.slice(1)] }],
+          ['node removed', { nodes: [], masters: new Array(4096).fill(null) }]
+        ]
+        for (const [, next] of changes) {
+          raw = next
+          d.poll(false)
+        }
+        expect(out.stdout.map(l => l.reason)).to.eql(['change', 'change', 'change', 'change'])
+        expect(out.stdout[2]).to.include({ unowned: 1 })
+        expect(out.stdout[3]).to.include({ unowned: 4096 })
+        expect(out.stdout[3].owners).to.eql({})
+      } finally {
+        out.restore()
+      }
+    })
+
+    it('writes the change before the heartbeat when a tick has both', function () {
+      let raw: any = { nodes: [node()], masters: new Array(4096).fill('A') }
+      const d = fakeDriver(() => raw)
+      const out = capture(true)
+      try {
+        d.poll(false)
+        raw = { nodes: [node(false)], masters: raw.masters }
+        d.poll(true)
+        expect(out.stdout.map(l => l.reason)).to.eql(['change', 'heartbeat'])
+      } finally {
+        out.restore()
+      }
+    })
+
+    it('keeps the longest unowned stretch, and restarts it on reset', function () {
+      const d = fakeDriver(() => null)
+      d.trackUnowned({ unowned: 5 }, 100)
+      d.trackUnowned({ unowned: 5 }, 200)
+      d.trackUnowned({ unowned: 0 }, 350)
+      expect(d.longestUnownedMs).to.equal(250)
+      d.trackUnowned({ unowned: 1 }, 400)
+      d.trackUnowned({ unowned: 0 }, 450)
+      expect(d.longestUnownedMs).to.equal(250)
+      d.trackUnowned({ unowned: 2 }, 500)
+      d.reset()
+      expect(d.longestUnownedMs).to.equal(0)
+      // The open stretch restarts at the reset.
+      expect(d.unownedSince).to.equal(d.resetAt)
+    })
+  })
+
+  describe('large', function () {
+    it('counts mismatches and failures, and names the first failure', async function () {
+      const d = new driver.Driver(driver.parseArgs(required))
+      const stored = new Map<string, string>()
+      d.client = {
+        put: async (key: any, bins: any) => {
+          if (key.key === 'big-1') throw new Error('put timeout')
+          stored.set(key.key, bins.v)
+        },
+        get: async (key: any) => {
+          if (key.key === 'big-3') throw new Error('get timeout')
+          if (key.key === 'big-2') return { bins: { v: 'other' } }
+          return { bins: { v: stored.get(key.key) } }
+        }
+      }
+      const out = capture(true)
+      try {
+        await d.large('big', 10, 4)
+        expect(out.stdout[0]).to.include({ type: 'large', step: 'big', bytes: 10, keys: 4, written: 3, read: 1, mismatched: 1, failures: 2, firstFailure: 'big-1 put: put timeout' })
+        expect(stored.get('big-0')).to.equal('big-0xxxxx')
+      } finally {
+        out.restore()
+      }
+    })
+  })
+
   describe('exit status', function () {
     this.timeout(30000)
 
@@ -198,7 +319,7 @@ describe('L5 driver #noserver', function () {
       const run = await runDriver(['--shape', 'nope'])
       expect(run.code).to.equal(2)
       expect(run.stdout).to.equal('')
-      expect(run.stderr).to.match(/--seed is required/).and.match(/^usage: driver.js/m)
+      expect(run.stderr).to.match(/^ERROR: --seed is required/m).and.match(/^usage: driver.js/m)
     })
 
     it('exits 3 when the client cannot be created, with an error line', async function () {
@@ -209,7 +330,7 @@ describe('L5 driver #noserver', function () {
       expect(run.lines).to.have.lengthOf(1)
       expect(run.lines[0]).to.include({ type: 'error' })
       expect(run.lines[0].message).to.match(/^client not created: ./)
-      expect(run.stderr).to.match(/client not created/)
+      expect(run.stderr).to.match(/^ERROR: client not created: /m)
     })
   })
 })
@@ -312,6 +433,8 @@ describe('L5 driver against a server', function () {
     const heartbeats = snapshots.filter(s => s.reason === 'heartbeat').map(s => s.t)
     const gaps = heartbeats.slice(1).map((t, i) => t - heartbeats[i])
     expect(Math.max(...gaps)).to.be.below(300)
+    // One interval apart, with no burst of heartbeats after a pause.
+    expect(Math.min(...gaps)).to.be.at.least(80)
 
     const served = run.lines.find(l => l.type === 'served')
     expect(served).to.include({ step: 'test-step', partitions: 4096, written: 4096, read: 4096, mismatched: 0, failures: 0, firstFailure: null })
@@ -386,6 +509,44 @@ describe('L5 driver against a server', function () {
     const last = run.lines.filter(l => l.type === 'snapshot').pop()
     expect(last.failed).to.be.at.least(failures.length)
     expect(last.lastError).to.be.a('string').that.is.not.empty
+  })
+
+  describe('watch on a name with several addresses', function () {
+    let addresses: string[] = []
+
+    before(async function () {
+      const dnsMod = await import('dns')
+      addresses = (await dnsMod.promises.lookup('localhost', { all: true, verbatim: true })).map(a => a.address)
+      if (!addresses.includes('127.0.0.1') || !addresses.includes('::1')) this.skip()
+    })
+
+    async function watchLocalhost (listenHost: string): Promise<any> {
+      const listener = net.createServer(socket => socket.destroy())
+      await new Promise<void>(resolve => listener.listen(0, listenHost, () => resolve()))
+      const port = (listener.address() as net.AddressInfo).port
+      try {
+        const run = await runDriver(args, [[1500, `watch localhost:${port} ${nodeName}`], [3000, 'quit']])
+        expect(run.code, run.stderr).to.equal(0)
+        return run.lines.find(l => l.type === 'watch')
+      } finally {
+        listener.close()
+      }
+    }
+
+    it('serves once every address connects, and lists each', async function () {
+      const watch = await watchLocalhost('::')
+      expect(watch.servingAt).to.be.a('number')
+      expect(watch.addresses.map((a: any) => a.address).sort()).to.eql(['127.0.0.1', '::1'])
+      expect(watch.addresses.every((a: any) => typeof a.firstConnectedAt === 'number')).to.be.true
+    })
+
+    it('never serves while one address never connects, which stays null', async function () {
+      const watch = await watchLocalhost('127.0.0.1')
+      expect(watch.servingAt).to.be.null
+      const byAddress = Object.fromEntries(watch.addresses.map((a: any) => [a.address, a.firstConnectedAt]))
+      expect(byAddress['127.0.0.1']).to.be.a('number')
+      expect(byAddress['::1']).to.be.null
+    })
   })
 
   it('treats the end of input as quit', async function () {

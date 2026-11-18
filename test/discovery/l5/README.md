@@ -17,6 +17,11 @@ to stderr as `client-log t=T LEVEL message` lines, which a harness copies into
 the row log; stdout keeps only the contract's warning and error `log` lines. The
 manifest passes `--client-log debug`.
 
+As in the C and Java drivers, anything written before `ready` goes to stderr,
+except the `error` line of exit 3, and a `failure` before `ready` is dropped. The
+manifest's build step ends with the driver's tests that need no server
+(`l5_driver.ts`, `#noserver`), as the C client's build does.
+
 The driver reads each node's address, port and active flag, and the client's
 partition map, through `_routing()` on the native client. That method is
 internal, for this driver only, and not part of the public API.
