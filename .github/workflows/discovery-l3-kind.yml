@@ -1,0 +1,128 @@
+name: Discovery L3 kind
+
+# Runs the l3-kind profiles of aerospike-client-conformance (kind with the
+# Aerospike Kubernetes Operator) against this commit through the Node.js L5
+# driver, built with test/discovery/l5-aws.manifest, as the Java client does.
+# Each profile is its own job; the results artifact is named after the profile.
+#
+# Every profile needs the Enterprise feature key (FEATURES_CONF), which fork pull
+# requests don't get. The gate job decides whether L3 runs and reports the skip,
+# so it's never skipped silently. The networkLoadBalancer profiles (nlb,
+# nlb-per-pod, nlb-tls) run on AKO 4.8.0-dev1 and stay non-blocking (not
+# required checks) until AKO 4.8.0 is released.
+#
+# The reusable workflow, the action and conformance-ref are pinned to one commit
+# of aerospike-client-conformance.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - stage
+      - master
+    types:
+      - opened
+      - reopened
+      - synchronize
+  push:
+    branches:
+      - dev
+      - stage
+  workflow_dispatch:
+
+concurrency:
+  group: discovery-l3-kind-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Skipped layers
+    runs-on: ubuntu-22.04
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Decide whether L3 runs
+        id: gate
+        env:
+          TRUSTED: >-
+            ${{
+              github.event_name == 'push'
+              || github.event_name == 'workflow_dispatch'
+              || github.event.pull_request.head.repo.full_name == github.repository
+            }}
+          HAS_FEATURES_CONF: ${{ secrets.FEATURES_CONF != '' }}
+        run: |
+          set -euo pipefail
+          run=false
+          reason=
+          if [[ "${TRUSTED}" != true ]]; then
+            reason="fork pull requests get no FEATURES_CONF"
+          elif [[ "${HAS_FEATURES_CONF}" != true ]]; then
+            reason="the FEATURES_CONF secret is not set"
+          else
+            run=true
+          fi
+          layers='[]'
+          if [[ "${run}" != true ]]; then
+            layers=$(jq -cn --arg reason "${reason}" '[{layer: "L3 kind", tests: "default, tls, per-node, nlb, nlb-per-pod and nlb-tls profiles", reason: $reason}]')
+          fi
+          echo "run=${run}" >> "${GITHUB_OUTPUT}"
+          echo "layers=${layers}" >> "${GITHUB_OUTPUT}"
+
+      - name: Report skipped layers
+        uses: aerospike/aerospike-client-conformance/.github/actions/report-skipped-layers@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+        with:
+          layers: ${{ steps.gate.outputs.layers }}
+
+  l3-kind:
+    name: L3 kind (${{ matrix.profile }})
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: default
+            ako-version: 4.7.0
+            ako-helm-repo: ""
+            cluster-chart-version: ""
+          - profile: tls
+            ako-version: 4.5.0
+            ako-helm-repo: ""
+            cluster-chart-version: ""
+          - profile: per-node
+            ako-version: 4.5.0
+            ako-helm-repo: ""
+            cluster-chart-version: ""
+          - profile: nlb
+            ako-version: 4.8.0-dev1
+            ako-helm-repo: https://aerospike.github.io/aerospike-kubernetes-operator
+            cluster-chart-version: 4.7.0
+          - profile: nlb-per-pod
+            ako-version: 4.8.0-dev1
+            ako-helm-repo: https://aerospike.github.io/aerospike-kubernetes-operator
+            cluster-chart-version: 4.7.0
+          - profile: nlb-tls
+            ako-version: 4.8.0-dev1
+            ako-helm-repo: https://aerospike.github.io/aerospike-kubernetes-operator
+            cluster-chart-version: 4.7.0
+    uses: aerospike/aerospike-client-conformance/.github/workflows/l3-kind.yaml@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+    with:
+      client-repository: ${{ github.repository }}
+      commit: ${{ github.event.pull_request.head.sha || github.sha }}
+      manifest: test/discovery/l5-aws.manifest
+      profile: ${{ matrix.profile }}
+      ako-version: ${{ matrix.ako-version }}
+      ako-helm-repo: ${{ matrix.ako-helm-repo }}
+      cluster-chart-version: ${{ matrix.cluster-chart-version }}
+      conformance-ref: a14ec6e68d7231815e1f60024e9121f4618a8850
+    secrets:
+      FEATURES_CONF: ${{ secrets.FEATURES_CONF }}
