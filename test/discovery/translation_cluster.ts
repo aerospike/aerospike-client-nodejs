@@ -214,8 +214,8 @@ describe('address translation against a multi-node cluster', function () {
 
   it('connects to the seed alone when strict skips every peer', async function () {
     // Intended (testing strategy P-11, C test translation_wrong_list_miss): a
-    // strict miss skips the peer, logs it and retries every tend. -25 comes
-    // back only when no node can be connected.
+    // strict miss skips the peer, logs it and retries every tend. A miss alone
+    // never fails connect (the seed is never translated).
     const portMap = { '192.0.2.1:3000': `${seedHost}:1` }
     const found = await connectedAddresses({ translation: { provider: 'port-map', portMap, onMiss: 'strict' } }, 1)
     expect(found).to.eql([`${seedHost}:${seedPort}`])
