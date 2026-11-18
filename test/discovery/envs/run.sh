@@ -14,6 +14,13 @@ if [ ! -f aerospike-client-c/Makefile ]; then
   git submodule update --init --recursive
 fi
 if ! ls build/Release/aerospike.node >/dev/null 2>&1; then
+  # The runner image is not ours: install what the C client and libuv build
+  # need, as the C client's own environment runs do.
+  if [ "$(uname -s)" = Linux ] && command -v apt-get >/dev/null; then
+    sudo apt-get update -q
+    sudo apt-get install -y -q --no-install-recommends build-essential autoconf automake libtool \
+      make pkg-config libssl-dev libyaml-dev zlib1g-dev
+  fi
   npm ci --ignore-scripts
   ./scripts/build-c-client.sh
   npm run build
