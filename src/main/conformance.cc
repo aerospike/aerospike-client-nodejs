@@ -34,19 +34,27 @@
  * its discovery provider through the same code a client uses.
  */
 
+#include <cstring>
 #include <map>
 #include <string>
 #include <vector>
 
+// The tls rows read a certificate with OpenSSL. On Windows the C client brings
+// its own OpenSSL DLL that the add-on does not link, so tlsMatch is left out
+// there; the L1 runner runs on Linux.
+#if !defined(_WIN32)
 #include <openssl/bio.h>
 #include <openssl/pem.h>
 #include <openssl/x509.h>
+#endif
 
 extern "C" {
 #include <aerospike/as_config.h>
 #include <aerospike/as_discovery.h>
 #include <aerospike/as_host.h>
+#if !defined(_WIN32)
 #include <aerospike/as_tls.h>
+#endif
 #include <aerospike/as_vector.h>
 }
 
@@ -410,6 +418,9 @@ void provider_destroy(Nan::NAN_METHOD_ARGS_TYPE info)
 
 void tls_match(Nan::NAN_METHOD_ARGS_TYPE info)
 {
+#if defined(_WIN32)
+	info.GetReturnValue().Set(error_object("tlsMatch is not built on Windows"));
+#else
 	std::string pem = str(info[1]);
 	std::string identifier = str(info[2]);
 	BIO *bio = BIO_new_file(pem.c_str(), "r");
@@ -427,6 +438,7 @@ void tls_match(Nan::NAN_METHOD_ARGS_TYPE info)
 					   : kind == AS_TLS_MATCH_LEGACY ? "legacy"
 													 : "none";
 	info.GetReturnValue().Set(Nan::New(name).ToLocalChecked());
+#endif
 }
 
 } // namespace
