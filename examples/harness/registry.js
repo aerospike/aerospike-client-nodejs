@@ -49,6 +49,11 @@ const secondaryIndex = require('../doc/secondaryIndex')
 const userDefinedFunction = require('../doc/userDefinedFunction')
 const udfModule = require('../doc/udfModule')
 const dynamicConfig = require('../doc/dynamicConfig')
+const addressTranslationIpMap = require('../doc/addressTranslationIpMap')
+const addressTranslationPortMap = require('../doc/addressTranslationPortMap')
+const addressTranslationPassThrough = require('../doc/addressTranslationPassThrough')
+const seedDiscoveryDns = require('../doc/seedDiscoveryDns')
+const seedDiscoveryAwsTags = require('../doc/seedDiscoveryAwsTags')
 const metrics = require('../doc/metrics')
 const mrtCommit = require('../doc/mrtCommit')
 const mrtAbort = require('../doc/mrtAbort')
@@ -201,6 +206,11 @@ const examples = [
     )
   },
   { name: 'DynamicConfig', runExample: dynamicConfig.runExample, fixture: emptyFixture() },
+  { name: 'AddressTranslationIpMap', runExample: addressTranslationIpMap.runExample, fixture: emptyFixture() },
+  { name: 'AddressTranslationPortMap', runExample: addressTranslationPortMap.runExample, fixture: emptyFixture() },
+  { name: 'AddressTranslationPassThrough', runExample: addressTranslationPassThrough.runExample, fixture: emptyFixture() },
+  { name: 'SeedDiscoveryDns', runExample: seedDiscoveryDns.runExample, fixture: emptyFixture() },
+  { name: 'SeedDiscoveryAwsTags', runExample: seedDiscoveryAwsTags.runExample, fixture: emptyFixture() },
   { name: 'Metrics', runExample: metrics.runExample, fixture: emptyFixture() },
   {
     name: 'MrtCommit',

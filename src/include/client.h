@@ -60,6 +60,13 @@ class AerospikeClient : public Nan::ObjectWrap {
 	bool closed = false;
 
 	char *report_dir = NULL;
+
+	// The ip_map array this client allocated from Config#ipMap. The client
+	// frees it after aerospike_destroy(), and never frees as->config.ip_map:
+	// a config file can point that at the C client's own copy, which the C
+	// client frees itself.
+	as_addr_map *ip_map = NULL;
+	uint32_t ip_map_size = 0;
 	Nan::Persistent<v8::Function> enable_callback;
 	Nan::Persistent<v8::Function> snapshot_callback;
 	Nan::Persistent<v8::Function> node_close_callback;
