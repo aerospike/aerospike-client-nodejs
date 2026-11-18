@@ -1,0 +1,93 @@
+name: Discovery conformance
+
+# L1: runs the aerospike-client-conformance fixture set (translate, collision,
+# merge, dns, aws-tags and tls rows) through the Node.js client with
+# test/discovery/l1/runner.ts, as the Java and C clients run it through theirs.
+# Each row's config goes through Node's own Config validation, then through the C
+# client built-ins the Node.js client uses. The runner compares every result with
+# test/discovery/l1/nodejs-declared.yaml and fails on any difference;
+# conformance's collect-conformance-report action then checks the report against
+# the fixture set and the declarations. Needs no secret.
+#
+# The fixtures and the action are pinned to one commit of
+# aerospike-client-conformance; moving the pin is a deliberate change that also
+# updates the declarations.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - stage
+      - master
+    types:
+      - opened
+      - reopened
+      - synchronize
+  push:
+    branches:
+      - dev
+      - stage
+  workflow_dispatch:
+
+concurrency:
+  group: discovery-conformance-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  l1:
+    name: L1 conformance
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          submodules: recursive
+
+      - name: Checkout conformance fixtures
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: aerospike/aerospike-client-conformance
+          ref: a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+          path: conformance-fixtures
+
+      - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
+        with:
+          node-version: 22
+
+      - name: Build client
+        run: |
+          npm ci --ignore-scripts
+          ./scripts/build-c-client.sh
+          npm run build
+
+      - name: Run conformance fixtures
+        run: |
+          mkdir -p conformance-report
+          npx tsx test/discovery/l1/runner.ts \
+            --fixtures conformance-fixtures \
+            --declarations test/discovery/l1/nodejs-declared.yaml \
+            --report conformance-report/conformance-report.json
+
+      - name: Upload conformance report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: conformance-report-nodejs
+          path: conformance-report/
+          if-no-files-found: warn
+
+      - name: Collect conformance report
+        if: ${{ always() }}
+        uses: aerospike/aerospike-client-conformance/.github/actions/collect-conformance-report@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+        with:
+          reports-directory: conformance-report
+          fixtures-directory: ${{ github.workspace }}/conformance-fixtures
+          declarations-directory: test/discovery/l1
