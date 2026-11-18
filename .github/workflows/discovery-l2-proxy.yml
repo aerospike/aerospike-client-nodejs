@@ -9,9 +9,10 @@ name: Discovery L2 proxy
 # Community runs every profile on every pull request and needs no secret.
 # Enterprise (default and cn-only, with server TLS) needs the FEATURES_CONF
 # secret, and the development server that advertises access addresses verbatim
-# needs the JFROG_OIDC_PROVIDER and JFROG_OIDC_AUDIENCE secrets. Fork pull
-# requests get neither. The gate job decides which of those run and reports
-# every layer it skips, so none is skipped silently.
+# needs JFrog OIDC, from the OIDC_PROVIDER_NAME and OIDC_AUDIENCE repository
+# variables. Fork pull requests get neither the secret nor the OIDC token.
+# The gate job decides which of those run and reports every layer it skips, so
+# none is skipped silently.
 #
 # The reusable workflow, the action and conformance-ref are pinned to one commit
 # of aerospike-client-conformance, so a change there can't break this
@@ -65,7 +66,7 @@ jobs:
               || github.event.pull_request.head.repo.full_name == github.repository
             }}
           HAS_FEATURES_CONF: ${{ secrets.FEATURES_CONF != '' }}
-          HAS_JFROG_OIDC: ${{ secrets.JFROG_OIDC_PROVIDER != '' && secrets.JFROG_OIDC_AUDIENCE != '' }}
+          HAS_JFROG_OIDC: ${{ vars.OIDC_PROVIDER_NAME != '' && vars.OIDC_AUDIENCE != '' }}
         run: |
           set -euo pipefail
           enterprise=false
@@ -86,7 +87,7 @@ jobs:
             if [[ "${HAS_JFROG_OIDC}" == true ]]; then
               verbatim=true
             else
-              layers=$(jq -c '. + [{layer: "L2 verbatim access address", tests: "pass-through-ports with an unresolvable hostname and unresolved-access on the development server", reason: "the JFROG_OIDC_PROVIDER and JFROG_OIDC_AUDIENCE secrets are not set"}]' <<< "${layers}")
+              layers=$(jq -c '. + [{layer: "L2 verbatim access address", tests: "pass-through-ports with an unresolvable hostname and unresolved-access on the development server", reason: "the OIDC_PROVIDER_NAME and OIDC_AUDIENCE variables are not set"}]' <<< "${layers}")
             fi
           fi
           echo "enterprise=${enterprise}" >> "${GITHUB_OUTPUT}"
@@ -160,5 +161,5 @@ jobs:
       verbatim-access-address: ${{ matrix.verbatim-access-address }}
       conformance-ref: a14ec6e68d7231815e1f60024e9121f4618a8850
     secrets:
-      JFROG_OIDC_PROVIDER: ${{ secrets.JFROG_OIDC_PROVIDER }}
-      JFROG_OIDC_AUDIENCE: ${{ secrets.JFROG_OIDC_AUDIENCE }}
+      JFROG_OIDC_PROVIDER: ${{ vars.OIDC_PROVIDER_NAME }}
+      JFROG_OIDC_AUDIENCE: ${{ vars.OIDC_AUDIENCE }}
