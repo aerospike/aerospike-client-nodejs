@@ -74,6 +74,8 @@ describe('L5 driver #noserver', function () {
       expect(options.portMap).to.eql({ A: 'h:1' })
       expect(options.user).to.be.undefined
       expect(options.tlsName).to.be.undefined
+      expect(options.clientLog).to.equal('warn')
+      expect(driver.parseArgs([...required, '--client-log', 'debug']).clientLog).to.equal('debug')
     })
 
     it('takes port-map keys as node names or advertised HOST:PORT, as given', function () {
@@ -112,6 +114,7 @@ describe('L5 driver #noserver', function () {
       ['a flag given twice', [...required, '--set', 'other'], /--set given twice/],
       ['a port-map key that is a bad HOST:PORT', [...required.slice(0, 12), '--port-map', '10.0.0.1:x=h:1'], /--port-map key must be HOST:PORT/],
       ['a port-map key named twice', [...required.slice(0, 12), '--port-map', 'A=h:1,A=h:2'], /--port-map names A twice/],
+      ['an unknown client log level', [...required, '--client-log', 'trace'], /--client-log must be warn, info or debug/],
       ['a CA file without a TLS name', [...required, '--tls-ca-file', '/ca.pem'], /--tls-ca-file is only valid with --tls-name/]
     ]
 
@@ -164,9 +167,14 @@ describe('L5 driver #noserver', function () {
         .to.eql({ level: 'ERROR', message: 'Failed to parse: x.yml' })
     })
 
-    it('ignores lower levels and lines that are not log lines', function () {
-      expect(driver.parseLogLine('Nov 16 2026 05:01:50 UTC: INFO (9017) [as_cluster.c:1] [fn] - Add node')).to.be.null
-      expect(driver.parseLogLine('Nov 16 2026 05:01:50 UTC: DEBUG (9017) [as_cluster.c:1] [fn] - x')).to.be.null
+    it('reads lower levels too, for --client-log', function () {
+      expect(driver.parseLogLine('Nov 16 2026 05:01:50 UTC: INFO (9017) [as_cluster.c:1] [fn] - Add node'))
+        .to.eql({ level: 'INFO', message: 'Add node' })
+      expect(driver.parseLogLine('Nov 16 2026 05:01:50 UTC: DEBUG(9017) [as_cluster.c:1] [fn] - x'))
+        .to.eql({ level: 'DEBUG', message: 'x' })
+    })
+
+    it('ignores lines that are not log lines', function () {
       expect(driver.parseLogLine('Expected event 6. Received event: 9 Offset: 171')).to.be.null
       expect(driver.parseLogLine('')).to.be.null
     })
@@ -327,6 +335,57 @@ describe('L5 driver against a server', function () {
     expect(watch.addresses).to.eql([{ address: '127.0.0.1', firstConnectedAt: watch.servingAt }])
     expect(watch.usableAt).to.be.at.least(watch.servingAt)
     expect(watch.usableMs).to.equal(watch.usableAt - watch.servingAt)
+  })
+
+  it('writes client messages below warning to stderr with --client-log debug, never to stdout', async function () {
+    const run = await runDriver([...args, '--client-log', 'debug'], [[1500, 'quit']])
+    expect(run.code, run.stderr).to.equal(0)
+    expect(run.stderr).to.match(/^client-log t=[\d.]+ INFO Add node /m)
+    expect(run.stderr).to.match(/^client-log t=[\d.]+ DEBUG /m)
+    const levels = run.lines.filter(l => l.type === 'log').map(l => l.level)
+    expect(levels.every(level => level === 'WARN' || level === 'ERROR')).to.be.true
+  })
+
+  it('writes a failure line for each failed attempt once ready, with its start time', async function () {
+    // The node is reached only through this proxy; closing it fails every
+    // attempt after ready.
+    const sockets = new Set<net.Socket>()
+    const proxy = net.createServer(client => {
+      const server = net.connect(seed.port, seed.addr)
+      sockets.add(client).add(server)
+      client.pipe(server).pipe(client)
+      client.on('error', () => server.destroy())
+      server.on('error', () => client.destroy())
+    })
+    await new Promise<void>(resolve => proxy.listen(0, '127.0.0.1', () => resolve()))
+    const proxyPort = (proxy.address() as net.AddressInfo).port
+    const proxied = ['--seed', `127.0.0.1:${proxyPort}`, '--shape', 'port-map', '--port-map', `${nodeName}=127.0.0.1:${proxyPort}`,
+      '--tend-interval', '250', '--timeout', '500', '--namespace', helper.namespace, '--set', 'l5-driver-test', '--workers', '2']
+    if (helper.config.user) proxied.push('--user', helper.config.user)
+    const breaker = setTimeout(() => {
+      proxy.close()
+      for (const socket of sockets) socket.destroy()
+    }, 1500)
+    let run: Run
+    try {
+      run = await runDriver(proxied, [[4000, 'quit']])
+    } finally {
+      clearTimeout(breaker)
+      proxy.close()
+      for (const socket of sockets) socket.destroy()
+    }
+    expect(run.code, run.stderr).to.equal(0)
+    const readyAt = run.lines[0].t
+    const failures = run.lines.filter(l => l.type === 'failure')
+    expect(failures).to.not.be.empty
+    for (const failure of failures) {
+      expect(failure.t).to.be.at.least(readyAt)
+      expect(failure.startedAt).to.be.a('number').and.at.most(failure.t)
+      expect(failure.message).to.be.a('string').that.is.not.empty
+    }
+    const last = run.lines.filter(l => l.type === 'snapshot').pop()
+    expect(last.failed).to.be.at.least(failures.length)
+    expect(last.lastError).to.be.a('string').that.is.not.empty
   })
 
   it('treats the end of input as quit', async function () {

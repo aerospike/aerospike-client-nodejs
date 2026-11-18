@@ -55,7 +55,7 @@ const LOG_POLL_MS = 50
 const USAGE = 'usage: driver.js --seed HOST:PORT --shape pass-through|port-map ' +
   '[--port-map NODE=HOST:PORT,...] [--on-miss strict|pass-through] [--user USER] ' +
   '--tend-interval MS --timeout MS --namespace NS --set SET [--workers N] [--keys N] ' +
-  '[--tls-name NAME --tls-ca-file PATH]'
+  '[--tls-name NAME --tls-ca-file PATH] [--client-log warn|info|debug]'
 
 // One monotonic clock for every t, in milliseconds since the driver started.
 const START = process.hrtime.bigint()
@@ -122,7 +122,7 @@ function largeArgs (words) {
 
 function parseArgs (argv) {
   const known = ['--seed', '--shape', '--port-map', '--on-miss', '--user', '--tend-interval', '--timeout',
-    '--namespace', '--set', '--workers', '--keys', '--tls-name', '--tls-ca-file']
+    '--namespace', '--set', '--workers', '--keys', '--tls-name', '--tls-ca-file', '--client-log']
   const values = {}
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i]
@@ -166,6 +166,10 @@ function parseArgs (argv) {
       portMap[key] = target
     }
   }
+  const clientLog = values['--client-log'] ?? 'warn'
+  if (!['warn', 'info', 'debug'].includes(clientLog)) {
+    throw new UsageError(`--client-log must be warn, info or debug, got '${clientLog}'`)
+  }
   if (values['--tls-ca-file'] !== undefined && values['--tls-name'] === undefined) {
     throw new UsageError('--tls-ca-file is only valid with --tls-name')
   }
@@ -182,7 +186,8 @@ function parseArgs (argv) {
     workers: values['--workers'] === undefined ? 4 : parsePositive(values['--workers'], '--workers'),
     keys: values['--keys'] === undefined ? 1000 : parsePositive(values['--keys'], '--keys'),
     tlsName: values['--tls-name'],
-    tlsCaFile: values['--tls-ca-file']
+    tlsCaFile: values['--tls-ca-file'],
+    clientLog
   }
 }
 
@@ -218,11 +223,20 @@ class LogTail {
     }
   }
 
+  // WARN and ERROR are the contract's log lines. Lower levels, only there with
+  // --client-log info or debug, go to stderr as "client-log t=T LEVEL message",
+  // one line each, as the C driver writes them; the harness copies stderr into
+  // the row log.
   emit (line) {
     const entry = parseLogLine(line)
     if (entry === null) return
-    if (this.isReady()) write({ type: 'log', t: now(), level: entry.level, message: entry.message })
-    else process.stderr.write(line + '\n')
+    if (entry.level !== 'WARN' && entry.level !== 'ERROR') {
+      process.stderr.write(`client-log t=${now()} ${entry.level} ${entry.message}\n`)
+    } else if (this.isReady()) {
+      write({ type: 'log', t: now(), level: entry.level, message: entry.message })
+    } else {
+      process.stderr.write(line + '\n')
+    }
   }
 
   stop () {
@@ -235,10 +249,10 @@ class LogTail {
   }
 }
 
-// A C client log line looks like "<date>: WARN(1234) [file.c:12] [fn] - message".
-// Returns its level and message when it is WARN or ERROR, otherwise null.
+// A client log line looks like "<date>: WARN(1234) [file.c:12] [fn] - message".
+// Returns its level and message, or null for a line that isn't one.
 function parseLogLine (line) {
-  const match = /^[^:]+:\d\d:\d\d [A-Z]+: (WARN|ERROR)\s*\(\d+\) \[[^\]]*\] \[[^\]]*\] - (.*)$/.exec(line)
+  const match = /^[^:]+:\d\d:\d\d [A-Z]+: (ERROR|WARN|INFO|DEBUG|TRACE)\s*\(\d+\) \[[^\]]*\] \[[^\]]*\] - (.*)$/.exec(line)
   return match === null ? null : { level: match[1], message: match[2] }
 }
 
@@ -316,7 +330,8 @@ class Driver {
 
   async start () {
     this.log = new LogTail(() => this.ready)
-    Aerospike.setDefaultLogging({ level: Aerospike.log.WARN, file: this.log.fd })
+    const level = { warn: Aerospike.log.WARN, info: Aerospike.log.INFO, debug: Aerospike.log.DEBUG }[this.options.clientLog]
+    Aerospike.setDefaultLogging({ level, file: this.log.fd })
     this.log.start()
     try {
       this.client = await Aerospike.connect(this.config())
