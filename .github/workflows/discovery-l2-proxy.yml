@@ -1,0 +1,47 @@
+name: Discovery L2 proxy
+
+# Runs the l2-proxy profiles of aerospike-client-conformance against this commit
+# through the Node.js L5 driver (test/discovery/l5/driver.js), as the Java and C
+# clients do. The harness builds the client with test/discovery/l5-aws.manifest,
+# which also runs the driver's own tests that need no server, then runs every
+# row of each profile. Community runs every profile on every pull request and
+# needs no secret.
+#
+# The reusable workflow and its conformance-ref are pinned to one commit of
+# aerospike-client-conformance, so a change there can't break this repository's
+# CI without a pin bump here.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - stage
+      - master
+    types:
+      - opened
+      - reopened
+      - synchronize
+  push:
+    branches:
+      - dev
+      - stage
+  workflow_dispatch:
+
+concurrency:
+  group: discovery-l2-proxy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  l2-proxy:
+    name: L2 proxy
+    uses: aerospike/aerospike-client-conformance/.github/workflows/l2-proxy.yaml@a14ec6e68d7231815e1f60024e9121f4618a8850 # main
+    with:
+      client-repository: ${{ github.repository }}
+      commit: ${{ github.event.pull_request.head.sha || github.sha }}
+      manifest: test/discovery/l5-aws.manifest
+      profile: all
+      edition: ce
+      conformance-ref: a14ec6e68d7231815e1f60024e9121f4618a8850
