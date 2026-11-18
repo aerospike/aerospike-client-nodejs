@@ -25,6 +25,12 @@
 //
 // Run by test/discovery/l5-aws.manifest as L5_DRIVER.
 
+// Reachability checks (info) and the watch's DNS lookups run on libuv's thread
+// pool, 4 threads by default, where a few nodes that time out at once would
+// hold up the rest. The C and Java drivers use their own threads. Set before
+// anything uses the pool.
+if (process.env.UV_THREADPOOL_SIZE === undefined) process.env.UV_THREADPOOL_SIZE = '64'
+
 const crypto = require('crypto')
 const dns = require('dns')
 const fs = require('fs')
@@ -67,18 +73,35 @@ function sleep (ms) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-// Stdout carries only JSON lines, each written synchronously so it is flushed
-// as it is written and lines never interleave.
-function write (obj) {
-  const line = Buffer.from(JSON.stringify(obj) + '\n')
+function writeFd (fd, text) {
+  const line = Buffer.from(text)
   let offset = 0
   while (offset < line.length) {
     try {
-      offset += fs.writeSync(1, line, offset)
+      offset += fs.writeSync(fd, line, offset)
     } catch (err) {
       if (err.code !== 'EAGAIN') throw err
     }
   }
+}
+
+// Stdout carries only JSON lines, ready first, each written synchronously so it
+// is flushed as it is written and lines never interleave. As in the C and Java
+// drivers, a line written before ready goes to stderr, except the error line of
+// exit 3, and a failure line before ready is dropped. The sinks can be swapped
+// for the driver's own tests.
+const output = {
+  readySent: false,
+  stdout: text => writeFd(1, text),
+  stderr: text => writeFd(2, text)
+}
+
+function write (obj, { stdout = false } = {}) {
+  if (obj.type === 'ready') output.readySent = true
+  if (!output.readySent && obj.type === 'failure') return
+  const text = JSON.stringify(obj) + '\n'
+  if (output.readySent || stdout) output.stdout(text)
+  else output.stderr(text)
 }
 
 function message (err) {
@@ -336,8 +359,8 @@ class Driver {
     try {
       this.client = await Aerospike.connect(this.config())
     } catch (err) {
-      write({ type: 'error', t: now(), message: `client not created: ${message(err)}` })
-      process.stderr.write(`client not created: ${message(err)}\n`)
+      write({ type: 'error', t: now(), message: `client not created: ${message(err)}` }, { stdout: true })
+      process.stderr.write(`ERROR: client not created: ${message(err)}\n`)
       this.log.stop()
       process.exit(3)
     }
@@ -790,7 +813,7 @@ function main () {
     options = parseArgs(process.argv.slice(2))
   } catch (err) {
     if (!(err instanceof UsageError)) throw err
-    process.stderr.write(`${err.message}\n${USAGE}\n`)
+    process.stderr.write(`ERROR: ${err.message}\n${USAGE}\n`)
     process.exit(2)
   }
   new Driver(options).start()
@@ -801,4 +824,4 @@ if (require.main === module) {
 }
 
 // For the driver's own tests.
-module.exports = { largeArgs, parseArgs, parseHostPort, parseLogLine, partitionId, UsageError, CONTRACT, PARTITIONS }
+module.exports = { Driver, output, write, largeArgs, parseArgs, parseHostPort, parseLogLine, partitionId, UsageError, CONTRACT, PARTITIONS }
