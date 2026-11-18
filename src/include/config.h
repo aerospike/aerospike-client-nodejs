@@ -27,6 +27,11 @@ extern "C" {
 int config_from_jsobject(as_config *config, v8::Local<v8::Object> obj, AerospikeClient *client,
 						 const LogInfo *log);
 
+// Registers on config the discovery provider that obj.discovery describes, as
+// for a client, for the L1 conformance runner (conformance.cc).
+int config_discovery_from_jsobject(as_config *config, v8::Local<v8::Object> obj,
+								   const LogInfo *log);
+
 // Frees an ip_map array the client allocated, with its strings.
 void free_ip_map(as_addr_map *map, uint32_t size);
 

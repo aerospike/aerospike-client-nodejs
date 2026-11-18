@@ -68,6 +68,7 @@
       ],
       'sources': [
         'src/main/aerospike.cc',
+        'src/main/conformance.cc',
         'src/main/client.cc',
         'src/main/transaction.cc',
         'src/main/hyperloglog.cc',

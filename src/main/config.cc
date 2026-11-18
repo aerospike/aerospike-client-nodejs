@@ -411,6 +411,14 @@ Cleanup:
  * refreshIntervalMs, refreshTimeoutMs, tendRefreshDeadlineMs }.
  */
 static int get_optional_discovery_property(as_config *config, Local<Object> obj,
+										   const LogInfo *log);
+
+int config_discovery_from_jsobject(as_config *config, Local<Object> obj, const LogInfo *log)
+{
+	return get_optional_discovery_property(config, obj, log);
+}
+
+static int get_optional_discovery_property(as_config *config, Local<Object> obj,
 										   const LogInfo *log)
 {
 	Local<Value> value = Nan::Get(obj, Nan::New("discovery").ToLocalChecked()).ToLocalChecked();
