@@ -1,0 +1,7 @@
+# Manifest for the aws-tags real AWS harness in aerospike-client-conformance (aws-real/README.md
+# there). Each command runs with bash on the runner (Amazon Linux 2023) from the repository root.
+# AWS_REAL_SETUP installs the build tools and a pinned Node.js for the machine's architecture.
+AWS_REAL_SETUP='sudo dnf install -y -q gcc-c++ make python3 git tar xz wget autoconf automake libtool openssl-devel zlib-devel libyaml-devel && case "$(uname -m)" in x86_64) arch=x64 ;; aarch64) arch=arm64 ;; *) echo "unsupported architecture $(uname -m)" >&2; exit 1 ;; esac && curl -fsSL "https://nodejs.org/dist/v22.11.0/node-v22.11.0-linux-$arch.tar.xz" | sudo tar -xJ -C /usr/local --strip-components=1'
+AWS_REAL_BUILD='git submodule update --init --recursive && npm ci --ignore-scripts && ./scripts/build-c-client.sh && npm run build'
+# The harness appends the mode (latency, denied or join).
+AWS_REAL_PROBE='npx tsx test/discovery/aws-real/probe.ts'
