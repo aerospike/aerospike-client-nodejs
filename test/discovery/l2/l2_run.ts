@@ -400,6 +400,11 @@ describe('L2 run', function () {
   describe('TLS (ee)', function () {
     before(function () {
       if (env.DISCOVERY_SUBSET !== 'ee' || (profile !== 'default' && profile !== 'cn-only')) this.skip()
+      // A harness older than its TLS listeners on ee leaves the ports empty.
+      if ((env.DISCOVERY_TLS_ENDPOINT_PORTS ?? '') === '') {
+        console.log('L2-NOTE N-6: the topology has no TLS listeners (DISCOVERY_TLS_ENDPOINT_PORTS is empty)')
+        this.skip()
+      }
     })
 
     it('N-6: holds every node over TLS through its TLS listener', async function () {
