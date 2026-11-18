@@ -221,12 +221,12 @@ describe('discovery and translation config #noserver', function () {
       // The Java client's limits, for a provider that refreshes.
       ['a refresh interval below the tend interval', { tenderInterval: 250, discovery: { provider: 'dns', dns, refreshIntervalMs: 200 } }, /Discovery refresh interval 200 must be greater or equal to the tend interval 250/],
       ['the default refresh interval below a long tend interval', { tenderInterval: 60000, discovery: { provider: 'dns', dns } }, /Discovery refresh interval 30000 must be greater or equal to the tend interval 60000/],
-      ['a DNS timeout over the default refresh timeout', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 2001 } } }, /DNS seed provider timeout 2001 must be less or equal to the discovery refresh timeout 2000/],
+      ['a DNS timeout over the default refresh timeout', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 10001 } } }, /DNS seed provider timeout 10001 must be less or equal to the discovery refresh timeout 10000/],
       ['a DNS timeout over the refresh timeout', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 80 }, refreshTimeoutMs: 50 } }, /DNS seed provider timeout 80 must be less or equal to the discovery refresh timeout 50/],
       ['a tend deadline over half the tend interval', { tenderInterval: 150, discovery: { provider: 'dns', dns, executionMode: 'tend', refreshIntervalMs: 1000 } }, /Invalid discovery tend refresh deadline: 100. Must be > 0 and <= tend interval \/ 2 \(75\)/],
       ['a DNS timeout over the tend deadline', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 80 }, executionMode: 'tend', tendRefreshDeadlineMs: 50 } }, /DNS seed provider timeout 80 must be less or equal to the discovery tend refresh deadline 50/],
       ['aws-tags in tend mode', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] }, executionMode: 'tend' } }, /'aws-tags' runs only in discovery.executionMode 'thread'/],
-      ['an AWS timeout over the refresh timeout', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], timeoutMs: 3000 } } }, /AWS EC2 seed provider timeout 3000 must be less or equal to the discovery refresh timeout 2000/],
+      ['an AWS timeout over the refresh timeout', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], timeoutMs: 10001 } } }, /AWS EC2 seed provider timeout 10001 must be less or equal to the discovery refresh timeout 10000/],
       // aws-tags options.
       ['aws without the aws-tags provider', { discovery: { aws: {} } }, /discovery.aws is only valid with discovery.provider 'aws-tags'/],
       ['the aws-tags provider without aws', { discovery: { provider: 'aws-tags' } }, /discovery.aws must be an object/],
@@ -735,6 +735,21 @@ describe('discovery and translation with dynamic config', function () {
     } finally {
       fs.unlinkSync(file)
     }
+  })
+})
+
+describe('useAlternateAccessAddress without an alternate address', function () {
+  // N-14: a node with no alternate-access-address fails loudly at connect.
+  it('fails to connect with ERR_INVALID_NODE, naming the setting', async function () {
+    const reply: string = await helper.client.infoAny('service-clear-alt')
+    if (helper.config.tls != null || reply.split('\t')[1]?.trim() !== '') this.skip()
+    const error = await connectError(Object.assign({}, helper.config, {
+      useAlternateAccessAddress: true,
+      log: { level: Aerospike.log.OFF }
+    }))
+    expect(error).to.be.instanceOf(Aerospike.AerospikeError)
+    expect(error.code).to.equal(Aerospike.status.ERR_INVALID_NODE)
+    expect(error.message).to.match(/no alternate-access-address and use_services_alternate is true/)
   })
 })
 

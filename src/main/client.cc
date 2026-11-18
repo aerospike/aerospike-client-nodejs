@@ -106,6 +106,8 @@ NAN_METHOD(AerospikeClient::New)
 	aerospike_client_version = (char *)ADDON_VERSION;
 	aerospike_client_language = (char*)"nodejs";
 
+	client->ip_map = config.ip_map;
+	client->ip_map_size = config.ip_map_size;
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
@@ -122,11 +124,14 @@ static void close_client(AerospikeClient *client)
 	as_error err;
 	events_callback_close(&client->as->config);
 
-	// The cluster has its own copy of ip_map from connect.
-	config_free_ip_map(&client->as->config);
-
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
+
+	// Free only the array this client allocated; the cluster made its own
+	// copy at connect.
+	free_ip_map(client->ip_map, client->ip_map_size);
+	client->ip_map = NULL;
+	client->ip_map_size = 0;
 
 	client->closed = true;
 

@@ -8013,10 +8013,11 @@ export class Config {
      * level and checked again on every tend. When a new node translates to the
      * address of a node the client already uses, the new node is skipped; when
      * two new nodes translate to the same address, both are skipped. Connect
-     * fails with {@link status.ERR_TRANSLATION_MISS} or
-     * {@link status.ERR_TRANSLATION_COLLISION} when no node can be connected
-     * because of it, or when a node was skipped for it at connect while
-     * another node could not be reached. See {@link TranslationConfig}.
+     * doesn't fail because of a skipped node alone. It can fail with
+     * {@link status.ERR_TRANSLATION_MISS} or
+     * {@link status.ERR_TRANSLATION_COLLISION} when the seed is the only node
+     * connected, another node could not be reached, and the skip was the
+     * first problem found. See {@link TranslationConfig}.
      *
      * @example
      *
@@ -10645,10 +10646,11 @@ export interface ConfigOptions {
      * level and checked again on every tend. When a new node translates to the
      * address of a node the client already uses, the new node is skipped; when
      * two new nodes translate to the same address, both are skipped. Connect
-     * fails with {@link status.ERR_TRANSLATION_MISS} or
-     * {@link status.ERR_TRANSLATION_COLLISION} when no node can be connected
-     * because of it, or when a node was skipped for it at connect while
-     * another node could not be reached. See {@link TranslationConfig}.
+     * doesn't fail because of a skipped node alone. It can fail with
+     * {@link status.ERR_TRANSLATION_MISS} or
+     * {@link status.ERR_TRANSLATION_COLLISION} when the seed is the only node
+     * connected, another node could not be reached, and the skip was the
+     * first problem found. See {@link TranslationConfig}.
      *
      * @example
      *
@@ -10936,6 +10938,11 @@ export interface ConfigOptions {
      * Whether the client should use the server's
      * <code>alternate-access-address</code> instead of the
      * <code>access-address</code>.
+     *
+     * When on, every node must have an <code>alternate-access-address</code>.
+     * A node without one is logged at error level and skipped. Connect fails
+     * with {@link status.ERR_INVALID_NODE} if the seed has none, or if the
+     * seed is the only node connected when a peer without one is found.
      *
      * @default false
      *
@@ -11234,9 +11241,12 @@ export interface DiscoveryConfig {
     /**
      * Longest wait for a refresh in thread mode, including the first one at
      * connect, in milliseconds. A refresh that takes longer is logged, and its
-     * result is still used when it arrives.
+     * result is still used when it arrives. The provider's own
+     * <code>timeoutMs</code> must not exceed it, so in practice connect waits
+     * at most that long for the first result. The JavaScript event loop is
+     * blocked while connect waits.
      *
-     * @default 2000
+     * @default 10000
      */
     refreshTimeoutMs?: number | null;
     /**

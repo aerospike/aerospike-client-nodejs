@@ -32,15 +32,20 @@ using namespace v8;
 
 const uint16_t DEFAULT_PORT = 3000;
 
+void free_ip_map(as_addr_map *map, uint32_t size)
+{
+	if (map) {
+		for (uint32_t i = 0; i < size; i++) {
+			cf_free(map[i].orig);
+			cf_free(map[i].alt);
+		}
+		cf_free(map);
+	}
+}
+
 void config_free_ip_map(as_config *config)
 {
-	if (config->ip_map) {
-		for (uint32_t i = 0; i < config->ip_map_size; i++) {
-			cf_free(config->ip_map[i].orig);
-			cf_free(config->ip_map[i].alt);
-		}
-		cf_free(config->ip_map);
-	}
+	free_ip_map(config->ip_map, config->ip_map_size);
 	config->ip_map = NULL;
 	config->ip_map_size = 0;
 }
@@ -273,8 +278,8 @@ static int set_aws_seed_provider(as_config *config, Local<Object> obj, const Log
 	Local<Object> aws_obj = value.As<Object>();
 	as_aws_seed_provider_config aws;
 	as_aws_seed_provider_config_init(&aws);
-	// The Java client's default, so that it fits within the default
-	// refresh_timeout_ms.
+	// The Java client's default; the C client's is 5000. The spec sets none
+	// and the cross-client default is still to be decided.
 	aws.timeout_ms = 2000;
 
 	// Strings read from the object; the C client copies them.
@@ -1114,8 +1119,6 @@ int config_from_jsobject(as_config *config, Local<Object> configObj, AerospikeCl
 		cf_free(app_id);
 	}
 
-	// The Java client's default refresh timeout; the C client's is 10000.
-	config->discovery.refresh_timeout_ms = 2000;
 	if ((rc = get_optional_discovery_property(config, configObj, log)) !=
 		AS_NODE_PARAM_OK) {
 		goto Cleanup;
