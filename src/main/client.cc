@@ -30,6 +30,7 @@ extern "C" {
 #include <aerospike/as_config.h>
 #include <aerospike/as_key.h>
 #include <aerospike/as_log.h>
+#include <aerospike/as_partition.h>
 #include <aerospike/as_record.h>
 AS_EXTERN extern char* aerospike_client_version;
 AS_EXTERN extern char* aerospike_client_language;
@@ -254,6 +255,83 @@ NAN_METHOD(AerospikeClient::GetNodes)
 }
 
 /**
+ * Internal, for the pluggable discovery test driver (test/discovery/l5/driver.js);
+ * not part of the public API. Returns the nodes the client holds, with the IP
+ * address and port it connects to and whether the node is active. Given a
+ * namespace, also returns the master node name of each of its partitions in the
+ * client's map, or null when the partition has no master the client holds.
+ */
+NAN_METHOD(AerospikeClient::Routing)
+{
+	Nan::HandleScope scope;
+	AerospikeClient *client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	as_cluster *cluster = client->as->cluster;
+
+	if (client->closed || !cluster) {
+		info.GetReturnValue().Set(Nan::Null());
+		return;
+	}
+
+	Local<Object> result = Nan::New<Object>();
+	as_nodes *nodes = as_nodes_reserve(cluster);
+	Local<Array> v8_nodes = Nan::New<Array>(nodes->size);
+
+	for (uint32_t i = 0; i < nodes->size; i++) {
+		as_node *node = nodes->array[i];
+		as_address *address = as_node_get_address(node);
+		struct sockaddr *addr = (struct sockaddr *)&address->addr;
+		char ip[AS_IP_ADDRESS_SIZE];
+		as_address_short_name(addr, ip, sizeof(ip));
+
+		Local<Object> node_obj = Nan::New<Object>();
+		Nan::Set(node_obj, Nan::New("name").ToLocalChecked(),
+				 Nan::New<String>(node->name).ToLocalChecked());
+		Nan::Set(node_obj, Nan::New("port").ToLocalChecked(),
+				 Nan::New((uint32_t)as_address_port(addr)));
+		Nan::Set(node_obj, Nan::New("address").ToLocalChecked(),
+				 Nan::New<String>(ip).ToLocalChecked());
+		Nan::Set(node_obj, Nan::New("active").ToLocalChecked(),
+				 Nan::New<Boolean>(node->active != 0));
+		Nan::Set(v8_nodes, i, node_obj);
+	}
+	Nan::Set(result, Nan::New("nodes").ToLocalChecked(), v8_nodes);
+
+	// Shared memory tending keeps the map elsewhere; the driver then reports no
+	// partition fields, as the contract allows.
+	if (info.Length() > 0 && info[0]->IsString() && !cluster->shm_info) {
+		Nan::Utf8String ns(info[0]);
+		as_partition_table *table =
+			as_partition_tables_get(&cluster->partition_tables, *ns);
+		uint32_t size = table ? table->size : cluster->n_partitions;
+		Local<Array> masters = Nan::New<Array>(size);
+
+		// A partition's master counts only when it is the very node the client
+		// holds under that name, and active, as in the Java and C drivers. A
+		// node replaced under the same name, or a namespace with no table
+		// yet, leaves its partitions without a master (null). The nodes stay
+		// reserved, so these pointers stay comparable.
+		for (uint32_t i = 0; i < size; i++) {
+			as_node *master = table ? as_node_load(&table->partitions[i].nodes[0]) : NULL;
+			bool held = false;
+
+			for (uint32_t j = 0; master && j < nodes->size && !held; j++) {
+				held = nodes->array[j] == master;
+			}
+			if (held && master->active) {
+				Nan::Set(masters, i, Nan::New<String>(master->name).ToLocalChecked());
+			}
+			else {
+				Nan::Set(masters, i, Nan::Null());
+			}
+		}
+		Nan::Set(result, Nan::New("masters").ToLocalChecked(), masters);
+	}
+
+	as_nodes_release(nodes);
+	info.GetReturnValue().Set(result);
+}
+
+/**
  * Adds a seed host to the cluster.
  */
 NAN_METHOD(AerospikeClient::AddSeedHost)
@@ -376,6 +454,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "expressionToBase64", ExpressionToBase64);
 	Nan::SetPrototypeMethod(tpl, "getAsync", GetAsync);
 	Nan::SetPrototypeMethod(tpl, "getNodes", GetNodes);
+	Nan::SetPrototypeMethod(tpl, "_routing", Routing);
 	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);
 	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
 	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
