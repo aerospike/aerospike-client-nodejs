@@ -11,6 +11,12 @@ the faults and decides every pass or fail.
 `../l5-aws.manifest` tells a harness how to set up (Node.js and build tools on
 Amazon Linux 2023), build (the C client and the add-on) and run the driver.
 
+Besides the contract's flags, `--client-log warn|info|debug` (default `warn`)
+sets the client log level, as in the C client's driver. Messages below warning go
+to stderr as `client-log t=T LEVEL message` lines, which a harness copies into
+the row log; stdout keeps only the contract's warning and error `log` lines. The
+manifest passes `--client-log debug`.
+
 The driver reads each node's address, port and active flag, and the client's
 partition map, through `_routing()` on the native client. That method is
 internal, for this driver only, and not part of the public API.
