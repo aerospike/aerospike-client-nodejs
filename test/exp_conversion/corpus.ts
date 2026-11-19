@@ -21,6 +21,7 @@
 
 import * as vm from 'vm';
 import * as Aerospike from '../../lib/aerospike.js';
+import { seededRandom } from '../util/random.ts';
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const OPS = require('../../lib/native').exp.ops
@@ -34,9 +35,9 @@ const ctxMap = () => new Aerospike.cdt.Context().addMapKey('a').addListIndex(-1)
 const listPolicy = () => new Aerospike.ListPolicy({ order: lists.order.ORDERED })
 const mapPolicy = () => new Aerospike.MapPolicy({ order: maps.order.KEY_ORDERED })
 const point = new Aerospike.GeoJSON.Point(103.913, 1.308)
-const many = (n: number, node: (i: number) => any[]) => exp.and(...Array.from({ length: n }, (_, i) => node(i)))
+const many = (n: number, build: (i: number) => any[]) => exp.and(...Array.from({ length: n }, (_, i) => build(i)))
 
-// Every node kind lib/exp*.js emits.
+// Every entry kind lib/exp*.js emits.
 const builders: Cases = {
   'int 0': () => exp.int(0),
   'int negative': () => exp.int(-123456789),
@@ -125,16 +126,16 @@ const builders: Cases = {
   'and of 500 str eq': () => many(500, i => exp.eq(exp.binStr('s'), exp.str(`v${i}`)))
 }
 
-// Nodes not built by lib/exp*.js: own, inherited, hidden and exotic properties.
+// Entries not built by lib/exp*.js: own, inherited, hidden and exotic properties.
 // The fast path must read each exactly as the legacy path does.
-class Node {
+class Entry {
   op: number
   intVal: number
   constructor () { this.op = OPS.VAL_INT; this.intVal = 5 }
 }
-const node = (props: object) => Object.assign({}, props)
+const entry = (props: object) => Object.assign({}, props)
 const shapes: Cases = {
-  'class instance': () => [new Node()],
+  'class instance': () => [new Entry()],
   'class instance with a value on the prototype': () => {
     class WithValue { op = OPS.AS_VAL }
     (WithValue.prototype as any).value = 'from the prototype'
@@ -157,16 +158,16 @@ const shapes: Cases = {
   },
   'many extra keys': () => [Object.assign(Object.fromEntries(Array.from({ length: 200 }, (_, i) => [`k${i}`, i])), { op: OPS.VAL_INT, intVal: 6 })],
   'integer-like keys': () => [{ 0: 'zero', 1: 'one', op: OPS.VAL_INT, intVal: 7 }],
-  'frozen node': () => [Object.freeze({ op: OPS.VAL_STR, strVal: 'frozen' })],
-  'sealed node': () => [Object.seal({ op: OPS.VAL_INT, intVal: 11 })],
-  'Proxy node': () => [new Proxy({ op: OPS.VAL_INT, intVal: 12 }, {})],
+  'frozen entry': () => [Object.freeze({ op: OPS.VAL_STR, strVal: 'frozen' })],
+  'sealed entry': () => [Object.seal({ op: OPS.VAL_INT, intVal: 11 })],
+  'Proxy entry': () => [new Proxy({ op: OPS.VAL_INT, intVal: 12 }, {})],
   'Proxy hiding its keys': () => [new Proxy({ op: OPS.VAL_INT, intVal: 13 }, { ownKeys: () => [] })],
-  'node from another realm': () => vm.runInNewContext(`[{ op: ${OPS.VAL_STR}, strVal: 'realm' }]`),
-  'array node with props': () => [Object.assign([], { op: OPS.VAL_INT, intVal: 14 })],
-  'function node with props': () => [Object.assign(function () {}, { op: OPS.VAL_INT, intVal: 15 })],
-  'mixed plain and unusual nodes': () => [
-    { op: OPS.CMP_EQ, count: 3 }, new Node(), node({ op: OPS.VAL_INT, intVal: 5 })],
-  'unusual node inside a nested exp': () => [{ op: OPS.MERGE, exp: [new Node()] }],
+  'entry from another realm': () => vm.runInNewContext(`[{ op: ${OPS.VAL_STR}, strVal: 'realm' }]`),
+  'array entry with props': () => [Object.assign([], { op: OPS.VAL_INT, intVal: 14 })],
+  'function entry with props': () => [Object.assign(function () {}, { op: OPS.VAL_INT, intVal: 15 })],
+  'mixed plain and unusual entries': () => [
+    { op: OPS.CMP_EQ, count: 3 }, new Entry(), entry({ op: OPS.VAL_INT, intVal: 5 })],
+  'unusual entry inside a nested exp': () => [{ op: OPS.MERGE, exp: [new Entry()] }],
   'symbol keys': () => [{ op: OPS.VAL_INT, intVal: 16, [Symbol('strVal')]: 'sym' }],
   'value and every lower kind': () => [{ op: OPS.AS_VAL, value: 1, strVal: 'x', bytesVal: 5, intVal: 'x', uintVal: 'x', floatVal: 'x', boolVal: 'x', ctx: 5, exp: 5, listPolicy: 5, mapPolicy: 5, inf: 1, wildcard: 1 }],
   'inf and wildcard together': () => [{ op: OPS.AS_VAL, inf: null, wildcard: null }],
@@ -181,7 +182,7 @@ const shapes: Cases = {
 
 // Malformed input: both paths must reject it the same way.
 const invalid: Cases = {
-  'empty node': () => [{}],
+  'empty entry': () => [{}],
   'op not a number': () => [{ op: 'x' }],
   'count not a number': () => [{ op: OPS.AND, count: 'two' }],
   'sz not a number': () => [{ op: OPS.VAL_BYTES, sz: 'x', bytesVal: Buffer.from('a') }],
@@ -195,18 +196,18 @@ const invalid: Cases = {
   'ctx not an object': () => [{ op: OPS.CALL, ctx: 5 }],
   'nested exp not array or string': () => [{ op: OPS.MERGE, exp: 5 }],
   'nested exp invalid': () => [{ op: OPS.MERGE, exp: [{ op: 'x' }] }],
-  'error after a string node': () => [{ op: OPS.CMP_EQ, count: 3 }, ...exp.binStr('s'), ...exp.str('a'), { op: 'x' }],
+  'error after a string entry': () => [{ op: OPS.CMP_EQ, count: 3 }, ...exp.binStr('s'), ...exp.str('a'), { op: 'x' }],
   'error after every owning kind': () => [
     ...exp.str('a'), ...exp.bytes(Buffer.from('ab'), 2), ...exp.lists.append(exp.binList('l'), exp.int(1), listPolicy(), ctxList()),
     ...exp.maps.put(exp.binMap('m'), exp.int(1), exp.str('k'), mapPolicy()), { op: OPS.MERGE, exp: exp.int(1) }, { op: 'x' }],
-  'error in a class instance after a string node': () => [...exp.str('a'), Object.assign(new Node(), { intVal: 'x' })],
-  'error in a ctx node after owning nodes': () => [...exp.str('a'), { op: OPS.CALL, ctx: new Aerospike.cdt.Context().addListIndex(0).addMapKeysIn(5 as any) }]
+  'error in a class instance after a string entry': () => [...exp.str('a'), Object.assign(new Entry(), { intVal: 'x' })],
+  'error in a ctx entry after owning entries': () => [...exp.str('a'), { op: OPS.CALL, ctx: new Aerospike.cdt.Context().addListIndex(0).addMapKeysIn(5 as any) }]
 }
 
-// Random nodes: every value kind, valid and wrong types, extra lower-precedence
+// Random entries: every value kind, valid and wrong types, extra lower-precedence
 // and unknown keys (some with getters that throw if read), random key order and
 // random containers. Deterministic for a seed, so both processes build the same.
-// Nodes with no value use leaf ops: a variadic op (and, or, add...) without its
+// Entries with no value use leaf ops: a variadic op (and, or, add...) without its
 // end marker makes the C client pack uninitialized bytes, whichever path built it.
 const KINDS = ['value', 'strVal', 'bytesVal', 'intVal', 'uintVal', 'floatVal', 'boolVal', 'exp', 'inf', 'wildcard', 'none']
 const LOWER = ['value', 'strVal', 'bytesVal', 'intVal', 'uintVal', 'floatVal', 'boolVal', 'ctx', 'exp', 'listPolicy', 'mapPolicy', 'inf', 'wildcard']
@@ -238,24 +239,23 @@ const WRONG: Record<string, any[]> = {
 }
 const GARBAGE = [5, 'x', null, undefined, {}, [], true, 1.5]
 
-function mulberry32 (seed: number) {
-  return () => {
-    seed = (seed + 0x6D2B79F5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-
 function fuzzCases (count: number, seed: number): Cases {
-  const rand = mulberry32(seed)
+  const rand = seededRandom(seed)
   const pick = <T>(items: T[]): T => items[Math.floor(rand() * items.length)]
   const chance = (p: number) => rand() < p
+
+  // Usually the op for the value kind, or a leaf op when the kind has none;
+  // 5% of the time a value that isn't an op number.
+  function randomOp (kind: string) {
+    if (!chance(0.95)) return pick(['x', null, undefined])
+    if (kind in OP_FOR) return OP_FOR[kind]
+    return pick([OPS.KEY_EXIST, OPS.TTL, OPS.UNKNOWN])
+  }
 
   function leaf (depth: number) {
     const kind = pick(KINDS)
     const props: Array<[string, any, boolean]> = [] // [key, value, getter that throws]
-    if (!chance(0.05)) props.push(['op', chance(0.95) ? (OP_FOR[kind] ?? pick([OPS.KEY_EXIST, OPS.TTL, OPS.UNKNOWN])) : pick(['x', null, undefined]), false])
+    if (!chance(0.05)) props.push(['op', randomOp(kind), false]) // the op key is missing 5% of the time
     if (chance(0.3)) props.push(['count', chance(0.9) ? pick([0, 1, 2, null, undefined]) : pick(['x', {}]), false])
     if (chance(0.2)) props.push(['sz', chance(0.9) ? pick([0, 3, null]) : 'x', false])
     if (kind !== 'none') {
@@ -313,7 +313,7 @@ export const fastOnly: Cases = {
   'number entry': () => [5],
   'null entry': () => [null],
   'hole in the array': () => [, { op: OPS.VAL_INT, intVal: 1 }], // eslint-disable-line no-sparse-arrays
-  'string entry after an owning node': () => [...exp.str('a'), 'x'],
+  'string entry after an owning entry': () => [...exp.str('a'), 'x'],
   'getter that throws on op': () => [{ get op () { throw new Error('op getter') } }],
   'getter that throws on the value kind': () => [...exp.str('a'), { op: OPS.VAL_STR, get strVal () { throw new Error('strVal getter') } }],
   'getter that throws on an array element': () => {
@@ -321,7 +321,7 @@ export const fastOnly: Cases = {
     Object.defineProperty(entries, 1, { get () { throw new Error('element getter') } })
     return entries
   },
-  // every other key the fast path reads, after a node that owns memory
+  // every other key the fast path reads, after an entry that owns memory
   ...Object.fromEntries(['count', 'sz', 'value', 'intVal', 'uintVal', 'boolVal', 'exp', 'listPolicy', 'mapPolicy'].map(key =>
     [`getter that throws on ${key}`, () => [...exp.str('a'), Object.defineProperty({ op: OPS.VAL_INT }, key, {
       get () { throw new Error(`${key} getter`) }, enumerable: true

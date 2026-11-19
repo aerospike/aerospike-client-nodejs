@@ -22,6 +22,7 @@ import type { Suite } from 'mocha';
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
+import { seededRandom } from '../util/random.ts';
 
 const { INTEGER, DOUBLE, STRING, BYTES } = Aerospike.binDataType
 const { DESC } = Aerospike.order
@@ -279,15 +280,8 @@ function asciiLower (s: string): string {
 // Generated data: small value pools so ties, missing and wrong-type values are common.
 // ---------------------------------------------------------------------------
 
-// A seeded random number generator (mulberry32): the same seed gives the same data.
-export function seededRandom (seed: number): () => number {
-  return () => {
-    seed = (seed + 0x6D2B79F5) | 0
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
+// The tests import it from here.
+export { seededRandom }
 
 export const pick = <T>(random: () => number, items: readonly T[]): T => items[Math.floor(random() * items.length)]
 

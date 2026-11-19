@@ -309,26 +309,26 @@ static int compile_expression_legacy(Local<Array> entries_ary,
 /*******************************************************************************
  * Fast conversion path
  *
- * The legacy path above costs ~15-30 V8 API calls per expression node:
+ * The legacy path above costs ~15-30 V8 API calls per expression entry:
  *  - every property probe does Nan::New("<literal>"), i.e. a UTF-8 decode, a hash
- *    and a string-table lookup, on every node of every call;
+ *    and a string-table lookup, on every entry of every call;
  *  - the value kind is found by up to 12 sequential Has() probes (a plain
- *    { op, count } node, the most common shape, fails all of them);
+ *    { op, count } entry, the most common shape, fails all of them);
  *  - free_entries() walks the JS array again and repeats the probes only to
  *    decide what to free.
  *
  * This path:
  *  1. creates the property-name strings once per isolate, internalized;
- *  2. reads each node's own property names once (GetOwnPropertyNames) and
+ *  2. reads each entry's own property names once (GetOwnPropertyNames) and
  *     matches them by identity against those keys (property names are
  *     internalized, so Local == is a pointer compare, no string comparison);
  *  3. records each entry's kind in a C array while converting, so freeing
  *     needs no V8 calls at all.
  *
  * Own properties answer the same as the legacy Has() lookups only for a plain
- * object whose prototype adds none of the keys. So the fast path takes a node
+ * object whose prototype adds none of the keys. So the fast path takes an entry
  * only if it is an object literal (prototype Object.prototype, not a Proxy), and
- * only while Object.prototype has none of the keys. Any other node goes through
+ * only while Object.prototype has none of the keys. Any other entry goes through
  * convert_entry() and is freed as the legacy path frees it.
  *
  * Semantics (precedence of value keys, type checks, errors) follow the legacy
@@ -486,7 +486,7 @@ static int compile_expression_fast(const exp_compile_state *state,
 								   Local<Array> entries_ary,
 								   as_exp **filter_exp, const LogInfo *log);
 
-// Converts a plain object node. Reads a property only where the legacy path
+// Converts a plain object entry. Reads a property only where the legacy path
 // reads it, in the same order, so getters run the same way.
 static int convert_entry_fast(const exp_compile_state *state,
 							  Local<Object> entry_obj, as_exp_entry *entry,
@@ -699,7 +699,7 @@ static int compile_expression_fast(const exp_compile_state *state,
 	uint8_t *kinds = (uint8_t *)cf_malloc(length > 0 ? length : 1);
 
 	for (int i = 0; i < length; i++) {
-		Nan::HandleScope scope; // bound the handles of one node
+		Nan::HandleScope scope; // bound the handles of one entry
 		entries[i] = {};
 		kinds[i] = EK_NONE;
 		Local<Value> item;
@@ -765,7 +765,7 @@ int compile_expression(Local<Array> entries_ary, as_exp **filter_exp,
 	}
 	state.object_prototype = prototype_of(Object::New(isolate));
 
-	// A key on Object.prototype would make every node "have" it, as far as
+	// A key on Object.prototype would make every entry "have" it, as far as
 	// the legacy Has() lookups go; leave that case to the legacy path.
 	Local<Object> object_prototype = state.object_prototype.As<Object>();
 	for (int k = 0; k < K__COUNT; k++) {

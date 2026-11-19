@@ -35,17 +35,17 @@ describe('Expression conversion: fast path matches the legacy path #noserver', f
     return fast
   }
 
-  it('compiles every node kind the exp builders emit to the same bytes', function () {
+  it('compiles every entry kind the exp builders emit to the same bytes', function () {
     const fast = expectSame('builders', 64)
     const failed = Object.entries(fast).filter(([, result]) => result.out.startsWith('ERROR'))
     expect(failed.map(([name]) => name)).to.eql([])
   })
 
-  it('reads hand-built nodes the same way: inherited, hidden, getter, exotic and polluted', function () {
+  it('reads hand-built entries the same way: inherited, hidden, getter, exotic and polluted', function () {
     expectSame('shapes', 30)
   })
 
-  it('rejects malformed nodes the same way, with the same log messages', function () {
+  it('rejects malformed entries the same way, with the same log messages', function () {
     const fast = expectSame('invalid', 18)
     const accepted = Object.entries(fast).filter(([, result]) => !result.out.startsWith('ERROR'))
     expect(accepted.map(([name]) => name)).to.eql([])
