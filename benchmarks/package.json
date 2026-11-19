@@ -27,7 +27,7 @@
     "aerospike": "file:..",
     "cli-table": "^0.3.11",
     "winston": "^3.5.1",
-    "yargs": "^18.0.0"
+    "yargs": "^18.1.0"
   },
   "main": "main.js"
 }
