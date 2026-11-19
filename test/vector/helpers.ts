@@ -19,7 +19,8 @@
 import { expect } from 'chai';
 import * as Aerospike from '../../lib/aerospike.js';
 import * as helper from '../test_helper.ts';
-import { topK, inBatches, seededRandom } from '../topk/helpers.ts';
+import { topK, inBatches } from '../topk/helpers.ts';
+import { seededRandom } from '../util/random.ts';
 
 // The tests import it from here.
 export { seededRandom }
