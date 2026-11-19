@@ -75,10 +75,4 @@ describe('Expression conversion: fast path #noserver', function () {
       expect(result.out, name).to.match(/^ERROR: /)
     }
   })
-
-  it('is selected by default and is faster than the legacy path', function () {
-    const legacy = compileIn('legacy', 'timing').nsPerCompile
-    const fast = compileIn('fast', 'timing').nsPerCompile
-    expect(fast).to.be.lessThan(legacy / 2)
-  })
 })

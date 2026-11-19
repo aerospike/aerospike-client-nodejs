@@ -26,10 +26,14 @@ export type Results = Record<string, { out: string, log: string[] }>
 export type Mode = 'legacy' | 'fast'
 
 // Runs child.ts in a new process (in its main thread or a worker) with the
-// given conversion path and returns what it printed.
+// given conversion path and returns what it printed. 'fast' leaves
+// AEROSPIKE_EXP_LEGACY unset, so it runs the path the client uses by default.
 export function compileIn (mode: Mode, set: string, thread: 'process' | 'worker' = 'process'): any {
+  const env = { ...process.env }
+  if (mode === 'legacy') env.AEROSPIKE_EXP_LEGACY = '1'
+  else delete env.AEROSPIKE_EXP_LEGACY
   const res = spawnSync(process.execPath, ['--import', 'tsx', SCRIPTS[thread], set], {
-    env: { ...process.env, AEROSPIKE_EXP_LEGACY: mode === 'legacy' ? '1' : '0' },
+    env,
     encoding: 'utf8',
     maxBuffer: 512 * 1024 * 1024
   })

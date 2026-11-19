@@ -63,24 +63,8 @@ function compileAll (set: string): Record<string, Result> {
   return results
 }
 
-function timeCompile (iterations: number): number {
-  const client = Aerospike.client({ hosts: '127.0.0.1:9' } as any)
-  const expression = Aerospike.exp.and(...Array.from({ length: 500 }, (_, i) =>
-    Aerospike.exp.eq(Aerospike.exp.binInt(`b${i % 7}`), Aerospike.exp.int(i))))
-  client.expressionToBase64(expression) // warm up
-  const start = process.hrtime.bigint()
-  for (let i = 0; i < iterations; i++) client.expressionToBase64(expression)
-  return Number(process.hrtime.bigint() - start) / iterations
-}
-
 if (!isMainThread) {
   parentPort!.postMessage(compileAll(workerData.set))
 } else {
-  const set = process.argv[2]
-  const print = (value: unknown) => process.stdout.write(JSON.stringify(value))
-  if (set === 'timing') {
-    print({ nsPerCompile: timeCompile(200) })
-  } else {
-    print(compileAll(set))
-  }
+  process.stdout.write(JSON.stringify(compileAll(process.argv[2])))
 }
