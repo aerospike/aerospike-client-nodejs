@@ -5,7 +5,7 @@ const fs = require('fs')
 const path = require('path')
 
 const root = path.join(__dirname, '..')
-const abis = ['115', '127', '137', '141']
+const abis = ['115', '127', '137', '141', '147']
 const platforms = [
   'linux-x64',
   'linux-arm64',

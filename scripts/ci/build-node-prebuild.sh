@@ -10,6 +10,7 @@ expected_abi_for_node_version() {
     22) echo 127 ;;
     24) echo 137 ;;
     25) echo 141 ;;
+    26) echo 147 ;;
     *)
       echo "ERROR: unsupported NODE_VERSION ${NODE_VERSION}" >&2
       exit 1
