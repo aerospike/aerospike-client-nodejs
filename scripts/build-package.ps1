@@ -60,3 +60,10 @@ Remove-Item -Recurse .\lib\binding\node-v141-win32-x64\obj
 Remove-Item .\lib\binding\node-v141-win32-x64\aerospike.pdb
 Remove-Item .\lib\binding\node-v141-win32-x64\aerospike.ipdb
 Remove-Item .\lib\binding\node-v141-win32-x64\aerospike.iobj
+
+build_nodejs_client v26
+Copy-Item -Recurse build\release\* lib\binding\node-v147-win32-x64
+Remove-Item -Recurse .\lib\binding\node-v147-win32-x64\obj
+Remove-Item .\lib\binding\node-v147-win32-x64\aerospike.pdb
+Remove-Item .\lib\binding\node-v147-win32-x64\aerospike.ipdb
+Remove-Item .\lib\binding\node-v147-win32-x64\aerospike.iobj
