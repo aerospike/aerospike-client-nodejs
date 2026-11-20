@@ -44,7 +44,8 @@ jobs:
           20,
           22,
           24,
-          25
+          25,
+          26
         ]
       fail-fast: false
     steps:

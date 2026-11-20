@@ -10,6 +10,7 @@ expected_abi_for_node_version() {
     22) echo 127 ;;
     24) echo 137 ;;
     25) echo 141 ;;
+    26) echo 147 ;;
     *)
       echo "ERROR: unsupported NODE_VERSION ${NODE_VERSION}" >&2
       exit 1
@@ -73,6 +74,8 @@ cleanup_windows_artifacts() {
     Remove-Item -Force .\build\Release\aerospike.pdb -ErrorAction SilentlyContinue
     Remove-Item -Force .\build\Release\aerospike.ipdb -ErrorAction SilentlyContinue
     Remove-Item -Force .\build\Release\aerospike.iobj -ErrorAction SilentlyContinue
+    # Missing files are fine (Node 26 builds write no .iobj); do not fail on them.
+    exit 0
   '
 }
 

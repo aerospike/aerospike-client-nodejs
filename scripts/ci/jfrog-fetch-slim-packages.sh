@@ -132,7 +132,7 @@ validate_prebuild_tgz () {
   listing="$(tar_listing "$file")"
   [[ -n "$listing" ]] || return 1
   [[ "$listing" == *"package/prebuilds/${PREBUILD_TAG}/"* ]] || return 1
-  for abi in 115 127 137 141; do
+  for abi in 115 127 137 141 147; do
     if [[ "$listing" != *"package/prebuilds/${PREBUILD_TAG}/node.abi${abi}.node"* ]] \
       && [[ "$listing" != *"package/prebuilds/${PREBUILD_TAG}/aerospike.${abi}.node"* ]]; then
       echo "validate_prebuild_tgz: missing ABI ${abi} under prebuilds/${PREBUILD_TAG}/ in ${file}" >&2
@@ -158,7 +158,7 @@ reject_invalid_tarballs () {
     rm -f "$MAIN"
   fi
   if [[ -f "$PREBUILD" ]] && ! validate_prebuild_tgz "$PREBUILD"; then
-    echo "warning: rejecting invalid prebuild tarball ${PREBUILD} (expected prebuilds/${PREBUILD_TAG}/ with ABIs 115,127,137,141)" >&2
+    echo "warning: rejecting invalid prebuild tarball ${PREBUILD} (expected prebuilds/${PREBUILD_TAG}/ with ABIs 115,127,137,141,147)" >&2
     prebuild_tgz_listing "$PREBUILD" >&2 || true
     rm -f "$PREBUILD"
   fi
