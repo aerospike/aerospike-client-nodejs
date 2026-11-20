@@ -74,6 +74,8 @@ cleanup_windows_artifacts() {
     Remove-Item -Force .\build\Release\aerospike.pdb -ErrorAction SilentlyContinue
     Remove-Item -Force .\build\Release\aerospike.ipdb -ErrorAction SilentlyContinue
     Remove-Item -Force .\build\Release\aerospike.iobj -ErrorAction SilentlyContinue
+    # Missing files are fine (Node 26 builds write no .iobj); do not fail on them.
+    exit 0
   '
 }
 
