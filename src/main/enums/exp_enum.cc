@@ -91,9 +91,8 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "VAL_RAWSTR", as_exp_ops::_AS_EXP_CODE_VAL_RAWSTR);
 	set(exp_ops, "VAL_RTYPE", as_exp_ops::_AS_EXP_CODE_VAL_RTYPE);
 
-	set(exp_ops, "VECTOR_EUCLIDEAN_DIST", as_exp_ops::_AS_EXP_CODE_VECTOR_EUCLIDEAN_DIST);
-	set(exp_ops, "VECTOR_DOT_PRODUCT", as_exp_ops::_AS_EXP_CODE_VECTOR_DOT_PRODUCT);
-	set(exp_ops, "VECTOR_COSINE_SIM", as_exp_ops::_AS_EXP_CODE_VECTOR_COSINE_SIM);
+	// One vector distance op for every metric; the metric is its first argument.
+	set(exp_ops, "VECTOR_DISTANCE", as_exp_ops::_AS_EXP_CODE_VECTOR_DIST);
 
 	set(exp_ops, "CALL_VOP_START", as_exp_ops::_AS_EXP_CODE_CALL_VOP_START);
 	set(exp_ops, "CDT_LIST_CRMOD", as_exp_ops::_AS_EXP_CODE_CDT_LIST_CRMOD);
