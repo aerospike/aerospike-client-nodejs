@@ -278,9 +278,9 @@ static int set_aws_seed_provider(as_config *config, Local<Object> obj, const Log
 	Local<Object> aws_obj = value.As<Object>();
 	as_aws_seed_provider_config aws;
 	as_aws_seed_provider_config_init(&aws);
-	// The Java client's default; the C client's is 5000. The spec sets none
-	// and the cross-client default is still to be decided.
-	aws.timeout_ms = 2000;
+	// The tech spec's default (FR-39), also the C client's. It must not exceed
+	// refresh_timeout_ms.
+	aws.timeout_ms = 5000;
 
 	// Strings read from the object; the C client copies them.
 	const char *string_props[] = {"region", "tlsName", "endpoint", "caFile", "caPath",

@@ -144,6 +144,9 @@ describe('discovery and translation config #noserver', function () {
 
     it('accepts limits that are exactly met', function () {
       expect(() => new Config({ discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 2000 } } })).to.not.throw()
+      // The default AWS timeout (5000) is within the default refresh timeout, and exactly meets a lower one.
+      expect(() => new Config({ discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] } } })).to.not.throw()
+      expect(() => new Config({ discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] }, refreshTimeoutMs: 5000 } })).to.not.throw()
       expect(() => new Config({ tenderInterval: 30000, discovery: { provider: 'dns', dns: { names: ['a'] } } })).to.not.throw()
       expect(() => new Config({ tenderInterval: 200, discovery: { provider: 'dns', executionMode: 'tend', dns: { names: ['a'], timeoutMs: 100 } } })).to.not.throw()
       // The limits apply only to a provider that refreshes.
@@ -227,6 +230,7 @@ describe('discovery and translation config #noserver', function () {
       ['a DNS timeout over the tend deadline', { discovery: { provider: 'dns', dns: { names: ['a'], timeoutMs: 80 }, executionMode: 'tend', tendRefreshDeadlineMs: 50 } }, /DNS seed provider timeout 80 must be less or equal to the discovery tend refresh deadline 50/],
       ['aws-tags in tend mode', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] }, executionMode: 'tend' } }, /'aws-tags' runs only in discovery.executionMode 'thread'/],
       ['an AWS timeout over the refresh timeout', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }], timeoutMs: 10001 } } }, /AWS EC2 seed provider timeout 10001 must be less or equal to the discovery refresh timeout 10000/],
+      ['the default AWS timeout over a lower refresh timeout', { discovery: { provider: 'aws-tags', aws: { region: 'us-east-1', filters: [{ name: 'tag:a', values: ['b'] }] }, refreshTimeoutMs: 4999 } }, /AWS EC2 seed provider timeout 5000 must be less or equal to the discovery refresh timeout 4999/],
       // aws-tags options.
       ['aws without the aws-tags provider', { discovery: { aws: {} } }, /discovery.aws is only valid with discovery.provider 'aws-tags'/],
       ['the aws-tags provider without aws', { discovery: { provider: 'aws-tags' } }, /discovery.aws must be an object/],

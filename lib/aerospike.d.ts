@@ -8012,12 +8012,11 @@ export class Config {
      * A node skipped by a <code>'strict'</code> miss is logged at warning
      * level and checked again on every tend. When a new node translates to the
      * address of a node the client already uses, the new node is skipped; when
-     * two new nodes translate to the same address, both are skipped. Connect
-     * doesn't fail because of a skipped node alone. It can fail with
+     * two new nodes translate to the same address, both are skipped. A
+     * skipped node is logged as a warning. Connect fails with
      * {@link status.ERR_TRANSLATION_MISS} or
-     * {@link status.ERR_TRANSLATION_COLLISION} when the seed is the only node
-     * connected, another node could not be reached, and the skip was the
-     * first problem found. See {@link TranslationConfig}.
+     * {@link status.ERR_TRANSLATION_COLLISION} only when that error is the
+     * reason no usable node is left. See {@link TranslationConfig}.
      *
      * @example
      *
@@ -10645,12 +10644,11 @@ export interface ConfigOptions {
      * A node skipped by a <code>'strict'</code> miss is logged at warning
      * level and checked again on every tend. When a new node translates to the
      * address of a node the client already uses, the new node is skipped; when
-     * two new nodes translate to the same address, both are skipped. Connect
-     * doesn't fail because of a skipped node alone. It can fail with
+     * two new nodes translate to the same address, both are skipped. A
+     * skipped node is logged as a warning. Connect fails with
      * {@link status.ERR_TRANSLATION_MISS} or
-     * {@link status.ERR_TRANSLATION_COLLISION} when the seed is the only node
-     * connected, another node could not be reached, and the skip was the
-     * first problem found. See {@link TranslationConfig}.
+     * {@link status.ERR_TRANSLATION_COLLISION} only when that error is the
+     * reason no usable node is left. See {@link TranslationConfig}.
      *
      * @example
      *
@@ -11119,7 +11117,7 @@ export interface AwsDiscoveryConfig {
      * Time in milliseconds for one whole refresh. It must not exceed
      * <code>refreshTimeoutMs</code>.
      *
-     * @default 2000
+     * @default 5000
      */
     timeoutMs?: number | null;
     /**
