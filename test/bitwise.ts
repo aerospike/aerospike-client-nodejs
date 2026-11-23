@@ -445,12 +445,42 @@ describe('client.operate() - Bitwise operations', function () {
     })
   })
 
+  describe('bitwise.count', function () {
+    it('returns the number of set bits in the C client example range', function () {
+      // as_operations_bit_count: offset 20, size 4 of this bitmap is 2.
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
+        .then(operate(bits.count('bits', 20, 4)))
+        .then(assertResultEql({ bits: 2 }))
+        .then(cleanup())
+    })
+
+    it('counts the set bits in the first 16 bits', function () {
+      // 0x01 and 0x42 contain three 1-bits.
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0x01, 0x42, 0xB0, 0x04, 0x05]) }))
+        .then(operate(bits.count('bits', 0, 16)))
+        .then(assertResultEql({ bits: 3 }))
+        .then(cleanup())
+    })
+  })
+
   describe('bitwise.lscan', function () {
     it('returns interger bit offset of the first specified value bit in bitmap', function () {
       return initState()
         .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
         .then(operate(bits.lscan('bits', 24, 8, true)))
         .then(assertResultEql({ bits: 5 }))
+        .then(cleanup())
+    })
+
+    it('returns the first set bit from the left when several bits are set', function () {
+      // 0x01 0x42 = 00000001 01000010. Set bits are at offsets 7, 9 and 14.
+      // A right scan of the same range returns 14, so this fails if lscan sends rscan.
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0x01, 0x42]) }))
+        .then(operate(bits.lscan('bits', 0, 16, true)))
+        .then(assertResultEql({ bits: 7 }))
         .then(cleanup())
     })
   })
@@ -461,6 +491,14 @@ describe('client.operate() - Bitwise operations', function () {
         .then(createRecord({ bits: Buffer.from([0b00000001, 0b01000010, 0b00000011, 0b00000100, 0b00000101]) }))
         .then(operate(bits.rscan('bits', 32, 8, true)))
         .then(assertResultEql({ bits: 7 }))
+        .then(cleanup())
+    })
+
+    it('returns the last set bit from the right when several bits are set', function () {
+      return initState()
+        .then(createRecord({ bits: Buffer.from([0x01, 0x42]) }))
+        .then(operate(bits.rscan('bits', 0, 16, true)))
+        .then(assertResultEql({ bits: 14 }))
         .then(cleanup())
     })
   })

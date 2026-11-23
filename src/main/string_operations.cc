@@ -404,24 +404,17 @@ int add_string_op(as_operations *ops, uint32_t opcode, Local<Object> op,
 	}
 	case STRING_OP_SNIP:
 	case STRING_OP_SNIP_RANGE: {
+		// 1-arg snip() is SNIP_START in JavaScript. A range opcode without
+		// end is a parameter error, not a second path to snip-from-start.
 		int64_t start;
 		int64_t end;
-		bool end_defined = false;
 		if (get_int64_property(&start, op, "start", log) != AS_NODE_PARAM_OK) {
 			break;
 		}
-		if (get_optional_int64_property(&end, &end_defined, op, "end", log) !=
-			AS_NODE_PARAM_OK) {
+		if (get_int64_property(&end, op, "end", log) != AS_NODE_PARAM_OK) {
 			break;
 		}
-		if (end_defined) {
-			ok = as_operations_string_snip(ops, bin, ctx_ptr, pol_ptr, start,
-										   end);
-		}
-		else {
-			ok = as_operations_string_snip_start(ops, bin, ctx_ptr, pol_ptr,
-												 start);
-		}
+		ok = as_operations_string_snip(ops, bin, ctx_ptr, pol_ptr, start, end);
 		break;
 	}
 	case STRING_OP_SNIP_START: {
