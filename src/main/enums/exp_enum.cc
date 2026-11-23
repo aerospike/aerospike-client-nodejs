@@ -91,10 +91,8 @@ Local<Object> exp_opcode_values()
 	set(exp_ops, "VAL_RAWSTR", as_exp_ops::_AS_EXP_CODE_VAL_RAWSTR);
 	set(exp_ops, "VAL_RTYPE", as_exp_ops::_AS_EXP_CODE_VAL_RTYPE);
 
-	// The server has one vector distance op (52) taking the metric as an
-	// argument; ops 53 and 54 are gone. The C client still names 52 after
-	// Euclidean distance.
-	set(exp_ops, "VECTOR_DISTANCE", as_exp_ops::_AS_EXP_CODE_VECTOR_EUCLIDEAN_DIST);
+	// One vector distance op for every metric; the metric is its first argument.
+	set(exp_ops, "VECTOR_DISTANCE", as_exp_ops::_AS_EXP_CODE_VECTOR_DIST);
 
 	set(exp_ops, "CALL_VOP_START", as_exp_ops::_AS_EXP_CODE_CALL_VOP_START);
 	set(exp_ops, "CDT_LIST_CRMOD", as_exp_ops::_AS_EXP_CODE_CDT_LIST_CRMOD);
