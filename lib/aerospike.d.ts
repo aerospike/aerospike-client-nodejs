@@ -13243,7 +13243,7 @@ export namespace bitwise {
      * Create bit "count" operation.
      * @remarks Server returns the number of set bits in the range.
      *
-     * @param bin - The name of the bin. The bin must contain a byte value.
+     * @param bin - The name of the bin. The bin must contain a bytes value.
      * @param bitOffset - Offset in bits.
      * @param bitSize - Number of bits to examine.
      * @returns Operation that can be passed to the {@link Client#operate} command.

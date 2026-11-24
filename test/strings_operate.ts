@@ -89,13 +89,13 @@ describe('strings operate()', function () {
     expect(result.bins.s).to.eql('hello')
   })
 
-  it('a range snip without end is rejected and leaves the bin unchanged', async function () {
-    const key = await putKey({ s: 'abcde' })
-    const snip = strings.snip('s', 1, 4) as { end?: number }
-    delete snip.end
-    await expectOperateError(key, [snip], status.ERR_PARAM)
-    const after: AerospikeRecord = await client.get(key)
-    expect(after.bins.s).to.eql('abcde')
+  it('snip(bin, start, null) removes through the end of the string', async function () {
+    const key = await putKey({ s: 'hello world' })
+    const result: AerospikeRecord = await client.operate(key, [
+      strings.snip('s', -6, null as unknown as number),
+      op.read('s')
+    ])
+    expect(result.bins.s).to.eql('hello')
   })
 
   it('substrRange read does not change stored bin (substring is read-only)', async function () {
