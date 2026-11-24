@@ -73,6 +73,7 @@
         'src/main/hyperloglog.cc',
         'src/main/vector.cc',
         'src/main/config.cc',
+        'src/main/js_bridge.cc',
         'src/main/events.cc',
         'src/main/cdt_ctx.cc',
         'src/main/operations.cc',

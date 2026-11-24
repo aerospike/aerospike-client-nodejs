@@ -21,6 +21,7 @@
 #include "config.h"
 #include "events.h"
 #include "log.h"
+#include "js_bridge.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -43,7 +44,15 @@ using namespace v8;
 
 AerospikeClient::AerospikeClient() {}
 
-AerospikeClient::~AerospikeClient() {}
+AerospikeClient::~AerospikeClient()
+{
+	// The client's references; the C client keeps its own until it releases
+	// the provider and hook.
+	for (JsBridge *bridge : js_bridges) {
+		bridge->ReleaseClient();
+	}
+	js_bridges.clear();
+}
 
 /*******************************************************************************
  *  Methods
@@ -122,6 +131,11 @@ static void close_client(AerospikeClient *client)
 {
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
+	// A JavaScript provider or hook waiting for the JavaScript thread returns
+	// at once, so the C client's close thread doesn't wait refresh_timeout_ms.
+	for (JsBridge *bridge : client->js_bridges) {
+		bridge->MarkClosing();
+	}
 	events_callback_close(&client->as->config);
 
 	aerospike_close(client->as, &err);
@@ -147,6 +161,63 @@ static void close_client(AerospikeClient *client)
 }
 
 /**
+ * aerospike_connect() on a libuv worker thread, for a client with a JavaScript
+ * seed provider or credentials hook. close() and destroy stay on the
+ * JavaScript thread (the C client hands close's waiting to its own thread);
+ * a close() asked for while connect runs is done when connect completes.
+ */
+class ConnectWorker : public Nan::AsyncWorker {
+  public:
+	ConnectWorker(Nan::Callback *callback, AerospikeClient *client)
+	  : Nan::AsyncWorker(callback, "aerospike:connect"), client(client), status(AEROSPIKE_OK)
+	{
+		as_error_init(&err);
+	}
+
+	void Execute() override
+	{
+		status = aerospike_connect(client->as, &err);
+	}
+
+	void HandleOKCallback() override
+	{
+		Nan::HandleScope scope;
+		client->connecting = false;
+		AerospikeCommand *cmd = new AerospikeCommand("Connect", client, callback->GetFunction());
+
+		if (client->close_pending) {
+			// close() was called while connect ran: connect fails with that,
+			// whatever aerospike_connect() returned (closing the bridge can
+			// itself make it fail).
+			close_client(client);
+			as_error closed;
+			as_error_init(&closed);
+			as_error_update(&closed, AEROSPIKE_ERR_CLIENT, "Client closed while connecting");
+			cmd->ErrorCallback(&closed);
+		}
+		else if (status != AEROSPIKE_OK) {
+			// The C client keeps the provider registered, so connect can be
+			// retried; a discovery thread still waiting is woken.
+			for (JsBridge *bridge : client->js_bridges) {
+				bridge->AbortPending();
+			}
+			events_callback_close(&client->as->config);
+			cmd->ErrorCallback(&err);
+		}
+		else {
+			as_v8_debug(client->log, "Successfully connected to cluster: Enjoy your cake!");
+			cmd->Callback(0, {});
+		}
+		delete cmd;
+	}
+
+  private:
+	AerospikeClient *client;
+	as_error err;
+	as_status status;
+};
+
+/**
  * Connect to an Aerospike Cluster
  */
 NAN_METHOD(AerospikeClient::Connect)
@@ -163,6 +234,20 @@ NAN_METHOD(AerospikeClient::Connect)
 		as_error_update(&err, AEROSPIKE_ERR_CLIENT,
 						"Client is closed. Create a new client to connect again.");
 		cmd->ErrorCallback(&err);
+	}
+	else if (client->connecting) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+						"Connect is already running on this client");
+		cmd->ErrorCallback(&err);
+	}
+	else if (!client->js_bridges.empty()) {
+		// A JavaScript provider or hook answers the C client's first refresh
+		// on the JavaScript thread, so that thread must not wait inside
+		// aerospike_connect(): connect runs on a worker thread instead.
+		client->connecting = true;
+		ConnectWorker *worker = new ConnectWorker(new Nan::Callback(callback), client);
+		worker->SaveToPersistent("client", info.This());
+		Nan::AsyncQueueWorker(worker);
 	}
 	else if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
 		// A failed connect leaves no cluster, so connect can be retried on
@@ -188,6 +273,15 @@ NAN_METHOD(AerospikeClient::Close)
 	Nan::HandleScope scope;
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	if (client->connecting) {
+		// Never wait for the worker here: its connect may need this thread.
+		client->close_pending = true;
+		for (JsBridge *bridge : client->js_bridges) {
+			bridge->MarkClosing();
+		}
+		return;
+	}
 
 	if (client->closed) {
 		return;
@@ -231,6 +325,12 @@ NAN_METHOD(AerospikeClient::GetNodes)
 {
 	Nan::HandleScope scope;
 	AerospikeClient *client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	// No cluster yet, or one being built by a connect on a worker thread.
+	if (client->connecting || client->closed || !client->as->cluster) {
+		info.GetReturnValue().Set(Nan::New<Array>(0));
+		return;
+	}
 
 	as_nodes *nodes = as_nodes_reserve(client->as->cluster);
 	Local<Array> v8_nodes = Nan::New<Array>(nodes->size);
@@ -310,6 +410,12 @@ NAN_METHOD(AerospikeClient::SetupEventCb)
 
 	if (client->closed) {
 		// Connect fails with a clear error instead.
+		return;
+	}
+
+	if (client->connecting) {
+		// A connect runs on a worker thread and uses the current handle; the
+		// second connect fails with a clear error instead.
 		return;
 	}
 

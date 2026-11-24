@@ -24,6 +24,9 @@ extern "C" {
 }
 
 #include "log.h"
+#include <vector>
+
+class JsBridge;
 
 #define TYPE_CHECK_REQ(val, type, msg)                                         \
 	if (!val->type())                                                          \
@@ -67,6 +70,14 @@ class AerospikeClient : public Nan::ObjectWrap {
 	// client frees itself.
 	as_addr_map *ip_map = NULL;
 	uint32_t ip_map_size = 0;
+
+	// Bridges of a JavaScript seed provider and credentials hook. With any,
+	// connect runs on a worker thread, so the JavaScript thread stays free to
+	// answer the C client's first refresh.
+	std::vector<JsBridge *> js_bridges;
+	// A connect running on a worker thread, and a close() asked for meanwhile.
+	bool connecting = false;
+	bool close_pending = false;
 	Nan::Persistent<v8::Function> enable_callback;
 	Nan::Persistent<v8::Function> snapshot_callback;
 	Nan::Persistent<v8::Function> node_close_callback;

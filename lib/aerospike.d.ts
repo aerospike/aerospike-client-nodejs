@@ -11162,6 +11162,105 @@ export interface AwsDiscoveryConfig {
      * characters.
      */
     sessionToken?: string | null;
+    /**
+     * Supplies the AWS credentials instead of the standard credential chain,
+     * for sources the chain doesn't cover (SSO, <code>credential_process</code>,
+     * role profiles, cross-account roles); it may call the AWS SDK. Can't be
+     * combined with static keys.
+     *
+     * Called on the JavaScript thread when the client needs credentials, with
+     * the time left of the refresh. Credentials with an expiration are cached
+     * until five minutes before it; without one, for the life of the client.
+     * A throw, a rejection, invalid credentials or no answer within
+     * <code>timeoutMs</code> fails that refresh; messages never contain the
+     * secret.
+     */
+    credentialsHook?: AwsCredentialsHook | null;
+}
+
+/**
+ * AWS credentials returned by an {@link AwsCredentialsHook}.
+ */
+export interface AwsCredentials {
+    /** Access key id, letters and digits. */
+    accessKeyId: string;
+    /** Secret access key, visible ASCII characters. */
+    secretAccessKey: string;
+    /** Session token of temporary credentials. */
+    sessionToken?: string | null;
+    /** Expiration in milliseconds since the epoch; 0 or missing for none. */
+    expiration?: number | null;
+}
+
+/**
+ * {@link AwsDiscoveryConfig#credentialsHook}: returns credentials, or a
+ * Promise of them. <code>timeoutMs</code> is the time left of the refresh.
+ */
+export type AwsCredentialsHook = (args: { timeoutMs: number }) => AwsCredentials | Promise<AwsCredentials>;
+
+/**
+ * What a {@link SeedCandidateProvider} gets on each call. A new, read-only
+ * object for each call.
+ */
+export interface SeedCandidateContext {
+    /** {@link Config#clusterName}, or null. */
+    readonly clusterName: string | null;
+    /** The configured {@link Config#hosts}. */
+    readonly configuredSeeds: readonly Host[];
+    /** 0 at connect, then the number of tends so far. */
+    readonly tendIteration: number;
+}
+
+/**
+ * A seed provider written in JavaScript: the tech spec's
+ * <code>SeedCandidateProvider</code>, set as {@link DiscoveryConfig#provider}.
+ *
+ * The client calls <code>refreshSeedCandidates()</code> once at connect and,
+ * when <code>needsPeriodicRefresh()</code> returns true, every
+ * <code>refreshIntervalMs</code>. Calls are never concurrent for one client;
+ * a provider shared by several clients may be called by each of them. It runs
+ * on the JavaScript thread, in the application's process with no isolation:
+ * a long synchronous call blocks the event loop and every command, so do I/O
+ * asynchronously, and don't start timers, threads or workers of its own.
+ *
+ * A throw, a rejection or an invalid result fails that refresh: at connect
+ * the client falls back to {@link Config#hosts}, or fails with
+ * {@link status.ERR_SEED_DISCOVERY_FAILED} when there are none; later it logs
+ * a warning and keeps the previous seeds. An empty list is a valid result.
+ * Results that arrive after <code>refreshTimeoutMs</code> are still used.
+ * Runs in thread mode only.
+ */
+export interface SeedCandidateProvider {
+    /**
+     * Returns the seed hosts in preference order, or a Promise of them. Each
+     * host is <code>{ addr, port, tlsname }</code>, the same as
+     * {@link Config#hosts} (the spec's <code>name</code>, <code>port</code>
+     * and <code>tlsName</code>). Any invalid host (empty <code>addr</code>,
+     * <code>port</code> outside 1-65535, <code>addr</code> over 255 bytes)
+     * fails the refresh, naming its index; a configured seed returned
+     * unchanged is not range checked. An empty <code>tlsname</code> means
+     * none, and gets the same default as a configured seed.
+     */
+    refreshSeedCandidates(ctx: SeedCandidateContext): Host[] | Promise<Host[]>;
+    /**
+     * Whether the hosts can change and must be refreshed periodically. Called
+     * once, when the client is created.
+     */
+    needsPeriodicRefresh(): boolean;
+    /**
+     * Accepted for the spec's interface; not called. A JavaScript provider
+     * runs only in thread mode.
+     */
+    supportsDeadline?(): boolean;
+    /**
+     * Releases the provider's resources. Called once per client, on the
+     * JavaScript thread, after <code>client.close()</code> and after the last
+     * refresh has settled; <code>close()</code> doesn't wait for it. Not
+     * called when the process exits first, or when a refresh never settles.
+     * Errors are logged, not thrown. After a failed connect the provider is
+     * kept, so the same client can connect again.
+     */
+    close?(): void;
 }
 
 /**
@@ -11195,11 +11294,14 @@ export interface DiscoveryConfig {
      * The seed provider: <code>'static'</code> (the default) uses only
      * <code>hosts</code>; <code>'dns'</code> needs {@link DiscoveryConfig#dns};
      * <code>'aws-tags'</code> needs {@link DiscoveryConfig#aws} and runs only
-     * in thread mode.
+     * in thread mode. A {@link SeedCandidateProvider} object is a provider
+     * written in JavaScript; it runs only in thread mode, and with one,
+     * <code>connect()</code> runs on a worker thread so the JavaScript thread
+     * stays free to answer the first refresh.
      *
      * @default 'static'
      */
-    provider?: 'static' | 'dns' | 'aws-tags' | null;
+    provider?: 'static' | 'dns' | 'aws-tags' | SeedCandidateProvider | null;
     /**
      * DNS seed provider options.
      */

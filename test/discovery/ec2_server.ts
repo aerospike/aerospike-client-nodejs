@@ -30,6 +30,8 @@ export interface Ec2Server {
   endpoint: string
   // The request bodies received so far.
   requests: () => Promise<string[]>
+  // The Authorization header of each request, which names the access key id.
+  authorizations: () => Promise<string[]>
   stop: () => Promise<void>
 }
 
@@ -37,6 +39,7 @@ const SERVER = `
 const http = require('http')
 const { workerData, parentPort } = require('worker_threads')
 const requests = []
+const authorizations = []
 
 function body (addresses) {
   const items = addresses.map((ip, i) =>
@@ -52,6 +55,7 @@ const server = http.createServer((req, res) => {
   req.on('data', chunk => { data += chunk })
   req.on('end', () => {
     requests.push(data)
+    authorizations.push(req.headers.authorization || '')
     const xml = body(workerData.addresses)
     res.writeHead(200, { 'Content-Type': 'text/xml', 'Content-Length': Buffer.byteLength(xml) })
     res.end(xml)
@@ -62,6 +66,7 @@ server.listen(0, '127.0.0.1', () => parentPort.postMessage({ port: server.addres
 
 parentPort.on('message', message => {
   if (message === 'requests') parentPort.postMessage({ requests })
+  else if (message === 'authorizations') parentPort.postMessage({ authorizations })
   else server.close(() => process.exit(0))
 })
 `
@@ -74,6 +79,10 @@ export async function startEc2Server (addresses: string[]): Promise<Ec2Server> {
     requests: async () => {
       worker.postMessage('requests')
       return (await new Promise<any>(resolve => worker.once('message', resolve))).requests
+    },
+    authorizations: async () => {
+      worker.postMessage('authorizations')
+      return (await new Promise<any>(resolve => worker.once('message', resolve))).authorizations
     },
     stop: async () => {
       worker.postMessage('stop')
