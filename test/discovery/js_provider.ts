@@ -109,6 +109,17 @@ describe('JavaScript seed provider config #noserver', function () {
     expect(bridge.hasJsPlugins(config)).to.be.false
   })
 
+  it('keeps the message of a Promise whose constructor getter throws', async function () {
+    const p = provider(() => {
+      const result = Promise.resolve([])
+      Object.defineProperty(result, 'constructor', { get () { throw new Error('hostile constructor') } })
+      return result
+    })
+    const spec = bridge.forNative(new Config({ discovery: { provider: p } })).discovery.provider
+    const answer = await new Promise<any>(resolve => spec.refresh({ clusterName: null, configuredSeeds: [], tendIteration: 0 }, (err: any, hosts: any) => resolve({ err, hosts })))
+    expect(answer.err).to.equal('hostile constructor')
+  })
+
   it('turns anything thrown into a message, never throwing itself', function () {
     expect(bridge.errorMessage(new Error('x'))).to.equal('x')
     expect(bridge.errorMessage(Object.create(null))).to.equal('unknown error')
@@ -195,6 +206,8 @@ describe('JavaScript seed provider config #noserver', function () {
       expect(() => bridge.checkCredentials({ accessKeyId: 'A-K', secretAccessKey: 's' })).to.throw(/invalid accessKeyId/)
       expect(() => bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 'has space' })).to.throw(/invalid secretAccessKey$/)
       expect(() => bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 's', expiration: -1 })).to.throw(/invalid expiration/)
+      expect(() => bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 's', sessionToken: 'has space' })).to.throw(/invalid sessionToken$/)
+      expect(() => bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 's', sessionToken: 42 })).to.throw(/invalid sessionToken$/)
     })
   })
 
