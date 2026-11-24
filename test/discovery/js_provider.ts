@@ -753,6 +753,28 @@ describe('JavaScript seed provider', function () {
     expect(Number(closed)).to.equal(1)
   })
 
+  it('frees the discovery thread when a call it waits on can never settle and is collected', function () {
+    // Not periodic: no wait limit, so C's discovery thread waits on the call;
+    // once its Promise can't settle and is collected, the call fails and the
+    // provider is closed on close().
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const seed = ${JSON.stringify(seedHost())}
+      let closed = 0
+      const provider = { refreshSeedCandidates: () => new Promise(() => {}), needsPeriodicRefresh: () => false, close: () => { closed++ } }
+      Aerospike.connect({ hosts: [seed], log: { level: Aerospike.log.OFF }, discovery: { provider, refreshTimeoutMs: 300 } }).then(async client => {
+        for (let i = 0; i < 5; i++) { global.gc(); await new Promise(r => setTimeout(r, 100)) }
+        client.close()
+        await new Promise(r => setTimeout(r, 300))
+        console.log('closed ' + closed)
+        Aerospike.releaseEventLoop()
+      })
+    `
+    const result = spawnSync(process.execPath, ['--expose-gc', '-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('closed 1')
+  })
+
   it('rejects a JavaScript provider or hook in a client created in a worker thread', function () {
     const script = `
       const { Worker } = require('worker_threads')
