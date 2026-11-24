@@ -177,6 +177,45 @@ describe('JavaScript seed provider config #noserver', function () {
     return new Promise(resolve => setTimeout(resolve, 100)).then(() => expect(closed).to.equal(1))
   })
 
+  it('closes the provider once, without a crash, when the native client rejects its registration', async function () {
+    // The JavaScript checks would reject tend mode first; the native client is
+    // given the bridge spec directly to reach its own failure path.
+    const native = require('../../lib/native.js')
+    let closed = 0
+    const p = provider(() => [], false, { close: () => { closed++ } })
+    const config: any = bridge.forNative(new Config({ discovery: { provider: p } }))
+    config.discovery = Object.assign({}, config.discovery, { executionMode: 'tend' })
+    // The native constructor fails, which native.client() reports as null.
+    expect(native.client(config)).to.be.null
+    await new Promise(resolve => setTimeout(resolve, 100))
+    expect(closed).to.equal(1)
+  })
+
+  it('frees the provider of a closed client', function () {
+    // Garbage collection can only take the provider once the native bridge
+    // that holds it is freed.
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      let ref
+      ;(() => {
+        const provider = { refreshSeedCandidates: () => [], needsPeriodicRefresh: () => false }
+        ref = new WeakRef(provider)
+        const client = new Aerospike.Client({ hosts: [], discovery: { provider } })
+        try { client.close() } catch (err) {}
+      })()
+      setTimeout(() => {
+        for (let i = 0; i < 5; i++) global.gc()
+        setTimeout(() => {
+          global.gc()
+          console.log(ref.deref() === undefined ? 'freed' : 'alive')
+        }, 100)
+      }, 100)
+    `
+    const result = spawnSync(process.execPath, ['--expose-gc', '-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('freed')
+  })
+
   it('lets the process exit with a client left open', function () {
     // The bridge's handle is unref'd, so an open client doesn't keep the
     // process alive, and exit with one doesn't crash.
@@ -238,6 +277,75 @@ describe('JavaScript seed provider', function () {
     } finally {
       client.close()
     }
+  })
+
+  it('frees the native bridge of a client that connected and closed', function () {
+    // A connected client object itself is never collected (an existing leak
+    // of the cluster-events callback, CLIENT-5899), and its config keeps the
+    // provider. The spec built for the bridge is held only by the bridge, so
+    // it shows whether the bridge was freed.
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const bridge = require(${JSON.stringify(path.resolve(__dirname, '../../lib/discovery_bridge.js'))})
+      const seed = ${JSON.stringify(seedHost())}
+      let ref
+      const forNative = bridge.forNative
+      bridge.forNative = config => {
+        const result = forNative(config)
+        if (result !== config) ref = new WeakRef(result.discovery.provider)
+        return result
+      }
+      ;(async () => {
+        await (async () => {
+          const provider = { refreshSeedCandidates: async () => [seed], needsPeriodicRefresh: () => true }
+          const client = await Aerospike.connect({ hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider, refreshIntervalMs: 1000 } })
+          client.close()
+        })()
+        await new Promise(resolve => setTimeout(resolve, 500))
+        for (let i = 0; i < 5; i++) global.gc()
+        await new Promise(resolve => setTimeout(resolve, 100))
+        global.gc()
+        console.log(ref.deref() === undefined ? 'freed' : 'alive')
+        Aerospike.releaseEventLoop()
+      })()
+    `
+    const result = spawnSync(process.execPath, ['--expose-gc', '-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('freed')
+  })
+
+  it('wakes a refresh still waiting when connect fails, and connects on the retry', async function () {
+    // No hosts and a provider that doesn't answer: connect gives up after
+    // refreshTimeoutMs with the refresh still waiting on the bridge.
+    let answer = false
+    const p = provider(() => answer ? [seedHost()] : new Promise(() => {}))
+    const client = new Aerospike.Client(config(p, { refreshTimeoutMs: 400 }))
+    let error: any = null
+    try {
+      await client.connect()
+    } catch (err) {
+      error = err
+    }
+    expect(error).to.not.be.null
+    expect(error.code).to.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
+    answer = true
+    await client.connect()
+    expect(client.getNodes().length).to.be.at.least(1)
+    client.close()
+  })
+
+  it('passes the cluster name and configured TLS names in ctx', async function () {
+    let ctx: any
+    const p = provider((c: any) => { ctx = c; return [seedHost()] })
+    const client = new Aerospike.Client(config(p, {}, { hosts: [Object.assign(seedHost(), { tlsname: 'tls-a' })], clusterName: 'not-checked-here' }))
+    try {
+      await client.connect()
+    } catch (err) {
+      // A cluster name the server doesn't have can fail connect; ctx is what matters.
+    }
+    try { client.close() } catch (err) {}
+    expect(ctx.clusterName).to.equal('not-checked-here')
+    expect(ctx.configuredSeeds).to.eql([Object.assign(seedHost(), { tlsname: 'tls-a' })])
   })
 
   it('connects through a provider that returns an array directly', async function () {
@@ -457,6 +565,28 @@ describe('JavaScript AWS credentials hook', function () {
       expect(Date.now() - start).to.be.below(5000)
       expect(error.code).to.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
       expect(error.message).to.match(/credentials hook timed out after \d+ ?ms|did not answer within \d+ ms/)
+    } finally {
+      await ec2.stop()
+    }
+  })
+
+  it('closes at once while the hook is still waiting', async function () {
+    const ec2 = await startEc2Server([seed.addr])
+    try {
+      let calls = 0
+      const hook = () => {
+        calls++
+        return calls === 1 ? { accessKeyId: 'AKIDHOOK', secretAccessKey: 'secret', expiration: Date.now() + 1000 } : new Promise(() => {})
+      }
+      const config: any = Object.assign(awsConfig(ec2.endpoint, hook), { tenderInterval: 250 })
+      config.discovery.refreshIntervalMs = 300
+      config.discovery.aws.timeoutMs = 4000
+      const client: Cli = await Aerospike.connect(config)
+      // Credentials expire within the 5 minute margin, so the next refresh asks again and waits.
+      await waitUntil(() => calls >= 2, 5000)
+      const start = Date.now()
+      client.close()
+      expect(Date.now() - start).to.be.below(200)
     } finally {
       await ec2.stop()
     }

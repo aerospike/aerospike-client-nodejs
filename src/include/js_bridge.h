@@ -70,6 +70,12 @@ class JsBridge {
 	// client never took its reference.
 	void ReleaseOwner();
 
+	// Stops every bridge at process exit: waiting calls return at once and no
+	// call is queued any more. Runs from the 'exit' event of process.exit(),
+	// before the worker threads are joined, and from the environment cleanup
+	// hook of a normal shutdown.
+	static void StopAll();
+
 	// C client callbacks.
 	static as_status Refresh(as_error *err, const as_seed_candidate_context *context,
 							 as_seed_candidates *candidates, void *udata);

@@ -68,6 +68,11 @@ JsBridge *JsBridge::Create(Kind kind, Local<Object> spec)
 
 void JsBridge::Cleanup(void *)
 {
+	StopAll();
+}
+
+void JsBridge::StopAll()
+{
 	std::lock_guard<std::mutex> guard(g_bridges_mutex);
 	if (!g_bridges) {
 		return;
@@ -302,8 +307,9 @@ void JsBridge::RunOnLoop()
 			close_called = true;
 			call_close = true;
 		}
-		// refs reaches 0 only once the C client released the bridge.
-		if (refs == 0 && running == 0 && !freeing && (kind != PROVIDER || close_called)) {
+		// refs reaches 0 only once the C client released the bridge. Never in
+		// the pass that calls close(): the pass after it frees the bridge.
+		else if (refs == 0 && running == 0 && !freeing && (kind != PROVIDER || close_called)) {
 			freeing = true;
 			free_now = true;
 		}

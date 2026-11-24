@@ -149,6 +149,14 @@ static void close_client(AerospikeClient *client)
 
 	client->closed = true;
 
+	// The client's references to its bridges: the native client object is
+	// not reliably destroyed, so they are released here, once closed. A bridge
+	// is freed when the C client has released it too.
+	for (JsBridge *bridge : client->js_bridges) {
+		bridge->ReleaseClient();
+	}
+	client->js_bridges.clear();
+
 	if(!client->enable_callback.IsEmpty()){
 		client->enable_callback.Reset();
 		client->snapshot_callback.Reset();
