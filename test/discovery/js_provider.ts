@@ -549,15 +549,45 @@ describe('JavaScript seed provider', function () {
     })
   }
 
-  it('survives a Promise whose then() answers and then throws', async function () {
+  it('survives a Promise whose own then() answers and then throws (the built-in then() is used)', async function () {
     const p = provider(() => {
-      const result: any = Promise.resolve()
+      const result: any = Promise.resolve([seedHost()])
       result.then = (ok: any) => { ok([seedHost()]); throw new Error('boom') }
       return result
     })
     const client: Cli = await Aerospike.connect(config(p))
     expect(client.getNodes().length).to.be.at.least(1)
     client.close()
+  })
+
+  it('reads a Promise through the built-in then(), so an overriding then() cannot swallow the answer', async function () {
+    const p = provider(() => {
+      const result: any = Promise.resolve([seedHost()])
+      result.then = () => {} // keeps nothing, calls nothing
+      return result
+    })
+    const client: Cli = await Aerospike.connect(config(p))
+    expect(client.getNodes().length).to.be.at.least(1)
+    client.close()
+  })
+
+  it('keeps the process alive for a client that connects while the last other client closes', function () {
+    // B closes (and unrefs the event loop) while A's connect still runs; once
+    // A is connected, the idle process must stay alive. Passing = killed by
+    // the timeout. (A's cluster events handle also keeps it alive, so this
+    // guards the behaviour, not only the re-reference after connect.)
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const seed = ${JSON.stringify(seedHost())}
+      Aerospike.connect({ hosts: [seed], log: { level: Aerospike.log.OFF } }).then(b => {
+        const provider = { refreshSeedCandidates: () => new Promise(r => setTimeout(() => r([seed]), 300)), needsPeriodicRefresh: () => false }
+        Aerospike.connect({ hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider } }).then(() => console.log('A connected'))
+        b.close()
+      })
+    `
+    const result = spawnSync(process.execPath, ['-e', script], { timeout: 3000, encoding: 'utf8' })
+    expect(result.stdout).to.contain('A connected')
+    expect(result.signal, 'the process exited although client A is connected').to.equal('SIGTERM')
   })
 
   it('logs a provider close() that rejects, with no unhandled rejection', async function () {
@@ -668,13 +698,14 @@ describe('JavaScript seed provider', function () {
         Aerospike.releaseEventLoop()
         const text = fs.readFileSync(logFile, 'utf8')
         fs.unlinkSync(logFile)
-        console.log(/exceeding refresh_timeout_ms/.test(text) ? 'late answer reached C' : 'no late answer')
+        // The C client logs the overrun when the call returns to it late.
+        console.log(/exceeding refresh_timeout_ms/.test(text) ? 'late answer returned to C' : 'no late answer')
         console.log(/did not answer within/.test(text) ? 'bridge gave up' : 'bridge waited')
       })
     `
     const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
     expect(result.status, result.stderr).to.equal(0)
-    expect(result.stdout).to.contain('late answer reached C')
+    expect(result.stdout).to.contain('late answer returned to C')
     expect(result.stdout).to.contain('bridge waited')
   })
 
