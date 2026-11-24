@@ -221,6 +221,32 @@ describe('address translation against a multi-node cluster', function () {
     expect(found).to.eql([`${seedHost}:${seedPort}`])
   })
 
+  // Tech spec: -25 and -26 come from connect only when they are the reason no
+  // usable node is left. In the C client that is connect with only the seed
+  // joined, a peer that could not be reached, and a miss or collision as the
+  // first topology error; otherwise the node is skipped with a warning.
+  it('fails connect with ERR_TRANSLATION_MISS when a strict miss leaves only the seed', async function () {
+    const [dead, ...unmapped] = nodes.filter(node => node.port !== seedPort)
+    expect(unmapped).to.not.be.empty
+    // One peer is mapped to a port nothing listens on; the others miss.
+    const portMap = { [dead.advertised]: `${seedHost}:1` }
+    const error = await connectError({ hosts, log, translation: { provider: 'port-map', portMap, onMiss: 'strict' } })
+    expect(error, 'connect should fail').to.not.be.null
+    expect(error.code).to.equal(Aerospike.status.ERR_TRANSLATION_MISS)
+    expect(error.message).to.match(/has no mapping for node/)
+  })
+
+  it('fails connect with ERR_TRANSLATION_COLLISION when a collision leaves only the seed', async function () {
+    const others = nodes.filter(node => node.port !== seedPort)
+    expect(others).to.have.length.of.at.least(3)
+    // Two peers collide on one address; the rest keep their unreachable advertised address.
+    const portMap = { [others[0].advertised]: `${seedHost}:1`, [others[1].advertised]: `${seedHost}:1` }
+    const error = await connectError({ hosts, log, translation: { provider: 'port-map', portMap } })
+    expect(error, 'connect should fail').to.not.be.null
+    expect(error.code).to.equal(Aerospike.status.ERR_TRANSLATION_COLLISION)
+    expect(error.message).to.match(/to the same address/)
+  })
+
   it('drops both nodes that translate to the same address', async function () {
     const others = nodes.filter(node => node.port !== seedPort)
     const portMap = portMapByAddress()
