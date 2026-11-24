@@ -377,6 +377,13 @@ NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
 
+	// No cluster yet, one being built by a connect on another thread, or one
+	// freed by close().
+	if (client->connecting || client->closed || !client->as->cluster) {
+		info.GetReturnValue().Set(Nan::New(false));
+		return;
+	}
+
 	bool pending = as_async_get_pending(client->as->cluster) > 0;
 
 	info.GetReturnValue().Set(Nan::New(pending));

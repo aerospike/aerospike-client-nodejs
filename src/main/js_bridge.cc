@@ -194,11 +194,16 @@ as_status JsBridge::Refresh(as_error *err, const as_seed_candidate_context *cont
 	}
 	bridge->tend_iteration = context->tend_iteration;
 
+	if (bridge->closing || !bridge->loop_alive) {
+		return as_error_set_message(err, AEROSPIKE_ERR_CLIENT,
+									"JavaScript seed provider not called: the client is closing");
+	}
+
 	// An earlier call past its wait limit hasn't settled: the provider is
 	// never called twice at once.
 	if (bridge->running > 0) {
 		return as_error_set_message(err, AEROSPIKE_ERR_CLIENT,
-									"JavaScript seed provider not called: its previous call has not settled");
+									"JavaScript seed provider not called: its previous call is still running");
 	}
 
 	if (bridge->Begin(lock) == 0) {
@@ -257,6 +262,18 @@ as_status JsBridge::GetCredentials(as_error *err, uint32_t timeout_ms,
 	JsBridge *bridge = static_cast<JsBridge *>(udata);
 	std::unique_lock<std::mutex> lock(bridge->mutex);
 	bridge->timeout_ms = timeout_ms;
+
+	if (bridge->closing || !bridge->loop_alive) {
+		return as_error_set_message(err, AEROSPIKE_ERR_CLIENT,
+									"JavaScript credentials hook not called: the client is closing");
+	}
+
+	// An earlier call past its timeout hasn't settled: the hook is never
+	// called twice at once.
+	if (bridge->running > 0) {
+		return as_error_set_message(err, AEROSPIKE_ERR_CLIENT,
+									"JavaScript credentials hook not called: its previous call is still running");
+	}
 
 	if (bridge->Begin(lock) == 0) {
 		return as_error_set_message(err, AEROSPIKE_ERR_CLIENT,
@@ -497,7 +514,32 @@ void JsBridge::Dispatch(uint64_t id)
 
 void JsBridge::DoneCollected(const Nan::WeakCallbackInfo<DoneData> &info)
 {
-	delete info.GetParameter();
+	DoneData *data = info.GetParameter();
+	if (!data->called) {
+		// Nothing can call done() any more: the call can never settle. It is
+		// released, so later calls and close() aren't held back by it.
+		data->called = true;
+		data->bridge->CallLost(data->id);
+	}
+	delete data;
+}
+
+// JavaScript thread, from a weak callback: no JavaScript is called here.
+void JsBridge::CallLost(uint64_t id)
+{
+	std::lock_guard<std::mutex> lock(mutex);
+	running--;
+	if (has_request && request_id == id && dispatched && !aborted && !has_result) {
+		result_ok = false;
+		result_error = "JavaScript call ended without an answer";
+		result_hosts.clear();
+		has_result = true;
+		cond.notify_all();
+	}
+	refs--;
+	if (loop_alive) {
+		uv_async_send(async);
+	}
 }
 
 NAN_METHOD(JsBridge::Done)

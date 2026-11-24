@@ -64,7 +64,9 @@ class JsBridge {
 	// a script that ends right after client.close() still closes it.
 	void MarkClosing();
 	// JavaScript thread, after a failed connect: wakes the waiting call, whose
-	// answer is then dropped. Later calls work, so connect can be retried.
+	// answer is then dropped. Connect can be retried; while that JavaScript
+	// call hasn't settled, the provider isn't called again (calls never
+	// overlap), so a retry meanwhile fails at once.
 	void AbortPending();
 	// JavaScript thread: the client's reference.
 	void ReleaseClient();
@@ -117,6 +119,7 @@ class JsBridge {
 	void RunOnLoop();
 	void Dispatch(uint64_t id);
 	void Finish(uint64_t id, const char *error, v8::Local<v8::Value> value);
+	void CallLost(uint64_t id);
 
 	static void AsyncCallback(uv_async_t *handle);
 	static void CloseCallback(uv_handle_t *handle);

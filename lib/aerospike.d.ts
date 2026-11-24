@@ -11221,8 +11221,8 @@ export interface SeedHost {
 export interface SeedCandidateContext {
     /** {@link Config#clusterName}, or null. */
     readonly clusterName: string | null;
-    /** The configured {@link Config#hosts}. */
-    readonly configuredSeeds: readonly Host[];
+    /** The configured {@link Config#hosts}, each with its port. */
+    readonly configuredSeeds: readonly SeedHost[];
     /** 0 at connect, then the number of tends so far. */
     readonly tendIteration: number;
 }
@@ -11243,11 +11243,14 @@ export interface SeedCandidateContext {
  * the client falls back to {@link Config#hosts}, or fails with
  * {@link status.ERR_SEED_DISCOVERY_FAILED} when there are none; later it logs
  * a warning and keeps the previous seeds. An empty list is a valid result.
- * Results that arrive after <code>refreshTimeoutMs</code> are still used,
- * up to <code>refreshIntervalMs</code> for a periodic provider (or
- * <code>refreshTimeoutMs</code> if longer); a call that takes longer fails,
- * the provider isn't called again until its Promise settles, and that late
- * result is dropped. A result may list at most 10000 hosts.
+ * Results that arrive after <code>refreshTimeoutMs</code> are still used. For
+ * a periodic provider that is up to <code>refreshIntervalMs</code> (or
+ * <code>refreshTimeoutMs</code> if longer): a call that takes longer fails,
+ * and that late result is dropped. Calls never overlap: while one hasn't
+ * settled the provider isn't called again, and a connect retried meanwhile
+ * fails at once. A Promise that can never settle (nothing references it any
+ * more) is released when it is garbage collected. A result may list at most
+ * 10000 hosts. Supported only in a client created on the main thread.
  * Runs in thread mode only.
  */
 export interface SeedCandidateProvider {
@@ -11261,7 +11264,7 @@ export interface SeedCandidateProvider {
      * unchanged is not range checked. An empty <code>tlsname</code> means
      * none, and gets the same default as a configured seed.
      */
-    refreshSeedCandidates(ctx: SeedCandidateContext): SeedHost[] | Promise<SeedHost[]>;
+    refreshSeedCandidates(ctx: SeedCandidateContext): readonly SeedHost[] | Promise<readonly SeedHost[]>;
     /**
      * Whether the hosts can change and must be refreshed periodically. Called
      * once, when the client is created.

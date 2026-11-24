@@ -255,6 +255,20 @@ describe('JavaScript seed provider config #noserver', function () {
     expect(result.stdout.trim()).to.equal('freed')
   })
 
+  it('closes a client that never connected without throwing, in a fresh process', function () {
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      let closed = 0
+      const client = new Aerospike.Client({ hosts: [], discovery: { provider: { refreshSeedCandidates: () => [], needsPeriodicRefresh: () => false, close: () => { closed++ } } } })
+      client.close()
+      new Aerospike.Client({ hosts: '127.0.0.1:3000' }).close()
+      setTimeout(() => console.log('closed ' + closed), 100)
+    `
+    const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('closed 1')
+  })
+
   it('lets the process exit with a client left open', function () {
     // The bridge's handle is unref'd, so an open client doesn't keep the
     // process alive, and exit with one doesn't crash.
@@ -367,7 +381,7 @@ describe('JavaScript seed provider', function () {
     expect(first.code).to.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
     // The first call hasn't settled: the provider is not called again.
     const second = await client.connect().catch((err: any) => err)
-    expect(second.message).to.match(/previous call has not settled/)
+    expect(second.message).to.match(/previous call is still running/)
     expect(calls).to.equal(1)
     settle([seedHost()])
     await new Promise(resolve => setTimeout(resolve, 50))
@@ -589,7 +603,7 @@ describe('JavaScript seed provider', function () {
     }
   })
 
-  it('throws "not connected" from addSeedHost, removeSeedHost and stats after close', async function () {
+  it('throws "not connected" from addSeedHost and removeSeedHost after close', async function () {
     const client: Cli = await Aerospike.connect(config(provider(() => [seedHost()])))
     client.close()
     expect(() => client.addSeedHost(seed.addr, seed.port)).to.throw(/not connected/)
@@ -617,19 +631,103 @@ describe('JavaScript seed provider', function () {
     }
   })
 
-  it('releases the event loop only after a connect still running when close(true) is called', function () {
+  it('releases the event loop only after a connect still running, from close(true) or Aerospike.releaseEventLoop()', function () {
+    for (const how of ['close', 'module']) {
+      const script = `
+        const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+        const native = require(${JSON.stringify(path.resolve(__dirname, '../../lib/native.js'))})
+        const seed = ${JSON.stringify(seedHost())}
+        let settled = false
+        const release = native.release_as_event_loop
+        native.release_as_event_loop = (...args) => { console.log('released, connect settled: ' + settled); return release.apply(native, args) }
+        const provider = { refreshSeedCandidates: () => new Promise(r => setTimeout(() => r([seed]), 300)), needsPeriodicRefresh: () => false }
+        const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider } })
+        client.connect().then(() => { settled = true; client.close() }, err => { settled = true; console.log('connect: ' + err.message) })
+        if (${JSON.stringify(how)} === 'close') client.close(true)
+        else Aerospike.releaseEventLoop()
+      `
+      const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
+      expect(result.signal, result.stderr).to.be.null
+      expect(result.status, result.stderr).to.equal(0)
+      expect(result.stdout, how).to.contain('released, connect settled: true')
+      expect(result.stdout, how).to.not.contain('released, connect settled: false')
+    }
+  })
+
+  it('publishes the late first answer of a provider that is not periodic, as the C client does', function () {
+    const script = `
+      const fs = require('fs')
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const seed = ${JSON.stringify(seedHost())}
+      const logFile = require('os').tmpdir() + '/js-provider-late-' + process.pid + '.log'
+      Aerospike.setDefaultLogging({ level: Aerospike.log.WARN, file: fs.openSync(logFile, 'w') })
+      const provider = { refreshSeedCandidates: () => new Promise(r => setTimeout(() => r([seed]), 900)), needsPeriodicRefresh: () => false }
+      Aerospike.connect({ hosts: [seed], log: { level: Aerospike.log.WARN }, discovery: { provider, refreshTimeoutMs: 400 } }).then(async client => {
+        await new Promise(r => setTimeout(r, 1200))
+        client.close()
+        Aerospike.releaseEventLoop()
+        const text = fs.readFileSync(logFile, 'utf8')
+        fs.unlinkSync(logFile)
+        console.log(/exceeding refresh_timeout_ms/.test(text) ? 'late answer reached C' : 'no late answer')
+        console.log(/did not answer within/.test(text) ? 'bridge gave up' : 'bridge waited')
+      })
+    `
+    const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout).to.contain('late answer reached C')
+    expect(result.stdout).to.contain('bridge waited')
+  })
+
+  it('releases a call that can never settle once it is collected, so refreshes and close() go on', function () {
     const script = `
       const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
       const seed = ${JSON.stringify(seedHost())}
-      const provider = { refreshSeedCandidates: () => new Promise(r => setTimeout(() => r([seed]), 300)), needsPeriodicRefresh: () => false }
-      const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider } })
-      client.connect().catch(err => console.log('connect: ' + err.message))
-      client.close(true)
+      let calls = 0
+      let closed = 0
+      const provider = {
+        refreshSeedCandidates: () => ++calls === 2 ? new Promise(() => {}) : [seed],
+        needsPeriodicRefresh: () => true,
+        close: () => { closed++ }
+      }
+      Aerospike.connect({ hosts: [], log: { level: Aerospike.log.OFF }, tenderInterval: 250,
+        discovery: { provider, refreshIntervalMs: 300, refreshTimeoutMs: 300 } }).then(async client => {
+        while (calls < 2) await new Promise(r => setTimeout(r, 20))
+        await new Promise(r => setTimeout(r, 500))
+        for (let i = 0; i < 5; i++) global.gc()
+        await new Promise(r => setTimeout(r, 1500))
+        const after = calls
+        client.close()
+        await new Promise(r => setTimeout(r, 300))
+        console.log('calls ' + after + ' closed ' + closed)
+        Aerospike.releaseEventLoop()
+      })
+    `
+    const result = spawnSync(process.execPath, ['--expose-gc', '-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    const [, calls, closed] = /calls (\d+) closed (\d+)/.exec(result.stdout) as any
+    expect(Number(calls)).to.be.at.least(3)
+    expect(Number(closed)).to.equal(1)
+  })
+
+  it('rejects a JavaScript provider or hook in a client created in a worker thread', function () {
+    const script = `
+      const { Worker } = require('worker_threads')
+      const lib = ${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))}
+      const worker = new Worker(\`
+        const Aerospike = require(\${JSON.stringify(lib)})
+        const { parentPort } = require('worker_threads')
+        try {
+          new Aerospike.Config({ discovery: { provider: { refreshSeedCandidates: () => [], needsPeriodicRefresh: () => false } } })
+          parentPort.postMessage('accepted')
+        } catch (err) {
+          parentPort.postMessage(err.message)
+        }
+      \`, { eval: true })
+      worker.once('message', message => { console.log(message); worker.terminate() })
     `
     const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
-    expect(result.signal, result.stderr).to.be.null
     expect(result.status, result.stderr).to.equal(0)
-    expect(result.stdout).to.contain('Client closed while connecting')
+    expect(result.stdout).to.contain('supported only in a client created on the main thread')
   })
 
   it('rejects a second connect while one runs', async function () {
@@ -783,6 +881,36 @@ describe('JavaScript AWS credentials hook', function () {
       client.close()
       expect(Date.now() - start).to.be.below(200)
     } finally {
+      await ec2.stop()
+    }
+  })
+
+  it('never calls the hook again while a call past its timeout is still running', async function () {
+    const ec2 = await startEc2Server([seed.addr])
+    let calls = 0
+    let release: () => void = () => {}
+    try {
+      const hook = () => {
+        calls++
+        // Credentials expiring at once: every refresh asks the hook again.
+        if (calls === 2) return new Promise<any>(resolve => { release = () => resolve({ accessKeyId: 'AKIDHOOK', secretAccessKey: 'secret' }) })
+        return { accessKeyId: 'AKIDHOOK', secretAccessKey: 'secret', expiration: Date.now() + 1000 }
+      }
+      const config: any = Object.assign(awsConfig(ec2.endpoint, hook), { tenderInterval: 250 })
+      config.discovery.refreshIntervalMs = 300
+      config.discovery.aws.timeoutMs = 200
+      const client: Cli = await Aerospike.connect(config)
+      try {
+        await waitUntil(() => calls >= 2, 5000)
+        await new Promise(resolve => setTimeout(resolve, 1200))
+        expect(calls).to.equal(2)
+        release()
+        await waitUntil(() => calls >= 3, 5000)
+      } finally {
+        client.close()
+      }
+    } finally {
+      release()
       await ec2.stop()
     }
   })
