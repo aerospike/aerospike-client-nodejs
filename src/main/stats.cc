@@ -61,6 +61,11 @@ NAN_METHOD(AerospikeClient::GetStats)
 	if (client->closed)
 		return;
 
+	// No cluster yet, or one being built by a connect on another thread.
+	if (client->connecting || !client->as->cluster) {
+		return Nan::ThrowError("stats: the client is not connected");
+	}
+
 	as_cluster_stats cluster_stats;
 	aerospike_stats(client->as, &cluster_stats);
 	Local<Object> stats = build_cluster_stats(&cluster_stats);

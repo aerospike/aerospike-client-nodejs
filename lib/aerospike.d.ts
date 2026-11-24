@@ -11296,8 +11296,8 @@ export interface DiscoveryConfig {
      * <code>'aws-tags'</code> needs {@link DiscoveryConfig#aws} and runs only
      * in thread mode. A {@link SeedCandidateProvider} object is a provider
      * written in JavaScript; it runs only in thread mode, and with one,
-     * <code>connect()</code> runs on a worker thread so the JavaScript thread
-     * stays free to answer the first refresh.
+     * <code>connect()</code> runs on a thread of its own (not libuv's thread
+     * pool) so the JavaScript thread stays free to answer the first refresh.
      *
      * @default 'static'
      */

@@ -437,6 +437,47 @@ describe('JavaScript seed provider', function () {
     expect(closed).to.equal(1)
   })
 
+  it('answers other calls safely while a connect runs on its own thread, and normally after', async function () {
+    const p = provider(async () => {
+      await new Promise(resolve => setTimeout(resolve, 300))
+      return [seedHost()]
+    })
+    const client = new Aerospike.Client(config(p))
+    const connecting = client.connect()
+    const errors = new Set<string>()
+    let rounds = 0
+    const poke = setInterval(() => {
+      rounds++
+      expect(client.getNodes()).to.eql([])
+      expect(client.isConnected()).to.be.false
+      for (const call of [() => client.stats(), () => client.addSeedHost(seed.addr, seed.port), () => client.removeSeedHost(seed.addr, seed.port)]) {
+        try {
+          call()
+        } catch (err: any) {
+          errors.add(err.message.replace(/^\w+: /, ''))
+        }
+      }
+      client.get(new Aerospike.Key(helper.namespace, helper.set, 'js-provider/during')).catch((err: any) => errors.add(err.message))
+    }, 5)
+    await connecting
+    clearInterval(poke)
+    expect(rounds).to.be.at.least(10)
+    expect([...errors].every(message => /not connected/i.test(message)), [...errors].join('; ')).to.be.true
+    try {
+      expect(client.getNodes().length).to.be.at.least(1)
+      expect(client.isConnected()).to.be.true
+      expect(client.stats().nodes.length).to.be.at.least(1)
+      client.addSeedHost(seed.addr, seed.port)
+      client.removeSeedHost(seed.addr, seed.port)
+      const key = new Aerospike.Key(helper.namespace, helper.set, 'js-provider/after')
+      await client.put(key, { i: 1 })
+      expect((await client.get(key)).bins.i).to.equal(1)
+      await client.remove(key)
+    } finally {
+      client.close()
+    }
+  })
+
   it('rejects a second connect while one runs', async function () {
     const p = provider(async () => {
       await new Promise(resolve => setTimeout(resolve, 200))

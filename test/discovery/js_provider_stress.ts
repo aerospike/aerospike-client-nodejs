@@ -185,6 +185,36 @@ describe('JavaScript seed provider stress #slow', function () {
     expect(delay.max / 1e6).to.be.below(250)
   })
 
+  it('runs many first connects at once, on their own threads and on the JavaScript thread, 15 times', function () {
+    // The C client sets its global Lua settings in the first connect without a
+    // lock; connects on their own threads must not race on that.
+    const script = `
+      const Aerospike = require(${JSON.stringify(lib)})
+      const seed = ${JSON.stringify(seedHost())}
+      const ns = ${JSON.stringify(helper.namespace)}
+      const set = ${JSON.stringify(helper.set)}
+      ;(async () => {
+        const provider = { refreshSeedCandidates: async () => [seed], needsPeriodicRefresh: () => false }
+        const js = Array.from({ length: 10 }, () => Aerospike.connect({ hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider } }))
+        const plain = Array.from({ length: 5 }, () => Aerospike.connect({ hosts: [seed], log: { level: Aerospike.log.OFF } }))
+        const clients = await Promise.all([...js, ...plain])
+        const key = new Aerospike.Key(ns, set, 'js-provider-lua/' + process.pid)
+        await clients[0].put(key, { i: 1 })
+        await Promise.all(clients.map(c => c.get(key)))
+        await clients[0].remove(key)
+        clients.forEach(c => c.close())
+        Aerospike.releaseEventLoop()
+        console.log('ok ' + clients.length)
+      })().catch(err => { console.error(err); process.exit(1) })
+    `
+    for (let i = 0; i < 15; i++) {
+      const result = spawnSync(process.execPath, ['-e', script], { timeout: 30000, encoding: 'utf8' })
+      expect(result.signal, `run ${i}: ${result.stderr}`).to.be.null
+      expect(result.status, `run ${i}: ${result.stderr}`).to.equal(0)
+      expect(result.stdout.trim()).to.equal('ok 15')
+    }
+  })
+
   it('connects 25 clients at once that share one provider, and closes it once per client', async function () {
     let closed = 0
     let calls = 0

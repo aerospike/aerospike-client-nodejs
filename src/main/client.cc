@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <node.h>
+#include <thread>
 #include "client.h"
 #include "command.h"
 #include "conversions.h"
@@ -170,29 +171,57 @@ static void close_client(AerospikeClient *client)
 }
 
 /**
- * aerospike_connect() on a libuv worker thread, for a client with a JavaScript
- * seed provider or credentials hook. close() and destroy stay on the
- * JavaScript thread (the C client hands close's waiting to its own thread);
- * a close() asked for while connect runs is done when connect completes.
+ * aerospike_connect() on a thread of its own, for a client with a JavaScript
+ * seed provider or credentials hook, so the JavaScript thread stays free to
+ * answer the C client's first refresh. Not the libuv thread pool: connect can
+ * wait up to refresh_timeout_ms there, which would hold back the
+ * application's fs, dns.lookup(), crypto and zlib work.
+ *
+ * Completion comes back on the JavaScript thread through a uv_async handle,
+ * which keeps the process alive while connect runs (as a pending connect
+ * always has). close() and destroy stay on the JavaScript thread (the C
+ * client hands close's waiting to its own thread); a close() asked for while
+ * connect runs is done when connect completes.
  */
-class ConnectWorker : public Nan::AsyncWorker {
+class ConnectJob {
   public:
-	ConnectWorker(Nan::Callback *callback, AerospikeClient *client)
-	  : Nan::AsyncWorker(callback, "aerospike:connect"), client(client), status(AEROSPIKE_OK)
+	ConnectJob(AerospikeClient *client, Local<Object> self, Local<Function> callback)
+	  : client(client), status(AEROSPIKE_OK)
 	{
 		as_error_init(&err);
+		this->self.Reset(self);
+		this->callback.Reset(callback);
+		uv_async_init(uv_default_loop(), &async, Done);
+		async.data = this;
 	}
 
-	void Execute() override
+	void Start()
 	{
-		status = aerospike_connect(client->as, &err);
+		thread = std::thread([this] {
+			status = aerospike_connect(client->as, &err);
+			uv_async_send(&async);
+		});
 	}
 
-	void HandleOKCallback() override
+  private:
+	static void Done(uv_async_t *handle)
+	{
+		ConnectJob *job = static_cast<ConnectJob *>(handle->data);
+		job->thread.join();
+		job->Complete();
+		uv_close(reinterpret_cast<uv_handle_t *>(&job->async), Free);
+	}
+
+	static void Free(uv_handle_t *handle)
+	{
+		delete static_cast<ConnectJob *>(handle->data);
+	}
+
+	void Complete()
 	{
 		Nan::HandleScope scope;
 		client->connecting = false;
-		AerospikeCommand *cmd = new AerospikeCommand("Connect", client, callback->GetFunction());
+		AerospikeCommand *cmd = new AerospikeCommand("Connect", client, Nan::New(callback));
 
 		if (client->close_pending) {
 			// close() was called while connect ran: connect fails with that,
@@ -218,13 +247,25 @@ class ConnectWorker : public Nan::AsyncWorker {
 			cmd->Callback(0, {});
 		}
 		delete cmd;
+		self.Reset();
+		callback.Reset();
 	}
 
-  private:
 	AerospikeClient *client;
+	Nan::Persistent<Object> self;
+	Nan::Persistent<Function> callback;
+	uv_async_t async;
+	std::thread thread;
 	as_error err;
 	as_status status;
 };
+
+// Whether the C client's global Lua settings are set: it sets them in the
+// first aerospike_connect(), without a lock. Connects on the JavaScript thread
+// never overlap, but a connect on a thread of its own can overlap another, so
+// the settings are made here first.
+static bool g_lua_configured = false;
+
 
 /**
  * Connect to an Aerospike Cluster
@@ -252,23 +293,31 @@ NAN_METHOD(AerospikeClient::Connect)
 	else if (!client->js_bridges.empty()) {
 		// A JavaScript provider or hook answers the C client's first refresh
 		// on the JavaScript thread, so that thread must not wait inside
-		// aerospike_connect(): connect runs on a worker thread instead.
+		// aerospike_connect(): connect runs on a thread of its own instead.
+		if (!g_lua_configured) {
+			aerospike_init_lua(&client->as->config.lua);
+			g_lua_configured = true;
+		}
 		client->connecting = true;
-		ConnectWorker *worker = new ConnectWorker(new Nan::Callback(callback), client);
-		worker->SaveToPersistent("client", info.This());
-		Nan::AsyncQueueWorker(worker);
-	}
-	else if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
-		// A failed connect leaves no cluster, so connect can be retried on
-		// this client. Release the event handle so it doesn't keep the
-		// process alive; the next connect sets it up again.
-		events_callback_close(&client->as->config);
-		cmd->ErrorCallback(&err);
+		ConnectJob *job = new ConnectJob(client, info.This(), callback);
+		job->Start();
 	}
 	else {
-		as_v8_debug(client->log,
-					"Successfully connected to cluster: Enjoy your cake!");
-		cmd->Callback(0, {});
+		// The first connect on this thread sets the Lua settings (see
+		// g_lua_configured).
+		g_lua_configured = true;
+		if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
+			// A failed connect leaves no cluster, so connect can be retried on
+			// this client. Release the event handle so it doesn't keep the
+			// process alive; the next connect sets it up again.
+			events_callback_close(&client->as->config);
+			cmd->ErrorCallback(&err);
+		}
+		else {
+			as_v8_debug(client->log,
+						"Successfully connected to cluster: Enjoy your cake!");
+			cmd->Callback(0, {});
+		}
 	}
 
 	delete cmd;
@@ -377,6 +426,10 @@ NAN_METHOD(AerospikeClient::AddSeedHost)
 	Nan::Utf8String hostname(info[0].As<String>());
 	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
+	// No cluster yet, or one being built by a connect on another thread.
+	if (client->connecting || !client->as->cluster) {
+		return Nan::ThrowError("addSeedHost: the client is not connected");
+	}
 	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
 }
 
@@ -395,6 +448,10 @@ NAN_METHOD(AerospikeClient::RemoveSeedHost)
 	Nan::Utf8String hostname(info[0].As<String>());
 	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
+	// No cluster yet, or one being built by a connect on another thread.
+	if (client->connecting || !client->as->cluster) {
+		return Nan::ThrowError("removeSeedHost: the client is not connected");
+	}
 	as_cluster_remove_seed(client->as->cluster, *hostname, port);
 }
 
