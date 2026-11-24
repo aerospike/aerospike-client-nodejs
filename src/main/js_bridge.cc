@@ -47,6 +47,13 @@ JsBridge *JsBridge::Create(Kind kind, Local<Object> spec)
 {
 	JsBridge *bridge = new JsBridge(kind);
 	bridge->spec.Reset(spec);
+	if (kind == PROVIDER) {
+		Local<Value> limit = Nan::Get(spec, Nan::New("waitLimitMs").ToLocalChecked()).ToLocalChecked();
+		if (limit->IsNumber()) {
+			double ms = Nan::To<double>(limit).FromMaybe(0);
+			bridge->wait_limit_ms = ms > 0 && ms < 4294967295.0 ? (uint32_t)ms : 0;
+		}
+	}
 
 	bridge->async = new uv_async_t;
 	uv_async_init(uv_default_loop(), bridge->async, AsyncCallback);
@@ -87,9 +94,32 @@ void JsBridge::StopAll()
 
 void JsBridge::MarkClosing()
 {
-	std::lock_guard<std::mutex> lock(mutex);
-	closing = true;
-	cond.notify_all();
+	bool keep;
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		closing = true;
+		cond.notify_all();
+		keep = kind == PROVIDER && loop_alive && !close_called;
+	}
+	if (keep) {
+		// JavaScript thread: until the provider's close() has run.
+		KeepAlive(true);
+	}
+}
+
+// JavaScript thread only (uv_ref and uv_unref).
+void JsBridge::KeepAlive(bool keep)
+{
+	if (keep == kept_alive) {
+		return;
+	}
+	kept_alive = keep;
+	if (keep) {
+		uv_ref(reinterpret_cast<uv_handle_t *>(async));
+	}
+	else {
+		uv_unref(reinterpret_cast<uv_handle_t *>(async));
+	}
 }
 
 void JsBridge::AbortPending()
@@ -164,14 +194,31 @@ as_status JsBridge::Refresh(as_error *err, const as_seed_candidate_context *cont
 	}
 	bridge->tend_iteration = context->tend_iteration;
 
+	// An earlier call past its wait limit hasn't settled: the provider is
+	// never called twice at once.
+	if (bridge->running > 0) {
+		return as_error_set_message(err, AEROSPIKE_ERR_CLIENT,
+									"JavaScript seed provider not called: its previous call has not settled");
+	}
+
 	if (bridge->Begin(lock) == 0) {
 		return as_error_set_message(err, AEROSPIKE_ERR_CLIENT,
 									"JavaScript seed provider not called: the client is closing");
 	}
 
-	bridge->cond.wait(lock, [bridge] {
+	auto answered = [bridge] {
 		return bridge->has_result || bridge->aborted || bridge->closing;
-	});
+	};
+	if (bridge->wait_limit_ms == 0) {
+		bridge->cond.wait(lock, answered);
+	}
+	else if (!bridge->cond.wait_for(lock, std::chrono::milliseconds(bridge->wait_limit_ms), answered)) {
+		// Its answer, if it ever comes, is dropped.
+		bridge->has_request = false;
+		return as_error_update(err, AEROSPIKE_ERR_TIMEOUT,
+							   "JavaScript seed provider did not answer within %u ms",
+							   bridge->wait_limit_ms);
+	}
 	bridge->has_request = false;
 
 	if (!bridge->has_result) {
@@ -282,18 +329,24 @@ void JsBridge::CloseCallback(uv_handle_t *handle)
 
 // JavaScript thread. uv_async_send() coalesces, so this checks every state:
 // a request to dispatch, the provider's close() to call, the bridge to free.
+// Nothing calls into JavaScript once the process is exiting.
 void JsBridge::RunOnLoop()
 {
 	Nan::HandleScope scope;
 	uint64_t id = 0;
+	bool alive;
 	{
 		std::lock_guard<std::mutex> lock(mutex);
-		if (has_request && !dispatched && !aborted && !closing) {
+		alive = loop_alive;
+		if (alive && has_request && !dispatched && !aborted && !closing) {
 			dispatched = true;
 			id = request_id;
 			running++;
 			refs++;
 		}
+	}
+	if (!alive) {
+		return;
 	}
 	if (id) {
 		Dispatch(id);
@@ -301,6 +354,7 @@ void JsBridge::RunOnLoop()
 
 	bool call_close = false;
 	bool free_now = false;
+	bool waiting_on_js = false;
 	{
 		std::lock_guard<std::mutex> lock(mutex);
 		if (kind == PROVIDER && released && running == 0 && !close_called) {
@@ -313,26 +367,36 @@ void JsBridge::RunOnLoop()
 			freeing = true;
 			free_now = true;
 		}
+		waiting_on_js = released && running > 0;
+	}
+
+	if (waiting_on_js) {
+		// A call that hasn't settled may never settle: don't hold the process
+		// for it (close() then runs only if it settles while the process runs).
+		KeepAlive(false);
 	}
 
 	if (call_close) {
 		Local<Object> spec_obj = Nan::New(spec);
 		Local<Value> close_fn = Nan::Get(spec_obj, Nan::New("close").ToLocalChecked()).ToLocalChecked();
 		if (close_fn->IsFunction()) {
+			Local<Value> argv[1] = {Nan::New<Function>(Warn)};
 			Nan::TryCatch try_catch;
-			Nan::Call(close_fn.As<Function>(), spec_obj, 0, NULL);
+			Nan::Call(close_fn.As<Function>(), spec_obj, 1, argv);
 			if (try_catch.HasCaught()) {
 				Nan::Utf8String message(try_catch.Exception());
 				as_v8_warn(&g_log_info, "JavaScript seed provider close() failed: %s",
 						   *message ? *message : "unknown error");
 			}
 		}
+		KeepAlive(false);
 		// The bridge may now be free.
 		RunOnLoop();
 		return;
 	}
 
 	if (free_now) {
+		KeepAlive(false);
 		{
 			std::lock_guard<std::mutex> guard(g_bridges_mutex);
 			if (g_bridges) {
@@ -341,6 +405,14 @@ void JsBridge::RunOnLoop()
 		}
 		uv_close(reinterpret_cast<uv_handle_t *>(async), CloseCallback);
 	}
+}
+
+NAN_METHOD(JsBridge::Warn)
+{
+	Nan::HandleScope scope;
+	Nan::Utf8String message(info.Length() > 0 ? info[0] : Nan::Undefined().As<Value>());
+	as_v8_warn(&g_log_info, "JavaScript seed provider close() failed: %s",
+			   *message ? *message : "unknown error");
 }
 
 static Local<Object> host_object(const std::string &addr, int port, bool has_tls_name,
@@ -357,41 +429,58 @@ static Local<Object> host_object(const std::string &addr, int port, bool has_tls
 
 void JsBridge::Dispatch(uint64_t id)
 {
+	// Copied under the lock; the JavaScript objects are built after it.
+	Kind call_kind = kind;
+	bool with_cluster_name;
+	std::string name;
+	std::vector<Host> configured;
+	uint64_t iteration;
+	uint32_t timeout;
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		with_cluster_name = has_cluster_name;
+		name = cluster_name;
+		configured = seeds;
+		iteration = tend_iteration;
+		timeout = timeout_ms;
+	}
+
 	Local<Object> spec_obj = Nan::New(spec);
-	DoneData *data = new DoneData{this, id};
+	// done() is single use. Its data is freed when the function is collected,
+	// so a done() called again, or never, can't double free or leak it.
+	DoneData *data = new DoneData();
+	data->bridge = this;
+	data->id = id;
+	data->called = false;
 	// A plain function, not a FunctionTemplate: V8 never frees templates.
 	Local<Function> done = Nan::New<Function>(Done, Nan::New<External>(data));
+	data->function.Reset(done);
+	data->function.SetWeak(data, DoneCollected, Nan::WeakCallbackType::kParameter);
 
 	Local<Value> argv[2];
 	Local<Value> fn;
-
-	{
-		std::lock_guard<std::mutex> lock(mutex);
-		if (kind == PROVIDER) {
-			Local<Object> ctx = Nan::New<Object>();
-			if (has_cluster_name) {
-				Nan::Set(ctx, Nan::New("clusterName").ToLocalChecked(),
-						 Nan::New(cluster_name).ToLocalChecked());
-			}
-			else {
-				Nan::Set(ctx, Nan::New("clusterName").ToLocalChecked(), Nan::Null());
-			}
-			Local<Array> list = Nan::New<Array>((int)seeds.size());
-			for (size_t i = 0; i < seeds.size(); i++) {
-				Nan::Set(list, (uint32_t)i,
-						 host_object(seeds[i].addr, seeds[i].port, seeds[i].has_tls_name,
-									 seeds[i].tls_name));
-			}
-			Nan::Set(ctx, Nan::New("configuredSeeds").ToLocalChecked(), list);
-			Nan::Set(ctx, Nan::New("tendIteration").ToLocalChecked(),
-					 Nan::New<Number>((double)tend_iteration));
-			argv[0] = ctx;
-			fn = Nan::Get(spec_obj, Nan::New("refresh").ToLocalChecked()).ToLocalChecked();
+	if (call_kind == PROVIDER) {
+		Local<Object> ctx = Nan::New<Object>();
+		if (with_cluster_name) {
+			Nan::Set(ctx, Nan::New("clusterName").ToLocalChecked(), Nan::New(name).ToLocalChecked());
 		}
 		else {
-			argv[0] = Nan::New(timeout_ms);
-			fn = Nan::Get(spec_obj, Nan::New("get").ToLocalChecked()).ToLocalChecked();
+			Nan::Set(ctx, Nan::New("clusterName").ToLocalChecked(), Nan::Null());
 		}
+		Local<Array> list = Nan::New<Array>((int)configured.size());
+		for (size_t i = 0; i < configured.size(); i++) {
+			Nan::Set(list, (uint32_t)i,
+					 host_object(configured[i].addr, configured[i].port,
+								 configured[i].has_tls_name, configured[i].tls_name));
+		}
+		Nan::Set(ctx, Nan::New("configuredSeeds").ToLocalChecked(), list);
+		Nan::Set(ctx, Nan::New("tendIteration").ToLocalChecked(), Nan::New<Number>((double)iteration));
+		argv[0] = ctx;
+		fn = Nan::Get(spec_obj, Nan::New("refresh").ToLocalChecked()).ToLocalChecked();
+	}
+	else {
+		argv[0] = Nan::New(timeout);
+		fn = Nan::Get(spec_obj, Nan::New("get").ToLocalChecked()).ToLocalChecked();
 	}
 	argv[1] = done;
 
@@ -399,35 +488,40 @@ void JsBridge::Dispatch(uint64_t id)
 	if (fn->IsFunction()) {
 		Nan::Call(fn.As<Function>(), spec_obj, 2, argv);
 	}
-	if (!fn->IsFunction() || try_catch.HasCaught()) {
+	if ((!fn->IsFunction() || try_catch.HasCaught()) && !data->called) {
 		// The wrapper catches the user's errors, so this is a bridge failure.
-		// done() won't be called; data is released here.
-		delete data;
+		data->called = true;
 		Finish(id, "JavaScript bridge call failed", Nan::Undefined());
 	}
+}
+
+void JsBridge::DoneCollected(const Nan::WeakCallbackInfo<DoneData> &info)
+{
+	delete info.GetParameter();
 }
 
 NAN_METHOD(JsBridge::Done)
 {
 	Nan::HandleScope scope;
 	DoneData *data = static_cast<DoneData *>(info.Data().As<External>()->Value());
-	JsBridge *bridge = data->bridge;
-	uint64_t id = data->id;
-	delete data;
+	if (data->called) {
+		return;
+	}
+	data->called = true;
 
 	if (info.Length() > 0 && !info[0]->IsNull() && !info[0]->IsUndefined()) {
 		Nan::Utf8String message(info[0]);
-		bridge->Finish(id, *message ? *message : "unknown error", Nan::Undefined());
+		data->bridge->Finish(data->id, *message && **message ? *message : "unknown error", Nan::Undefined());
 	}
 	else {
-		bridge->Finish(id, NULL, info.Length() > 1 ? info[1] : Nan::Undefined().As<Value>());
+		data->bridge->Finish(data->id, NULL, info.Length() > 1 ? info[1] : Nan::Undefined().As<Value>());
 	}
 }
 
 static std::string string_property(Local<Object> obj, const char *name, bool *present)
 {
-	Local<Value> value = Nan::Get(obj, Nan::New(name).ToLocalChecked()).ToLocalChecked();
-	if (!value->IsString()) {
+	Local<Value> value;
+	if (!Nan::Get(obj, Nan::New(name).ToLocalChecked()).ToLocal(&value) || !value->IsString()) {
 		*present = false;
 		return "";
 	}
@@ -448,12 +542,21 @@ void JsBridge::Finish(uint64_t id, const char *error, Local<Value> value)
 	if (ok && kind == PROVIDER) {
 		if (value->IsArray()) {
 			Local<Array> list = value.As<Array>();
-			for (uint32_t i = 0; i < list->Length(); i++) {
-				Local<Object> obj = Nan::Get(list, i).ToLocalChecked().As<Object>();
+			for (uint32_t i = 0; i < list->Length() && ok; i++) {
+				Local<Value> item;
+				if (!Nan::Get(list, i).ToLocal(&item) || !item->IsObject()) {
+					// lib/discovery_bridge.js already checked this; never crash on it.
+					ok = false;
+					message = "invalid host at index " + std::to_string(i);
+					break;
+				}
+				Local<Object> obj = item.As<Object>();
 				bool present = false;
 				Host host;
 				host.addr = string_property(obj, "addr", &present);
-				host.port = Nan::To<int32_t>(Nan::Get(obj, Nan::New("port").ToLocalChecked()).ToLocalChecked()).FromMaybe(0);
+				Local<Value> port;
+				host.port = Nan::Get(obj, Nan::New("port").ToLocalChecked()).ToLocal(&port)
+					? Nan::To<int32_t>(port).FromMaybe(0) : 0;
 				host.tls_name = string_property(obj, "tlsname", &host.has_tls_name);
 				hosts.push_back(host);
 			}
@@ -470,9 +573,10 @@ void JsBridge::Finish(uint64_t id, const char *error, Local<Value> value)
 			creds.access_key_id = string_property(obj, "accessKeyId", &present);
 			creds.secret_access_key = string_property(obj, "secretAccessKey", &present);
 			creds.session_token = string_property(obj, "sessionToken", &creds.has_session_token);
-			double expiration = Nan::To<double>(
-				Nan::Get(obj, Nan::New("expiration").ToLocalChecked()).ToLocalChecked()).FromMaybe(0);
-			creds.expiration_ms = expiration > 0 ? (uint64_t)expiration : 0;
+			Local<Value> expiration_value;
+			double expiration = Nan::Get(obj, Nan::New("expiration").ToLocalChecked()).ToLocal(&expiration_value)
+				? Nan::To<double>(expiration_value).FromMaybe(0) : 0;
+			creds.expiration_ms = expiration > 0 && expiration <= 9007199254740991.0 ? (uint64_t)expiration : 0;
 		}
 		else {
 			ok = false;

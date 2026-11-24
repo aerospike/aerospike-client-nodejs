@@ -11188,8 +11188,11 @@ export interface AwsCredentials {
     secretAccessKey: string;
     /** Session token of temporary credentials. */
     sessionToken?: string | null;
-    /** Expiration in milliseconds since the epoch; 0 or missing for none. */
-    expiration?: number | null;
+    /**
+     * Expiration, as a Date (what the AWS SDK returns) or milliseconds since
+     * the epoch; 0 or missing for none.
+     */
+    expiration?: Date | number | null;
 }
 
 /**
@@ -11197,6 +11200,19 @@ export interface AwsCredentials {
  * Promise of them. <code>timeoutMs</code> is the time left of the refresh.
  */
 export type AwsCredentialsHook = (args: { timeoutMs: number }) => AwsCredentials | Promise<AwsCredentials>;
+
+/**
+ * A seed host returned by {@link SeedCandidateProvider#refreshSeedCandidates}:
+ * the same fields as {@link Host}, with the port required.
+ */
+export interface SeedHost {
+    /** Host name or IP address, at most 255 bytes. */
+    addr: string;
+    /** Port, 1 to 65535. */
+    port: number;
+    /** TLS name; empty, null or missing means none. */
+    tlsname?: string | null;
+}
 
 /**
  * What a {@link SeedCandidateProvider} gets on each call. A new, read-only
@@ -11227,7 +11243,11 @@ export interface SeedCandidateContext {
  * the client falls back to {@link Config#hosts}, or fails with
  * {@link status.ERR_SEED_DISCOVERY_FAILED} when there are none; later it logs
  * a warning and keeps the previous seeds. An empty list is a valid result.
- * Results that arrive after <code>refreshTimeoutMs</code> are still used.
+ * Results that arrive after <code>refreshTimeoutMs</code> are still used,
+ * up to <code>refreshIntervalMs</code> for a periodic provider (or
+ * <code>refreshTimeoutMs</code> if longer); a call that takes longer fails,
+ * the provider isn't called again until its Promise settles, and that late
+ * result is dropped. A result may list at most 10000 hosts.
  * Runs in thread mode only.
  */
 export interface SeedCandidateProvider {
@@ -11241,7 +11261,7 @@ export interface SeedCandidateProvider {
      * unchanged is not range checked. An empty <code>tlsname</code> means
      * none, and gets the same default as a configured seed.
      */
-    refreshSeedCandidates(ctx: SeedCandidateContext): Host[] | Promise<Host[]>;
+    refreshSeedCandidates(ctx: SeedCandidateContext): SeedHost[] | Promise<SeedHost[]>;
     /**
      * Whether the hosts can change and must be refreshed periodically. Called
      * once, when the client is created.
@@ -11257,10 +11277,11 @@ export interface SeedCandidateProvider {
      * JavaScript thread, after <code>client.close()</code> and after the last
      * refresh has settled; <code>close()</code> doesn't wait for it. Not
      * called when the process exits first, or when a refresh never settles.
-     * Errors are logged, not thrown. After a failed connect the provider is
-     * kept, so the same client can connect again.
+     * A throw or a rejected Promise is logged as a warning, not thrown. After
+     * a failed connect the provider is kept, so the same client can connect
+     * again.
      */
-    close?(): void;
+    close?(): void | Promise<void>;
 }
 
 /**

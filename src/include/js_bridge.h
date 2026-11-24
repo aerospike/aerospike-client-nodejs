@@ -59,7 +59,9 @@ class JsBridge {
 	// JavaScript thread. spec is the object built by lib/discovery_bridge.js.
 	static JsBridge *Create(Kind kind, v8::Local<v8::Object> spec);
 
-	// JavaScript thread: a later or waiting call fails at once.
+	// JavaScript thread: a later or waiting call fails at once. For a
+	// provider, also keeps the event loop alive until its close() has run, so
+	// a script that ends right after client.close() still closes it.
 	void MarkClosing();
 	// JavaScript thread, after a failed connect: wakes the waiting call, whose
 	// answer is then dropped. Later calls work, so connect can be retried.
@@ -99,9 +101,12 @@ class JsBridge {
 		uint64_t expiration_ms;
 	};
 
+	// One call's done(): single use, freed when the function is collected.
 	struct DoneData {
 		JsBridge *bridge;
 		uint64_t id;
+		bool called;
+		Nan::Persistent<v8::Function> function;
 	};
 
 	explicit JsBridge(Kind kind);
@@ -116,6 +121,9 @@ class JsBridge {
 	static void AsyncCallback(uv_async_t *handle);
 	static void CloseCallback(uv_handle_t *handle);
 	static NAN_METHOD(Done);
+	static NAN_METHOD(Warn);
+	static void DoneCollected(const Nan::WeakCallbackInfo<DoneData> &info);
+	void KeepAlive(bool keep);
 	static void Cleanup(void *arg);
 
 	Kind kind;
@@ -132,6 +140,10 @@ class JsBridge {
 	bool released = false;
 	bool close_called = false;
 	bool freeing = false;
+	// The handle is ref'd while a provider's close() is due (see MarkClosing).
+	bool kept_alive = false;
+	// How long Refresh() waits for one JavaScript call (0: no limit).
+	uint32_t wait_limit_ms = 0;
 
 	// The one request: the C client never overlaps calls of one registration.
 	uint64_t next_id = 0;

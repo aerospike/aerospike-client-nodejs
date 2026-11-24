@@ -266,6 +266,17 @@ class ConnectJob {
 // the settings are made here first.
 static bool g_lua_configured = false;
 
+// The first connect's Lua settings, as the C client takes them, set on the
+// JavaScript thread before any connect runs (also when a connect then fails
+// before the C client would have set them).
+static void configure_lua(AerospikeClient *client)
+{
+	if (!g_lua_configured) {
+		aerospike_init_lua(&client->as->config.lua);
+		g_lua_configured = true;
+	}
+}
+
 
 /**
  * Connect to an Aerospike Cluster
@@ -294,18 +305,13 @@ NAN_METHOD(AerospikeClient::Connect)
 		// A JavaScript provider or hook answers the C client's first refresh
 		// on the JavaScript thread, so that thread must not wait inside
 		// aerospike_connect(): connect runs on a thread of its own instead.
-		if (!g_lua_configured) {
-			aerospike_init_lua(&client->as->config.lua);
-			g_lua_configured = true;
-		}
+		configure_lua(client);
 		client->connecting = true;
 		ConnectJob *job = new ConnectJob(client, info.This(), callback);
 		job->Start();
 	}
 	else {
-		// The first connect on this thread sets the Lua settings (see
-		// g_lua_configured).
-		g_lua_configured = true;
+		configure_lua(client);
 		if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
 			// A failed connect leaves no cluster, so connect can be retried on
 			// this client. Release the event handle so it doesn't keep the
@@ -427,7 +433,7 @@ NAN_METHOD(AerospikeClient::AddSeedHost)
 	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
 	// No cluster yet, or one being built by a connect on another thread.
-	if (client->connecting || !client->as->cluster) {
+	if (client->connecting || client->closed || !client->as->cluster) {
 		return Nan::ThrowError("addSeedHost: the client is not connected");
 	}
 	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
@@ -449,7 +455,7 @@ NAN_METHOD(AerospikeClient::RemoveSeedHost)
 	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
 	// No cluster yet, or one being built by a connect on another thread.
-	if (client->connecting || !client->as->cluster) {
+	if (client->connecting || client->closed || !client->as->cluster) {
 		return Nan::ThrowError("removeSeedHost: the client is not connected");
 	}
 	as_cluster_remove_seed(client->as->cluster, *hostname, port);

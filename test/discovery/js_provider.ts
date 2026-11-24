@@ -109,6 +109,28 @@ describe('JavaScript seed provider config #noserver', function () {
     expect(bridge.hasJsPlugins(config)).to.be.false
   })
 
+  it('turns anything thrown into a message, never throwing itself', function () {
+    expect(bridge.errorMessage(new Error('x'))).to.equal('x')
+    expect(bridge.errorMessage(Object.create(null))).to.equal('unknown error')
+    expect(bridge.errorMessage({ get message () { throw new Error('getter') }, toString () { throw new Error('toString') } })).to.equal('unknown error')
+    expect(bridge.errorMessage('')).to.equal('unknown error')
+    expect(bridge.errorMessage(42)).to.equal('42')
+  })
+
+  it('asks a provider set on a copy of a config again', function () {
+    let asked = 0
+    const p1 = provider(() => [], false)
+    const p2 = provider(() => [], true, { needsPeriodicRefresh: () => { asked++; return true } })
+    const c1 = new Config({ discovery: { provider: p1 } })
+    void new Config({ ...c1, discovery: { ...c1.discovery, provider: p2 } } as any)
+    expect(asked).to.equal(1)
+  })
+
+  it('names the provider after its class, or js, even when that throws', function () {
+    const hostile = new Proxy({}, { get (target, key) { if (key === 'constructor') throw new Error('no'); return undefined } })
+    expect(bridge.providerName(hostile)).to.equal('js')
+  })
+
   it('names the provider after its class, or js', function () {
     class Consul { refreshSeedCandidates () { return [] } needsPeriodicRefresh () { return true } }
     expect(bridge.providerName(new Consul())).to.equal('Consul')
@@ -140,6 +162,15 @@ describe('JavaScript seed provider config #noserver', function () {
         .to.eql([{ addr: 'b', port: 2, tlsname: null }, { addr: 'a', port: 1, tlsname: 't' }])
     })
 
+    it('checks every index of a sparse array, and rejects NUL and too many hosts', function () {
+      // eslint-disable-next-line no-sparse-arrays
+      expect(() => bridge.checkHosts([, { addr: 'a', port: 1 }], seeds)).to.throw(/invalid host at index 0: expected an object/)
+      expect(() => bridge.checkHosts(new Array(3), seeds)).to.throw(/invalid host at index 0/)
+      expect(() => bridge.checkHosts([{ addr: 'a\0b', port: 1 }], seeds)).to.throw(/addr must be a non-empty string/)
+      expect(() => bridge.checkHosts([{ addr: 'a', port: 1, tlsname: 't\0' }], seeds)).to.throw(/tlsname must be a string/)
+      expect(() => bridge.checkHosts(new Array(10001).fill({ addr: 'a', port: 1 }), seeds)).to.throw(/returned 10001 hosts, more than 10000/)
+    })
+
     it('does not range check a configured seed returned unchanged', function () {
       expect(bridge.checkHosts([{ addr: 'seed.example', port: 0 }], seeds)).to.eql([{ addr: 'seed.example', port: 0, tlsname: null }])
     })
@@ -149,6 +180,14 @@ describe('JavaScript seed provider config #noserver', function () {
     it('accepts credentials and maps missing fields', function () {
       expect(bridge.checkCredentials({ accessKeyId: 'AKID1', secretAccessKey: 's/k+1' }))
         .to.eql({ accessKeyId: 'AKID1', secretAccessKey: 's/k+1', sessionToken: null, expiration: 0 })
+    })
+
+    it('accepts a Date expiration, as the AWS SDK returns, and rejects seconds or huge values', function () {
+      const at = new Date(Date.now() + 3600000)
+      expect(bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 's', expiration: at }).expiration).to.equal(at.getTime())
+      expect(() => bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 's', expiration: Math.floor(Date.now() / 1000) })).to.throw(/invalid expiration/)
+      expect(() => bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 's', expiration: 1e300 })).to.throw(/invalid expiration/)
+      expect(bridge.checkCredentials({ accessKeyId: 'AK', secretAccessKey: 's', expiration: 0 }).expiration).to.equal(0)
     })
 
     it('rejects bad values without putting them in the message', function () {
@@ -314,22 +353,26 @@ describe('JavaScript seed provider', function () {
     expect(result.stdout.trim()).to.equal('freed')
   })
 
-  it('wakes a refresh still waiting when connect fails, and connects on the retry', async function () {
-    // No hosts and a provider that doesn't answer: connect gives up after
-    // refreshTimeoutMs with the refresh still waiting on the bridge.
-    let answer = false
-    const p = provider(() => answer ? [seedHost()] : new Promise(() => {}))
+  it('wakes a refresh still waiting when connect fails, and connects on the retry once the call settles', async function () {
+    // No hosts and a provider that doesn't answer in time: connect gives up
+    // after refreshTimeoutMs with the refresh still waiting on the bridge.
+    let settle: (hosts: any) => void = () => {}
+    let calls = 0
+    const p = provider(() => {
+      calls++
+      return calls === 1 ? new Promise(resolve => { settle = resolve }) : [seedHost()]
+    })
     const client = new Aerospike.Client(config(p, { refreshTimeoutMs: 400 }))
-    let error: any = null
-    try {
-      await client.connect()
-    } catch (err) {
-      error = err
-    }
-    expect(error).to.not.be.null
-    expect(error.code).to.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
-    answer = true
+    const first = await client.connect().catch((err: any) => err)
+    expect(first.code).to.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
+    // The first call hasn't settled: the provider is not called again.
+    const second = await client.connect().catch((err: any) => err)
+    expect(second.message).to.match(/previous call has not settled/)
+    expect(calls).to.equal(1)
+    settle([seedHost()])
+    await new Promise(resolve => setTimeout(resolve, 50))
     await client.connect()
+    expect(calls).to.equal(2)
     expect(client.getNodes().length).to.be.at.least(1)
     client.close()
   })
@@ -476,6 +519,117 @@ describe('JavaScript seed provider', function () {
     } finally {
       client.close()
     }
+  })
+
+  const hostile: Array<[string, () => any, RegExp]> = [
+    // eslint-disable-next-line no-sparse-arrays
+    ['a sparse array', () => [, { addr: '127.0.0.1', port: 3000 }], /invalid host at index 0/],
+    ['a non-Error throw', async () => { throw Object.create(null) }, /unknown error/],
+    ['an empty throw', () => { throw '' }, /unknown error/] // eslint-disable-line no-throw-literal
+  ]
+  for (const [name, refresh, message] of hostile) {
+    it(`fails the refresh cleanly, never crashing, on ${name}`, async function () {
+      const error = await connectError(config(provider(refresh)))
+      expect(error.code).to.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
+      expect(error.message).to.match(message)
+    })
+  }
+
+  it('survives a Promise whose then() answers and then throws', async function () {
+    const p = provider(() => {
+      const result: any = Promise.resolve()
+      result.then = (ok: any) => { ok([seedHost()]); throw new Error('boom') }
+      return result
+    })
+    const client: Cli = await Aerospike.connect(config(p))
+    expect(client.getNodes().length).to.be.at.least(1)
+    client.close()
+  })
+
+  it('logs a provider close() that rejects, with no unhandled rejection', async function () {
+    let unhandled = 0
+    const onUnhandled = () => { unhandled++ }
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      const p = provider(() => [seedHost()], false, { close: async () => { throw new Error('disconnect failed') } })
+      const client: Cli = await Aerospike.connect(config(p))
+      client.close()
+      await new Promise(resolve => setTimeout(resolve, 300))
+      expect(unhandled).to.equal(0)
+    } finally {
+      process.removeListener('unhandledRejection', onUnhandled)
+    }
+  })
+
+  it('never calls the provider again while a call past its wait limit is pending, and resumes after it settles', async function () {
+    let calls = 0
+    let inFlight = 0
+    let maxInFlight = 0
+    const p = provider(async () => {
+      calls++
+      inFlight++
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      try {
+        if (calls === 2) await new Promise(resolve => setTimeout(resolve, 1500))
+        return [seedHost()]
+      } finally {
+        inFlight--
+      }
+    }, true)
+    const client: Cli = await Aerospike.connect(config(p, { refreshIntervalMs: 300, refreshTimeoutMs: 300 }, { tenderInterval: 250 }))
+    try {
+      await waitUntil(() => calls >= 2, 5000)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      // The slow call is still pending: no other call started.
+      expect(calls).to.equal(2)
+      await waitUntil(() => calls >= 4, 5000)
+      expect(maxInFlight).to.equal(1)
+    } finally {
+      client.close()
+    }
+  })
+
+  it('throws "not connected" from addSeedHost, removeSeedHost and stats after close', async function () {
+    const client: Cli = await Aerospike.connect(config(provider(() => [seedHost()])))
+    client.close()
+    expect(() => client.addSeedHost(seed.addr, seed.port)).to.throw(/not connected/)
+    expect(() => client.removeSeedHost(seed.addr, seed.port)).to.throw(/not connected/)
+  })
+
+  it('runs the provider close() when the script ends right after client.close()', function () {
+    for (const connect of [true, false]) {
+      const script = `
+        const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+        const seed = ${JSON.stringify(seedHost())}
+        const provider = { refreshSeedCandidates: () => [seed], needsPeriodicRefresh: () => true, close: () => console.log('provider closed') }
+        const options = { hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider } }
+        if (${connect}) {
+          Aerospike.connect(options).then(client => client.close())
+        } else {
+          const client = new Aerospike.Client(options)
+          try { client.close() } catch (err) {}
+        }
+      `
+      const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
+      expect(result.status, result.stderr).to.equal(0)
+      expect(result.stdout, `connect=${connect}`).to.contain('provider closed')
+      expect(result.stderr).to.not.contain('illegal access')
+    }
+  })
+
+  it('releases the event loop only after a connect still running when close(true) is called', function () {
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const seed = ${JSON.stringify(seedHost())}
+      const provider = { refreshSeedCandidates: () => new Promise(r => setTimeout(() => r([seed]), 300)), needsPeriodicRefresh: () => false }
+      const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider } })
+      client.connect().catch(err => console.log('connect: ' + err.message))
+      client.close(true)
+    `
+    const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.signal, result.stderr).to.be.null
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout).to.contain('Client closed while connecting')
   })
 
   it('rejects a second connect while one runs', async function () {
