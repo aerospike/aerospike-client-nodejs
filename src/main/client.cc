@@ -155,7 +155,8 @@ static void close_client(AerospikeClient *client)
 	for (JsBridge *bridge : client->js_bridges) {
 		bridge->ReleaseClient();
 	}
-	client->js_bridges.clear();
+	// Frees the list's buffer too (clear() keeps it).
+	std::vector<JsBridge *>().swap(client->js_bridges);
 
 	if(!client->enable_callback.IsEmpty()){
 		client->enable_callback.Reset();
