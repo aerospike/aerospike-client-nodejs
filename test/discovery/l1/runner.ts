@@ -159,6 +159,18 @@ function endpoint (input: any): any {
   return { nodeName: input.nodeName, tlsName: input.tlsName ?? null, host: input.host, port: input.port, sourceList: input.sourceList }
 }
 
+// The endpoints of one collision peer: its hosts, in order, or its one host and
+// port. Consecutive endpoints with the same node name are the hosts of one peer
+// (C's as_discovery_conformance_collision), as in the C client's runner.
+function peerEndpoints (peer: any): any[] {
+  if (peer === null || typeof peer !== 'object') die('a collision peer must be a map')
+  const list = peer.hosts
+  if (list === undefined || list === null) return [endpoint(peer)]
+  if (!Array.isArray(list) || list.length === 0) die('hosts must be a non-empty list')
+  if (peer.host !== undefined || peer.port !== undefined) die('a collision peer has hosts or host and port, not both')
+  return list.map((h: any) => endpoint({ ...peer, hosts: undefined, host: h.host, port: h.port }))
+}
+
 function hostText (h: Host): string {
   return `${h.host}:${h.port}`
 }
@@ -193,7 +205,7 @@ function runCollision (r: Row): Outcome {
   const { config, input, expect } = r.node
   const { t, outcome } = translation(config)
   if (outcome !== undefined) return outcome
-  const peers = input.map(endpoint)
+  const peers = input.flatMap(peerEndpoints)
   if (peers.some((p: any) => p.sourceList !== peers[0].sourceList)) {
     return fail('one peers reply cannot mix standard and alternate peers')
   }
@@ -376,8 +388,10 @@ function checkStep (i: number, step: any, exp: any, seeds: Host[]): Outcome {
   if (error !== undefined) {
     const marker = categoryMarker(error.category)
     if (step.status === 0) return fail(`refresh ${i}: expected ${error.category}, got hosts [${step.hosts.map(hostText).join(', ')}]`)
-    if (step.status !== Aerospike.status.ERR_SEED_DISCOVERY_FAILED) {
-      return fail(`refresh ${i}: failed with status ${step.status} instead of ${Aerospike.status.ERR_SEED_DISCOVERY_FAILED}: ${step.message}`)
+    // A provider fails a refresh with ERR_CLIENT; ERR_SEED_DISCOVERY_FAILED is
+    // only connect's, when the initial refresh leaves no seed (as the C runner).
+    if (step.status !== Aerospike.status.ERR_CLIENT) {
+      return fail(`refresh ${i}: failed with status ${step.status} instead of ${Aerospike.status.ERR_CLIENT}: ${step.message}`)
     }
     if (!step.message.includes(marker)) return fail(`refresh ${i}: message lacks '${marker}': ${step.message}`)
     const missing = missingFact(step.message, error.messageContains)

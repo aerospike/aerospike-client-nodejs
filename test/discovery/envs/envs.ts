@@ -379,11 +379,38 @@ describe('conformance test environment', function () {
   describe('yaml', function () {
     only('yaml')
 
-    it('connects with only the pass-through and the port-map YAML config files', async function () {
-      // The YAML discovery and translation keys come with the C client after
-      // the one Node pins today (CLIENT-5735 6c1); until the pin moves, a file
-      // that names them is rejected.
-      this.skip()
+    // The file is the client's only configuration; the client seeds node A.
+    // Follows envs/yaml.sh and the C client's yaml_pass_through and
+    // yaml_port_map_strict.
+    function yamlConfig (file: string, seed: EnvNode, log: { fd: number }): any {
+      return Object.assign(base(log), {
+        hosts: [{ addr: seed.host, port: seed.port }],
+        configProvider: { path: env[file] as string }
+      })
+    }
+
+    it('takes pass-through and the alternate addresses from the file, and both nodes serve', async function () {
+      const a = node('PASS_THROUGH_NODE_A')
+      const b = node('PASS_THROUGH_NODE_B')
+      await withClient(yamlConfig('PASS_THROUGH_CLIENT_CONFIG', a, logFile()), async client => {
+        expect(await waitNodes(client, [a.name, b.name])).to.eql([a.name, b.name].sort())
+        const addresses = client.getNodes().map((n: any) => n.address).sort()
+        expect(addresses).to.eql([`${a.advertisedHost}:${a.advertisedPort}`, `${b.advertisedHost}:${b.advertisedPort}`].sort())
+        await roundTrip(client, 'envyamlpt')
+      }, 10000)
+    })
+
+    it('takes a strict port-map from the file, by host:port and by node name, and both nodes serve', async function () {
+      const a = node('PORT_MAP_NODE_A')
+      const b = node('PORT_MAP_NODE_B')
+      const log = logFile()
+      await withClient(yamlConfig('PORT_MAP_CLIENT_CONFIG', a, log), async client => {
+        expect(await waitNodes(client, [a.name, b.name])).to.eql([a.name, b.name].sort())
+        const addresses = client.getNodes().map((n: any) => n.address).sort()
+        expect(addresses).to.eql([`${a.host}:${a.port}`, `${b.host}:${b.port}`].sort())
+        await roundTrip(client, 'envyamlpm')
+      }, 10000)
+      expect(log.read()).to.not.match(/has no mapping/)
     })
   })
 

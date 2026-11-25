@@ -25,14 +25,3 @@ tls/name-matching.yaml:
   ci-server-certificate-shape:
     result: fail
     reason: "legacy name check kept until the next major version (deferring per FR-45)"
-
-# The C client this Node.js client pins keeps the previous seeds on an empty
-# refresh; the tech spec publishes it (CLIENT-5946), as the C client's discovery
-# branch now does. Pass once the C client pin moves (CLIENT-5736).
-discovery/merge/merge-policy.yaml:
-  replace-empty-refresh-publishes-empty:
-    result: fail
-    reason: "C client pin keeps the previous seeds on an empty refresh; pass once the pin moves (CLIENT-5946)"
-  replace-empty-at-init-keeps-static:
-    result: fail
-    reason: "C client pin keeps the previous seeds on an empty refresh; pass once the pin moves (CLIENT-5946)"
