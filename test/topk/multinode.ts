@@ -177,7 +177,8 @@ describe('Top-K across several nodes', function () {
       const { set, model } = await loadModel(scoredRecords(300000, 10000, 7))
       const expected = hexDigests(referenceTopK(model, byScoreThenTag, 1000))
 
-      // Short socket timeouts make nodes time out mid-scan, so the client retries and the node rescans.
+      // Short socket timeouts make nodes time out mid-scan. A Top-K query isn't retried, even with
+      // maxRetries set, so each run returns the right top k or fails with a timeout.
       for (const socketTimeout of [20, 100, 500]) {
         for (let attempt = 0; attempt < 5; attempt++) {
           const query = helper.client.query(helper.namespace, set)

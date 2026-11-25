@@ -1435,7 +1435,12 @@ export class Query {
      *
      * Records arrive only after the query has checked every matching record, not as they're
      * found. For queries over many records, raise the query policy's <code>socketTimeout</code>,
-     * or set it to 0, and let <code>totalTimeout</code> bound the query.
+     * or set it to 0, and let <code>totalTimeout</code> bound the query. A Top-K query that
+     * passes its <code>socketTimeout</code> or <code>totalTimeout</code> fails with
+     * {@link statusNamespace.ERR_TIMEOUT|ERR_TIMEOUT} (9) and is not retried, whatever
+     * <code>maxRetries</code> is, since a retry would only run the scan again. A query that
+     * isn't a Top-K query still retries a socket timeout within <code>maxRetries</code>, until
+     * <code>totalTimeout</code> passes.
      *
      * Records whose order key is missing, or holds a value of a different type than declared,
      * rank last and still count toward k. Records that tie on every order key rank by digest,
@@ -1445,9 +1450,18 @@ export class Query {
      * a list, the query fails with that operation's error, for example
      * {@link statusNamespace.ERR_BIN_INCOMPATIBLE_TYPE|ERR_BIN_INCOMPATIBLE_TYPE} (12). A query
      * with more than 32,768 operations is rejected with
-     * {@link statusNamespace.ERR_REQUEST_INVALID|ERR_REQUEST_INVALID} (4). A node at its Top-K
-     * memory limit refuses the query with
-     * {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN} (22); retry it later.
+     * {@link statusNamespace.ERR_REQUEST_INVALID|ERR_REQUEST_INVALID} (4).
+     *
+     * The server can also end a Top-K query, and the client doesn't retry either error; run the
+     * query again yourself, for example later and with backoff:
+     * - A query that runs longer than the server's <code>query-max-run-time-ms</code> setting
+     *   fails with {@link statusNamespace.ERR_QUERY_TIMEOUT|ERR_QUERY_TIMEOUT} (212), and returns
+     *   no partial result.
+     * - A node already running its limit of Top-K queries refuses a new one with
+     *   {@link statusNamespace.ERR_FAIL_FORBIDDEN|ERR_FAIL_FORBIDDEN} (22). Set the policy's
+     *   {@link BasePolicy#errorDetailVerbosity|errorDetailVerbosity} to
+     *   {@link errorDetailVerbosityNamespace.MESSAGE|MESSAGE} to get the server's reason in the
+     *   error message.
      *
      * @param bin - Name of the bin to order by, as it appears in the returned record. At most
      * 15 characters.
