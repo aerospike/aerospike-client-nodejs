@@ -1,0 +1,117 @@
+name: Discovery integration
+
+# Runs the Node.js tests in test/discovery/envs/envs.ts against the test
+# environments of aerospike-client-conformance (envs/README.md there), through
+# its reusable test-envs workflow, as the Java client does. Each environment
+# brings up its servers, and a DNS server, a stub EC2 endpoint or TLS
+# certificates where it needs them; test/discovery/envs/run.sh builds the client
+# and runs the tests with the environment's values.
+#
+# The translation environments run on Aerospike Community and need no secret.
+# TLS certificate matching and the dns and aws-tags providers run on Aerospike
+# Enterprise with the FEATURES_CONF secret, which fork pull requests don't get;
+# the gate job decides whether they run and reports every skip.
+#
+# The reusable workflow, the action and conformance-ref are pinned to one commit
+# of aerospike-client-conformance.
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - stage
+      - master
+    types:
+      - opened
+      - reopened
+      - synchronize
+  push:
+    branches:
+      - dev
+      - stage
+  workflow_dispatch:
+
+concurrency:
+  group: discovery-integration-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: Skipped layers
+    runs-on: ubuntu-22.04
+    outputs:
+      enterprise: ${{ steps.gate.outputs.enterprise }}
+    steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+
+      - name: Decide whether the Enterprise environments run
+        id: gate
+        env:
+          TRUSTED: >-
+            ${{
+              github.event_name == 'push'
+              || github.event_name == 'workflow_dispatch'
+              || github.event.pull_request.head.repo.full_name == github.repository
+            }}
+          HAS_FEATURES_CONF: ${{ secrets.FEATURES_CONF != '' }}
+        run: |
+          set -euo pipefail
+          enterprise=false
+          reason=
+          if [[ "${TRUSTED}" != true ]]; then
+            reason="fork pull requests get no FEATURES_CONF"
+          elif [[ "${HAS_FEATURES_CONF}" != true ]]; then
+            reason="the FEATURES_CONF secret is not set"
+          else
+            enterprise=true
+          fi
+          layers='[]'
+          if [[ "${enterprise}" != true ]]; then
+            layers=$(jq -cn --arg reason "${reason}" '[
+              {layer: "TLS certificate matching", tests: "tls-matching environment", reason: $reason},
+              {layer: "Discovery providers", tests: "dns and aws-tags environments", reason: $reason}
+            ]')
+          fi
+          echo "enterprise=${enterprise}" >> "${GITHUB_OUTPUT}"
+          echo "layers=${layers}" >> "${GITHUB_OUTPUT}"
+
+      - name: Report skipped layers
+        uses: aerospike/aerospike-client-conformance/.github/actions/report-skipped-layers@42db5e9c508226cc0ad1496d7dff1cb23dac2bb0 # main
+        with:
+          layers: ${{ steps.gate.outputs.layers }}
+
+  translation:
+    name: Translation (${{ matrix.environment }})
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [port-map, collision, yaml, pass-through, on-miss, alt-missing]
+    uses: aerospike/aerospike-client-conformance/.github/workflows/test-envs.yaml@42db5e9c508226cc0ad1496d7dff1cb23dac2bb0 # main
+    with:
+      environment: ${{ matrix.environment }}
+      server-image: aerospike/aerospike-server:8.2.0.1
+      conformance-ref: 42db5e9c508226cc0ad1496d7dff1cb23dac2bb0
+      command: test/discovery/envs/run.sh
+
+  enterprise:
+    name: Enterprise (${{ matrix.environment }})
+    needs: gate
+    if: needs.gate.outputs.enterprise == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [tls-matching, dns, aws-tags]
+    uses: aerospike/aerospike-client-conformance/.github/workflows/test-envs.yaml@42db5e9c508226cc0ad1496d7dff1cb23dac2bb0 # main
+    with:
+      environment: ${{ matrix.environment }}
+      server-image: aerospike/aerospike-server-enterprise:8.2.0.0
+      conformance-ref: 42db5e9c508226cc0ad1496d7dff1cb23dac2bb0
+      command: test/discovery/envs/run.sh
+    secrets:
+      features-conf: ${{ secrets.FEATURES_CONF }}

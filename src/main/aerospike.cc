@@ -21,6 +21,7 @@
 #include "expressions.h"
 #include "log.h"
 #include "conversions.h"
+#include "conformance.h"
 
 extern "C" {
 #include <aerospike/as_event.h>
@@ -168,6 +169,9 @@ NAN_MODULE_INIT(Aerospike)
 	NAN_EXPORT(target, vectorFloat16Values);
 	NAN_EXPORT(target, unref_as_event_loop);
 	NAN_EXPORT(target, setDefaultLogging);
+	// Internal, for the L1 conformance runner only (test/discovery/l1).
+	Nan::Set(target, Nan::New("_conformance").ToLocalChecked(),
+			 Nan::GetFunction(Nan::New<v8::FunctionTemplate>(conformance)).ToLocalChecked());
 
 	// enumerations
 	export("bitwise", bitwise_enum_values());

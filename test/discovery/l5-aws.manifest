@@ -9,3 +9,5 @@ L5_BUILD='if [ ! -f aerospike-client-c/Makefile ]; then git config --global --ad
 # remove and address changes, peer and partition-map updates) reach the row log
 # as DRIVER-STDERR client-log lines, as with the C client's manifest.
 L5_DRIVER='node test/discovery/l5/driver.js --client-log debug'
+# L2_RUN is the l2-proxy harness's hook for a client's own L2 tests (l2-proxy/README.md there).
+L2_RUN='test/discovery/l2_run.sh'
