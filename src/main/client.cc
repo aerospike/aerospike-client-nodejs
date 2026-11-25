@@ -53,6 +53,10 @@ AerospikeClient::~AerospikeClient()
 		bridge->ReleaseClient();
 	}
 	js_bridges.clear();
+	for (JsNamedProvider *named : js_named) {
+		delete named;
+	}
+	js_named.clear();
 }
 
 /*******************************************************************************
@@ -118,6 +122,11 @@ NAN_METHOD(AerospikeClient::New)
 
 	client->ip_map = config.ip_map;
 	client->ip_map_size = config.ip_map_size;
+	// A named seed provider the config file selects is built inside
+	// aerospike_init(), and reads the timings the file set from client->as.
+	for (JsNamedProvider *named : client->js_named) {
+		named->as = client->as;
+	}
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
@@ -141,6 +150,13 @@ static void close_client(AerospikeClient *client)
 
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
+
+	// aerospike_destroy() ended every registration, so the C client never
+	// calls a named factory again.
+	for (JsNamedProvider *named : client->js_named) {
+		delete named;
+	}
+	std::vector<JsNamedProvider *>().swap(client->js_named);
 
 	// Free only the array this client allocated; the cluster made its own
 	// copy at connect.
@@ -371,6 +387,16 @@ NAN_METHOD(AerospikeClient::IsConnected)
 /**
  * Are there any pending async commands.
  */
+/**
+ * Whether the client has a JavaScript seed provider or credentials hook,
+ * including a named provider the config file selected in new Client().
+ */
+NAN_METHOD(AerospikeClient::HasJsBridges)
+{
+	AerospikeClient *client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	info.GetReturnValue().Set(Nan::New(!client->js_bridges.empty()));
+}
+
 NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 {
 	Nan::HandleScope scope;
@@ -563,6 +589,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "getNodes", GetNodes);
 	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);
 	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
+	Nan::SetPrototypeMethod(tpl, "hasJsBridges", HasJsBridges);
 	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(tpl, "indexRemove", IndexRemove);
 	Nan::SetPrototypeMethod(tpl, "infoAny", InfoAny);

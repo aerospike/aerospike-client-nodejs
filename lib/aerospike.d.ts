@@ -9785,6 +9785,45 @@ export function connect(callback: TypedCallback<Client>): Client;
  */
 export function connect(config: ConfigOptions, callback: TypedCallback<Client>): Client;
 /**
+ * Registers a JavaScript seed provider factory under a name, so the YAML
+ * config file ({@link ConfigOptions.configProvider}) can select it with
+ * <code>static.client.discovery.provider: &lt;name&gt;</code>, as the Java
+ * client's <code>ClientPolicy.registerSeedCandidateProvider()</code>.
+ *
+ * When a client created afterwards on the main thread reads a config file that
+ * names it, the client calls <code>factory(options)</code> once, while it is
+ * created, with every other key of the file's
+ * <code>static.client.discovery</code> block (the discovery settings
+ * included), and uses the provider it returns as
+ * {@link DiscoveryConfig.provider}: the same checks apply, every refresh runs
+ * on the client's discovery thread, connect waits at most the refresh timeout
+ * for the first one, and the provider's <code>close()</code> runs after
+ * {@link Client#close}. It needs <code>execution_mode: thread</code>; in tend
+ * mode connect fails with {@link status.ERR_PARAM}. The factory must return
+ * the provider, not a Promise. A factory error is logged, as any error in the
+ * config file, and the client keeps the provider set in code. A reloaded file
+ * never builds a provider again.
+ *
+ * @param name - The name the config file uses: a non-empty string, not a
+ * built-in name (<code>static</code>, <code>dns</code>, <code>aws-tags</code>)
+ * and not already registered.
+ * @param factory - Builds the provider from the options.
+ * @throws {@link AerospikeError} For an invalid or taken name or a factory
+ * that isn't a function.
+ *
+ * @example
+ *
+ * Aerospike.registerSeedProvider('inventory', options => new InventoryProvider(options.url))
+ * // aerospike.yml:
+ * //   static:
+ * //     client:
+ * //       discovery:
+ * //         provider: inventory
+ * //         url: https://inventory.example.com
+ * const client = await Aerospike.connect({ configProvider: { path: 'aerospike.yml' } })
+ */
+export function registerSeedProvider(name: string, factory: (options: Record<string, any>) => SeedCandidateProvider): void;
+/**
  * Sets the global, default log level and destination. The default log settings
  * are used for all new client instances, unless different log settings are
  * supplied in the client's configuration.
@@ -11557,6 +11596,14 @@ export interface ConfigProvider {
     * {@link policy.key|send_key} is resolved as a union: dynamic config can enable send-key
     * (<code>send_key: true</code>) but cannot disable it (<code>send_key: false</code> is ignored).
     * If any layer sets send-key, writes use {@link policy.key.SEND}.
+    *
+    * The file's <code>static.client.discovery</code> and <code>static.client.translation</code> keys
+    * (provider, merge policy, execution mode, timings, port map, on miss and so on) are read once,
+    * when the client is created: each key in the file wins over the same setting in
+    * {@link Config#discovery} or {@link Config#translation}, a key missing from the file keeps the
+    * config's value, and a reload never changes them. A provider or translator the file sets
+    * replaces the one in the config, and the client logs a warning. With
+    * {@link registerSeedProvider} the file can select a JavaScript seed provider.
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.

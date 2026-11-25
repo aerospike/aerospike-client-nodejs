@@ -20,6 +20,7 @@
 #include <chrono>
 #include <set>
 
+#include "conversions.h"
 #include "log.h"
 
 extern "C" {
@@ -40,6 +41,8 @@ JsBridge::JsBridge(Kind kind_) : kind(kind_), async(NULL) {}
 
 JsBridge::~JsBridge()
 {
+	// The JavaScript thread (CloseCallback).
+	delete resource;
 	spec.Reset();
 }
 
@@ -47,12 +50,18 @@ JsBridge *JsBridge::Create(Kind kind, Local<Object> spec)
 {
 	JsBridge *bridge = new JsBridge(kind);
 	bridge->spec.Reset(spec);
+	bridge->resource = new Nan::AsyncResource(kind == PROVIDER ? "aerospike:SeedProvider"
+															  : "aerospike:CredentialsHook");
 	if (kind == PROVIDER) {
 		Local<Value> limit = Nan::Get(spec, Nan::New("waitLimitMs").ToLocalChecked()).ToLocalChecked();
 		if (limit->IsNumber()) {
 			double ms = Nan::To<double>(limit).FromMaybe(0);
 			bridge->wait_limit_ms = ms > 0 && ms < 4294967295.0 ? (uint32_t)ms : 0;
 		}
+		Nan::Utf8String name(Nan::Get(spec, Nan::New("name").ToLocalChecked()).ToLocalChecked());
+		bridge->name = *name && **name ? *name : "js";
+		bridge->periodic = Nan::To<bool>(
+			Nan::Get(spec, Nan::New("periodic").ToLocalChecked()).ToLocalChecked()).FromMaybe(true);
 	}
 
 	bridge->async = new uv_async_t;
@@ -140,7 +149,9 @@ void JsBridge::ReleaseClient()
 void JsBridge::ReleaseOwner()
 {
 	std::unique_lock<std::mutex> lock(mutex);
-	// No C client call can come any more.
+	// No C client call can come any more. An instance the factory built was
+	// destroyed by the failed registration.
+	c_refs--;
 	released = true;
 	closing = true;
 	Release(lock);
@@ -317,16 +328,62 @@ as_status JsBridge::GetCredentials(as_error *err, uint32_t timeout_ms,
 	return AEROSPIKE_OK;
 }
 
+// Destroy() and DestroyRegistration() run on any thread, possibly after the
+// client closed: they never block and never call into JavaScript. The
+// provider's close() runs on the JavaScript thread once the C client released
+// its last reference.
 void JsBridge::Destroy(void *udata)
 {
 	JsBridge *bridge = static_cast<JsBridge *>(udata);
-	// Any thread, possibly after the client closed: never blocks, never calls
-	// into JavaScript. The provider's close() runs on the JavaScript thread.
 	std::unique_lock<std::mutex> lock(bridge->mutex);
-	bridge->released = true;
+	// The instance is gone, so no refresh call comes any more.
 	bridge->closing = true;
+	if (--bridge->c_refs == 0) {
+		bridge->released = true;
+	}
 	bridge->cond.notify_all();
 	bridge->Release(lock);
+}
+
+void JsBridge::DestroyRegistration(void *udata)
+{
+	JsBridge *bridge = static_cast<JsBridge *>(udata);
+	std::unique_lock<std::mutex> lock(bridge->mutex);
+	if (--bridge->c_refs == 0) {
+		bridge->released = true;
+		bridge->closing = true;
+	}
+	bridge->cond.notify_all();
+	bridge->Release(lock);
+}
+
+as_status JsBridge::Factory(as_error *, const as_map *, as_seed_provider *provider, void *udata)
+{
+	static_cast<JsBridge *>(udata)->FillProvider(provider, true);
+	return AEROSPIKE_OK;
+}
+
+void JsBridge::FillProvider(as_seed_provider *provider, bool new_reference)
+{
+	if (new_reference) {
+		std::lock_guard<std::mutex> lock(mutex);
+		c_refs++;
+		refs++;
+	}
+	provider->size = sizeof(as_seed_provider);
+	provider->api_version = AS_DISCOVERY_API_VERSION;
+	// The C client copies the name.
+	provider->name = name.c_str();
+	provider->refresh = Refresh;
+	provider->needs_periodic_refresh = Periodic;
+	provider->destroy = Destroy;
+	provider->udata = this;
+}
+
+// Pure C, on any thread: periodic never changes after Create().
+bool JsBridge::Periodic(void *udata)
+{
+	return static_cast<JsBridge *>(udata)->periodic;
 }
 
 void JsBridge::AsyncCallback(uv_async_t *handle)
@@ -399,7 +456,7 @@ void JsBridge::RunOnLoop()
 		if (close_fn->IsFunction()) {
 			Local<Value> argv[1] = {Nan::New<Function>(Warn)};
 			Nan::TryCatch try_catch;
-			Nan::Call(close_fn.As<Function>(), spec_obj, 1, argv);
+			resource->runInAsyncScope(spec_obj, close_fn.As<Function>(), 1, argv);
 			if (try_catch.HasCaught()) {
 				Nan::Utf8String message(try_catch.Exception());
 				as_v8_warn(&g_log_info, "JavaScript seed provider close() failed: %s",
@@ -503,7 +560,10 @@ void JsBridge::Dispatch(uint64_t id)
 
 	Nan::TryCatch try_catch;
 	if (fn->IsFunction()) {
-		Nan::Call(fn.As<Function>(), spec_obj, 2, argv);
+		// As a callback from the event loop: Node runs the microtasks after it,
+		// so the wrapper's Promise reaction calls done() now, not whenever
+		// something else runs on the loop.
+		resource->runInAsyncScope(spec_obj, fn.As<Function>(), 2, argv);
 	}
 	if ((!fn->IsFunction() || try_catch.HasCaught()) && !data->called) {
 		// The wrapper catches the user's errors, so this is a bridge failure.
@@ -644,4 +704,84 @@ void JsBridge::Finish(uint64_t id, const char *error, Local<Value> value)
 
 	// Close the provider or free the bridge, if this was the last call.
 	RunOnLoop();
+}
+
+/*******************************************************************************
+ *  JsNamedProvider
+ ******************************************************************************/
+
+JsNamedProvider::JsNamedProvider(const std::string &name_, Local<Function> build_,
+								 std::vector<JsBridge *> *bridges_, const LogInfo *log_)
+	: name(name_), bridges(bridges_), log(log_)
+{
+	build.Reset(build_);
+	thread = uv_thread_self();
+}
+
+JsNamedProvider::~JsNamedProvider()
+{
+	build.Reset();
+}
+
+as_status JsNamedProvider::Factory(as_error *err, const as_map *options,
+								   as_seed_provider *provider, void *udata)
+{
+	JsNamedProvider *self = static_cast<JsNamedProvider *>(udata);
+
+	// Node.js connects with async event loops, so the C client calls a binding
+	// factory only while loading the config file in new Client(). Anywhere
+	// else, the JavaScript thread can't be entered.
+	uv_thread_t current = uv_thread_self();
+	if (!uv_thread_equal(&current, &self->thread) || !self->as) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+							   "JavaScript seed provider '%s' can be built only on the "
+							   "JavaScript thread, when the client is created",
+							   self->name.c_str());
+	}
+
+	Nan::HandleScope scope;
+	Local<Value> js_options = options ? val_to_jsvalue((as_val *)options, self->log)
+									  : Local<Value>(Nan::New<Object>());
+	const as_config *config = &self->as->config;
+	Local<Object> limits = Nan::New<Object>();
+	Nan::Set(limits, Nan::New("refreshTimeoutMs").ToLocalChecked(),
+			 Nan::New<Number>(config->discovery.refresh_timeout_ms));
+	Nan::Set(limits, Nan::New("refreshIntervalMs").ToLocalChecked(),
+			 Nan::New<Number>(config->discovery.refresh_interval_ms));
+	Nan::Set(limits, Nan::New("tendIntervalMs").ToLocalChecked(),
+			 Nan::New<Number>(config->tender_interval));
+
+	// lib/discovery_bridge.js returns { spec } or { error }; it catches what the
+	// user's factory throws.
+	Nan::TryCatch try_catch;
+	Local<Value> argv[2] = {js_options, limits};
+	Nan::MaybeLocal<Value> maybe = Nan::Call(Nan::New(self->build), Nan::New<Object>(), 2, argv);
+	Local<Value> result;
+	if (try_catch.HasCaught() || !maybe.ToLocal(&result) || !result->IsObject()) {
+		try_catch.Reset();
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+							   "JavaScript seed provider '%s' returned no provider",
+							   self->name.c_str());
+	}
+	Local<Object> answer = result.As<Object>();
+	Local<Value> error;
+	if (Nan::Get(answer, Nan::New("error").ToLocalChecked()).ToLocal(&error) &&
+		error->IsString()) {
+		Nan::Utf8String text(error);
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT, "%s", *text);
+	}
+	Local<Value> spec;
+	if (!Nan::Get(answer, Nan::New("spec").ToLocalChecked()).ToLocal(&spec) ||
+		!spec->IsObject()) {
+		return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+							   "JavaScript seed provider '%s' returned no provider",
+							   self->name.c_str());
+	}
+
+	// The bridge's C reference is the instance's: the registration holds this
+	// object, not the bridge.
+	JsBridge *bridge = JsBridge::Create(JsBridge::PROVIDER, spec.As<Object>());
+	bridge->FillProvider(provider, false);
+	self->bridges->push_back(bridge);
+	return AEROSPIKE_OK;
 }

@@ -25,7 +25,10 @@
 #include <string>
 #include <vector>
 
+#include "log.h"
+
 extern "C" {
+#include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_discovery.h>
 }
@@ -45,12 +48,13 @@ extern "C" {
  * with refresh_timeout_ms and publishes late results. GetCredentials() waits at
  * most the timeout_ms the C client passes, the time left of the refresh.
  *
- * References: one for the C client (released by Destroy(), which may run on
- * any thread and after the client closed), one for the client (released when
- * it closes or is collected), and one per JavaScript call still running. The
- * provider's close() runs once on the JavaScript thread after the C client
- * released it and the last call settled; the bridge is freed on the
- * JavaScript thread when the last reference goes.
+ * References: one per C client reference (its registration and the provider
+ * instance its factory built, released by DestroyRegistration() and Destroy(),
+ * which may run on any thread and after the client closed), one for the client
+ * (released when it closes or is collected), and one per JavaScript call still
+ * running. The provider's close() runs once on the JavaScript thread after the
+ * C client released every reference and the last call settled; the bridge is
+ * freed on the JavaScript thread when the last reference goes.
  */
 class JsBridge {
   public:
@@ -85,7 +89,20 @@ class JsBridge {
 							 as_seed_candidates *candidates, void *udata);
 	static as_status GetCredentials(as_error *err, uint32_t timeout_ms,
 									as_aws_credentials *credentials, void *udata);
+	// The instance's destroy: no call comes from it any more.
 	static void Destroy(void *udata);
+
+	// The factory of a provider registered in code: the C client calls it once,
+	// on the registering thread, and the instance it builds is this bridge
+	// with one more C reference.
+	static as_status Factory(as_error *err, const as_map *options, as_seed_provider *provider,
+							 void *udata);
+	// The registration's destroy, when the C client ends it.
+	static void DestroyRegistration(void *udata);
+	// Fills provider's function table with this bridge as the instance. With
+	// new_reference the instance takes one more C reference; without, it takes
+	// the C reference the bridge was created with.
+	void FillProvider(as_seed_provider *provider, bool new_reference);
 
   private:
 	struct Host {
@@ -112,6 +129,7 @@ class JsBridge {
 	};
 
 	explicit JsBridge(Kind kind);
+	static bool Periodic(void *udata);
 	~JsBridge();
 
 	uint64_t Begin(std::unique_lock<std::mutex> &lock);
@@ -131,12 +149,17 @@ class JsBridge {
 
 	Kind kind;
 	Nan::Persistent<v8::Object> spec;
+	// JavaScript calls run in it, as callbacks, so Node runs the microtasks
+	// after each (Promise reactions) and async hooks see them.
+	Nan::AsyncResource *resource = NULL;
 	uv_async_t *async;
 
 	std::mutex mutex;
 	std::condition_variable cond;
 
 	int refs = 2;
+	// The C client's references, counted in refs too.
+	int c_refs = 1;
 	int running = 0;
 	bool loop_alive = true;
 	bool closing = false;
@@ -147,6 +170,10 @@ class JsBridge {
 	bool kept_alive = false;
 	// How long Refresh() waits for one JavaScript call (0: no limit).
 	uint32_t wait_limit_ms = 0;
+	// A provider's name and whether it refreshes periodically; set once in
+	// Create(), read by the C client from any thread.
+	std::string name;
+	bool periodic = true;
 
 	// The one request: the C client never overlaps calls of one registration.
 	uint64_t next_id = 0;
@@ -166,4 +193,41 @@ class JsBridge {
 	std::string result_error;
 	std::vector<Host> result_hosts;
 	Credentials result_credentials;
+};
+
+/**
+ * A JavaScript seed provider factory registered by name with
+ * Aerospike.registerSeedProvider(), offered to the C client with
+ * as_config_register_binding_seed_provider(). When the config file selects
+ * the name (static.client.discovery.provider), the C client calls Factory()
+ * on the thread that loads the file: in Node.js the JavaScript thread, inside
+ * aerospike_init() during new Client(). Factory() calls the JavaScript factory
+ * with the file's options and wraps the provider it returns in a new bridge,
+ * which then works as a provider set in code.
+ *
+ * The client owns this object and frees it on the JavaScript thread. The C
+ * client gets no destroy for it, so the C client's close thread never touches
+ * it.
+ */
+class JsNamedProvider {
+  public:
+	// JavaScript thread. build is the function lib/discovery_bridge.js made
+	// for the name; bridges is the client's list, which takes each new bridge.
+	JsNamedProvider(const std::string &name, v8::Local<v8::Function> build,
+					std::vector<JsBridge *> *bridges, const LogInfo *log);
+	~JsNamedProvider();
+
+	static as_status Factory(as_error *err, const as_map *options, as_seed_provider *provider,
+							 void *udata);
+
+	std::string name;
+	// The client's aerospike object, set before aerospike_init(): the factory
+	// reads the timings the config file set.
+	aerospike *as = NULL;
+
+  private:
+	Nan::Persistent<v8::Function> build;
+	std::vector<JsBridge *> *bridges;
+	const LogInfo *log;
+	uv_thread_t thread;
 };

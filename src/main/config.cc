@@ -505,18 +505,15 @@ static int get_optional_discovery_property(as_config *config, Local<Object> obj,
 			as_v8_error(log, "A JavaScript discovery.provider is not supported here");
 			return AS_NODE_PARAM_ERR;
 		}
-		Local<Object> spec = provider_value.As<Object>();
-		Nan::Utf8String name(Nan::Get(spec, Nan::New("name").ToLocalChecked()).ToLocalChecked());
-		bool periodic = Nan::To<bool>(
-			Nan::Get(spec, Nan::New("periodic").ToLocalChecked()).ToLocalChecked()).FromMaybe(true);
-
-		JsBridge *bridge = JsBridge::Create(JsBridge::PROVIDER, spec);
+		JsBridge *bridge = JsBridge::Create(JsBridge::PROVIDER, provider_value.As<Object>());
 		as_error err;
 		as_error_init(&err);
-		// The C client runs every call, the first included, on its discovery
-		// thread, and owns the bridge once this succeeds.
-		if (as_config_set_binding_seed_provider(config, *name ? *name : "js", JsBridge::Refresh,
-												periodic, JsBridge::Destroy, bridge,
+		// The C client calls the factory once, here, for the one instance; it
+		// runs every call, the first included, on its discovery thread, and
+		// holds the bridge for the registration and the instance once this
+		// succeeds.
+		if (as_config_set_binding_seed_provider(config, JsBridge::Factory,
+												JsBridge::DestroyRegistration, bridge,
 												&err) != AEROSPIKE_OK) {
 			as_v8_error(log, "Invalid discovery.provider: %s", err.message);
 			bridge->ReleaseOwner();
@@ -639,6 +636,52 @@ static int get_optional_translation_property(as_config *config, Local<Object> ob
 		return AS_NODE_PARAM_ERR;
 	}
 
+	return AS_NODE_PARAM_OK;
+}
+
+// Seed provider factories registered by name with Aerospike.registerSeedProvider(),
+// for the config file to select with static.client.discovery.provider.
+// lib/discovery_bridge.js passes them as _seedProviders, [{ name, build }], to a
+// client of the main thread. Each is a binding provider: every refresh runs on
+// the C client's discovery thread, and connect waits at most
+// refresh_timeout_ms for the first one.
+static int register_named_seed_providers(as_config *config, Local<Object> obj,
+										 AerospikeClient *client, const LogInfo *log)
+{
+	Local<Value> value =
+		Nan::Get(obj, Nan::New("_seedProviders").ToLocalChecked()).ToLocalChecked();
+	if (!value->IsArray()) {
+		return AS_NODE_PARAM_OK;
+	}
+	Local<Array> list = value.As<Array>();
+	for (uint32_t i = 0; i < list->Length(); i++) {
+		Local<Value> item = Nan::Get(list, i).ToLocalChecked();
+		Local<Value> name_value = Nan::Undefined();
+		Local<Value> build_value = Nan::Undefined();
+		if (item->IsObject()) {
+			name_value = Nan::Get(item.As<Object>(), Nan::New("name").ToLocalChecked()).ToLocalChecked();
+			build_value = Nan::Get(item.As<Object>(), Nan::New("build").ToLocalChecked()).ToLocalChecked();
+		}
+		if (!name_value->IsString() || !build_value->IsFunction()) {
+			as_v8_error(log, "Invalid registered seed provider at index %u", i);
+			return AS_NODE_PARAM_ERR;
+		}
+		Nan::Utf8String name(name_value);
+		JsNamedProvider *named = new JsNamedProvider(*name, build_value.As<Function>(),
+													 &client->js_bridges, client->log);
+		as_error err;
+		as_error_init(&err);
+		// No destroy: the client owns named and frees it on the JavaScript
+		// thread, so the C client's close thread never touches it.
+		if (as_config_register_binding_seed_provider(config, named->name.c_str(),
+													 JsNamedProvider::Factory, NULL, named,
+													 &err) != AEROSPIKE_OK) {
+			as_v8_error(log, "Invalid registered seed provider: %s", err.message);
+			delete named;
+			return AS_NODE_PARAM_ERR;
+		}
+		client->js_named.push_back(named);
+	}
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1184,6 +1227,10 @@ int config_from_jsobject(as_config *config, Local<Object> configObj, AerospikeCl
 		goto Cleanup;
 	}
 	if ((rc = get_optional_translation_property(config, configObj, log)) !=
+		AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
+	if ((rc = register_named_seed_providers(config, configObj, client, log)) !=
 		AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}

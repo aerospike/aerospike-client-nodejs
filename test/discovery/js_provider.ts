@@ -28,7 +28,9 @@ import type { Client as Cli, ConfigOptions } from '../../lib/aerospike.js'
 
 import { expect } from 'chai'
 import { spawnSync } from 'child_process'
+import * as fs from 'fs'
 import * as net from 'net'
+import * as os from 'os'
 import * as path from 'path'
 import * as Aerospike from '../../lib/aerospike.js'
 import * as helper from '../test_helper.ts'
@@ -430,6 +432,26 @@ describe('JavaScript seed provider', function () {
     client.close()
     expect(ctx.configuredSeeds).to.eql([seedHost()])
     expect(ctx.clusterName === null || typeof ctx.clusterName === 'string').to.be.true
+  })
+
+  it('answers the first refresh at once in a process with nothing else on its event loop', function () {
+    // The wrapper calls done() in a Promise reaction. The bridge calls into
+    // JavaScript as an event loop callback, so Node runs that reaction right
+    // after the call; called any other way, it waited for something else to
+    // run on the loop, and connect timed out (Node 26).
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const seed = ${JSON.stringify(seedHost())}
+      const provider = { refreshSeedCandidates: () => [seed], needsPeriodicRefresh: () => true, close: () => console.log('closed') }
+      const start = Date.now()
+      Aerospike.connect({ hosts: [], log: { level: Aerospike.log.OFF }, discovery: { provider, refreshTimeoutMs: 5000 } }).then(client => {
+        console.log('connected ' + (Date.now() - start < 2000))
+        client.close()
+      }, err => console.log('failed ' + err.message))
+    `
+    const result = spawnSync(process.execPath, ['-e', script], { timeout: 15000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim().split('\n')).to.eql(['connected true', 'closed'])
   })
 
   it('calls a provider that does not refresh periodically once', async function () {
@@ -1015,5 +1037,213 @@ describe('JavaScript AWS credentials hook', function () {
     } finally {
       await ec2.stop()
     }
+  })
+})
+
+describe('named JavaScript seed provider #noserver', function () {
+  it('rejects an invalid name or factory, and leaves the registry unchanged', function () {
+    const factory = (): any => ({})
+    for (const [name, message] of [
+      ['', "Invalid seed provider name: ''"],
+      [undefined, 'Invalid seed provider name: undefined'],
+      [42, 'Invalid seed provider name: 42'],
+      ['a\0b', 'Invalid seed provider name: '],
+      ['static', "Invalid seed provider name 'static': built-in name"],
+      ['dns', "Invalid seed provider name 'dns': built-in name"],
+      ['aws-tags', "Invalid seed provider name 'aws-tags': built-in name"]
+    ] as Array<[any, string]>) {
+      expect(() => Aerospike.registerSeedProvider(name, factory)).to.throw(Aerospike.AerospikeError, message)
+    }
+    expect(() => Aerospike.registerSeedProvider('never-registered', 'x' as any))
+      .to.throw(Aerospike.AerospikeError, "Invalid seed provider factory for 'never-registered': must be a function")
+    // Nothing was registered, so configs still reach the native client as they are.
+    const config = new Config({ hosts: '127.0.0.1:3000' })
+    expect(bridge.forNative(config)).to.equal(config)
+  })
+
+  it('rejects a name already registered', function () {
+    // In a new process: the registry is process wide. (A worker thread can't
+    // load this add-on once the main thread has, so the main-thread check in
+    // registerSeedProvider() only guards against that changing.)
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      Aerospike.registerSeedProvider('inventory', () => ({}))
+      try { Aerospike.registerSeedProvider('inventory', () => ({})) } catch (err) { console.log(err.message) }
+    `
+    const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8' })
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal("Invalid seed provider name 'inventory': already registered")
+  })
+
+  it('checks what the factory returns, and passes the timings the file set', function () {
+    const build = (factory: any, limits: any = { refreshTimeoutMs: 10000, refreshIntervalMs: 30000, tendIntervalMs: 1000 }): any => {
+      // The function the native client calls when the file selects the name.
+      return bridge._namedBuild('p', factory)({ k: 1 }, limits)
+    }
+    expect(build(() => { throw new Error('boom') }).error).to.equal("JavaScript seed provider 'p': boom")
+    expect(build(() => null).error).to.equal("JavaScript seed provider 'p': the factory must return a provider object")
+    expect(build(() => Promise.resolve({})).error).to.equal("JavaScript seed provider 'p': the factory must return a provider, not a Promise")
+    expect(build(() => ({ needsPeriodicRefresh: () => true })).error).to.equal("JavaScript seed provider 'p': refreshSeedCandidates must be a function")
+    expect(build(() => ({ refreshSeedCandidates: () => [] })).error).to.equal("JavaScript seed provider 'p': needsPeriodicRefresh must be a function")
+    expect(build(() => ({ refreshSeedCandidates: () => [], needsPeriodicRefresh: () => true, close: 1 })).error)
+      .to.equal("JavaScript seed provider 'p': close must be a function")
+    expect(build(() => ({ refreshSeedCandidates: () => [], needsPeriodicRefresh: () => 'yes' })).error)
+      .to.equal("JavaScript seed provider 'p': needsPeriodicRefresh() must return a boolean")
+    expect(build(() => ({ refreshSeedCandidates: () => [], needsPeriodicRefresh: () => { throw new Error('no') } })).error)
+      .to.equal("JavaScript seed provider 'p': needsPeriodicRefresh() failed: no")
+    const throwing = new Proxy({}, { get () { throw new Error('trap') } })
+    expect(build(() => throwing).error).to.equal("JavaScript seed provider 'p': trap")
+    expect(build(() => ({ refreshSeedCandidates: () => [], needsPeriodicRefresh: () => true }),
+      { refreshTimeoutMs: 1000, refreshIntervalMs: 500, tendIntervalMs: 1000 }).error)
+      .to.equal("JavaScript seed provider 'p': discovery refresh interval 500 must be greater or equal to the tend interval 1000")
+
+    let options: any
+    const periodic = build((o: any) => { options = o; return { refreshSeedCandidates: () => [], needsPeriodicRefresh: () => true } },
+      { refreshTimeoutMs: 2000, refreshIntervalMs: 5000, tendIntervalMs: 1000 }).spec
+    expect(options).to.eql({ k: 1 })
+    expect(periodic.name).to.equal('p')
+    expect(periodic.periodic).to.be.true
+    expect(periodic.waitLimitMs).to.equal(5000)
+    const once = build(() => ({ refreshSeedCandidates: () => [], needsPeriodicRefresh: () => false }),
+      { refreshTimeoutMs: 2000, refreshIntervalMs: 500, tendIntervalMs: 1000 }).spec
+    expect(once.periodic).to.be.false
+    expect(once.waitLimitMs).to.equal(0)
+  })
+})
+
+describe('named JavaScript seed provider', function () {
+  this.timeout(60000)
+
+  const hosts: any = helper.config.hosts
+  const seed: any = Array.isArray(hosts) ? hosts[0] : null
+  const lib = JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))
+
+  before(function () {
+    if (!seed || !net.isIP(seed.addr)) this.skip()
+  })
+
+  // Runs script in a new process (the registry is process wide) with the
+  // config file yaml at the path in the variable file.
+  function run (yaml: string, script: string, timeout = 20000): any {
+    const file = path.join(os.tmpdir(), `named-provider-${process.pid}-${Date.now()}.yaml`)
+    fs.writeFileSync(file, yaml)
+    try {
+      const prologue = `
+        const Aerospike = require(${lib})
+        const seed = ${JSON.stringify({ addr: seed.addr, port: seed.port })}
+        const file = ${JSON.stringify(file)}
+      `
+      return spawnSync(process.execPath, ['-e', prologue + script], { timeout, encoding: 'utf8' })
+    } finally {
+      fs.unlinkSync(file)
+    }
+  }
+
+  function discoveryYaml (block: string): string {
+    return ['version: 1.2.0', 'static:', '  client:', '    discovery:', ...block.trim().split('\n').map(line => `      ${line.trim()}`), ''].join('\n')
+  }
+
+  it('builds the provider the file selects, with the file options, uses it alone and closes it', function () {
+    const yaml = discoveryYaml(`
+      provider: inventory
+      refresh_timeout_ms: 3000
+      url: https://inventory.example.com
+      retries: 3
+      ratio: 0.5
+      secure: true
+      zones: [a, b]
+      labels: { team: db }
+    `)
+    const result = run(yaml, `
+      let calls = 0
+      Aerospike.registerSeedProvider('inventory', options => {
+        calls++
+        console.log('options ' + JSON.stringify(options))
+        return { refreshSeedCandidates: () => [seed], needsPeriodicRefresh: () => true, close: () => console.log('closed') }
+      })
+      const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF }, configProvider: { path: file } })
+      client.connect().then(() => {
+        console.log('connected ' + client.getNodes().length + ' calls ' + calls)
+        client.close()
+      }, err => { console.log('failed ' + err.message); client.close() })
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    const lines = result.stdout.trim().split('\n')
+    expect(JSON.parse(lines[0].slice('options '.length))).to.eql({
+      // Every key of the block but provider, as Java's factory gets them.
+      refresh_timeout_ms: 3000, url: 'https://inventory.example.com', retries: 3, ratio: 0.5, secure: true, zones: ['a', 'b'], labels: { team: 'db' }
+    })
+    expect(lines.slice(1)).to.eql(['connected 1 calls 1', 'closed'])
+  })
+
+  it('bounds the first refresh of a provider that never answers, and falls back to hosts', function () {
+    // A binding provider: every call runs on the C client's discovery thread,
+    // so connect waits at most refresh_timeout_ms, also when not periodic.
+    const yaml = discoveryYaml(`
+      provider: stuck
+      refresh_timeout_ms: 500
+    `)
+    const result = run(yaml, `
+      Aerospike.registerSeedProvider('stuck', () => ({ refreshSeedCandidates: () => new Promise(() => {}), needsPeriodicRefresh: () => false }))
+      const start = Date.now()
+      const client = new Aerospike.Client({ hosts: [seed], log: { level: Aerospike.log.OFF }, configProvider: { path: file } })
+      client.connect().then(() => {
+        console.log('connected ' + (Date.now() - start < 3000))
+        client.close()
+      }, err => { console.log('failed ' + err.message); client.close() })
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('connected true')
+  })
+
+  it('logs a factory that throws, as any config file error, and keeps the provider set in code', function () {
+    const yaml = discoveryYaml(`
+      provider: broken
+    `)
+    const result = run(yaml, `
+      Aerospike.registerSeedProvider('broken', () => { throw new Error('no inventory url') })
+      const code = { refreshSeedCandidates: () => [seed], needsPeriodicRefresh: () => true }
+      const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.ERROR }, configProvider: { path: file }, discovery: { provider: code } })
+      client.connect().then(() => {
+        console.log('connected')
+        client.close()
+      }, err => { console.log('failed ' + err.message); client.close() })
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('connected')
+    expect(result.stderr).to.match(/static\.client\.discovery\.provider: broken\. factory failed: JavaScript seed provider 'broken': no inventory url/)
+  })
+
+  it('fails connect when the file selects it in tend mode', function () {
+    const yaml = discoveryYaml(`
+      provider: inventory
+      execution_mode: tend
+    `)
+    const result = run(yaml, `
+      Aerospike.registerSeedProvider('inventory', () => { console.log('factory called'); return { refreshSeedCandidates: () => [seed], needsPeriodicRefresh: () => true } })
+      const client = new Aerospike.Client({ hosts: [seed], log: { level: Aerospike.log.OFF }, configProvider: { path: file } })
+      client.connect().then(() => {
+        console.log('connected')
+        client.close()
+      }, err => { console.log('failed ' + err.code + ' ' + err.message); client.close() })
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal(`failed ${Aerospike.status.ERR_PARAM} Binding seed provider requires thread execution mode`)
+  })
+
+  it('leaves clients whose file names no registered provider as they were', function () {
+    const yaml = discoveryYaml(`
+      provider: static
+    `)
+    const result = run(yaml, `
+      Aerospike.registerSeedProvider('inventory', () => { console.log('factory called'); return {} })
+      const client = new Aerospike.Client({ hosts: [seed], log: { level: Aerospike.log.OFF }, configProvider: { path: file } })
+      client.connect().then(() => {
+        console.log('connected ' + client._jsPlugins)
+        client.close()
+      }, err => { console.log('failed ' + err.message); client.close() })
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('connected false')
   })
 })
