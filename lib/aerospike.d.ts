@@ -13240,6 +13240,16 @@ export namespace bitwise {
      */
     export function get(bin: string, bitOffset: number, bitSize: number): BitwiseOperation;
     /**
+     * Create bit "count" operation.
+     * @remarks Server returns the number of set bits in the range.
+     *
+     * @param bin - The name of the bin. The bin must contain a bytes value.
+     * @param bitOffset - Offset in bits.
+     * @param bitSize - Number of bits to examine.
+     * @returns Operation that can be passed to the {@link Client#operate} command.
+     */
+    export function count(bin: string, bitOffset: number, bitSize: number): BitwiseOperation;
+    /**
      * Create bit "get integer" operation.
      * @remarks Server returns integer from bitmap.
      *
@@ -18043,10 +18053,10 @@ export namespace exp {
      * Create expression that returns record digest modulo as integer.
      *
      *
-     * @param expr - Divisor used to divide the digest to get a remainder.
+     * @param mod - Divisor used to divide the digest to get a remainder.
      * @return integer value Value in range 0 and mod (exclusive).
      */
-    export const digestModulo: _VAExp;
+    export const digestModulo: (mod: number) => AerospikeExp;
 
     /**
      * Create equal (==) expression.

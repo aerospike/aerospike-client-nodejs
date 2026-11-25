@@ -400,7 +400,7 @@ bool add_bit_scan_op(as_operations *ops, AsBitScan scan_op, char *bin,
 bool add_bit_lscan_op(as_operations *ops, char *bin, as_bit_policy *policy,
 					  Local<Object> op, LogInfo *log)
 {
-	return add_bit_scan_op(ops, as_operations_bit_rscan, bin, op, log);
+	return add_bit_scan_op(ops, as_operations_bit_lscan, bin, op, log);
 }
 
 bool add_bit_rscan_op(as_operations *ops, char *bin, as_bit_policy *policy,
@@ -500,6 +500,7 @@ const ops_table_entry ops_table[] = {
 	{"BIT_LSHIFT", add_bit_lshift_op},	 {"BIT_RSHIFT", add_bit_rshift_op},
 	{"BIT_ADD", add_bit_add_op},		 {"BIT_SUBTRACT", add_bit_subtract_op},
 	{"BIT_SET_INT", add_bit_set_int_op}, {"BIT_GET", add_bit_get_op},
+	{"BIT_COUNT", add_bit_count_op},
 	{"BIT_LSCAN", add_bit_lscan_op},	 {"BIT_RSCAN", add_bit_rscan_op},
 	{"BIT_GET_INT", add_bit_get_int_op},
 	{"BIT_B64_ENCODE", add_bit_b64_encode_op},

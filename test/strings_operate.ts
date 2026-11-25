@@ -89,6 +89,15 @@ describe('strings operate()', function () {
     expect(result.bins.s).to.eql('hello')
   })
 
+  it('snip(bin, start, null) removes through the end of the string', async function () {
+    const key = await putKey({ s: 'hello world' })
+    const result: AerospikeRecord = await client.operate(key, [
+      strings.snip('s', -6, null as unknown as number),
+      op.read('s')
+    ])
+    expect(result.bins.s).to.eql('hello')
+  })
+
   it('substrRange read does not change stored bin (substring is read-only)', async function () {
     const key = await putKey({ s: 'abcdef' })
     await client.operate(key, [strings.substrRange('s', 1, 5)])

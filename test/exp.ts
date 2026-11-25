@@ -230,6 +230,26 @@ describe('Aerospike.exp', function () {
     })
   })
 
+  describe('digestModulo', function () {
+    it('evaluates to the digest remainder for the divisor that was sent', async function () {
+      const key = await createRecord({ foo: 'bar' })
+      const readMod = (mod: number) => exp.operations.read(
+        tempBin,
+        exp.digestModulo(mod),
+        exp.expReadFlags.DEFAULT
+      )
+      const mod1 = (await client.operate(key, [readMod(1)])).bins[tempBin]
+      const mod3 = (await client.operate(key, [readMod(3)])).bins[tempBin]
+      const mod6 = (await client.operate(key, [readMod(6)])).bins[tempBin]
+
+      expect(mod1).to.equal(0)
+      expect(mod3).to.be.within(0, 2)
+      expect(mod6).to.be.within(0, 5)
+      // Same digest integer, so (d % 6) % 3 === d % 3. This fails if the divisor is dropped or ignored.
+      expect(Number(mod6) % 3).to.equal(Number(mod3))
+    })
+  })
+
   describe('not', function () {
     it('evaluates to true if the expression evaluates to false', async function () {
       const key = await createRecord({ a: 1, b: 2, c: 3 })
