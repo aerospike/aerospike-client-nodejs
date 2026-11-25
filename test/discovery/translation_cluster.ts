@@ -116,6 +116,24 @@ describe('address translation against a multi-node cluster', function () {
     expect(await connectedAddresses({ translation: { provider: 'port-map', portMap } }, nodes.length)).to.eql(reachable())
   })
 
+  it('takes port-map from the config file, over the translation set in code', async function () {
+    // The C client reads static.client.translation from the file at
+    // aerospike_init(); a key in the file wins over the same key set in code.
+    // pass-through alone fails here (the peers are unreachable), so every node
+    // joining shows the file's port-map was used.
+    const lines = nodes.map(node => `        "${node.name}": "${seedHost}:${node.port}"`)
+    const yaml = ['version: 1.2.0', 'static:', '  client:', '    translation:', '      provider: port-map',
+      '      on_miss: strict', '      port_map:', ...lines, 'dynamic:', '  client:', '    tend_interval: 250', ''].join('\n')
+    const file = path.join(os.tmpdir(), `translation-${process.pid}-${Date.now()}.yaml`)
+    fs.writeFileSync(file, yaml)
+    try {
+      const found = await connectedAddresses({ configProvider: { path: file }, translation: { provider: 'pass-through' } }, nodes.length)
+      expect(found).to.eql(reachable())
+    } finally {
+      fs.unlinkSync(file)
+    }
+  })
+
   it('uses the host:port entry over the node name entry when both match', async function () {
     // Every node name points at a dead port, so a node joins only through its host:port entry.
     const portMap = portMapByAddress()
