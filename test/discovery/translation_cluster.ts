@@ -192,7 +192,7 @@ describe('address translation against a multi-node cluster', function () {
     expect(found).to.include(`${seedHost}:${seedPort}`)
     expect(found).to.not.include(`${seedHost}:${other.port}`)
     expect(found).to.have.lengthOf(nodes.length - 1)
-    expect(text).to.match(new RegExp(`Address translator port-map translated nodes (${other.name} and ${seed.name}|${seed.name} and ${other.name}) to the same address ${seedHost}:${seedPort}`))
+    expect(text).to.match(new RegExp(`Peer ${other.name} has no address of its own: ${seedHost}:${seedPort} is used by ${seed.name} \\(address translator port-map\\)`))
   })
 
   it('connects an unmapped node at its advertised address with onMiss passThrough', async function () {
@@ -244,7 +244,7 @@ describe('address translation against a multi-node cluster', function () {
     const error = await connectError({ hosts, log, translation: { provider: 'port-map', portMap } })
     expect(error, 'connect should fail').to.not.be.null
     expect(error.code).to.equal(Aerospike.status.ERR_TRANSLATION_COLLISION)
-    expect(error.message).to.match(/to the same address/)
+    expect(error.message).to.match(/has no address of its own: .* is used by .*\(address translator port-map\)/)
   })
 
   it('drops both nodes that translate to the same address', async function () {
@@ -262,9 +262,10 @@ describe('address translation against a multi-node cluster', function () {
     const portMap = portMapByAddress()
     portMap[others[1].advertised] = portMap[others[0].advertised]
     const { text } = await connectWithLog({ translation: { provider: 'port-map', portMap } }, nodes.length - 2)
-    const pair = `(${others[0].name} and ${others[1].name}|${others[1].name} and ${others[0].name})`
-    // The collision is logged again on each tend.
-    expect(count(text, new RegExp(`translated nodes ${pair} to the same address ${seedHost}:${others[0].port}`))).to.be.at.least(2)
+    const shared = `${seedHost}:${others[0].port}`
+    // Each peer is logged naming the other, and again on each tend.
+    expect(count(text, new RegExp(`Peer ${others[0].name} has no address of its own: ${shared} is used by ${others[1].name}`))).to.be.at.least(2)
+    expect(count(text, new RegExp(`Peer ${others[1].name} has no address of its own: ${shared} is used by ${others[0].name}`))).to.be.at.least(2)
   })
 
   it('uses advertised addresses as they are with pass-through', async function () {

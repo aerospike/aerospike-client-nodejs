@@ -666,7 +666,8 @@ describe('discovery with the aws-tags provider', function () {
     try {
       const error = await connectError(awsConfig(ec2.endpoint))
       expect(error.code).to.not.equal(Aerospike.status.ERR_SEED_DISCOVERY_FAILED)
-      expect(error.message).to.match(/Failed to connect/)
+      // An empty result is published, so connect has no seed host at all.
+      expect(error.message).to.match(/No seed host to connect to/)
     } finally {
       await ec2.stop()
     }

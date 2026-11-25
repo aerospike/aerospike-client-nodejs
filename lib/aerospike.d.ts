@@ -8010,10 +8010,13 @@ export class Config {
      * is ignored (the client logs a warning at connect).
      *
      * A node skipped by a <code>'strict'</code> miss is logged at warning
-     * level and checked again on every tend. When a new node translates to the
-     * address of a node the client already uses, the new node is skipped; when
-     * two new nodes translate to the same address, both are skipped. A
-     * skipped node is logged as a warning. Connect fails with
+     * level and checked again on every tend. No address is used for more than
+     * one node: a peer address that another node also has after translation
+     * (hostnames compared case-insensitively, nothing resolved), or that
+     * answers as a node the client already knows, is skipped and the peer
+     * tries its next address. A peer left with no address of its own is not
+     * added; it is logged as a warning and tried again on every tend, and a
+     * node the client already uses is kept. Connect fails with
      * {@link status.ERR_TRANSLATION_MISS} or
      * {@link status.ERR_TRANSLATION_COLLISION} only when that error is the
      * reason no usable node is left. See {@link TranslationConfig}.
@@ -10642,10 +10645,13 @@ export interface ConfigOptions {
      * is ignored (the client logs a warning at connect).
      *
      * A node skipped by a <code>'strict'</code> miss is logged at warning
-     * level and checked again on every tend. When a new node translates to the
-     * address of a node the client already uses, the new node is skipped; when
-     * two new nodes translate to the same address, both are skipped. A
-     * skipped node is logged as a warning. Connect fails with
+     * level and checked again on every tend. No address is used for more than
+     * one node: a peer address that another node also has after translation
+     * (hostnames compared case-insensitively, nothing resolved), or that
+     * answers as a node the client already knows, is skipped and the peer
+     * tries its next address. A peer left with no address of its own is not
+     * added; it is logged as a warning and tried again on every tend, and a
+     * node the client already uses is kept. Connect fails with
      * {@link status.ERR_TRANSLATION_MISS} or
      * {@link status.ERR_TRANSLATION_COLLISION} only when that error is the
      * reason no usable node is left. See {@link TranslationConfig}.
@@ -11208,15 +11214,21 @@ export interface DiscoveryConfig {
      * <li><code>'merge'</code>: <code>hosts</code> first, then the discovered
      * seeds. Use it when <code>hosts</code> is still a reliable way in.</li>
      * <li><code>'replace'</code>: the same at connect; after that each
-     * refresh's discovered seeds replace the list (an empty result keeps the
-     * previous list). Use it when <code>hosts</code> may go stale.</li>
+     * refresh's discovered seeds replace the list, and an empty result
+     * empties it. Use it when <code>hosts</code> may go stale.</li>
      * <li><code>'discoveryOnly'</code>: only the discovered seeds, and
      * <code>hosts</code> when discovery returns none. Use it when
      * <code>hosts</code> is only an emergency fallback.</li>
      * </ul>
      * With any policy, a discovery failure at connect falls back to
      * <code>hosts</code>, and a failed refresh after connect keeps the
-     * previous seeds. The combined list has each <code>host:port</code> once:
+     * previous seeds. A successful refresh is used even when the combined
+     * list is empty; then, while the client has no node, it reconnects only
+     * after a later refresh returns a seed. <code>'aws-tags'</code> returns
+     * an empty result when no running instance matches, while
+     * <code>'dns'</code> fails when no name resolves. To keep a fallback
+     * while discovery returns nothing, use <code>'merge'</code> or
+     * <code>'discoveryOnly'</code> with <code>hosts</code>. The combined list has each <code>host:port</code> once:
      * the first occurrence wins, with its TLS name.
      *
      * @default 'merge'
@@ -19784,19 +19796,21 @@ export namespace filter {
  */
 declare namespace statusNamespace {
     /**
-     * A seed discovery provider failed, and there were no usable seeds.
+     * The seed provider failed at connect, and no configured seed host is left.
      */
     export const AEROSPIKE_ERR_SEED_DISCOVERY_FAILED = -27;
     /**
-     * A seed discovery provider failed, and there were no usable seeds.
+     * The seed provider failed at connect, and no configured seed host is left.
      */
     export const ERR_SEED_DISCOVERY_FAILED = -27;
     /**
-     * Address translation mapped two nodes to the same host and port.
+     * A peer has no address that another node does not also have, or two nodes
+     * answer at one host and port.
      */
     export const AEROSPIKE_ERR_TRANSLATION_COLLISION = -26;
     /**
-     * Address translation mapped two nodes to the same host and port.
+     * A peer has no address that another node does not also have, or two nodes
+     * answer at one host and port.
      */
     export const ERR_TRANSLATION_COLLISION = -26;
     /**
