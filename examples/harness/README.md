@@ -4,9 +4,9 @@ The `examples/harness` directory runs documentation-shaped examples against a li
 
 Example code lives in [`../doc/`](../doc/). Each file exports a `runExample(context)` function that uses injected `client`, `ns`, `set`, policies, and `console`. Keep example bodies focused on teachable API usage; use fixtures for seed data, assertions, and cleanup.
 
-## Registered examples (29)
+## Registered examples (36)
 
-Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, QueryTopK, VectorSearch, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, Metrics, MrtCommit, MrtAbort, GeospatialMonteCarlo, PathExpressions.
+Connect, ServerInfo, Info, PutGet, Put, Get, Exists, Add, Append, Prepend, Delete, Remove, Replace, Operate, Batch, Apply, Scan, ScanParallel, QueryInteger, QueryEqual, QueryTopK, VectorSearch, SecondaryIndex, UserDefinedFunction, UdfModule, DynamicConfig, AddressTranslationIpMap, AddressTranslationPortMap, AddressTranslationPassThrough, SeedDiscoveryDns, SeedDiscoveryAwsTags, Metrics, MrtCommit, MrtAbort, GeospatialMonteCarlo, PathExpressions.
 
 Run all registered examples:
 

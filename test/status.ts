@@ -29,13 +29,13 @@ describe('Aerospike.status #noserver', function () {
   it('AEROSPIKE_ERR_SEED_DISCOVERY_FAILED', function () {
     expect(status.AEROSPIKE_ERR_SEED_DISCOVERY_FAILED).to.equal(-27)
     expect(status.ERR_SEED_DISCOVERY_FAILED).to.equal(-27)
-    expect(status.getMessage(status.ERR_SEED_DISCOVERY_FAILED)).to.equal('A seed discovery provider failed, and there were no usable seeds.')
+    expect(status.getMessage(status.ERR_SEED_DISCOVERY_FAILED)).to.equal('The seed provider failed at connect, and no configured seed host is left.')
   })
 
   it('AEROSPIKE_ERR_TRANSLATION_COLLISION', function () {
     expect(status.AEROSPIKE_ERR_TRANSLATION_COLLISION).to.equal(-26)
     expect(status.ERR_TRANSLATION_COLLISION).to.equal(-26)
-    expect(status.getMessage(status.ERR_TRANSLATION_COLLISION)).to.equal('Address translation mapped two nodes to the same host and port.')
+    expect(status.getMessage(status.ERR_TRANSLATION_COLLISION)).to.equal('A peer has no address that another node does not also have, or two nodes answer at one host and port.')
   })
 
   it('AEROSPIKE_ERR_TRANSLATION_MISS', function () {
