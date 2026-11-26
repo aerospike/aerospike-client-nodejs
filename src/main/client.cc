@@ -151,8 +151,10 @@ static void close_client(AerospikeClient *client)
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
 
-	// aerospike_destroy() ended every registration, so the C client never
-	// calls a named factory again.
+	// A closed client never connects again, so the C client never calls a
+	// named factory again. Its registry may outlive this (with async event
+	// loops it is freed on the C client's close thread), but it holds its own
+	// copy of each name and no destroy for named, so freeing them here is safe.
 	for (JsNamedProvider *named : client->js_named) {
 		delete named;
 	}

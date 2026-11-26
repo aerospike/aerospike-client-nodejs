@@ -1048,6 +1048,9 @@ describe('named JavaScript seed provider #noserver', function () {
       [undefined, 'Invalid seed provider name: undefined'],
       [42, 'Invalid seed provider name: 42'],
       ['a\0b', 'Invalid seed provider name: '],
+      // A lone surrogate becomes U+FFFD in UTF-8, so two such names would be one.
+      ['a\uD800', 'Invalid seed provider name: '],
+      ['a\uDC00b', 'Invalid seed provider name: '],
       ['static', "Invalid seed provider name 'static': built-in name"],
       ['dns', "Invalid seed provider name 'dns': built-in name"],
       ['aws-tags', "Invalid seed provider name 'aws-tags': built-in name"]
@@ -1229,6 +1232,125 @@ describe('named JavaScript seed provider', function () {
     `)
     expect(result.status, result.stderr).to.equal(0)
     expect(result.stdout.trim()).to.equal(`failed ${Aerospike.status.ERR_PARAM} Binding seed provider requires thread execution mode`)
+  })
+
+  it('replaces a provider set in code, which is closed once and never called', function () {
+    // A key in the file wins over the same key in code: the C client destroys
+    // the code registration while the file is loaded.
+    const yaml = discoveryYaml(`
+      provider: inventory
+    `)
+    const result = run(yaml, `
+      Aerospike.registerSeedProvider('inventory', () => ({ refreshSeedCandidates: () => { console.log('named refresh'); return [seed] }, needsPeriodicRefresh: () => false, close: () => console.log('named closed') }))
+      const code = { refreshSeedCandidates: () => { console.log('code refresh'); return [seed] }, needsPeriodicRefresh: () => true, close: () => console.log('code closed') }
+      const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF }, configProvider: { path: file }, discovery: { provider: code } })
+      client.connect().then(() => {
+        console.log('connected')
+        client.close()
+      }, err => { console.log('failed ' + err.message); client.close() })
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    const lines = result.stdout.trim().split('\n')
+    expect(lines.filter((l: string) => l === 'code closed')).to.have.lengthOf(1)
+    expect(lines).to.not.include('code refresh')
+    expect(lines.filter((l: string) => l === 'named refresh')).to.have.lengthOf(1)
+    expect(lines.slice(-2)).to.eql(['connected', 'named closed'])
+  })
+
+  it('reads the file named by AEROSPIKE_CLIENT_CONFIG_URL', function () {
+    const yaml = discoveryYaml(`
+      provider: inventory
+    `)
+    const fileFromEnv = path.join(os.tmpdir(), `named-provider-env-${process.pid}-${Date.now()}.yaml`)
+    fs.writeFileSync(fileFromEnv, yaml)
+    try {
+      const script = `
+        const Aerospike = require(${lib})
+        const seed = ${JSON.stringify({ addr: seed.addr, port: seed.port })}
+        Aerospike.registerSeedProvider('inventory', () => ({ refreshSeedCandidates: () => [seed], needsPeriodicRefresh: () => true, close: () => console.log('closed') }))
+        const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF } })
+        client.connect().then(() => { console.log('connected'); client.close() }, err => { console.log('failed ' + err.message); client.close() })
+      `
+      const env = Object.assign({}, process.env, { AEROSPIKE_CLIENT_CONFIG_URL: fileFromEnv })
+      const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8', env })
+      expect(result.status, result.stderr).to.equal(0)
+      expect(result.stdout.trim().split('\n')).to.eql(['connected', 'closed'])
+    } finally {
+      fs.unlinkSync(fileFromEnv)
+    }
+  })
+
+  it('closes the provider of a client that never connected, once, and of one left open at exit', function () {
+    const yaml = discoveryYaml(`
+      provider: inventory
+    `)
+    const result = run(yaml, `
+      let built = 0
+      Aerospike.registerSeedProvider('inventory', () => { const n = ++built; return { refreshSeedCandidates: () => [seed], needsPeriodicRefresh: () => true, close: () => console.log('closed ' + n) } })
+      const config = { hosts: [], log: { level: Aerospike.log.OFF }, configProvider: { path: file } }
+      new Aerospike.Client(config).close()
+      // Left open: its bridge doesn't keep the process alive, and exit doesn't crash.
+      new Aerospike.Client(config)
+      setTimeout(() => console.log('built ' + built), 200)
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim().split('\n')).to.eql(['closed 1', 'built 2'])
+  })
+
+  it('builds a provider for each client that reads the file, and closes each once', function () {
+    const yaml = discoveryYaml(`
+      provider: inventory
+    `)
+    const result = run(yaml, `
+      let built = 0
+      const closed = []
+      Aerospike.registerSeedProvider('inventory', () => { const n = ++built; return { refreshSeedCandidates: async () => [seed], needsPeriodicRefresh: () => true, close: () => closed.push(n) } })
+      const config = { hosts: [], log: { level: Aerospike.log.OFF }, configProvider: { path: file } }
+      const clients = Array.from({ length: 8 }, () => new Aerospike.Client(config))
+      Promise.all(clients.map(c => c.connect())).then(async () => {
+        const key = new Aerospike.Key('test', 'demo', 'named-many')
+        await Promise.all(clients.map((c, i) => c.put(key, { i })))
+        clients.forEach(c => c.close())
+        setTimeout(() => console.log('built ' + built + ' closed ' + closed.sort((a, b) => a - b).join(',')), 500)
+      }, err => { console.log('failed ' + err.message); clients.forEach(c => c.close()) })
+    `, 40000)
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim()).to.equal('built 8 closed 1,2,3,4,5,6,7,8')
+  })
+
+  it('fails safely on input lib/ never passes to the native layer', function () {
+    // Straight to the native client: a malformed registration fails the
+    // config, a name taken twice fails C's registration, and a build function
+    // that throws or answers neither spec nor error fails only the provider.
+    const yaml = discoveryYaml(`
+      provider: thrower
+    `)
+    const result = run(yaml, `
+      const native = require(${JSON.stringify(path.resolve(__dirname, '../../lib/native.js'))})
+      const base = { hosts: [], log: { level: Aerospike.log.ERROR } }
+      const ok = () => ({ error: 'unused' })
+      for (const [label, seedProviders] of [
+        ['malformed', [{ name: 'x' }]],
+        ['not a list item', ['x']],
+        ['taken twice', [{ name: 'a', build: ok }, { name: 'a', build: ok }]]
+      ]) {
+        // The native client answers an invalid config with null.
+        console.log(label + (native.client(Object.assign({}, base, { _seedProviders: seedProviders })) === null ? ' rejected' : ' accepted'))
+      }
+      for (const build of [() => { throw new Error('boom') }, () => 42, () => ({}), () => ({ error: 7 }), () => ({ spec: 'x' })]) {
+        const client = native.client(Object.assign({}, base, { configProvider: { path: file }, _seedProviders: [{ name: 'thrower', build }] }))
+        console.log('built ' + client.hasJsBridges())
+        client.close()
+      }
+    `)
+    expect(result.status, result.stderr).to.equal(0)
+    expect(result.stdout.trim().split('\n')).to.eql([
+      'malformed rejected', 'not a list item rejected', 'taken twice rejected',
+      'built false', 'built false', 'built false', 'built false', 'built false'
+    ])
+    expect(result.stderr.match(/JavaScript seed provider 'thrower' returned no provider/g)).to.have.lengthOf(5)
+    expect(result.stderr).to.match(/Invalid registered seed provider at index 0/)
+    expect(result.stderr).to.match(/Invalid registered seed provider: .*already registered/)
   })
 
   it('leaves clients whose file names no registered provider as they were', function () {
