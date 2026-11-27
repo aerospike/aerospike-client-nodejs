@@ -607,6 +607,40 @@ describe('discovery seed refresh and limits', function () {
     expect(readLog()).to.match(/Seed provider dns refresh failed: .*seeds\.test: NXDOMAIN\. Keeping the previous seeds/)
   })
 
+  it('keeps a tend-mode refresh within its deadline when the resolver is slow (TC-06)', async function () {
+    // In tend mode the dns provider bounds each lookup with timeoutMs, which
+    // may not exceed tendRefreshDeadlineMs: a slow resolver fails the refresh
+    // on time, so tend never overruns, the breaker never trips, the previous
+    // seeds are kept and the client keeps working. (Only a custom C provider
+    // can overrun; a JavaScript provider runs in thread mode only.)
+    const readLog = captureLog()
+    const discovery = { executionMode: 'tend', tendRefreshDeadlineMs: 100, refreshIntervalMs: 250 }
+    const options: any = config(['seeds.test'], discovery)
+    options.discovery.dns.timeoutMs = 80
+    const client: Cli = await Aerospike.connect(options)
+    let log = ''
+    try {
+      await dns.setDelay(400)
+      const before = await dns.queries()
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      expect((await dns.queries()) - before, 'refreshes ran while the resolver was slow').to.be.at.least(3)
+      const key = new Aerospike.Key(helper.namespace, helper.set, 'discovery/tend-slow')
+      await client.put(key, { v: 1 })
+      await dns.setDelay(0)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      await client.put(key, { v: 2 })
+      expect((await client.get(key)).bins.v).to.equal(2)
+      await client.remove(key)
+    } finally {
+      await dns.setDelay(0)
+      client.close()
+      log = readLog()
+    }
+    expect(log).to.match(/Seed provider dns refresh failed: .*Keeping the previous seeds/)
+    expect(log).to.not.match(/exceeding tend_refresh_deadline_ms/)
+    expect(log).to.not.match(/no longer refreshed/)
+  })
+
   it('takes the provider limits from refreshTimeoutMs when it is set', async function () {
     const client: Cli = await Aerospike.connect(config(['seeds.test'], { refreshTimeoutMs: 3000 }, {}))
     client.close()

@@ -454,6 +454,50 @@ describe('JavaScript seed provider', function () {
     expect(result.stdout.trim().split('\n')).to.eql(['connected true', 'closed'])
   })
 
+  it('asks for an urgent refresh once the client has no node left, at most once per interval (TC-17)', async function () {
+    // The provider's seed is a local proxy to the server, so closing the proxy
+    // leaves the client with no node. Its 60 s interval is far off, so a call
+    // soon after is the urgent refresh (FR-42), and only one is made.
+    const sockets = new Set<net.Socket>()
+    const forward = (port: number): net.Server => net.createServer(socket => {
+      const upstream = net.connect(seed.port, seed.addr)
+      sockets.add(socket); sockets.add(upstream)
+      socket.pipe(upstream); upstream.pipe(socket)
+      const done = (): void => { socket.destroy(); upstream.destroy() }
+      for (const s of [socket, upstream]) { s.on('error', done); s.on('close', done) }
+    }).listen(port, '127.0.0.1')
+    let proxy = forward(0)
+    await new Promise(resolve => proxy.once('listening', resolve))
+    const port = (proxy.address() as net.AddressInfo).port
+    const calls: number[] = []
+    const p = provider(() => { calls.push(Date.now()); return [{ addr: '127.0.0.1', port }] }, true)
+    const client: Cli = await Aerospike.connect(config(p, { refreshIntervalMs: 60000 }, { tenderInterval: 250 }))
+    try {
+      expect(calls).to.have.lengthOf(1)
+      const dropped = Date.now()
+      proxy.close()
+      for (const s of sockets) s.destroy()
+      const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
+        const end = Date.now() + ms
+        while (Date.now() < end) { if (check()) return true; await new Promise(resolve => setTimeout(resolve, 50)) }
+        return check()
+      }
+      expect(await waitFor(() => client.getNodes().length === 0, 10000), 'the node is dropped').to.be.true
+      expect(await waitFor(() => calls.length === 2, 5000), 'an urgent refresh').to.be.true
+      expect(calls[1] - dropped).to.be.below(10000)
+      // Still no node, but the urgent refresh was honored once this interval.
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      expect(calls).to.have.lengthOf(2)
+      // The seed comes back: the client reconnects from the seeds it has.
+      proxy = forward(port)
+      expect(await waitFor(() => client.getNodes().length === 1, 10000), 'reconnects').to.be.true
+    } finally {
+      client.close()
+      proxy.close()
+      for (const s of sockets) s.destroy()
+    }
+  })
+
   it('calls a provider that does not refresh periodically once', async function () {
     let calls = 0
     const client: Cli = await Aerospike.connect(config(provider(() => { calls++; return [seedHost()] }, false), { refreshIntervalMs: 300 }, { tenderInterval: 250 }))

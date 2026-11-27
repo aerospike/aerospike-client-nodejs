@@ -35,11 +35,13 @@ import * as fs from 'fs'
 import * as net from 'net'
 import * as os from 'os'
 import * as path from 'path'
+import { execFileSync } from 'child_process'
 import { info, advertisedPeers, connectError, addresses, waitFor } from './helpers.ts'
 import { startDnsServer, DnsServer } from './dns_server.ts'
 
 const seedEnv = process.env.IPMAP_CLUSTER_SEED
 const caFile = process.env.IPMAP_CLUSTER_CA
+const script = process.env.IPMAP_CLUSTER_SCRIPT
 const tlsName = 'ipmap-tls'
 const log = { level: Aerospike.log.OFF }
 
@@ -387,6 +389,87 @@ describe('address translation against a multi-node cluster', function () {
     it('finds every node from A seeds in tend mode', async function () {
       const discovery = { provider: 'dns' as const, dns: { names: ['seeds.cluster.test'], port: seedPort, servers: [dns.address] }, executionMode: 'tend' as const }
       expect(await connectedAddresses({ hosts: [], discovery, translation: translation() }, nodes.length)).to.eql(reachable())
+    })
+  })
+
+  // Adds and removes an extra node 7, so the nodes the other tests map by
+  // address are never restarted (a restarted container can get a new address).
+  describe('with a node added and removed', function () {
+    this.timeout(120000)
+    const extra = 7
+    const extraPort = 4000 + (extra - 1) * 100
+
+    before(function () {
+      if (!script) this.skip()
+    })
+
+    // A port-map filled in advance for every address of the node subnet and
+    // every node port, including the extra node's, which no node has yet.
+    function prefilledPortMap (): Record<string, string> {
+      const prefix = nodes[0].advertised.split(':')[0].split('.').slice(0, 3).join('.')
+      const map: Record<string, string> = {}
+      for (let n = 1; n <= extra; n++) {
+        const port = 4000 + (n - 1) * 100
+        for (let i = 1; i < 255; i++) map[`${prefix}.${i}:${port}`] = `${seedHost}:${port}`
+      }
+      return map
+    }
+
+    function cluster (verb: string): void {
+      execFileSync(script as string, [verb, String(extra)], { stdio: 'ignore' })
+    }
+
+    it('reaches a new node through a pre-filled port-map with no client change (TC-09A, N-19)', async function () {
+      const config: ConfigOptions = { hosts, log, tenderInterval: 250 }
+      const covered: Cli = await Aerospike.connect(Object.assign({}, config, { translation: { provider: 'port-map', portMap: prefilledPortMap(), onMiss: 'strict' } }))
+      const exact: Cli = await Aerospike.connect(Object.assign({}, config, { translation: { provider: 'port-map', portMap: portMapByAddress(), onMiss: 'strict' } }))
+      try {
+        expect(await waitFor(() => covered.getNodes().length === nodes.length, 10000)).to.be.true
+        cluster('add')
+        expect(await waitFor(() => covered.getNodes().length === nodes.length + 1, 60000), 'the new node joins').to.be.true
+        expect(addresses(covered)).to.include(`${seedHost}:${extraPort}`)
+        // The exact map has no entry for the new node's address, so strict skips it.
+        expect(exact.getNodes()).to.have.lengthOf(nodes.length)
+        cluster('remove')
+        expect(await waitFor(() => covered.getNodes().length === nodes.length, 30000), 'the node leaves').to.be.true
+      } finally {
+        try { cluster('remove') } catch (err) {}
+        covered.close()
+        exact.close()
+      }
+    })
+
+    it('keeps tending while a thread-mode DNS refresh is stalled (TC-15)', async function () {
+      // The resolver answers after 8 s. Once a refresh is waiting on it, the
+      // extra node is removed: the client drops it within a few tends, which
+      // only the tend thread does, so tend was not waiting on the refresh.
+      const dns = await startDnsServer({ 'seeds.cluster.test': { A: [seedHost] } })
+      let client: Cli | undefined
+      try {
+        cluster('add')
+        const discovery = { provider: 'dns' as const, dns: { names: ['seeds.cluster.test'], port: seedPort, servers: [dns.address], timeoutMs: 9000 }, refreshIntervalMs: 1000, refreshTimeoutMs: 10000 }
+        client = await Aerospike.connect({ hosts: [], log, tenderInterval: 250, discovery, translation: { provider: 'port-map', portMap: prefilledPortMap() } })
+        const c = client
+        expect(await waitFor(() => c.getNodes().length === nodes.length + 1, 60000), 'the extra node joins').to.be.true
+        await dns.setDelay(8000)
+        const queries = await dns.queries()
+        const started = Date.now()
+        // Wait for a refresh to reach the stalled resolver.
+        while ((await dns.queries()) === queries && Date.now() - started < 3000) await new Promise(resolve => setTimeout(resolve, 50))
+        expect(await dns.queries(), 'a refresh is waiting on the resolver').to.be.above(queries)
+        const stalledAt = Date.now()
+        cluster('remove')
+        expect(await waitFor(() => c.getNodes().length === nodes.length, 6000), 'tend drops the removed node').to.be.true
+        expect(Date.now() - stalledAt, 'well before the refresh returns').to.be.below(7000)
+        const key = new Aerospike.Key('test', 'demo', 'translation-cluster/tc15')
+        await c.put(key, { v: 1 })
+        await c.remove(key)
+      } finally {
+        await dns.setDelay(0)
+        client?.close()
+        try { cluster('remove') } catch (err) {}
+        await dns.stop()
+      }
     })
   })
 })
