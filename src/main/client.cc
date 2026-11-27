@@ -15,12 +15,14 @@
  ******************************************************************************/
 
 #include <node.h>
+#include <thread>
 #include "client.h"
 #include "command.h"
 #include "conversions.h"
 #include "config.h"
 #include "events.h"
 #include "log.h"
+#include "js_bridge.h"
 
 extern "C" {
 #include <aerospike/aerospike.h>
@@ -43,7 +45,19 @@ using namespace v8;
 
 AerospikeClient::AerospikeClient() {}
 
-AerospikeClient::~AerospikeClient() {}
+AerospikeClient::~AerospikeClient()
+{
+	// The client's references; the C client keeps its own until it releases
+	// the provider and hook.
+	for (JsBridge *bridge : js_bridges) {
+		bridge->ReleaseClient();
+	}
+	js_bridges.clear();
+	for (JsNamedProvider *named : js_named) {
+		delete named;
+	}
+	js_named.clear();
+}
 
 /*******************************************************************************
  *  Methods
@@ -108,6 +122,11 @@ NAN_METHOD(AerospikeClient::New)
 
 	client->ip_map = config.ip_map;
 	client->ip_map_size = config.ip_map_size;
+	// A named seed provider the config file selects is built inside
+	// aerospike_init(), and reads the timings the file set from client->as.
+	for (JsNamedProvider *named : client->js_named) {
+		named->as = client->as;
+	}
 	aerospike_init(client->as, &config);
 	as_v8_debug(client->log, "Aerospike client initialized successfully");
 	client->Wrap(info.This());
@@ -122,10 +141,24 @@ static void close_client(AerospikeClient *client)
 {
 	as_v8_debug(client->log, "Closing the connection to aerospike cluster");
 	as_error err;
+	// A JavaScript provider or hook waiting for the JavaScript thread returns
+	// at once, so the C client's close thread doesn't wait refresh_timeout_ms.
+	for (JsBridge *bridge : client->js_bridges) {
+		bridge->MarkClosing();
+	}
 	events_callback_close(&client->as->config);
 
 	aerospike_close(client->as, &err);
 	aerospike_destroy(client->as);
+
+	// A closed client never connects again, so the C client never calls a
+	// named factory again. Its registry may outlive this (with async event
+	// loops it is freed on the C client's close thread), but it holds its own
+	// copy of each name and no destroy for named, so freeing them here is safe.
+	for (JsNamedProvider *named : client->js_named) {
+		delete named;
+	}
+	std::vector<JsNamedProvider *>().swap(client->js_named);
 
 	// Free only the array this client allocated; the cluster made its own
 	// copy at connect.
@@ -134,6 +167,15 @@ static void close_client(AerospikeClient *client)
 	client->ip_map_size = 0;
 
 	client->closed = true;
+
+	// The client's references to its bridges: the native client object is
+	// not reliably destroyed, so they are released here, once closed. A bridge
+	// is freed when the C client has released it too.
+	for (JsBridge *bridge : client->js_bridges) {
+		bridge->ReleaseClient();
+	}
+	// Frees the list's buffer too (clear() keeps it).
+	std::vector<JsBridge *>().swap(client->js_bridges);
 
 	if(!client->enable_callback.IsEmpty()){
 		client->enable_callback.Reset();
@@ -145,6 +187,114 @@ static void close_client(AerospikeClient *client)
 		cf_free(client->report_dir);
 	}
 }
+
+/**
+ * aerospike_connect() on a thread of its own, for a client with a JavaScript
+ * seed provider or credentials hook, so the JavaScript thread stays free to
+ * answer the C client's first refresh. Not the libuv thread pool: connect can
+ * wait up to refresh_timeout_ms there, which would hold back the
+ * application's fs, dns.lookup(), crypto and zlib work.
+ *
+ * Completion comes back on the JavaScript thread through a uv_async handle,
+ * which keeps the process alive while connect runs (as a pending connect
+ * always has). close() and destroy stay on the JavaScript thread (the C
+ * client hands close's waiting to its own thread); a close() asked for while
+ * connect runs is done when connect completes.
+ */
+class ConnectJob {
+  public:
+	ConnectJob(AerospikeClient *client, Local<Object> self, Local<Function> callback)
+	  : client(client), status(AEROSPIKE_OK)
+	{
+		as_error_init(&err);
+		this->self.Reset(self);
+		this->callback.Reset(callback);
+		uv_async_init(uv_default_loop(), &async, Done);
+		async.data = this;
+	}
+
+	void Start()
+	{
+		thread = std::thread([this] {
+			status = aerospike_connect(client->as, &err);
+			uv_async_send(&async);
+		});
+	}
+
+  private:
+	static void Done(uv_async_t *handle)
+	{
+		ConnectJob *job = static_cast<ConnectJob *>(handle->data);
+		job->thread.join();
+		job->Complete();
+		uv_close(reinterpret_cast<uv_handle_t *>(&job->async), Free);
+	}
+
+	static void Free(uv_handle_t *handle)
+	{
+		delete static_cast<ConnectJob *>(handle->data);
+	}
+
+	void Complete()
+	{
+		Nan::HandleScope scope;
+		client->connecting = false;
+		AerospikeCommand *cmd = new AerospikeCommand("Connect", client, Nan::New(callback));
+
+		if (client->close_pending) {
+			// close() was called while connect ran: connect fails with that,
+			// whatever aerospike_connect() returned (closing the bridge can
+			// itself make it fail).
+			close_client(client);
+			as_error closed;
+			as_error_init(&closed);
+			as_error_update(&closed, AEROSPIKE_ERR_CLIENT, "Client closed while connecting");
+			cmd->ErrorCallback(&closed);
+		}
+		else if (status != AEROSPIKE_OK) {
+			// The C client keeps the provider registered, so connect can be
+			// retried; a discovery thread still waiting is woken.
+			for (JsBridge *bridge : client->js_bridges) {
+				bridge->AbortPending();
+			}
+			events_callback_close(&client->as->config);
+			cmd->ErrorCallback(&err);
+		}
+		else {
+			as_v8_debug(client->log, "Successfully connected to cluster: Enjoy your cake!");
+			cmd->Callback(0, {});
+		}
+		delete cmd;
+		self.Reset();
+		callback.Reset();
+	}
+
+	AerospikeClient *client;
+	Nan::Persistent<Object> self;
+	Nan::Persistent<Function> callback;
+	uv_async_t async;
+	std::thread thread;
+	as_error err;
+	as_status status;
+};
+
+// Whether the C client's global Lua settings are set: it sets them in the
+// first aerospike_connect(), without a lock. Connects on the JavaScript thread
+// never overlap, but a connect on a thread of its own can overlap another, so
+// the settings are made here first.
+static bool g_lua_configured = false;
+
+// The first connect's Lua settings, as the C client takes them, set on the
+// JavaScript thread before any connect runs (also when a connect then fails
+// before the C client would have set them).
+static void configure_lua(AerospikeClient *client)
+{
+	if (!g_lua_configured) {
+		aerospike_init_lua(&client->as->config.lua);
+		g_lua_configured = true;
+	}
+}
+
 
 /**
  * Connect to an Aerospike Cluster
@@ -164,17 +314,34 @@ NAN_METHOD(AerospikeClient::Connect)
 						"Client is closed. Create a new client to connect again.");
 		cmd->ErrorCallback(&err);
 	}
-	else if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
-		// A failed connect leaves no cluster, so connect can be retried on
-		// this client. Release the event handle so it doesn't keep the
-		// process alive; the next connect sets it up again.
-		events_callback_close(&client->as->config);
+	else if (client->connecting) {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+						"Connect is already running on this client");
 		cmd->ErrorCallback(&err);
 	}
+	else if (!client->js_bridges.empty()) {
+		// A JavaScript provider or hook answers the C client's first refresh
+		// on the JavaScript thread, so that thread must not wait inside
+		// aerospike_connect(): connect runs on a thread of its own instead.
+		configure_lua(client);
+		client->connecting = true;
+		ConnectJob *job = new ConnectJob(client, info.This(), callback);
+		job->Start();
+	}
 	else {
-		as_v8_debug(client->log,
-					"Successfully connected to cluster: Enjoy your cake!");
-		cmd->Callback(0, {});
+		configure_lua(client);
+		if (aerospike_connect(client->as, &err) != AEROSPIKE_OK) {
+			// A failed connect leaves no cluster, so connect can be retried on
+			// this client. Release the event handle so it doesn't keep the
+			// process alive; the next connect sets it up again.
+			events_callback_close(&client->as->config);
+			cmd->ErrorCallback(&err);
+		}
+		else {
+			as_v8_debug(client->log,
+						"Successfully connected to cluster: Enjoy your cake!");
+			cmd->Callback(0, {});
+		}
 	}
 
 	delete cmd;
@@ -188,6 +355,15 @@ NAN_METHOD(AerospikeClient::Close)
 	Nan::HandleScope scope;
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	if (client->connecting) {
+		// Never wait for the worker here: its connect may need this thread.
+		client->close_pending = true;
+		for (JsBridge *bridge : client->js_bridges) {
+			bridge->MarkClosing();
+		}
+		return;
+	}
 
 	if (client->closed) {
 		return;
@@ -213,11 +389,28 @@ NAN_METHOD(AerospikeClient::IsConnected)
 /**
  * Are there any pending async commands.
  */
+/**
+ * Whether the client has a JavaScript seed provider or credentials hook,
+ * including a named provider the config file selected in new Client().
+ */
+NAN_METHOD(AerospikeClient::HasJsBridges)
+{
+	AerospikeClient *client = Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+	info.GetReturnValue().Set(Nan::New(!client->js_bridges.empty()));
+}
+
 NAN_METHOD(AerospikeClient::HasPendingAsyncCommands)
 {
 	Nan::HandleScope scope;
 	AerospikeClient *client =
 		Nan::ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	// No cluster yet, one being built by a connect on another thread, or one
+	// freed by close().
+	if (client->connecting || client->closed || !client->as->cluster) {
+		info.GetReturnValue().Set(Nan::New(false));
+		return;
+	}
 
 	bool pending = as_async_get_pending(client->as->cluster) > 0;
 
@@ -231,6 +424,12 @@ NAN_METHOD(AerospikeClient::GetNodes)
 {
 	Nan::HandleScope scope;
 	AerospikeClient *client = ObjectWrap::Unwrap<AerospikeClient>(info.This());
+
+	// No cluster yet, or one being built by a connect on a worker thread.
+	if (client->connecting || client->closed || !client->as->cluster) {
+		info.GetReturnValue().Set(Nan::New<Array>(0));
+		return;
+	}
 
 	as_nodes *nodes = as_nodes_reserve(client->as->cluster);
 	Local<Array> v8_nodes = Nan::New<Array>(nodes->size);
@@ -268,6 +467,10 @@ NAN_METHOD(AerospikeClient::AddSeedHost)
 	Nan::Utf8String hostname(info[0].As<String>());
 	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
+	// No cluster yet, or one being built by a connect on another thread.
+	if (client->connecting || client->closed || !client->as->cluster) {
+		return Nan::ThrowError("addSeedHost: the client is not connected");
+	}
 	as_cluster_add_seed(client->as->cluster, *hostname, NULL, port);
 }
 
@@ -286,6 +489,10 @@ NAN_METHOD(AerospikeClient::RemoveSeedHost)
 	Nan::Utf8String hostname(info[0].As<String>());
 	uint16_t port = (uint16_t)Nan::To<uint32_t>(info[1]).FromJust();
 
+	// No cluster yet, or one being built by a connect on another thread.
+	if (client->connecting || client->closed || !client->as->cluster) {
+		return Nan::ThrowError("removeSeedHost: the client is not connected");
+	}
 	as_cluster_remove_seed(client->as->cluster, *hostname, port);
 }
 
@@ -310,6 +517,12 @@ NAN_METHOD(AerospikeClient::SetupEventCb)
 
 	if (client->closed) {
 		// Connect fails with a clear error instead.
+		return;
+	}
+
+	if (client->connecting) {
+		// A connect runs on a worker thread and uses the current handle; the
+		// second connect fails with a clear error instead.
 		return;
 	}
 
@@ -378,6 +591,7 @@ void AerospikeClient::Init()
 	Nan::SetPrototypeMethod(tpl, "getNodes", GetNodes);
 	Nan::SetPrototypeMethod(tpl, "getStats", GetStats);
 	Nan::SetPrototypeMethod(tpl, "hasPendingAsyncCommands", HasPendingAsyncCommands);
+	Nan::SetPrototypeMethod(tpl, "hasJsBridges", HasJsBridges);
 	Nan::SetPrototypeMethod(tpl, "indexCreate", IndexCreate);
 	Nan::SetPrototypeMethod(tpl, "indexRemove", IndexRemove);
 	Nan::SetPrototypeMethod(tpl, "infoAny", InfoAny);

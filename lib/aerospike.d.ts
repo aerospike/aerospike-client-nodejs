@@ -9785,6 +9785,45 @@ export function connect(callback: TypedCallback<Client>): Client;
  */
 export function connect(config: ConfigOptions, callback: TypedCallback<Client>): Client;
 /**
+ * Registers a JavaScript seed provider factory under a name, so the YAML
+ * config file ({@link ConfigOptions.configProvider}) can select it with
+ * <code>static.client.discovery.provider: &lt;name&gt;</code>, as the Java
+ * client's <code>ClientPolicy.registerSeedCandidateProvider()</code>.
+ *
+ * When a client created afterwards on the main thread reads a config file that
+ * names it, the client calls <code>factory(options)</code> once, while it is
+ * created, with every other key of the file's
+ * <code>static.client.discovery</code> block (the discovery settings
+ * included), and uses the provider it returns as
+ * {@link DiscoveryConfig.provider}: the same checks apply, every refresh runs
+ * on the client's discovery thread, connect waits at most the refresh timeout
+ * for the first one, and the provider's <code>close()</code> runs after
+ * {@link Client#close}. It needs <code>execution_mode: thread</code>; in tend
+ * mode connect fails with {@link status.ERR_PARAM}. The factory must return
+ * the provider, not a Promise. A factory error is logged, as any error in the
+ * config file, and the client keeps the provider set in code. A reloaded file
+ * never builds a provider again.
+ *
+ * @param name - The name the config file uses: a non-empty string, not a
+ * built-in name (<code>static</code>, <code>dns</code>, <code>aws-tags</code>)
+ * and not already registered.
+ * @param factory - Builds the provider from the options.
+ * @throws {@link AerospikeError} For an invalid or taken name or a factory
+ * that isn't a function.
+ *
+ * @example
+ *
+ * Aerospike.registerSeedProvider('inventory', options => new InventoryProvider(options.url))
+ * // aerospike.yml:
+ * //   static:
+ * //     client:
+ * //       discovery:
+ * //         provider: inventory
+ * //         url: https://inventory.example.com
+ * const client = await Aerospike.connect({ configProvider: { path: 'aerospike.yml' } })
+ */
+export function registerSeedProvider(name: string, factory: (options: Record<string, any>) => SeedCandidateProvider): void;
+/**
  * Sets the global, default log level and destination. The default log settings
  * are used for all new client instances, unless different log settings are
  * supplied in the client's configuration.
@@ -11162,6 +11201,129 @@ export interface AwsDiscoveryConfig {
      * characters.
      */
     sessionToken?: string | null;
+    /**
+     * Supplies the AWS credentials instead of the standard credential chain,
+     * for sources the chain doesn't cover (SSO, <code>credential_process</code>,
+     * role profiles, cross-account roles); it may call the AWS SDK. Can't be
+     * combined with static keys.
+     *
+     * Called on the JavaScript thread when the client needs credentials, with
+     * the time left of the refresh. Credentials with an expiration are cached
+     * until five minutes before it; without one, for the life of the client.
+     * A throw, a rejection, invalid credentials or no answer within
+     * <code>timeoutMs</code> fails that refresh; messages never contain the
+     * secret.
+     */
+    credentialsHook?: AwsCredentialsHook | null;
+}
+
+/**
+ * AWS credentials returned by an {@link AwsCredentialsHook}.
+ */
+export interface AwsCredentials {
+    /** Access key id, letters and digits. */
+    accessKeyId: string;
+    /** Secret access key, visible ASCII characters. */
+    secretAccessKey: string;
+    /** Session token of temporary credentials. */
+    sessionToken?: string | null;
+    /**
+     * Expiration, as a Date (what the AWS SDK returns) or milliseconds since
+     * the epoch; 0 or missing for none.
+     */
+    expiration?: Date | number | null;
+}
+
+/**
+ * {@link AwsDiscoveryConfig#credentialsHook}: returns credentials, or a
+ * Promise of them. <code>timeoutMs</code> is the time left of the refresh.
+ */
+export type AwsCredentialsHook = (args: { timeoutMs: number }) => AwsCredentials | Promise<AwsCredentials>;
+
+/**
+ * A seed host returned by {@link SeedCandidateProvider#refreshSeedCandidates}:
+ * the same fields as {@link Host}, with the port required.
+ */
+export interface SeedHost {
+    /** Host name or IP address, at most 255 bytes. */
+    addr: string;
+    /** Port, 1 to 65535. */
+    port: number;
+    /** TLS name; empty, null or missing means none. */
+    tlsname?: string | null;
+}
+
+/**
+ * What a {@link SeedCandidateProvider} gets on each call. A new, read-only
+ * object for each call.
+ */
+export interface SeedCandidateContext {
+    /** {@link Config#clusterName}, or null. */
+    readonly clusterName: string | null;
+    /** The configured {@link Config#hosts}, each with its port. */
+    readonly configuredSeeds: readonly SeedHost[];
+    /** 0 at connect, then the number of tends so far. */
+    readonly tendIteration: number;
+}
+
+/**
+ * A seed provider written in JavaScript: the tech spec's
+ * <code>SeedCandidateProvider</code>, set as {@link DiscoveryConfig#provider}.
+ *
+ * The client calls <code>refreshSeedCandidates()</code> once at connect and,
+ * when <code>needsPeriodicRefresh()</code> returns true, every
+ * <code>refreshIntervalMs</code>. Calls are never concurrent for one client;
+ * a provider shared by several clients may be called by each of them. It runs
+ * on the JavaScript thread, in the application's process with no isolation:
+ * a long synchronous call blocks the event loop and every command, so do I/O
+ * asynchronously, and don't start timers, threads or workers of its own.
+ *
+ * A throw, a rejection or an invalid result fails that refresh: at connect
+ * the client falls back to {@link Config#hosts}, or fails with
+ * {@link status.ERR_SEED_DISCOVERY_FAILED} when there are none; later it logs
+ * a warning and keeps the previous seeds. An empty list is a valid result.
+ * Results that arrive after <code>refreshTimeoutMs</code> are still used. For
+ * a periodic provider that is up to <code>refreshIntervalMs</code> (or
+ * <code>refreshTimeoutMs</code> if longer): a call that takes longer fails,
+ * and that late result is dropped. Calls never overlap: while one hasn't
+ * settled the provider isn't called again, and a connect retried meanwhile
+ * fails at once. A Promise that can never settle (nothing references it any
+ * more) is released when it is garbage collected. A result may list at most
+ * 10000 hosts. Supported only in a client created on the main thread.
+ * Runs in thread mode only.
+ */
+export interface SeedCandidateProvider {
+    /**
+     * Returns the seed hosts in preference order, or a Promise of them. Each
+     * host is <code>{ addr, port, tlsname }</code>, the same as
+     * {@link Config#hosts} (the spec's <code>name</code>, <code>port</code>
+     * and <code>tlsName</code>). Any invalid host (empty <code>addr</code>,
+     * <code>port</code> outside 1-65535, <code>addr</code> over 255 bytes)
+     * fails the refresh, naming its index; a configured seed returned
+     * unchanged is not range checked. An empty <code>tlsname</code> means
+     * none, and gets the same default as a configured seed.
+     */
+    refreshSeedCandidates(ctx: SeedCandidateContext): readonly SeedHost[] | Promise<readonly SeedHost[]>;
+    /**
+     * Whether the hosts can change and must be refreshed periodically. Called
+     * once, when the client is created.
+     */
+    needsPeriodicRefresh(): boolean;
+    /**
+     * Accepted for the spec's interface; not called. A JavaScript provider
+     * runs only in thread mode.
+     */
+    supportsDeadline?(): boolean;
+    /**
+     * Releases the provider's resources. Called once per client, on the
+     * JavaScript thread, after <code>client.close()</code> and after the last
+     * refresh has settled; <code>close()</code> doesn't wait for it. Not
+     * called when the process exits first, or when a refresh never settles.
+     * A throw or a rejected Promise is logged as a warning, not thrown. After
+     * a failed connect the provider is kept, so the same client can connect
+     * again.
+     */
+    close?(): void | Promise<void>;
 }
 
 /**
@@ -11195,11 +11357,14 @@ export interface DiscoveryConfig {
      * The seed provider: <code>'static'</code> (the default) uses only
      * <code>hosts</code>; <code>'dns'</code> needs {@link DiscoveryConfig#dns};
      * <code>'aws-tags'</code> needs {@link DiscoveryConfig#aws} and runs only
-     * in thread mode.
+     * in thread mode. A {@link SeedCandidateProvider} object is a provider
+     * written in JavaScript; it runs only in thread mode, and with one,
+     * <code>connect()</code> runs on a thread of its own (not libuv's thread
+     * pool) so the JavaScript thread stays free to answer the first refresh.
      *
      * @default 'static'
      */
-    provider?: 'static' | 'dns' | 'aws-tags' | null;
+    provider?: 'static' | 'dns' | 'aws-tags' | SeedCandidateProvider | null;
     /**
      * DNS seed provider options.
      */
@@ -11431,6 +11596,14 @@ export interface ConfigProvider {
     * {@link policy.key|send_key} is resolved as a union: dynamic config can enable send-key
     * (<code>send_key: true</code>) but cannot disable it (<code>send_key: false</code> is ignored).
     * If any layer sets send-key, writes use {@link policy.key.SEND}.
+    *
+    * The file's <code>static.client.discovery</code> and <code>static.client.translation</code> keys
+    * (provider, merge policy, execution mode, timings, port map, on miss and so on) are read once,
+    * when the client is created: each key in the file wins over the same setting in
+    * {@link Config#discovery} or {@link Config#translation}, a key missing from the file keeps the
+    * config's value, and a reload never changes them. A provider or translator the file sets
+    * replaces the one in the config, and the client logs a warning. With
+    * {@link registerSeedProvider} the file can select a JavaScript seed provider.
     *
     * If the <code>AEROSPIKE_CLIENT_CONFIG_URL</code> environment variable is set, it will take precedence over
     * any path provided with a config provider.

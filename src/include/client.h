@@ -24,6 +24,10 @@ extern "C" {
 }
 
 #include "log.h"
+#include <vector>
+
+class JsBridge;
+class JsNamedProvider;
 
 #define TYPE_CHECK_REQ(val, type, msg)                                         \
 	if (!val->type())                                                          \
@@ -67,6 +71,17 @@ class AerospikeClient : public Nan::ObjectWrap {
 	// client frees itself.
 	as_addr_map *ip_map = NULL;
 	uint32_t ip_map_size = 0;
+
+	// Bridges of a JavaScript seed provider and credentials hook. With any,
+	// connect runs on a worker thread, so the JavaScript thread stays free to
+	// answer the C client's first refresh.
+	std::vector<JsBridge *> js_bridges;
+	// Seed provider factories registered by name, which the config file can
+	// select; the client owns them and frees them on the JavaScript thread.
+	std::vector<JsNamedProvider *> js_named;
+	// A connect running on a worker thread, and a close() asked for meanwhile.
+	bool connecting = false;
+	bool close_pending = false;
 	Nan::Persistent<v8::Function> enable_callback;
 	Nan::Persistent<v8::Function> snapshot_callback;
 	Nan::Persistent<v8::Function> node_close_callback;
@@ -114,6 +129,7 @@ class AerospikeClient : public Nan::ObjectWrap {
 	static NAN_METHOD(GetNodes);
 	static NAN_METHOD(GetStats);
 	static NAN_METHOD(HasPendingAsyncCommands);
+	static NAN_METHOD(HasJsBridges);
 	static NAN_METHOD(InfoAny);
 	static NAN_METHOD(InfoForeach);
 	static NAN_METHOD(InfoHost);

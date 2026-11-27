@@ -54,6 +54,7 @@ const addressTranslationPortMap = require('../doc/addressTranslationPortMap')
 const addressTranslationPassThrough = require('../doc/addressTranslationPassThrough')
 const seedDiscoveryDns = require('../doc/seedDiscoveryDns')
 const seedDiscoveryAwsTags = require('../doc/seedDiscoveryAwsTags')
+const seedDiscoveryCustom = require('../doc/seedDiscoveryCustom')
 const metrics = require('../doc/metrics')
 const mrtCommit = require('../doc/mrtCommit')
 const mrtAbort = require('../doc/mrtAbort')
@@ -211,6 +212,7 @@ const examples = [
   { name: 'AddressTranslationPassThrough', runExample: addressTranslationPassThrough.runExample, fixture: emptyFixture() },
   { name: 'SeedDiscoveryDns', runExample: seedDiscoveryDns.runExample, fixture: emptyFixture() },
   { name: 'SeedDiscoveryAwsTags', runExample: seedDiscoveryAwsTags.runExample, fixture: emptyFixture() },
+  { name: 'SeedDiscoveryCustom', runExample: seedDiscoveryCustom.runExample, fixture: emptyFixture() },
   { name: 'Metrics', runExample: metrics.runExample, fixture: emptyFixture() },
   {
     name: 'MrtCommit',

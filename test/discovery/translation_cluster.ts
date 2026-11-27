@@ -35,11 +35,13 @@ import * as fs from 'fs'
 import * as net from 'net'
 import * as os from 'os'
 import * as path from 'path'
+import { execFileSync } from 'child_process'
 import { info, advertisedPeers, connectError, addresses, waitFor } from './helpers.ts'
 import { startDnsServer, DnsServer } from './dns_server.ts'
 
 const seedEnv = process.env.IPMAP_CLUSTER_SEED
 const caFile = process.env.IPMAP_CLUSTER_CA
+const script = process.env.IPMAP_CLUSTER_SCRIPT
 const tlsName = 'ipmap-tls'
 const log = { level: Aerospike.log.OFF }
 
@@ -286,6 +288,24 @@ describe('address translation against a multi-node cluster', function () {
     expect(count(text, new RegExp(`Peer ${others[1].name} has no address of its own: ${shared} is used by ${others[0].name}`))).to.be.at.least(2)
   })
 
+  it('misses every peer when a port-map keyed on standard addresses is used with the alternate list (U-13)', async function () {
+    // Nodes advertise container addresses as standard and hostnames as
+    // alternate. A map written against the standard list, used with
+    // useAlternateAccessAddress, matches no alternate address: under strict
+    // every peer misses, and the miss names the alternate list (design G-18).
+    const { found, text } = await connectWithLog({ useAlternateAccessAddress: true, translation: { provider: 'port-map', portMap: portMapByAddress(), onMiss: 'strict' } }, 1)
+    expect(found).to.eql([`${seedHost}:${seedPort}`])
+    expect(text).to.match(/has no mapping for node .* in the alternate list/)
+  })
+
+  it('reaches every node through a port-map keyed on alternate addresses, under strict (CT-12)', async function () {
+    const altPeers = await advertisedPeers(seedHost, seedPort, 'peers-clear-alt')
+    const portMap = Object.fromEntries(altPeers.map(peer => [`${peer.host}:${peer.port}`, `${seedHost}:${peer.port}`]))
+    const { found, text } = await connectWithLog({ useAlternateAccessAddress: true, translation: { provider: 'port-map', portMap, onMiss: 'strict' } }, nodes.length)
+    expect(found).to.eql(reachable())
+    expect(text).to.not.match(/has no mapping/)
+  })
+
   it('uses advertised addresses as they are with pass-through', async function () {
     const error = await connectError({ hosts, log, translation: { provider: 'pass-through' } })
     expect(error.message).to.match(/Peers not reachable/)
@@ -388,5 +408,146 @@ describe('address translation against a multi-node cluster', function () {
       const discovery = { provider: 'dns' as const, dns: { names: ['seeds.cluster.test'], port: seedPort, servers: [dns.address] }, executionMode: 'tend' as const }
       expect(await connectedAddresses({ hosts: [], discovery, translation: translation() }, nodes.length)).to.eql(reachable())
     })
+  })
+
+  // Adds and removes an extra node 7, so the nodes the other tests map by
+  // address are never restarted (a restarted container can get a new address).
+  describe('with a node added and removed', function () {
+    this.timeout(120000)
+    const extra = 7
+    const extraPort = 4000 + (extra - 1) * 100
+
+    before(function () {
+      if (!script) this.skip()
+    })
+
+    // A port-map filled in advance for every address of the node subnet and
+    // every node port, including the extra node's, which no node has yet.
+    function prefilledPortMap (): Record<string, string> {
+      const prefix = nodes[0].advertised.split(':')[0].split('.').slice(0, 3).join('.')
+      const map: Record<string, string> = {}
+      for (let n = 1; n <= extra; n++) {
+        const port = 4000 + (n - 1) * 100
+        for (let i = 1; i < 255; i++) map[`${prefix}.${i}:${port}`] = `${seedHost}:${port}`
+      }
+      return map
+    }
+
+    function cluster (verb: string): void {
+      execFileSync(script as string, [verb, String(extra)], { stdio: 'ignore' })
+    }
+
+    it('reaches a new node through a pre-filled port-map with no client change (TC-09A, N-19)', async function () {
+      const config: ConfigOptions = { hosts, log, tenderInterval: 250 }
+      const covered: Cli = await Aerospike.connect(Object.assign({}, config, { translation: { provider: 'port-map', portMap: prefilledPortMap(), onMiss: 'strict' } }))
+      const exact: Cli = await Aerospike.connect(Object.assign({}, config, { translation: { provider: 'port-map', portMap: portMapByAddress(), onMiss: 'strict' } }))
+      try {
+        expect(await waitFor(() => covered.getNodes().length === nodes.length, 10000)).to.be.true
+        cluster('add')
+        expect(await waitFor(() => covered.getNodes().length === nodes.length + 1, 60000), 'the new node joins').to.be.true
+        expect(addresses(covered)).to.include(`${seedHost}:${extraPort}`)
+        // The exact map has no entry for the new node's address, so strict skips it.
+        expect(exact.getNodes()).to.have.lengthOf(nodes.length)
+        cluster('remove')
+        expect(await waitFor(() => covered.getNodes().length === nodes.length, 30000), 'the node leaves').to.be.true
+      } finally {
+        try { cluster('remove') } catch (err) {}
+        covered.close()
+        exact.close()
+      }
+    })
+
+    it('keeps tending while a thread-mode DNS refresh is stalled (TC-15)', async function () {
+      // The resolver answers after 8 s. Once a refresh is waiting on it, the
+      // extra node is removed: the client drops it within a few tends, which
+      // only the tend thread does, so tend was not waiting on the refresh.
+      const dns = await startDnsServer({ 'seeds.cluster.test': { A: [seedHost] } })
+      let client: Cli | undefined
+      try {
+        cluster('add')
+        const discovery = { provider: 'dns' as const, dns: { names: ['seeds.cluster.test'], port: seedPort, servers: [dns.address], timeoutMs: 9000 }, refreshIntervalMs: 1000, refreshTimeoutMs: 10000 }
+        client = await Aerospike.connect({ hosts: [], log, tenderInterval: 250, discovery, translation: { provider: 'port-map', portMap: prefilledPortMap() } })
+        const c = client
+        expect(await waitFor(() => c.getNodes().length === nodes.length + 1, 60000), 'the extra node joins').to.be.true
+        await dns.setDelay(8000)
+        const queries = await dns.queries()
+        const started = Date.now()
+        // Wait for a refresh to reach the stalled resolver.
+        while ((await dns.queries()) === queries && Date.now() - started < 3000) await new Promise(resolve => setTimeout(resolve, 50))
+        expect(await dns.queries(), 'a refresh is waiting on the resolver').to.be.above(queries)
+        const stalledAt = Date.now()
+        cluster('remove')
+        expect(await waitFor(() => c.getNodes().length === nodes.length, 6000), 'tend drops the removed node').to.be.true
+        expect(Date.now() - stalledAt, 'well before the refresh returns').to.be.below(7000)
+        const key = new Aerospike.Key('test', 'demo', 'translation-cluster/tc15')
+        await c.put(key, { v: 1 })
+        await c.remove(key)
+      } finally {
+        await dns.setDelay(0)
+        client?.close()
+        try { cluster('remove') } catch (err) {}
+        await dns.stop()
+      }
+    })
+  })
+})
+
+// TC-02A, N-16, design T3: one address with a port per node, server-advertised.
+// Needs the 2-node cluster from discoverydocs/test-cluster/cluster.sh t3-up, whose
+// nodes advertise 127.0.0.1 with their own port as the alternate address
+// (clear and TLS) and container addresses as the standard one. Local only.
+describe('pass-through on one address with a port per node (T3)', function () {
+  this.timeout(60000)
+  const t3Env = process.env.IPMAP_T3_SEED
+
+  if (!t3Env) {
+    it.skip('set IPMAP_T3_SEED to run')
+    return
+  }
+
+  const [t3Host, t3PortText] = t3Env.split(':')
+  const t3Port = Number(t3PortText)
+  const ports = [t3Port, t3Port + 100]
+
+  async function useEveryPartition (client: Cli): Promise<void> {
+    const keys = Array.from({ length: 200 }, (_, i) => new Aerospike.Key('test', 'demo', `t3/${i}`))
+    try {
+      for (const key of keys) await client.put(key, { i: 1 })
+      const records = await client.batchRead(keys.map(key => ({ key, readAllBins: true })))
+      expect(records.filter(record => record.status === Aerospike.status.OK)).to.have.lengthOf(keys.length)
+    } finally {
+      await client.batchRemove(keys).catch(() => {})
+    }
+  }
+
+  it('reaches every node at its advertised alternate address with no map', async function () {
+    const client: Cli = await Aerospike.connect({ hosts: [{ addr: t3Host, port: t3Port }], log, tenderInterval: 250, useAlternateAccessAddress: true, translation: { provider: 'pass-through' } })
+    try {
+      expect(await waitFor(() => client.getNodes().length === 2, 5000)).to.be.true
+      expect(addresses(client)).to.eql(ports.map(port => `${t3Host}:${port}`))
+      await useEveryPartition(client)
+    } finally {
+      client.close()
+    }
+  })
+
+  it('does not reach the peer at its standard address, which the host cannot route', async function () {
+    // Without the alternate list, pass-through uses the container address.
+    const error = await connectError({ hosts: [{ addr: t3Host, port: t3Port }], log, tenderInterval: 250, translation: { provider: 'pass-through' } })
+    expect(error, 'connect fails with the peer unreachable').to.not.be.null
+    expect(error.message).to.match(/Peers not reachable/)
+  })
+
+  it('does the same over TLS, checking each node against its TLS name', async function () {
+    if (!caFile) return this.skip()
+    const tls = { enable: true, cafile: caFile }
+    const client: Cli = await Aerospike.connect({ hosts: [{ addr: t3Host, port: t3Port + 10, tlsname: tlsName }], log, tls, tenderInterval: 250, useAlternateAccessAddress: true, translation: { provider: 'pass-through' } })
+    try {
+      expect(await waitFor(() => client.getNodes().length === 2, 5000)).to.be.true
+      expect(addresses(client)).to.eql(ports.map(port => `${t3Host}:${port + 10}`))
+      await useEveryPartition(client)
+    } finally {
+      client.close()
+    }
   })
 })

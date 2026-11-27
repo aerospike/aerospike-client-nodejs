@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include "client.h"
+#include "js_bridge.h"
 #include "enums.h"
 #include "policy.h"
 #include "operations.h"
@@ -142,6 +143,13 @@ NAN_METHOD(transaction)
 /**
  *  aerospike object.
  */
+// Stops the JavaScript seed provider and hook bridges at process exit, so a
+// connect still waiting on one returns before the worker threads are joined.
+NAN_METHOD(stopJsBridges)
+{
+	JsBridge::StopAll();
+}
+
 NAN_MODULE_INIT(Aerospike)
 {
 	Nan::HandleScope scope;
@@ -168,6 +176,7 @@ NAN_MODULE_INIT(Aerospike)
 	NAN_EXPORT(target, vectorFloat16Values);
 	NAN_EXPORT(target, unref_as_event_loop);
 	NAN_EXPORT(target, setDefaultLogging);
+	NAN_EXPORT(target, stopJsBridges);
 
 	// enumerations
 	export("bitwise", bitwise_enum_values());

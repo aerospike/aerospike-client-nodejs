@@ -22,6 +22,8 @@
 #include "policy.h"
 #include "config.h"
 #include "conversions.h"
+#include "js_bridge.h"
+#include "client.h"
 
 extern "C" {
 #include <aerospike/as_config.h>
@@ -266,7 +268,8 @@ static int set_dns_seed_provider(as_config *config, Local<Object> obj, const Log
  * timeoutMs, endpoint, caFile, caPath, accessKeyId, secretAccessKey,
  * sessionToken }.
  */
-static int set_aws_seed_provider(as_config *config, Local<Object> obj, const LogInfo *log)
+static int set_aws_seed_provider(as_config *config, Local<Object> obj,
+								 std::vector<JsBridge *> *bridges, const LogInfo *log)
 {
 	Local<Value> value = Nan::Get(obj, Nan::New("aws").ToLocalChecked()).ToLocalChecked();
 
@@ -388,12 +391,37 @@ static int set_aws_seed_provider(as_config *config, Local<Object> obj, const Log
 	aws.filters_size = (uint32_t)filters.size();
 
 	{
-		// The C client validates and copies the configuration.
+		// A JavaScript credentials hook: lib/discovery_bridge.js replaced the
+		// user's function with a spec object for the bridge.
+		JsBridge *hook = NULL;
+		Local<Value> hook_value =
+			Nan::Get(aws_obj, Nan::New("credentialsHook").ToLocalChecked()).ToLocalChecked();
+		if (hook_value->IsObject()) {
+			if (!bridges) {
+				as_v8_error(log, "discovery.aws.credentialsHook is not supported here");
+				rc = AS_NODE_PARAM_ERR;
+				goto Cleanup;
+			}
+			hook = JsBridge::Create(JsBridge::CREDENTIALS_HOOK, hook_value.As<Object>());
+			aws.credentials_hook.get = JsBridge::GetCredentials;
+			aws.credentials_hook.destroy = JsBridge::Destroy;
+			aws.credentials_hook.udata = hook;
+		}
+
+		// The C client validates and copies the configuration, and owns the
+		// hook once this succeeds.
 		as_error err;
 		as_error_init(&err);
 		if (as_config_set_aws_seed_provider(config, &aws, &err) != AEROSPIKE_OK) {
 			as_v8_error(log, "Invalid discovery.aws: %s", err.message);
 			rc = AS_NODE_PARAM_ERR;
+			if (hook) {
+				hook->ReleaseOwner();
+				hook->ReleaseClient();
+			}
+		}
+		else if (hook) {
+			bridges->push_back(hook);
 		}
 	}
 
@@ -411,6 +439,7 @@ Cleanup:
  * refreshIntervalMs, refreshTimeoutMs, tendRefreshDeadlineMs }.
  */
 static int get_optional_discovery_property(as_config *config, Local<Object> obj,
+										   std::vector<JsBridge *> *bridges,
 										   const LogInfo *log)
 {
 	Local<Value> value = Nan::Get(obj, Nan::New("discovery").ToLocalChecked()).ToLocalChecked();
@@ -467,6 +496,34 @@ static int get_optional_discovery_property(as_config *config, Local<Object> obj,
 	}
 
 	// The provider is registered last, after the execution mode is set.
+	// A JavaScript provider: lib/discovery_bridge.js replaced it with a spec
+	// object { name, periodic, refresh, close } for the bridge.
+	Local<Value> provider_value =
+		Nan::Get(discovery, Nan::New("provider").ToLocalChecked()).ToLocalChecked();
+	if (provider_value->IsObject()) {
+		if (!bridges) {
+			as_v8_error(log, "A JavaScript discovery.provider is not supported here");
+			return AS_NODE_PARAM_ERR;
+		}
+		JsBridge *bridge = JsBridge::Create(JsBridge::PROVIDER, provider_value.As<Object>());
+		as_error err;
+		as_error_init(&err);
+		// The C client calls the factory once, here, for the one instance; it
+		// runs every call, the first included, on its discovery thread, and
+		// holds the bridge for the registration and the instance once this
+		// succeeds.
+		if (as_config_set_binding_seed_provider(config, JsBridge::Factory,
+												JsBridge::DestroyRegistration, bridge,
+												&err) != AEROSPIKE_OK) {
+			as_v8_error(log, "Invalid discovery.provider: %s", err.message);
+			bridge->ReleaseOwner();
+			bridge->ReleaseClient();
+			return AS_NODE_PARAM_ERR;
+		}
+		bridges->push_back(bridge);
+		return AS_NODE_PARAM_OK;
+	}
+
 	// 'static' (the configured hosts only) registers nothing.
 	static const char *const providers[] = {"static", "dns", "aws-tags"};
 	if ((rc = get_optional_enum_property(&index, &defined, discovery, "provider",
@@ -477,7 +534,7 @@ static int get_optional_discovery_property(as_config *config, Local<Object> obj,
 		return set_dns_seed_provider(config, discovery, log);
 	}
 	if (defined && index == 2) {
-		return set_aws_seed_provider(config, discovery, log);
+		return set_aws_seed_provider(config, discovery, bridges, log);
 	}
 
 	return AS_NODE_PARAM_OK;
@@ -579,6 +636,52 @@ static int get_optional_translation_property(as_config *config, Local<Object> ob
 		return AS_NODE_PARAM_ERR;
 	}
 
+	return AS_NODE_PARAM_OK;
+}
+
+// Seed provider factories registered by name with Aerospike.registerSeedProvider(),
+// for the config file to select with static.client.discovery.provider.
+// lib/discovery_bridge.js passes them as _seedProviders, [{ name, build }], to a
+// client of the main thread. Each is a binding provider: every refresh runs on
+// the C client's discovery thread, and connect waits at most
+// refresh_timeout_ms for the first one.
+static int register_named_seed_providers(as_config *config, Local<Object> obj,
+										 AerospikeClient *client, const LogInfo *log)
+{
+	Local<Value> value =
+		Nan::Get(obj, Nan::New("_seedProviders").ToLocalChecked()).ToLocalChecked();
+	if (!value->IsArray()) {
+		return AS_NODE_PARAM_OK;
+	}
+	Local<Array> list = value.As<Array>();
+	for (uint32_t i = 0; i < list->Length(); i++) {
+		Local<Value> item = Nan::Get(list, i).ToLocalChecked();
+		Local<Value> name_value = Nan::Undefined();
+		Local<Value> build_value = Nan::Undefined();
+		if (item->IsObject()) {
+			name_value = Nan::Get(item.As<Object>(), Nan::New("name").ToLocalChecked()).ToLocalChecked();
+			build_value = Nan::Get(item.As<Object>(), Nan::New("build").ToLocalChecked()).ToLocalChecked();
+		}
+		if (!name_value->IsString() || !build_value->IsFunction()) {
+			as_v8_error(log, "Invalid registered seed provider at index %u", i);
+			return AS_NODE_PARAM_ERR;
+		}
+		Nan::Utf8String name(name_value);
+		JsNamedProvider *named = new JsNamedProvider(*name, build_value.As<Function>(),
+													 &client->js_bridges, client->log);
+		as_error err;
+		as_error_init(&err);
+		// No destroy: the client owns named and frees it on the JavaScript
+		// thread, so the C client's close thread never touches it.
+		if (as_config_register_binding_seed_provider(config, named->name.c_str(),
+													 JsNamedProvider::Factory, NULL, named,
+													 &err) != AEROSPIKE_OK) {
+			as_v8_error(log, "Invalid registered seed provider: %s", err.message);
+			delete named;
+			return AS_NODE_PARAM_ERR;
+		}
+		client->js_named.push_back(named);
+	}
 	return AS_NODE_PARAM_OK;
 }
 
@@ -1119,11 +1222,15 @@ int config_from_jsobject(as_config *config, Local<Object> configObj, AerospikeCl
 		cf_free(app_id);
 	}
 
-	if ((rc = get_optional_discovery_property(config, configObj, log)) !=
+	if ((rc = get_optional_discovery_property(config, configObj, &client->js_bridges, log)) !=
 		AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
 	if ((rc = get_optional_translation_property(config, configObj, log)) !=
+		AS_NODE_PARAM_OK) {
+		goto Cleanup;
+	}
+	if ((rc = register_named_seed_providers(config, configObj, client, log)) !=
 		AS_NODE_PARAM_OK) {
 		goto Cleanup;
 	}
