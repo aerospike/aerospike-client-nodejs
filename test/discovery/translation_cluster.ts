@@ -473,3 +473,63 @@ describe('address translation against a multi-node cluster', function () {
     })
   })
 })
+
+// TC-02A, N-16, design T3: one address with a port per node, server-advertised.
+// Needs the 2-node cluster from discoverydocs/test-cluster/cluster.sh t3-up, whose
+// nodes advertise 127.0.0.1 with their own port as the alternate address
+// (clear and TLS) and container addresses as the standard one. Local only.
+describe('pass-through on one address with a port per node (T3)', function () {
+  this.timeout(60000)
+  const t3Env = process.env.IPMAP_T3_SEED
+
+  if (!t3Env) {
+    it.skip('set IPMAP_T3_SEED to run')
+    return
+  }
+
+  const [t3Host, t3PortText] = t3Env.split(':')
+  const t3Port = Number(t3PortText)
+  const ports = [t3Port, t3Port + 100]
+
+  async function useEveryPartition (client: Cli): Promise<void> {
+    const keys = Array.from({ length: 200 }, (_, i) => new Aerospike.Key('test', 'demo', `t3/${i}`))
+    try {
+      for (const key of keys) await client.put(key, { i: 1 })
+      const records = await client.batchRead(keys.map(key => ({ key, readAllBins: true })))
+      expect(records.filter(record => record.status === Aerospike.status.OK)).to.have.lengthOf(keys.length)
+    } finally {
+      await client.batchRemove(keys).catch(() => {})
+    }
+  }
+
+  it('reaches every node at its advertised alternate address with no map', async function () {
+    const client: Cli = await Aerospike.connect({ hosts: [{ addr: t3Host, port: t3Port }], log, tenderInterval: 250, useAlternateAccessAddress: true, translation: { provider: 'pass-through' } })
+    try {
+      expect(await waitFor(() => client.getNodes().length === 2, 5000)).to.be.true
+      expect(addresses(client)).to.eql(ports.map(port => `${t3Host}:${port}`))
+      await useEveryPartition(client)
+    } finally {
+      client.close()
+    }
+  })
+
+  it('does not reach the peer at its standard address, which the host cannot route', async function () {
+    // Without the alternate list, pass-through uses the container address.
+    const error = await connectError({ hosts: [{ addr: t3Host, port: t3Port }], log, tenderInterval: 250, translation: { provider: 'pass-through' } })
+    expect(error, 'connect fails with the peer unreachable').to.not.be.null
+    expect(error.message).to.match(/Peers not reachable/)
+  })
+
+  it('does the same over TLS, checking each node against its TLS name', async function () {
+    if (!caFile) return this.skip()
+    const tls = { enable: true, cafile: caFile }
+    const client: Cli = await Aerospike.connect({ hosts: [{ addr: t3Host, port: t3Port + 10, tlsname: tlsName }], log, tls, tenderInterval: 250, useAlternateAccessAddress: true, translation: { provider: 'pass-through' } })
+    try {
+      expect(await waitFor(() => client.getNodes().length === 2, 5000)).to.be.true
+      expect(addresses(client)).to.eql(ports.map(port => `${t3Host}:${port + 10}`))
+      await useEveryPartition(client)
+    } finally {
+      client.close()
+    }
+  })
+})
