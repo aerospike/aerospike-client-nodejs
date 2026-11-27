@@ -288,6 +288,24 @@ describe('address translation against a multi-node cluster', function () {
     expect(count(text, new RegExp(`Peer ${others[1].name} has no address of its own: ${shared} is used by ${others[0].name}`))).to.be.at.least(2)
   })
 
+  it('misses every peer when a port-map keyed on standard addresses is used with the alternate list (U-13)', async function () {
+    // Nodes advertise container addresses as standard and hostnames as
+    // alternate. A map written against the standard list, used with
+    // useAlternateAccessAddress, matches no alternate address: under strict
+    // every peer misses, and the miss names the alternate list (design G-18).
+    const { found, text } = await connectWithLog({ useAlternateAccessAddress: true, translation: { provider: 'port-map', portMap: portMapByAddress(), onMiss: 'strict' } }, 1)
+    expect(found).to.eql([`${seedHost}:${seedPort}`])
+    expect(text).to.match(/has no mapping for node .* in the alternate list/)
+  })
+
+  it('reaches every node through a port-map keyed on alternate addresses, under strict (CT-12)', async function () {
+    const altPeers = await advertisedPeers(seedHost, seedPort, 'peers-clear-alt')
+    const portMap = Object.fromEntries(altPeers.map(peer => [`${peer.host}:${peer.port}`, `${seedHost}:${peer.port}`]))
+    const { found, text } = await connectWithLog({ useAlternateAccessAddress: true, translation: { provider: 'port-map', portMap, onMiss: 'strict' } }, nodes.length)
+    expect(found).to.eql(reachable())
+    expect(text).to.not.match(/has no mapping/)
+  })
+
   it('uses advertised addresses as they are with pass-through', async function () {
     const error = await connectError({ hosts, log, translation: { provider: 'pass-through' } })
     expect(error.message).to.match(/Peers not reachable/)

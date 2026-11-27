@@ -27,7 +27,7 @@
 import type { Client as Cli, ConfigOptions } from '../../lib/aerospike.js'
 
 import { expect } from 'chai'
-import { spawnSync } from 'child_process'
+import { spawn, spawnSync } from 'child_process'
 import * as fs from 'fs'
 import * as net from 'net'
 import * as os from 'os'
@@ -491,6 +491,97 @@ describe('JavaScript seed provider', function () {
       // The seed comes back: the client reconnects from the seeds it has.
       proxy = forward(port)
       expect(await waitFor(() => client.getNodes().length === 1, 10000), 'reconnects').to.be.true
+    } finally {
+      client.close()
+      proxy.close()
+      for (const s of sockets) s.destroy()
+    }
+  })
+
+  it('works with shared-memory tending in two processes, also after a takeover (CC-06)', async function () {
+    // Each process has its own discovery thread and provider (thread mode);
+    // one process tends the shared cluster view. The first process exits
+    // early, so the second takes over tending and must keep working.
+    const key = 0x5000 + Math.floor(Math.random() * 0x1000)
+    const script = (tag: string, ms: number): string => `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const seed = ${JSON.stringify(seedHost())}
+      let calls = 0
+      const provider = { refreshSeedCandidates: () => { calls++; return [seed] }, needsPeriodicRefresh: () => true, close: () => console.log('closed') }
+      ;(async () => {
+        const client = await Aerospike.connect({ hosts: [], log: { level: Aerospike.log.OFF }, tenderInterval: 250,
+          sharedMemory: { enable: true, key: ${key}, takeoverThresholdSeconds: 2 }, discovery: { provider, refreshIntervalMs: 500 } })
+        let ok = 0, err = 0
+        const end = Date.now() + ${ms}
+        while (Date.now() < end) {
+          try { await client.put(new Aerospike.Key('test', 'demo', 'cc06-${tag}'), { v: 1 }); ok++ } catch (e) { err++ }
+          await new Promise(resolve => setTimeout(resolve, 100))
+        }
+        console.log(JSON.stringify({ calls, ok, err, nodes: client.getNodes().length }))
+        client.close()
+      })().catch(e => { console.log(JSON.stringify({ failed: e.message })); process.exit(2) })
+    `
+    const run = (tag: string, ms: number): Promise<{ code: number | null, out: string }> => new Promise(resolve => {
+      const child = spawn(process.execPath, ['-e', script(tag, ms)])
+      let out = ''
+      child.stdout.on('data', chunk => { out += chunk })
+      child.on('exit', code => resolve({ code, out }))
+    })
+    const first = run('a', 3000)
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    // The second outlives the first by 5 s, past the 2 s takeover threshold.
+    const second = run('b', 7000)
+    for (const { code, out } of [await first, await second]) {
+      expect(code, out).to.equal(0)
+      const [line, closed] = out.trim().split('\n')
+      const result = JSON.parse(line)
+      expect(result.err, out).to.equal(0)
+      expect(result.ok).to.be.above(10)
+      expect(result.nodes).to.equal(1)
+      expect(result.calls, 'its own provider refreshes').to.be.at.least(2)
+      expect(closed).to.equal('closed')
+    }
+  })
+
+  it('reconnects from the seeds it holds while a refresh is still running (M-11)', async function () {
+    // Later refreshes take 2.5 s. With one in flight, the client loses its
+    // node and the node comes back: tend re-seeds at once from the snapshot it
+    // holds (FR-42) and does not wait for the refresh.
+    const sockets = new Set<net.Socket>()
+    const forward = (port: number): net.Server => net.createServer(socket => {
+      const upstream = net.connect(seed.port, seed.addr)
+      sockets.add(socket); sockets.add(upstream)
+      socket.pipe(upstream); upstream.pipe(socket)
+      const done = (): void => { socket.destroy(); upstream.destroy() }
+      for (const s of [socket, upstream]) { s.on('error', done); s.on('close', done) }
+    }).listen(port, '127.0.0.1')
+    let proxy = forward(0)
+    await new Promise(resolve => proxy.once('listening', resolve))
+    const port = (proxy.address() as net.AddressInfo).port
+    let started = 0
+    let settled = 0
+    const p = provider(async () => {
+      started++
+      if (started > 1) await new Promise(resolve => setTimeout(resolve, 2500))
+      settled++
+      return [{ addr: '127.0.0.1', port }]
+    }, true)
+    const client: Cli = await Aerospike.connect(config(p, { refreshIntervalMs: 1000, refreshTimeoutMs: 3000 }, { tenderInterval: 250 }))
+    const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
+      const end = Date.now() + ms
+      while (Date.now() < end) { if (check()) return true; await new Promise(resolve => setTimeout(resolve, 25)) }
+      return check()
+    }
+    try {
+      expect(await waitFor(() => started > settled, 3000), 'a refresh is in flight').to.be.true
+      const inFlight = settled
+      proxy.close()
+      for (const s of sockets) s.destroy()
+      expect(await waitFor(() => client.getNodes().length === 0, 5000), 'the node is dropped').to.be.true
+      proxy = forward(port)
+      expect(await waitFor(() => client.getNodes().length === 1, 5000), 'reconnects').to.be.true
+      // The refresh that was running when the node was lost has not returned yet.
+      expect(settled, 'reconnected before the running refresh returned').to.equal(inFlight)
     } finally {
       client.close()
       proxy.close()

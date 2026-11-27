@@ -26,7 +26,7 @@ import * as fs from 'fs'
 import * as net from 'net'
 import * as os from 'os'
 import * as path from 'path'
-import { spawnSync } from 'child_process'
+import { spawn, spawnSync } from 'child_process'
 import * as Aerospike from '../../lib/aerospike.js'
 import * as helper from '../test_helper.ts'
 import { connectError } from './helpers.ts'
@@ -425,6 +425,24 @@ describe('discovery with the dns provider', function () {
     await connectAndUse(dnsConfig({ names: ['seeds.test'] }, { executionMode: 'tend' }))
   })
 
+  it('uses the names that resolve and warns once for each that fails (CN-04)', async function () {
+    const logFile = path.join(os.tmpdir(), `discovery-cn04-${process.pid}-${Date.now()}.log`)
+    const fd = fs.openSync(logFile, 'w')
+    Aerospike.setDefaultLogging({ level: Aerospike.log.WARN, file: fd })
+    let text = ''
+    try {
+      await connectAndUse(dnsConfig({ names: ['missing-a.seeds.test', 'seeds.test', 'missing-b.seeds.test'] }))
+    } finally {
+      Aerospike.setDefaultLogging(helper.config.log ?? {})
+      fs.closeSync(fd)
+      text = fs.readFileSync(logFile, 'utf8')
+      fs.unlinkSync(logFile)
+    }
+    expect(text.match(/DNS seed name missing-a\.seeds\.test failed: /g)).to.have.lengthOf(1)
+    expect(text.match(/DNS seed name missing-b\.seeds\.test failed: /g)).to.have.lengthOf(1)
+    expect(text).to.not.match(/DNS seed name seeds\.test failed/)
+  })
+
   it('fails with ERR_SEED_DISCOVERY_FAILED when the name does not exist and there are no hosts', async function () {
     const error = await connectError(dnsConfig({ names: ['missing.seeds.test'] }))
     expect(error).to.be.instanceof(Aerospike.AerospikeError)
@@ -640,6 +658,52 @@ describe('discovery seed refresh and limits', function () {
     expect(log).to.match(/Seed provider dns refresh failed: .*Keeping the previous seeds/)
     expect(log).to.not.match(/exceeding tend_refresh_deadline_ms/)
     expect(log).to.not.match(/no longer refreshed/)
+  })
+
+  it('reconnects in tend mode from the seeds it holds, with no new lookup (M-12)', async function () {
+    // The seed is a proxy to the server in a separate process: this client
+    // connects on the JavaScript thread, so a proxy on it could not answer.
+    // Killing the proxy drops the node; a new proxy on the same port brings it
+    // back. In tend mode the client re-seeds from the snapshot in hand and makes
+    // no lookup (the refresh interval is far off; tend mode has no urgent refresh).
+    const startProxy = async (port: number): Promise<{ port: number, stop: () => Promise<void> }> => {
+      const child = spawn(process.execPath, ['-e', `
+        const net = require('net')
+        const server = net.createServer(s => { const u = net.connect(${seed.port}, ${JSON.stringify(seed.addr)}); s.pipe(u); u.pipe(s); s.on('error', () => u.destroy()); u.on('error', () => s.destroy()) })
+        server.listen(${port}, '127.0.0.1', () => console.log(server.address().port))
+      `])
+      const actual = await new Promise<number>((resolve, reject) => {
+        child.stdout.once('data', data => resolve(Number(String(data).trim())))
+        child.once('exit', code => reject(new Error(`proxy exited ${code}`)))
+      })
+      return { port: actual, stop: () => new Promise(resolve => { child.once('exit', () => resolve()); child.kill('SIGKILL') }) }
+    }
+    let proxy = await startProxy(0)
+    const port = proxy.port
+    const options: any = Object.assign({}, helper.config, { hosts: [], tenderInterval: 250 }, {
+      discovery: { provider: 'dns', dns: { names: ['proxy.seeds.test'], servers: [dns.address], port, timeoutMs: 80 }, executionMode: 'tend', refreshIntervalMs: 60000 }
+    })
+    await dns.setRecords({ 'seeds.test': { A: [seed.addr] }, 'v6.seeds.test': { AAAA: ['::1'] }, 'proxy.seeds.test': { A: ['127.0.0.1'] } })
+    let client: Cli | undefined
+    const waitFor = async (check: () => boolean, ms: number): Promise<boolean> => {
+      const end = Date.now() + ms
+      while (Date.now() < end) { if (check()) return true; await new Promise(resolve => setTimeout(resolve, 50)) }
+      return check()
+    }
+    try {
+      client = await Aerospike.connect(options)
+      const c = client
+      const queries = await dns.queries()
+      await proxy.stop()
+      expect(await waitFor(() => c.getNodes().length === 0, 10000), 'the node is dropped').to.be.true
+      proxy = await startProxy(port)
+      expect(await waitFor(() => c.getNodes().length === 1, 5000), 'reconnects').to.be.true
+      expect(await dns.queries(), 'no lookup for the reconnect').to.equal(queries)
+    } finally {
+      client?.close()
+      await proxy.stop()
+      await dns.setRecords({ 'seeds.test': { A: [seed.addr] }, 'v6.seeds.test': { AAAA: ['::1'] } })
+    }
   })
 
   it('takes the provider limits from refreshTimeoutMs when it is set', async function () {
@@ -879,6 +943,132 @@ describe('ipMap ownership with a config file (CY-15)', function () {
       ])
     } finally {
       for (const name of Object.values(files)) fs.unlinkSync(name)
+    }
+  })
+})
+
+// C test plan CY rows, through Node: the discovery keys of the YAML config file.
+// Node cannot read the C client's settings, so each case checks behaviour: a
+// client with no hosts in code connects only if the file's dns discovery applied.
+describe('discovery from the config file (CY-01, CY-04, CY-05, CY-07, CY-08, CY-11, CY-12)', function () {
+  this.timeout(30000)
+
+  const hosts: any = helper.config.hosts
+  const seed: any = Array.isArray(hosts) ? hosts[0] : null
+  let dns: DnsServer
+  const files: string[] = []
+
+  before(async function () {
+    if (!seed || !net.isIP(seed.addr)) this.skip()
+    dns = await startDnsServer({ 'seeds.cfg.test': { A: [seed.addr] } })
+  })
+
+  after(async function () {
+    if (dns) await dns.stop()
+    for (const file of files) try { fs.unlinkSync(file) } catch (err) {}
+  })
+
+  function yamlFile (lines: string[]): string {
+    const file = path.join(os.tmpdir(), `discovery-file-${process.pid}-${files.length}.yml`)
+    fs.writeFileSync(file, lines.join('\n') + '\n')
+    files.push(file)
+    return file
+  }
+
+  // A file with dns discovery under static.client.discovery (extra lines go in
+  // that block) and a tend interval of 250 ms, so a 500 ms refresh is valid.
+  function dnsBlock (extra: string[] = []): string[] {
+    return ['version: 1.2.0', 'static:', '  client:', '    discovery:', '      provider: dns',
+      '      merge_policy: discovery_only', '      refresh_interval_ms: 500', ...extra,
+      '      dns:', '        names: [seeds.cfg.test]', `        servers: ["${dns.address}"]`, `        port: ${seed.port}`,
+      'dynamic:', '  client:', '    tend_interval: 250']
+  }
+
+  // Connects with no hosts in code, writes and closes; returns the error or null and the C log.
+  async function tryFile (file: string): Promise<{ error: any, log: string }> {
+    const logFile = path.join(os.tmpdir(), `discovery-file-${process.pid}-${Date.now()}.log`)
+    const fd = fs.openSync(logFile, 'w')
+    Aerospike.setDefaultLogging({ level: Aerospike.log.WARN, file: fd })
+    let error: any = null
+    const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.WARN, file: fd }, configProvider: { path: file } })
+    try {
+      await client.connect()
+      const key = new Aerospike.Key(helper.namespace, helper.set, 'discovery/file')
+      await client.put(key, { v: 1 })
+      await client.remove(key)
+    } catch (err) {
+      error = err
+    } finally {
+      client.close()
+      Aerospike.setDefaultLogging(helper.config.log ?? {})
+      fs.closeSync(fd)
+    }
+    const log = fs.readFileSync(logFile, 'utf8')
+    fs.unlinkSync(logFile)
+    return { error, log }
+  }
+
+  it('takes dns discovery, its servers, port and refresh interval from the file (CY-01, CY-11)', async function () {
+    const file = yamlFile(dnsBlock())
+    const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF }, configProvider: { path: file } })
+    try {
+      await client.connect()
+      const before = await dns.queries()
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      expect((await dns.queries()) - before, 'refreshes at the file interval').to.be.at.least(3)
+      const key = new Aerospike.Key(helper.namespace, helper.set, 'discovery/file-dns')
+      await client.put(key, { v: 1 })
+      await client.remove(key)
+    } finally {
+      client.close()
+    }
+  })
+
+  it('rejects the whole file on an invalid value, keeping the code settings (CY-04)', async function () {
+    // The dns block alone would let the client connect; one bad value rejects all of it.
+    const { error, log } = await tryFile(yamlFile(dnsBlock(['      execution_mode: background'])))
+    expect(error, 'no file key applied, so no seed').to.not.be.null
+    expect(log).to.match(/Failed to parse/)
+    expect(log).to.match(/execution_mode: background/)
+  })
+
+  it('rejects the whole file on a YAML syntax error after valid keys (CY-05)', async function () {
+    const { error, log } = await tryFile(yamlFile(dnsBlock(['      bad: [unclosed'])))
+    expect(error).to.not.be.null
+    expect(log).to.match(/Failed to parse/)
+  })
+
+  it('skips unknown keys, maps and lists, and applies the rest (CY-07)', async function () {
+    const { error } = await tryFile(yamlFile(dnsBlock(['      future_key: 1', '      future_block:', '        a: [1, 2]', '        b: { c: d }', '      future_list: [x, y]'])))
+    expect(error).to.be.null
+  })
+
+  it('changes nothing with a version-only file (CY-08)', async function () {
+    const file = yamlFile(['version: 1.2.0'])
+    const client: Cli = await Aerospike.connect(Object.assign({}, helper.config, { log: { level: Aerospike.log.OFF }, configProvider: { path: file } }))
+    try {
+      const key = new Aerospike.Key(helper.namespace, helper.set, 'discovery/file-version')
+      await client.put(key, { v: 1 })
+      await client.remove(key)
+    } finally {
+      client.close()
+    }
+  })
+
+  it('uses AEROSPIKE_CLIENT_CONFIG_URL over configProvider.path, with or without file:// (CY-12)', function () {
+    const good = yamlFile(dnsBlock())
+    const bad = yamlFile(['version: 1.2.0', 'static:', '  client:', '    discovery:', '      provider: dns',
+      '      dns:', '        names: [missing.cfg.test]', `        servers: ["${dns.address}"]`, `        port: ${seed.port}`,
+      'dynamic:', '  client:', '    tend_interval: 250'])
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const client = new Aerospike.Client({ hosts: [], log: { level: Aerospike.log.OFF }, configProvider: { path: ${JSON.stringify(bad)} } })
+      client.connect().then(() => { console.log('connected'); client.close() }, err => { console.log('failed ' + err.code); client.close() })
+    `
+    for (const url of [good, `file://${good}`]) {
+      const env = Object.assign({}, process.env, { AEROSPIKE_CLIENT_CONFIG_URL: url })
+      const result = spawnSync(process.execPath, ['-e', script], { timeout: 20000, encoding: 'utf8', env })
+      expect(result.stdout.trim(), `${url}: ${result.stderr}`).to.equal('connected')
     }
   })
 })
