@@ -26,6 +26,7 @@ import * as fs from 'fs'
 import * as net from 'net'
 import * as os from 'os'
 import * as path from 'path'
+import { spawnSync } from 'child_process'
 import * as Aerospike from '../../lib/aerospike.js'
 import * as helper from '../test_helper.ts'
 import { connectError } from './helpers.ts'
@@ -810,5 +811,74 @@ describe('translation on a single node', function () {
         client.close()
       }
     })
+  })
+})
+
+describe('ipMap ownership with a config file (CY-15)', function () {
+  this.timeout(60000)
+
+  const hosts: any = helper.config.hosts
+  const seed: any = Array.isArray(hosts) ? hosts[0] : null
+
+  before(function () {
+    if (!seed || !net.isIP(seed.addr)) this.skip()
+  })
+
+  // When the config file sets ip_map, as_config.ip_map points at the C client's
+  // own copy, which it frees; the client frees only the array it built from
+  // Config#ipMap. Each case connects, writes, closes and runs again, in a new
+  // process (under Guard Malloc on macOS, so a double free or a use after free
+  // crashes it). The seed 10.255.0.1 is routable only through the file's map.
+  it('frees each ip_map once, whether the file, the code or both set it', function () {
+    const file = (body: string[]): string => {
+      const name = path.join(os.tmpdir(), `cy15-${process.pid}-${Math.random().toString(36).slice(2)}.yml`)
+      fs.writeFileSync(name, ['version: 1.2.0', 'static:', '  client:', ...body, ''].join('\n'))
+      return name
+    }
+    const files = {
+      ipMap: file(['    ip_map:', `      "10.255.0.1": "${seed.addr}"`]),
+      staticMap: file(['    translation:', '      static_map:', `        "10.255.0.1": "${seed.addr}"`])
+    }
+    const script = `
+      const Aerospike = require(${JSON.stringify(path.resolve(__dirname, '../../lib/aerospike.js'))})
+      const files = ${JSON.stringify(files)}
+      const real = ${JSON.stringify({ addr: seed.addr, port: seed.port })}
+      const viaFile = { addr: '10.255.0.1', port: real.port }
+      const codeMap = { '10.255.0.2': real.addr }
+      const cases = [
+        ['file and code', { hosts: [viaFile], ipMap: codeMap, configProvider: { path: files.ipMap } }, true],
+        ['file only', { hosts: [viaFile], configProvider: { path: files.ipMap } }, true],
+        ['code only', { hosts: [real], ipMap: codeMap }, true],
+        ['file static_map and code', { hosts: [viaFile], ipMap: codeMap, configProvider: { path: files.staticMap } }, true],
+        ['file and code, never connected', { hosts: [viaFile], ipMap: codeMap, configProvider: { path: files.ipMap } }, false]
+      ]
+      ;(async () => {
+        for (const [name, config, connect] of cases) {
+          for (let i = 0; i < 3; i++) {
+            const client = new Aerospike.Client(Object.assign({ log: { level: Aerospike.log.OFF }, connTimeoutMs: 2000 }, config))
+            if (connect) {
+              await client.connect()
+              const key = new Aerospike.Key('test', 'demo', 'cy15')
+              await client.put(key, { v: i })
+              await client.remove(key)
+            }
+            client.close()
+            await new Promise(resolve => setTimeout(resolve, 300))
+          }
+          console.log('ok ' + name)
+        }
+      })().catch(err => { console.log('failed ' + err.message); process.exit(2) })
+    `
+    const env = Object.assign({}, process.env)
+    if (process.platform === 'darwin') Object.assign(env, { DYLD_INSERT_LIBRARIES: '/usr/lib/libgmalloc.dylib', MALLOC_PROTECT_BEFORE: '1' })
+    try {
+      const result = spawnSync(process.execPath, ['-e', script], { timeout: 50000, encoding: 'utf8', env })
+      expect(result.status, `${result.stdout}${result.stderr}`).to.equal(0)
+      expect(result.stdout.trim().split('\n')).to.eql([
+        'ok file and code', 'ok file only', 'ok code only', 'ok file static_map and code', 'ok file and code, never connected'
+      ])
+    } finally {
+      for (const name of Object.values(files)) fs.unlinkSync(name)
+    }
   })
 })
